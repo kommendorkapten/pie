@@ -37,7 +37,9 @@ struct pixel_f32rgb
 
 struct bitmap_8rgb
 {
-        struct pixel_8rgb *pixels;
+        uint8_t* c_red;
+        uint8_t* c_green;
+        uint8_t* c_blue;
         enum pie_color_type color_type;
         int width;
         int height;
@@ -45,7 +47,9 @@ struct bitmap_8rgb
 
 struct bitmap_f32rgb
 {
-        struct pixel_f32rgb *pixels;
+        float* c_red;
+        float* c_green;
+        float* c_blue;
         enum pie_color_type color_type;
         int width;
         int height;

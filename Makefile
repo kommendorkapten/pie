@@ -47,7 +47,7 @@ OBJS    = $(SOURCES:%.c=obj/%.o)
 
 ########################################################################
 
-all: $(OBJS)
+all: $(OBJS) pngrw pngcreate pngread
 
 dir: $(DIRS)
 
@@ -58,7 +58,7 @@ obj/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj/*.o bin/*
+	rm -rf obj/*.o bin/* pngrw pngcreate pngread
 
 lint:
 	lint -Xc99 -m64 -errwarn=%all -errchk=%all -Ncheck=%all -Nlevel=1 -u -m -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT $(SOURCES)

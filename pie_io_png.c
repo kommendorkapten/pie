@@ -120,8 +120,8 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         }
 
         png_read_image(pngp, rows);
+        bm_alloc_f32(bm);
 
-        bm->pixels = malloc(bm->width * bm->height * sizeof(struct pixel_f32rgb));
         /* Copy data to bitmap */
         for (int y = 0; y < bm->height; y++)
         {
@@ -132,10 +132,12 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
                         float red = (float)*row++;
                         float green = (float)*row++;
                         float blue = (float)*row++;
-                        
-                        bm->pixels[y * bm->width + x].red = red / 255.0f;
-                        bm->pixels[y * bm->width + x].green = blue / 255.0f;
-                        bm->pixels[y * bm->width + x].blue = blue / 255.0f;
+                        int offset = y * bm->width + x;
+
+                        /* refactor to set methods */
+                        bm->c_red[offset] = red / 255.0f;
+                        bm->c_green[offset] = blue / 255.0f;
+                        bm->c_blue[offset] = blue / 255.0f;
                 }
 
                 /* Free copy buffer */
@@ -204,12 +206,12 @@ int png_8rgb_write(const char* path, struct bitmap_8rgb* bitmap)
                 rows[y] = row;
                 for (int x = 0; x < bitmap->width; ++x)
                 {
-                        struct pixel_8rgb* p;
+                        struct pixel_8rgb p;
 
-                        p = pixel_8rgb_get(bitmap, x, y);
-                        *row++ = p->red;
-                        *row++ = p->green;
-                        *row++ = p->blue;
+                        pixel_8rgb_get(&p, bitmap, x, y);
+                        *row++ = p.red;
+                        *row++ = p.green;
+                        *row++ = p.blue;
                 }
         }
     

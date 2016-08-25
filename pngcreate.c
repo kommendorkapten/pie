@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "pie_types.h"
-#include "pie_io.h"
-#include "pie_bm.h"
+#include "pie.h"
     
 /* Given "value" and "max", the maximum value which we expect "value"
    to take, this returns an integer between 0 and 255 proportional to
@@ -20,32 +18,34 @@ static int pix(int value, int max)
 
 int main ()
 {
-        struct bitmap_8rgb fruit;
+        struct bitmap_8rgb out;
 
         /* Create an image. */
 
-        fruit.width = 100;
-        fruit.height = 100;
+        out.width = 100;
+        out.height = 100;
+        out.color_type = PIE_COLOR_TYPE_RGB;
 
-        fruit.pixels = calloc(sizeof(struct pixel_8rgb), 
-                              fruit.width * fruit.height);
+        bm_alloc_8(&out);
 
-        for (int y = 0; y < fruit.height; y++)
+        for (int y = 0; y < out.height; y++)
         {
-                for (int x = 0; x < fruit.width; x++)
+                for (int x = 0; x < out.width; x++)
                 {
-                        struct pixel_8rgb* pixel = pixel_8rgb_get(&fruit,
-                                                                  x, 
-                                                                  y);
+                        struct pixel_8rgb pixel;
 
-                        pixel->red = pix(x, fruit.width);
-                        pixel->green = pix(y, fruit.height);
+                        pixel.red = pix(x, out.width);
+                        pixel.green = pix(y, out.height);
+                        pixel.blue = 0;
+
+                        pixel_8rgb_set(&out, x, y, &pixel);
                 }
         }
 
-        /* Write the image to a file 'fruit.png'. */
+        /* Write the image to a file 'out.png'. */
 
-        png_8rgb_write("fruit.png", &fruit);
+        png_8rgb_write("out.png", &out);
+        bm_free_8(&out);
 
         return 0;
 }

@@ -10,8 +10,8 @@ int main(void)
         
         src.height = 10;
         src.width = 10;
-        src.pixels = malloc(src.height * src.width * sizeof(struct pixel_8rgb));
         src.color_type = PIE_COLOR_TYPE_RGB;
+        bm_alloc_8(&src);
 
         for (int y = 0; y < src.height; y++)
         {
@@ -19,9 +19,9 @@ int main(void)
                 {
                         uint8_t c = y * src.width + x;
 
-                        src.pixels[y * src.width + x].red = c;
-                        src.pixels[y * src.width + x].green = c;
-                        src.pixels[y * src.width + x].blue = c;
+                        src.c_red[y * src.width + x] = c;
+                        src.c_green[y * src.width + x] = c;
+                        src.c_blue[y * src.width + x] = c;
                 }
         }
 
@@ -42,14 +42,37 @@ int main(void)
                 for (int x = 0; x < dst.width; x++)
                 {
                         int offset = y * src.width + x;
+                        int red = (int)(dst.c_red[offset] * 255.0f);
+                        int green = (int)(dst.c_green[offset] * 255.0f);
+                        int blue = (int)(dst.c_blue[offset] * 255.0f);
 
-                        printf("%02d ", (int)(dst.pixels[offset].blue * 255.0f));
+                        printf("%02d ", blue);
+
+                        /* Compare */
+                        if (red != y * src.width + x)
+                        {
+                                printf("ERROR\n");
+                                abort();
+                        }
+                        if (red != blue)
+                        {
+                                printf("ERROR\n");
+                                abort();                                
+                        }
+                        if (red != green)
+                        {
+                                printf("ERROR\n");
+                                abort();                                
+                        }
+                        
                 }
                 printf("\n");
         }
 
-        free(src.pixels);
-        free(dst.pixels);
+        printf("Success\n");
+
+        bm_free_8(&src);
+        bm_free_f32(&dst);
 
         return 0;
 }
