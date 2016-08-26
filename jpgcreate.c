@@ -19,6 +19,7 @@ static int pix(int value, int max)
 int main ()
 {
         struct bitmap_8rgb out;
+        int ret;
 
         /* Create an image. */
 
@@ -43,8 +44,11 @@ int main ()
         }
 
         /* Write the image to a file 'out.png'. */
-
-        png_8rgb_write("out.png", &out);
+        ret = jpg_8rgb_write("out.jpg", &out, 10);
+        if (ret)
+        {
+                printf("Failed: %d\n", ret);
+        }
         bm_free_8(&out);
 
         return 0;

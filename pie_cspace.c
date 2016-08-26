@@ -17,16 +17,16 @@
 /* sRGB gamma exponent */
 #define SRGB_G_EXP 2.4f
 
-float gamma(float b, float g)
+float pie_gamma(float b, float g)
 {
         return powf(b, g);
 }
 
-void gammav(float* b, float g, size_t size)
+void pie_gammav(float* b, float g, size_t size)
 {
-        for (int i = 0; i < size; i++)
+        for (size_t i = 0; i < size; i++)
         {
-                b[i] = gamma(b[i], g);
+                b[i] = pie_gamma(b[i], g);
         }
 }
 

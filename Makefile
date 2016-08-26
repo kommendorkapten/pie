@@ -1,6 +1,6 @@
 CC     = gcc
 CFLAGS = -m64 -I/usr/local/include
-LFLAGS += 
+LFLAGS += -lm -lpng -ljpeg
 LSCUT  = -L/usr/local/lib -lscut
 OS     = $(shell uname -s)
 ISA    = $(shell uname -p)
@@ -38,16 +38,16 @@ else
 endif
 
 DIRS    = obj bin
-SOURCES = pie_bm.c pie_cspace.c pie_io_png.c
+SOURCES = pie_bm.c pie_cspace.c pie_io_png.c pie_io_jpg.c
 OBJS    = $(SOURCES:%.c=obj/%.o)
-
+BINS    = pngrw pngcreate pngread jpgcreate
 
 .PHONY: clean
 .PHONY: lint
 
 ########################################################################
 
-all: $(OBJS) pngrw pngcreate pngread
+all: $(OBJS) $(BINS)
 
 dir: $(DIRS)
 
@@ -58,16 +58,19 @@ obj/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj/*.o bin/* pngrw pngcreate pngread
+	rm -rf obj/*.o bin/* $(BINS)
 
 lint:
 	lint -Xc99 -m64 -errwarn=%all -errchk=%all -Ncheck=%all -Nlevel=1 -u -m -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT $(SOURCES)
 
 pngrw: pngrw.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ -lpng -lm
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 pngcreate: pngcreate.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ -lpng -lm
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 pngread: pngread.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ -lpng -lm
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+jpgcreate: jpgcreate.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)

@@ -21,5 +21,6 @@
 #define PIE_IO_UNSUPPORTED_FMT 5
 
 #include "pie_io_png.h"
+#include "pie_io_jpg.h"
 
 #endif /* __PIE_IO_H__ */

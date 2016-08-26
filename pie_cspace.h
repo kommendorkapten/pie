@@ -21,7 +21,7 @@
  * @param the gamma exponent.
  * @return the corrected value.
  */
-extern float gamma(float, float);
+extern float pie_gamma(float, float);
 /**
  * Apply gamma correction to an array of values.
  * @param the channel values.
@@ -29,7 +29,7 @@ extern float gamma(float, float);
  * @param the number of values in the array.
  * @return void.
  */
-extern void gammav(float*, float, size_t);
+extern void pie_gammav(float*, float, size_t);
 
 /**
  * Convert from sRGB color space to linear color space.

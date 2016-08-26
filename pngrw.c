@@ -13,9 +13,9 @@ int main(void)
         src.color_type = PIE_COLOR_TYPE_RGB;
         bm_alloc_8(&src);
 
-        for (int y = 0; y < src.height; y++)
+        for (unsigned int y = 0; y < src.height; y++)
         {
-                for (int x = 0; x < src.width; x++)
+                for (unsigned int x = 0; x < src.width; x++)
                 {
                         uint8_t c = y * src.width + x;
 
@@ -37,14 +37,14 @@ int main(void)
 
         printf("%d %d %d\n", dst.width, dst.height, dst.color_type);
 
-        for (int y = 0; y < dst.height; y++)
+        for (unsigned int y = 0; y < dst.height; y++)
         {
-                for (int x = 0; x < dst.width; x++)
+                for (unsigned int x = 0; x < dst.width; x++)
                 {
-                        int offset = y * src.width + x;
-                        int red = (int)(dst.c_red[offset] * 255.0f);
-                        int green = (int)(dst.c_green[offset] * 255.0f);
-                        int blue = (int)(dst.c_blue[offset] * 255.0f);
+                        unsigned int offset = y * src.width + x;
+                        unsigned int red = (int)(dst.c_red[offset] * 255.0f);
+                        unsigned int green = (int)(dst.c_green[offset] * 255.0f);
+                        unsigned int blue = (int)(dst.c_blue[offset] * 255.0f);
 
                         printf("%02d ", blue);
 

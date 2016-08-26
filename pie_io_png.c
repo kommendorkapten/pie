@@ -16,10 +16,15 @@
 #include "pie_io.h"
 #include "pie_bm.h"
 
+/*
+  TODO fix scan lines
+  TODO support 16b
+ */
+
 int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
 {
         unsigned char header[8];
-        FILE *fp = fopen(path, "rb");
+        FILE* fp = fopen(path, "rb");
         png_structp pngp;
         png_infop infop;
         png_byte** rows;
@@ -114,7 +119,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         }
 
         rows = malloc(sizeof(png_byte*) * bm->height);
-        for (int y = 0; y < bm->height; y++)
+        for (unsigned int y = 0; y < bm->height; y++)
         {
                 rows[y] = malloc(png_get_rowbytes(pngp, infop));
         }
@@ -123,11 +128,11 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         bm_alloc_f32(bm);
 
         /* Copy data to bitmap */
-        for (int y = 0; y < bm->height; y++)
+        for (unsigned int y = 0; y < bm->height; y++)
         {
                 png_byte* row = rows[y];
 
-                for (int x = 0; x < bm->width; x++)
+                for (unsigned int x = 0; x < bm->width; x++)
                 {
                         float red = (float)*row++;
                         float green = (float)*row++;
@@ -199,12 +204,12 @@ int png_8rgb_write(const char* path, struct bitmap_8rgb* bitmap)
     
         /* Write rows to PNG obj */
         rows = malloc(bitmap->height * sizeof(png_byte*));
-        for (int y = 0; y < bitmap->height; y++)
+        for (unsigned int y = 0; y < bitmap->height; y++)
         {
                 size_t row_size = sizeof(uint8_t) * bitmap->width * pixel_size;
                 png_byte* row = malloc(row_size);
                 rows[y] = row;
-                for (int x = 0; x < bitmap->width; ++x)
+                for (unsigned int x = 0; x < bitmap->width; ++x)
                 {
                         struct pixel_8rgb p;
 
@@ -223,7 +228,7 @@ int png_8rgb_write(const char* path, struct bitmap_8rgb* bitmap)
                       PNG_TRANSFORM_IDENTITY, /* No transform */
                       NULL); /* not used */
     
-        for (int y = 0; y < bitmap->height; y++) 
+        for (unsigned int y = 0; y < bitmap->height; y++) 
         {
                 free(rows[y]);
         }
