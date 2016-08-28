@@ -24,6 +24,10 @@ ifeq ($(OS), SunOS)
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2
     endif
+  else ifeq ($(CC), gcc)
+    ifeq ($(ISA), i386)
+      CFLAGS += -march=nehalem
+    endif
   endif
 else ifeq ($(OS), FreeBSD)
   ifeq ($(CC), gcc)
