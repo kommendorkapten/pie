@@ -41,13 +41,14 @@ DIRS    = obj bin
 SOURCES = pie_bm.c pie_cspace.c pie_io_png.c pie_io_jpg.c
 OBJS    = $(SOURCES:%.c=obj/%.o)
 BINS    = pngrw pngcreate pngread jpgcreate jpgtopng
+P_BINS  = $(BINS:%=bin/%)
 
 .PHONY: clean
 .PHONY: lint
 
 ########################################################################
 
-all: $(OBJS) $(BINS)
+all: $(OBJS) $(P_BINS)
 
 dir: $(DIRS)
 
@@ -58,22 +59,22 @@ obj/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj/*.o bin/* $(BINS)
+	rm -rf obj/*.o bin/* $(P_BINS)
 
 lint:
 	lint -Xc99 -m64 -errwarn=%all -errchk=%all -Ncheck=%all -Nlevel=1 -u -m -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT $(SOURCES)
 
-pngrw: pngrw.c $(OBJS)
+bin/pngrw: pngrw.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-pngcreate: pngcreate.c $(OBJS)
+bin/pngcreate: pngcreate.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-pngread: pngread.c $(OBJS)
+bin/pngread: pngread.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-jpgcreate: jpgcreate.c $(OBJS)
+bin/jpgcreate: jpgcreate.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-jpgtopng: jpgtopng.c $(OBJS)
+bin/jpgtopng: jpgtopng.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
