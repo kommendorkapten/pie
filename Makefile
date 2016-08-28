@@ -40,7 +40,7 @@ endif
 DIRS    = obj bin
 SOURCES = pie_bm.c pie_cspace.c pie_io_png.c pie_io_jpg.c
 OBJS    = $(SOURCES:%.c=obj/%.o)
-BINS    = pngrw pngcreate pngread jpgcreate
+BINS    = pngrw pngcreate pngread jpgcreate jpgtopng
 
 .PHONY: clean
 .PHONY: lint
@@ -73,4 +73,7 @@ pngread: pngread.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 jpgcreate: jpgcreate.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+jpgtopng: jpgtopng.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)

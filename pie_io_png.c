@@ -155,7 +155,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         return 0;
 }
 
-int png_8rgb_write(const char* path, struct bitmap_8rgb* bitmap)
+int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;
@@ -211,9 +211,9 @@ int png_8rgb_write(const char* path, struct bitmap_8rgb* bitmap)
                 rows[y] = row;
                 for (unsigned int x = 0; x < bitmap->width; ++x)
                 {
-                        struct pixel_8rgb p;
+                        struct pixel_u8rgb p;
 
-                        pixel_8rgb_get(&p, bitmap, x, y);
+                        pixel_u8rgb_get(&p, bitmap, x, y);
                         *row++ = p.red;
                         *row++ = p.green;
                         *row++ = p.blue;

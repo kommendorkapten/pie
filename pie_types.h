@@ -21,11 +21,24 @@ enum pie_color_type {
         PIE_COLOR_TYPE_RGB
 };
 
-struct pixel_8rgb
+enum pie_color_bit_depth {
+        PIE_COLOR_8B = 8,  /* unsigned 8 bit int */
+        PIE_COLOR_16B = 16, /* unsigned 16 bit int */
+        PIE_COLOR_32B = 32 /* single precision 32 bit float */
+};
+
+struct pixel_u8rgb
 {
         uint8_t red;
         uint8_t green;
         uint8_t blue;
+};
+
+struct pixel_u16rgb
+{
+        uint16_t red;
+        uint16_t green;
+        uint16_t blue;
 };
 
 struct pixel_f32rgb
@@ -35,11 +48,21 @@ struct pixel_f32rgb
         float blue;
 };
 
-struct bitmap_8rgb
+struct bitmap_u8rgb
 {
         uint8_t* c_red;
         uint8_t* c_green;
         uint8_t* c_blue;
+        enum pie_color_type color_type;
+        unsigned int width;
+        unsigned int height;
+};
+
+struct bitmap_u16rgb
+{
+        uint16_t* c_red;
+        uint16_t* c_green;
+        uint16_t* c_blue;
         enum pie_color_type color_type;
         unsigned int width;
         unsigned int height;

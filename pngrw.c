@@ -5,13 +5,13 @@
 int main(void)
 {
         char* f = "out.png";
-        struct bitmap_8rgb src;
+        struct bitmap_u8rgb src;
         struct bitmap_f32rgb dst;
         
         src.height = 10;
         src.width = 10;
         src.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_8(&src);
+        bm_alloc_u8(&src);
 
         for (unsigned int y = 0; y < src.height; y++)
         {
@@ -25,7 +25,7 @@ int main(void)
                 }
         }
 
-        if (png_8rgb_write(f, &src))
+        if (png_u8rgb_write(f, &src))
         {
                 printf("Failed to write\n");
         }
@@ -71,7 +71,7 @@ int main(void)
 
         printf("Success\n");
 
-        bm_free_8(&src);
+        bm_free_u8(&src);
         bm_free_f32(&dst);
 
         return 0;

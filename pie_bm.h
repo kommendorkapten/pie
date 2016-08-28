@@ -22,7 +22,7 @@
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int bm_alloc_f32(struct bitmap_f32rgb*);
+int bm_alloc_u8(struct bitmap_u8rgb*);
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -30,7 +30,31 @@ int bm_alloc_f32(struct bitmap_f32rgb*);
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int bm_alloc_8(struct bitmap_8rgb*);
+int bm_alloc_u16(struct bitmap_u16rgb*);
+
+/**
+ * Alloc data for pixel data. If color type is rgb, only
+ * red channel will contain data.
+ * @param the bitmap to allocate pixel data for.
+ * @return 0 if success, non zero otherwise.
+ */
+int bm_alloc_f32(struct bitmap_f32rgb*);
+
+/**
+ * Free data for bitmap. If color type is rgb, only
+ * red channel will be freed.
+ * @param the bitmap to free data for.
+ * @return void
+ */
+void bm_free_u8(struct bitmap_u8rgb*);
+
+/**
+ * Free data for bitmap. If color type is rgb, only
+ * red channel will be freed.
+ * @param the bitmap to free data for.
+ * @return void
+ */
+void bm_free_u16(struct bitmap_u16rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -41,14 +65,6 @@ int bm_alloc_8(struct bitmap_8rgb*);
 void bm_free_f32(struct bitmap_f32rgb*);
 
 /**
- * Free data for bitmap. If color type is rgb, only
- * red channel will be freed.
- * @param the bitmap to free data for.
- * @return void
- */
-void bm_free_8(struct bitmap_8rgb*);
-
-/**
  * Get a pixel from a bitmap.
  * @param the pixel to store the result in
  * @param the bitmap to extract the pixel from.
@@ -56,10 +72,10 @@ void bm_free_8(struct bitmap_8rgb*);
  * @param the y coordinate (row).
  * @return void
  */
-void pixel_8rgb_get(struct pixel_8rgb*,
-                    const struct bitmap_8rgb*, 
-                    int, 
-                    int);
+void pixel_u8rgb_get(struct pixel_u8rgb*,
+                     const struct bitmap_u8rgb*, 
+                     int, 
+                     int);
 
 /**
  * Set a pixel int the bitmap.
@@ -69,8 +85,14 @@ void pixel_8rgb_get(struct pixel_8rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pixel_8rgb_set(struct bitmap_8rgb*, 
-                    int, 
-                    int,
-                    struct pixel_8rgb*);
+void pixel_u8rgb_set(struct bitmap_u8rgb*, 
+                     int, 
+                     int,
+                     struct pixel_u8rgb*);
+
+
+int bm_conv_bd(void* restrict, 
+               enum pie_color_bit_depth,
+               void* restrict, 
+               enum pie_color_bit_depth);
 #endif /* __PIE_BM_H__ */

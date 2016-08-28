@@ -32,6 +32,6 @@ extern int png_f32_read(struct bitmap_f32rgb*, const char*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int png_8rgb_write(const char*, struct bitmap_8rgb*);
+extern int png_u8rgb_write(const char*, struct bitmap_u8rgb*);
 
 #endif /* __PIE_IO_PNG_H__ */
