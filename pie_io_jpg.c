@@ -48,8 +48,7 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         struct jpeg_decompress_struct cinfo;
         FILE* fp;
         JSAMPLE* row;
-        int row_stride; /* physical row width in output buffer */
-        int y = 0;
+        int y;
         struct pie_jpg_error_mgr jerr;
 
         fp = fopen(path, "rb");
@@ -78,7 +77,6 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         jpeg_stdio_src(&cinfo, fp);
         jpeg_read_header(&cinfo, TRUE);
         jpeg_start_decompress(&cinfo);
-        row_stride = cinfo.output_width * cinfo.output_components;
 
         switch (cinfo.output_components)
         {
@@ -95,12 +93,10 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         bm->width = cinfo.output_width;
         bm->height = cinfo.output_height;
         bm_alloc_f32(bm);
-
+        y = 0;
         row = malloc(sizeof(JSAMPLE) * 
                      cinfo.output_width * 
                      cinfo.output_components);
-        /* buffer = (*cinfo.mem->alloc_sarray) */
-        /*         ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1); */
 
         while (cinfo.output_scanline < cinfo.output_height) 
         {
