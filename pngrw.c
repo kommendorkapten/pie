@@ -18,10 +18,11 @@ int main(void)
                 for (unsigned int x = 0; x < src.width; x++)
                 {
                         uint8_t c = y * src.width + x;
+                        unsigned int o = y * src.row_stride + x;
 
-                        src.c_red[y * src.width + x] = c;
-                        src.c_green[y * src.width + x] = c;
-                        src.c_blue[y * src.width + x] = c;
+                        src.c_red[o] = c;
+                        src.c_green[o] = c;
+                        src.c_blue[o] = c;
                 }
         }
 
@@ -41,7 +42,7 @@ int main(void)
         {
                 for (unsigned int x = 0; x < dst.width; x++)
                 {
-                        unsigned int offset = y * src.width + x;
+                        unsigned int offset = y * src.row_stride + x;
                         unsigned int red = (int)(dst.c_red[offset] * 255.0f);
                         unsigned int green = (int)(dst.c_green[offset] * 255.0f);
                         unsigned int blue = (int)(dst.c_blue[offset] * 255.0f);

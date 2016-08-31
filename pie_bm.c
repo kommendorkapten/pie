@@ -29,12 +29,27 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb*,
 
 int bm_alloc_u8(struct bitmap_u8rgb* bm)
 {
-        bm->c_red = malloc(bm->width * bm->height * sizeof(uint8_t));
+        unsigned int rem = bm->width % 4;
+        size_t s;
+
+        /* Make sure each row has good alignment */
+        if (rem == 0)
+        {
+                bm->row_stride = bm->width;
+        }
+        else
+        {
+                bm->row_stride = bm->width + (4 - rem);
+        }
+
+        s = bm->row_stride * bm->height * sizeof(uint8_t);
+        bm->bit_depth = PIE_COLOR_8B;
+        bm->c_red = malloc(s);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(bm->width * bm->height * sizeof(uint8_t));
-                bm->c_blue = malloc(bm->width * bm->height * sizeof(uint8_t));
+                bm->c_green = malloc(s);
+                bm->c_blue = malloc(s);
         }
 
         return 0;
@@ -42,12 +57,27 @@ int bm_alloc_u8(struct bitmap_u8rgb* bm)
 
 int bm_alloc_u16(struct bitmap_u16rgb* bm)
 {
-        bm->c_red = malloc(bm->width * bm->height * sizeof(uint16_t));
+        unsigned int rem = bm->width % 4;
+        size_t s;
+
+        /* Make sure each row has good alignment */
+        if (rem == 0)
+        {
+                bm->row_stride = bm->width;
+        }
+        else
+        {
+                bm->row_stride = bm->width + (4 - rem);
+        }
+
+        s = bm->row_stride * bm->height * sizeof(uint16_t);
+        bm->bit_depth = PIE_COLOR_16B;
+        bm->c_red = malloc(s);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(bm->width * bm->height * sizeof(uint16_t));
-                bm->c_blue = malloc(bm->width * bm->height * sizeof(uint16_t));
+                bm->c_green = malloc(s);
+                bm->c_blue = malloc(s);
         }
 
         return 0;
@@ -55,12 +85,27 @@ int bm_alloc_u16(struct bitmap_u16rgb* bm)
 
 int bm_alloc_f32(struct bitmap_f32rgb* bm)
 {
-        bm->c_red = malloc(bm->width * bm->height * sizeof(float));
+        unsigned int rem = bm->width % 4;
+        size_t s;
+
+        /* Make sure each row has good alignment */
+        if (rem == 0)
+        {
+                bm->row_stride = bm->width;
+        }
+        else
+        {
+                bm->row_stride = bm->width + (4 - rem);
+        }
+
+        s = bm->row_stride * bm->height * sizeof(float);
+        bm->bit_depth = PIE_COLOR_32B;
+        bm->c_red = malloc(s);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(bm->width * bm->height * sizeof(float));
-                bm->c_blue = malloc(bm->width * bm->height * sizeof(float));
+                bm->c_green = malloc(s);
+                bm->c_blue = malloc(s);
         }
 
         return 0;
@@ -116,7 +161,7 @@ void pixel_u8rgb_get(struct pixel_u8rgb* p,
                      int x,
                      int y)
 {
-        unsigned int offset = bm->width * y + x;
+        unsigned int offset = bm->row_stride * y + x;
 
         p->red = bm->c_red[offset];
         p->green = bm->c_green[offset];
@@ -128,7 +173,7 @@ void pixel_u8rgb_set(struct bitmap_u8rgb* bm,
                      int y,
                      struct pixel_u8rgb* p)
 {
-        unsigned int offset = bm->width * y + x;
+        unsigned int offset = bm->row_stride * y + x;
 
         bm->c_red[offset] = p->red;
         bm->c_green[offset] = p->green;
@@ -213,11 +258,16 @@ static void bm_conv_u8_u16(struct bitmap_u8rgb* dst,
 
         bm_alloc_u8(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = (uint8_t) ((src->c_red[i] / 65535.0f) * 255.0f);
-                dst->c_green[i] = (uint8_t) ((src->c_green[i] / 65535.0f) * 255.0f);
-                dst->c_blue[i] = (uint8_t) ((src->c_blue[i] / 65535.0f) * 255.0f);
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+
+                        dst->c_red[o] = (uint8_t) ((src->c_red[o] / 65535.0f) * 255.0f);
+                        dst->c_green[o] = (uint8_t) ((src->c_green[o] / 65535.0f) * 255.0f);
+                        dst->c_blue[o] = (uint8_t) ((src->c_blue[o] / 65535.0f) * 255.0f);
+                }
         }
 }
 
@@ -230,11 +280,16 @@ static void bm_conv_u8_f32(struct bitmap_u8rgb* dst,
 
         bm_alloc_u8(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = (uint8_t) (src->c_red[i] * 255.0f);
-                dst->c_green[i] = (uint8_t) (src->c_green[i] * 255.0f);
-                dst->c_blue[i] = (uint8_t) (src->c_blue[i] * 255.0f);
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+                  
+                        dst->c_red[o] = (uint8_t) (src->c_red[o] * 255.0f);
+                        dst->c_green[o] = (uint8_t) (src->c_green[o] * 255.0f);
+                        dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 255.0f);
+                }
         }
 }
 
@@ -247,11 +302,16 @@ static void bm_conv_u16_u8(struct bitmap_u16rgb* dst,
 
         bm_alloc_u16(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = (uint16_t) ((src->c_red[i] / 255.0f) * 65535.0f);
-                dst->c_green[i] = (uint16_t) ((src->c_green[i] / 255.0f) * 65535.0f);
-                dst->c_blue[i] = (uint16_t) ((src->c_blue[i] / 255.0f) * 65535.0f);
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+                  
+                        dst->c_red[o] = (uint16_t) ((src->c_red[o] / 255.0f) * 65535.0f);
+                        dst->c_green[o] = (uint16_t) ((src->c_green[o] / 255.0f) * 65535.0f);
+                        dst->c_blue[o] = (uint16_t) ((src->c_blue[o] / 255.0f) * 65535.0f);
+                }
         }        
 }
 
@@ -264,11 +324,16 @@ static void bm_conv_u16_f32(struct bitmap_u16rgb* dst,
 
         bm_alloc_u16(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = (uint8_t) (src->c_red[i] * 65535.0f);
-                dst->c_green[i] = (uint8_t) (src->c_green[i] * 65535.0f);
-                dst->c_blue[i] = (uint8_t) (src->c_blue[i] * 65535.0f);
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+                  
+                        dst->c_red[o] = (uint8_t) (src->c_red[o] * 65535.0f);
+                        dst->c_green[o] = (uint8_t) (src->c_green[o] * 65535.0f);
+                        dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 65535.0f);
+                }
         }
 }
 
@@ -281,11 +346,16 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb* dst,
 
         bm_alloc_f32(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = src->c_red[i] / 255.0f;
-                dst->c_green[i] = src->c_green[i] / 255.0f;
-                dst->c_blue[i] = src->c_blue[i] / 255.0f;
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+                  
+                        dst->c_red[o] = src->c_red[o] / 255.0f;
+                        dst->c_green[o] = src->c_green[o] / 255.0f;
+                        dst->c_blue[o] = src->c_blue[o] / 255.0f;
+                }
         }
 }
 
@@ -298,10 +368,15 @@ static void bm_conv_f32_u16(struct bitmap_f32rgb* dst,
 
         bm_alloc_f32(dst);
 
-        for (unsigned int i = 0; i < src->width * src->height; i++)
+        for (unsigned int y = 0; y < src->height; y++)
         {
-                dst->c_red[i] = src->c_red[i] / 65535.0f;
-                dst->c_green[i] = src->c_green[i] / 65535.0f;
-                dst->c_blue[i] = src->c_blue[i] / 65535.0f;
+                for (unsigned int x = 0; x < src->width; x++)
+                {
+                        unsigned int o = y * src->row_stride + x;
+                  
+                        dst->c_red[o] = src->c_red[o] / 65535.0f;
+                        dst->c_green[o] = src->c_green[o] / 65535.0f;
+                        dst->c_blue[o] = src->c_blue[o] / 65535.0f;
+                }
         }
 }

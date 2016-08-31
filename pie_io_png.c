@@ -137,7 +137,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
                         float red = (float)*row++;
                         float green = (float)*row++;
                         float blue = (float)*row++;
-                        int offset = y * bm->width + x;
+                        int offset = y * bm->row_stride + x;
 
                         /* refactor to set methods */
                         bm->c_red[offset] = red / 255.0f;

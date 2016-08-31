@@ -106,12 +106,12 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
 
                 for (unsigned int i = 0; i < cinfo.output_width; i++)
                 {
-                        bm->c_red[i + y] = row[jpos++] / 255.0f;
-                        bm->c_green[i + y] = row[jpos++] / 255.0f;
-                        bm->c_blue[i + y] = row[jpos++] / 255.0f;
+                        bm->c_red[y + i] = row[jpos++] / 255.0f;
+                        bm->c_green[y + i] = row[jpos++] / 255.0f;
+                        bm->c_blue[y + i] = row[jpos++] / 255.0f;
                 }
                 
-                y += cinfo.image_width;
+                y += bm->row_stride;
         }
         free(row);
 
@@ -178,14 +178,15 @@ int jpg_u8rgb_write(const char* path, struct bitmap_u8rgb* bm, int quality)
         {
                 JSAMPROW rows[1];
                 int jpos = 0;
+
                 /* Only send one row at a time */
                 for (unsigned int i = 0; i < cinfo.image_width; i++)
                 {
-                        row[jpos++] = (JSAMPLE) bm->c_red[i + y];
-                        row[jpos++] = (JSAMPLE) bm->c_green[i + y];
-                        row[jpos++] = (JSAMPLE) bm->c_blue[i + y];
+                        row[jpos++] = (JSAMPLE) bm->c_red[y + i];
+                        row[jpos++] = (JSAMPLE) bm->c_green[y + i];
+                        row[jpos++] = (JSAMPLE) bm->c_blue[y + i];
                 }
-                y += cinfo.image_width;
+                y += bm->row_stride;
                 rows[0] = row;
                 jpeg_write_scanlines(&cinfo, rows, 1);
         }
