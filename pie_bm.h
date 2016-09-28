@@ -19,6 +19,9 @@
 /**
  * Alloc data for pixel data. If color type is rgb, only
  * red channel will contain data.
+ * Width, height and color_type must be set before allocation
+ * can occur.
+ * After allocation the channels, bit depth and row_stride are set.
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
@@ -27,6 +30,9 @@ int bm_alloc_u8(struct bitmap_u8rgb*);
 /**
  * Alloc data for pixel data. If color type is rgb, only
  * red channel will contain data.
+ * Width, height and color_type must be set before allocation
+ * can occur.
+ * After allocation the channels, bit depth and row_stride are set.
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
@@ -35,6 +41,9 @@ int bm_alloc_u16(struct bitmap_u16rgb*);
 /**
  * Alloc data for pixel data. If color type is rgb, only
  * red channel will contain data.
+ * Width, height and color_type must be set before allocation
+ * can occur.
+ * After allocation the channels, bit depth and row_stride are set.
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
@@ -90,7 +99,17 @@ void pixel_u8rgb_set(struct bitmap_u8rgb*,
                      int,
                      struct pixel_u8rgb*);
 
-
+/**
+ * Convert a bitmap from a specific bitdepth.
+ * The destination must point to a bitmap_XXXrgb struct.
+ * The destination bitmamp must *NOT* contain any allocated channels,
+ * as they will not be freed. Calling with allocated channels will result
+ * in a memory leak as they will be overwrittern.
+ * @param the target bitmap (uninitialized).
+ * @param the target bit depth.
+ * @param the source bitmap.
+ * @param the source bit dept.
+ */
 int bm_conv_bd(void* restrict, 
                enum pie_color_bit_depth,
                void* restrict, 
