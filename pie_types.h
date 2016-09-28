@@ -84,4 +84,25 @@ struct bitmap_f32rgb
         unsigned int row_stride;
 };
 
+struct pie_img_settings
+{
+        float contrast;
+        float exposure;
+        float highlights;
+        float shadows;
+        float white;
+        float black;
+        float clarity;
+        float vibrance;
+        float saturation;
+        float rotate;
+};
+
+struct pie_img_workspace
+{
+        struct bitmap_f32rgb raw;
+        struct bitmap_f32rgb proxy;
+        struct pie_img_settings settings;
+};
+
 #endif /* __PIE_TYPES_H__ */
