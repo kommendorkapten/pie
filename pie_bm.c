@@ -189,7 +189,65 @@ int bm_conv_bd(void* restrict dst,
         
         if (dst_bd == src_bd)
         {
+                struct bitmap_u8rgb* u8_src;
+                struct bitmap_u8rgb* u8_dst;
+                struct bitmap_u16rgb* u16_src;
+                struct bitmap_u16rgb* u16_dst;
+                struct bitmap_f32rgb* f32_src;
+                struct bitmap_f32rgb* f32_dst;
+                size_t len;
+
                 /* Create a copy */
+                switch (dst_bd)
+                {
+                case PIE_COLOR_8B:
+                        u8_src = src;
+                        u8_dst = dst;
+                        u8_dst->width = u8_src->width;
+                        u8_dst->height = u8_src->height;
+                        u8_dst->color_type = u8_src->color_type;
+                        bm_alloc_u8(u8_src);
+                        len = u8_src->row_stride * u8_src->height * sizeof(uint8_t);
+                        memcpy(u8_dst->c_red, u8_src->c_red, len);
+                        if (u8_src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                memcpy(u8_dst->c_green, u8_src->c_green, len);
+                                memcpy(u8_dst->c_blue, u8_src->c_blue, len);
+                        }
+                        break;
+                case PIE_COLOR_16B:
+                        u16_src = src;
+                        u16_dst = dst;
+                        u16_dst->width = u16_src->width;
+                        u16_dst->height = u16_src->height;
+                        u16_dst->color_type = u16_src->color_type;
+                        bm_alloc_u16(u16_src);
+                        len = u16_src->row_stride * u16_src->height * sizeof(uint16_t);
+                        memcpy(u16_dst->c_red, u16_src->c_red, len);
+                        if (u16_src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                memcpy(u16_dst->c_green, u16_src->c_green, len);
+                                memcpy(u16_dst->c_blue, u16_src->c_blue, len);
+                        }
+                        break;
+                case PIE_COLOR_32B:
+                        f32_src = src;
+                        f32_dst = dst;
+                        f32_dst->width = f32_src->width;
+                        f32_dst->height = f32_src->height;
+                        f32_dst->color_type = f32_src->color_type;
+                        bm_alloc_f32(f32_src);
+                        len = f32_src->row_stride * f32_src->height * sizeof(float);
+                        memcpy(f32_dst->c_red, f32_src->c_red, len);
+                        if (f32_src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                memcpy(f32_dst->c_green, f32_src->c_green, len);
+                                memcpy(f32_dst->c_blue, f32_src->c_blue, len);
+                        }
+                        break;
+                default:
+                        return -1;
+                }
         }
         if (dst_bd == PIE_COLOR_8B)
         {
@@ -265,8 +323,11 @@ static void bm_conv_u8_u16(struct bitmap_u8rgb* dst,
                         unsigned int o = y * src->row_stride + x;
 
                         dst->c_red[o] = (uint8_t) ((src->c_red[o] / 65535.0f) * 255.0f);
-                        dst->c_green[o] = (uint8_t) ((src->c_green[o] / 65535.0f) * 255.0f);
-                        dst->c_blue[o] = (uint8_t) ((src->c_blue[o] / 65535.0f) * 255.0f);
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = (uint8_t) ((src->c_green[o] / 65535.0f) * 255.0f);
+                                dst->c_blue[o] = (uint8_t) ((src->c_blue[o] / 65535.0f) * 255.0f);                                
+                        }
                 }
         }
 }
@@ -287,8 +348,11 @@ static void bm_conv_u8_f32(struct bitmap_u8rgb* dst,
                         unsigned int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 255.0f);
-                        dst->c_green[o] = (uint8_t) (src->c_green[o] * 255.0f);
-                        dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 255.0f);
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = (uint8_t) (src->c_green[o] * 255.0f);
+                                dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 255.0f);
+                        }
                 }
         }
 }
@@ -309,8 +373,11 @@ static void bm_conv_u16_u8(struct bitmap_u16rgb* dst,
                         unsigned int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint16_t) ((src->c_red[o] / 255.0f) * 65535.0f);
-                        dst->c_green[o] = (uint16_t) ((src->c_green[o] / 255.0f) * 65535.0f);
-                        dst->c_blue[o] = (uint16_t) ((src->c_blue[o] / 255.0f) * 65535.0f);
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = (uint16_t) ((src->c_green[o] / 255.0f) * 65535.0f);
+                                dst->c_blue[o] = (uint16_t) ((src->c_blue[o] / 255.0f) * 65535.0f);
+                        }
                 }
         }        
 }
@@ -331,8 +398,11 @@ static void bm_conv_u16_f32(struct bitmap_u16rgb* dst,
                         unsigned int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 65535.0f);
-                        dst->c_green[o] = (uint8_t) (src->c_green[o] * 65535.0f);
-                        dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 65535.0f);
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = (uint8_t) (src->c_green[o] * 65535.0f);
+                                dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 65535.0f);
+                        }
                 }
         }
 }
@@ -353,8 +423,11 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb* dst,
                         unsigned int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = src->c_red[o] / 255.0f;
-                        dst->c_green[o] = src->c_green[o] / 255.0f;
-                        dst->c_blue[o] = src->c_blue[o] / 255.0f;
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = src->c_green[o] / 255.0f;
+                                dst->c_blue[o] = src->c_blue[o] / 255.0f;
+                        }
                 }
         }
 }
@@ -375,8 +448,11 @@ static void bm_conv_f32_u16(struct bitmap_f32rgb* dst,
                         unsigned int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = src->c_red[o] / 65535.0f;
-                        dst->c_green[o] = src->c_green[o] / 65535.0f;
-                        dst->c_blue[o] = src->c_blue[o] / 65535.0f;
+                        if (src->color_type == PIE_COLOR_TYPE_RGB)
+                        {
+                                dst->c_green[o] = src->c_green[o] / 65535.0f;
+                                dst->c_blue[o] = src->c_blue[o] / 65535.0f;
+                        }
                 }
         }
 }
