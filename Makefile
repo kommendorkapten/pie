@@ -42,10 +42,13 @@ else
 endif
 
 DIRS    = obj bin
-SOURCES = pie_bm.c pie_cspace.c pie_io_png.c pie_io_jpg.c
+IO_SRC  = pie_io_jpg.c pie_io_png.c
+SOURCES = pie_bm.c pie_cspace.c $(IO_SRC)
 OBJS    = $(SOURCES:%.c=obj/%.o)
 BINS    = pngrw pngcreate pngread jpgcreate jpgtopng
 P_BINS  = $(BINS:%=bin/%)
+
+VPATH = io
 
 .PHONY: clean
 .PHONY: lint

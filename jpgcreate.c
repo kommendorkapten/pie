@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "pie.h"
+#include "pie_types.h"
+#include "pie_bm.h"
+#include "io/pie_io_jpg.h"
     
 /* Given "value" and "max", the maximum value which we expect "value"
    to take, this returns an integer between 0 and 255 proportional to

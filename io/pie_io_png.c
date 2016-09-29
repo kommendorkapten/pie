@@ -11,10 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include "pie_io.h"
+#include "../pie_bm.h"
 #include <png.h>
 #include <stdlib.h>
-#include "pie_io.h"
-#include "pie_bm.h"
 
 /*
   TODO fix scan lines

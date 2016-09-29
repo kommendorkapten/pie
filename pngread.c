@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "pie.h"
+#include "pie_types.h"
+#include "pie_bm.h"
+#include "io/pie_io_png.h"
 
 int main(int argc, char** argv)
 {

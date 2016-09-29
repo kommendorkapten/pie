@@ -11,28 +11,27 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_IO_JPG_H__
-#define __PIE_IO_JPG_H__
+#ifndef __PIE_IO_PNG_H__
+#define __PIE_IO_PNG_H__
 
-#include "pie_types.h"
+#include "../pie_types.h"
 
 /**
- * Reads an JPEG image into the provided bitmap.
- * If JPEG image only has a single channel, the data vill be read
+ * Reads an PNG image into the provided bitmap.
+ * If PNG image only has a single channel, the data vill be read
  * into the red channel.
  * @param the bitmap to store image in.
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int jpg_f32_read(struct bitmap_f32rgb*, const char*);
+extern int png_f32_read(struct bitmap_f32rgb*, const char*);
 
 /**
- * Writes an 8bit RGB bitmap to a JPEG file.
- * @param the output filename of the JPEG file.
+ * Writes an 8bit RGB bitmap to a PNG file.
+ * @param the output filename of the PNG file.
  * @param the bitmap to write.
- * @param the quality of the output file, in [0,100].
  * @return 0 on success, non-zero otherwise.
  */
-extern int jpg_u8rgb_write(const char*, struct bitmap_u8rgb*, int);
+extern int png_u8rgb_write(const char*, struct bitmap_u8rgb*);
 
-#endif /* __PIE_IO_JPG_H__ */
+#endif /* __PIE_IO_PNG_H__ */
