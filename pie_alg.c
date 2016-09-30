@@ -1,3 +1,11 @@
+/* Render function for a single channel */
+typedef (*pie_render_f)(float* out, 
+                        float* in, 
+                        unsigned int width, 
+                        unsigned int height, 
+                        unsigned int stride);
+
+
 float contrast_brightness(float in,
                           float c, /* [0:+] */
                           float b) /* [-1.0:1.0] */
