@@ -17,8 +17,8 @@
 #include <stdint.h>
 
 enum pie_color_type {
-        PIE_COLOR_TYPE_GRAY,
-        PIE_COLOR_TYPE_RGB
+        PIE_COLOR_TYPE_GRAY = 1,
+        PIE_COLOR_TYPE_RGB = 3
 };
 
 enum pie_color_bit_depth {
@@ -100,9 +100,13 @@ struct pie_img_settings
 
 struct pie_img_workspace
 {
-        struct bitmap_f32rgb raw;
-        struct bitmap_f32rgb proxy;
         struct pie_img_settings settings;
+        /* Unmodified full resolution image */
+        struct bitmap_f32rgb* raw;
+        /* Downsampled unmodified proxy image */
+        struct bitmap_f32rgb* proxy;
+        /* Downsampled and rendered proxy image */
+        struct bitmap_f32rgb* proxy_out;
 };
 
 #endif /* __PIE_TYPES_H__ */
