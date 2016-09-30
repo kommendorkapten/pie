@@ -13,6 +13,7 @@
 
 #include "pie_bm.h"
 #include <stdlib.h>
+#include <string.h>
 
 static void bm_conv_u8_u16(struct bitmap_u8rgb*, 
                            const struct bitmap_u16rgb*);
