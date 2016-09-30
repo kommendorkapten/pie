@@ -20,7 +20,16 @@
 #define PIE_IO_INV_FMT         4
 #define PIE_IO_UNSUPPORTED_FMT 5
 
+#include "../pie_types.h"
 #include "pie_io_png.h"
 #include "pie_io_jpg.h"
+
+/**
+ * Open a file and load content into bitmap.
+ * @param the bitmap to load content into.
+ * @param the path to open.
+ * @return 0 on success.
+ */
+extern int pie_io_load(struct bitmap_f32rgb*, const char*);
 
 #endif /* __PIE_IO_H__ */
