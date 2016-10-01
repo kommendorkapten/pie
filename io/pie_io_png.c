@@ -201,6 +201,8 @@ int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
                      PNG_INTERLACE_NONE,
                      PNG_COMPRESSION_TYPE_DEFAULT,
                      PNG_FILTER_TYPE_DEFAULT);
+
+        png_set_gAMA(pngp, infop, 2.2);
     
         /* Write rows to PNG obj */
         rows = malloc(bitmap->height * sizeof(png_byte*));
