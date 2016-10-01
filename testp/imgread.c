@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include "pie_types.h"
-#include "pie_bm.h"
-#include "io/pie_io.h"
+#include "../pie_types.h"
+#include "../pie_bm.h"
+#include "../io/pie_io.h"
 
 int main(int argc, char** argv)
 {

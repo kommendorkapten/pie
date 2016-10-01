@@ -16,6 +16,8 @@
 
 #include <stdint.h>
 
+#define PIE_HIST_RES 256
+
 enum pie_color_type {
         PIE_COLOR_TYPE_GRAY = 1,
         PIE_COLOR_TYPE_RGB = 3
@@ -107,6 +109,14 @@ struct pie_img_workspace
         struct bitmap_f32rgb* proxy;
         /* Downsampled and rendered proxy image */
         struct bitmap_f32rgb* proxy_out;
+};
+
+struct pie_histogram
+{
+        unsigned int lum[PIE_HIST_RES];
+        unsigned int c_red[PIE_HIST_RES];
+        unsigned int c_green[PIE_HIST_RES];
+        unsigned int c_blue[PIE_HIST_RES];
 };
 
 #endif /* __PIE_TYPES_H__ */

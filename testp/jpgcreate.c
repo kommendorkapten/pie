@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "pie_types.h"
-#include "pie_bm.h"
-#include "io/pie_io_png.h"
+#include "../pie_types.h"
+#include "../pie_bm.h"
+#include "../io/pie_io_jpg.h"
     
 /* Given "value" and "max", the maximum value which we expect "value"
    to take, this returns an integer between 0 and 255 proportional to
@@ -21,11 +21,12 @@ static int pix(int value, int max)
 int main ()
 {
         struct bitmap_u8rgb out;
+        int ret;
 
         /* Create an image. */
 
-        out.width = 100;
-        out.height = 100;
+        out.width = 120;
+        out.height = 120;
         out.color_type = PIE_COLOR_TYPE_RGB;
 
         bm_alloc_u8(&out);
@@ -45,8 +46,11 @@ int main ()
         }
 
         /* Write the image to a file 'out.png'. */
-
-        png_u8rgb_write("out.png", &out);
+        ret = jpg_u8rgb_write("out.jpg", &out, 90);
+        if (ret)
+        {
+                printf("Failed: %d\n", ret);
+        }
         bm_free_u8(&out);
 
         return 0;

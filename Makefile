@@ -30,6 +30,8 @@ ifeq ($(OS), SunOS)
     endif
   endif
 else ifeq ($(OS), FreeBSD)
+  # libpng and libjpeg is found in /usr/local/lib when installed via ports
+  LFLAGS := -L/usr/local/lib $(LFLAGS)
   ifeq ($(CC), gcc)
     CFLAGS += -mtune=$(ISA) -mcpu=$(ISA)
   endif
@@ -46,7 +48,7 @@ IO_SRC  = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC = timing.c
 SOURCES = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC)
 OBJS    = $(SOURCES:%.c=obj/%.o)
-BINS    = pngrw pngcreate pngread jpgcreate jpgtopng
+BINS    = pngrw pngcreate imgread jpgcreate jpgtopng
 P_BINS  = $(BINS:%=bin/%)
 
 VPATH = io lib
@@ -72,17 +74,17 @@ clean:
 lint:
 	lint -Xc99 -m64 -errwarn=%all -errchk=%all -Ncheck=%all -Nlevel=1 -u -m -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT $(SOURCES)
 
-bin/pngrw: pngrw.c $(OBJS)
+bin/pngrw: testp/pngrw.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/pngcreate: pngcreate.c $(OBJS)
+bin/pngcreate: testp/pngcreate.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/pngread: pngread.c $(OBJS)
+bin/imgread: testp/imgread.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/jpgcreate: jpgcreate.c $(OBJS)
+bin/jpgcreate: testp/jpgcreate.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/jpgtopng: jpgtopng.c $(OBJS)
+bin/jpgtopng: testp/jpgtopng.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
