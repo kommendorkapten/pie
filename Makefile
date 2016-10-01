@@ -48,7 +48,7 @@ IO_SRC  = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC = timing.c
 SOURCES = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC)
 OBJS    = $(SOURCES:%.c=obj/%.o)
-BINS    = pngrw pngcreate imgread jpgcreate jpgtopng
+BINS    = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin
 P_BINS  = $(BINS:%=bin/%)
 
 VPATH = io lib
@@ -87,4 +87,10 @@ bin/jpgcreate: testp/jpgcreate.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/jpgtopng: testp/jpgtopng.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/linvsgma: testp/linvsgma.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/analin: testp/analin.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
