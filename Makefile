@@ -22,7 +22,7 @@ ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
     CFLAGS += -v -xO5
     ifeq ($(ISA), i386)
-      CFLAGS += -xarch=sse4_2
+      CFLAGS += -xarch=sse4_2 
     endif
   else ifeq ($(CC), gcc)
     ifeq ($(ISA), i386)
@@ -37,21 +37,34 @@ else ifeq ($(OS), FreeBSD)
   endif
 endif
 
+# Configuration based on ISA
+ifeq ($(ISA), i386)
+CFLAGS += -D_HAS_SIMD -D_HAS_SSE
+else ifeq ($(ISA), powerpc64)
+CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
+else ifeq ($(ISA), sparc)
+else
+endif
+
 ifeq ($(DEBUG), 1)
   CFLAGS += -g -DDEBUG=1
 else
   CFLAGS += -DNDEBUG
 endif
 
-DIRS    = obj bin
-IO_SRC  = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC = timing.c
-SOURCES = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC)
-OBJS    = $(SOURCES:%.c=obj/%.o)
-BINS    = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin
-P_BINS  = $(BINS:%=bin/%)
+DIRS     = obj bin
+IO_SRC   = pie_io_jpg.c pie_io_png.c pie_io.c
+LIB_SRC  = timing.c
+SRV_SRC  = pie_server.c
+ALG_SRC  = pie_hist.c
+SOURCES  = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC) $(ALG_SRC)
+OBJS     = $(SOURCES:%.c=obj/%.o)
+SRV_OBJS = $(SRV_SRC:%.c=obj/%.o)
+BINS     = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
+           histinfo server
+P_BINS   = $(BINS:%=bin/%)
 
-VPATH = io lib
+VPATH = io lib alg wsrv
 
 .PHONY: clean
 .PHONY: lint
@@ -94,3 +107,9 @@ bin/linvsgma: testp/linvsgma.c $(OBJS)
 
 bin/analin: testp/analin.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/histinfo: testp/histinfo.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/server: testp/server.c $(OBJS) $(SRV_OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LFLAGS)
