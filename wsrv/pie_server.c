@@ -123,7 +123,7 @@ int start_server(struct server* srv)
                 },
                 {
                         "pie-hist",
-                        cb_img,
+                        cb_hist,
                         sizeof(struct pie_ctx_hist),
                         0, 
                         0,
@@ -131,7 +131,7 @@ int start_server(struct server* srv)
                 },
                 {
                         "pie-cmd",
-                        cb_img,
+                        cb_cmd,
                         sizeof(struct pie_ctx_cmd),
                         0, 
                         0,
@@ -180,6 +180,8 @@ int start_server(struct server* srv)
         status = 1;
         while (status >= 0 && srv->run)
         {
+                /* Run state machine here */
+                /* Check for stop condition or img/hist is computed */
                 /* If nothing to do, return after 100ms */
                 status = lws_service(srv->context, 100);
         }
@@ -323,14 +325,23 @@ static int cb_cmd(struct lws *wsi,
         int ret = -1;
         unsigned char buf[LWS_PRE + 1024];
         unsigned char* p = &buf[LWS_PRE];
+        int data[4] = {123, 234, 345, 456};
+        int bw;
 
         printf("HEJ %s %d\n", __func__, reason);
 
         switch (reason)
         {
+        case LWS_CALLBACK_SERVER_WRITEABLE:
+                bw = lws_write(wsi, (unsigned char*)data, sizeof(data), LWS_WRITE_BINARY);
+                if (bw < sizeof(data))
+                {
+                        printf("Error write\n");
+                }
+                break;
         case LWS_CALLBACK_RECEIVE:
                 printf("[cb_cmd]Got data: '%s'\n", in);
-
+                lws_callback_on_writable(wsi);
                 break;
         }
 
