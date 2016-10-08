@@ -40,7 +40,8 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket(get_appropriate_ws_url(),"fs-echo");
+        ws = new WebSocket(get_appropriate_ws_url(),"pie-cmd");
+        ws.binaryType = "arraybuffer";
         ws.onopen = function(evt) {
             print("OPEN");
         }
@@ -49,8 +50,20 @@ window.addEventListener("load", function(evt) {
             ws = null;
         }
         ws.onmessage = function(evt) {
-            console.log(evt)
-            print("RESPONSE: " + evt.data);
+            var now = Date.now()
+            var dur = now - ws.pieStartTs;
+            ws.pieStartTs = now;
+            console.log(evt);
+            console.log("RT in " + dur + "ms");
+            if (typeof evt.data === "string") {
+                print("RESPONSE: " + evt.data);
+            } else {
+                print("RESPONSE: Binary");
+                var z = new Uint8Array(evt.data);
+                console.log(typeof z);
+                console.log(z.length);
+            }
+
         }
         ws.onerror = function(evt) {
             print("ERROR: " + evt.data);
@@ -62,6 +75,7 @@ window.addEventListener("load", function(evt) {
             return false;
         }
         print("SEND: " + input.value);
+        ws.pieStartTs = Date.now();
         ws.send(input.value);
         return false;
     };
@@ -82,7 +96,6 @@ window.addEventListener("load", function(evt) {
         } else {
             tart = evt.srcElement;
         }
-        console.log(targ.value);
 
         ws.send(targ.value);
 
@@ -92,7 +105,7 @@ window.addEventListener("load", function(evt) {
         if (!ws) {
             return false;
         }
-        console.log("done");
+        console.log("on change done");
         return true;
     };
 });
