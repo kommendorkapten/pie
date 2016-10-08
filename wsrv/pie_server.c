@@ -12,7 +12,10 @@
 */
 
 #include "pie_server.h"
+#include "pie_session.h"
 #include <libwebsockets.h>
+
+#define MAX_HEADERS 4096
 
 enum pie_protocols
 {
@@ -25,36 +28,47 @@ enum pie_protocols
 
 struct pie_ctx_http
 {
-        lws_filefd_type fd;
         char post_data[256];
-        char client_done;
+        lws_filefd_type fd;
 };
 
 struct pie_ctx_img
 {
-        int data;
+        char token[TOKEN_LEN];
+        char tx;
 };
 
 struct pie_ctx_hist
 {
-        int data;
+        char token[TOKEN_LEN];
+        char tx;
 };
 
 struct pie_ctx_cmd
 {
-        int data;
+        char token[TOKEN_LEN];
+        char tx;
 };
 
 /* Global path, if multiple servers are started they MUST use the same
  * context root */
 static const char* context_root;
+static struct pie_sess_mgr* sess_mgr;
 
 /**
  * Return the mime type from the requested URL.
  * @param the request URL.
  * @return the mimetype (e.g image/jpeg) or NULL if unknown.
  */
-const char* get_mimetype(const char*);
+static const char* get_mimetype(const char*);
+
+/**
+ * Extract a session from the current request.
+ * A session is defined by the cookie pie-session.
+ * @param the request
+ * @return pointer to the session, or NULL if no session is found.
+ */
+static struct pie_sess* get_session(struct lws*);
 
 /**
  * Callback methods.
@@ -66,25 +80,25 @@ const char* get_mimetype(const char*);
  * @param Length of data for request.
  * @return 0 on sucess, negative otherwise.
  */
-static int cb_http(struct lws *wsi, 
+static int cb_http(struct lws* wsi, 
                    enum lws_callback_reasons reason, 
-                   void *user,
-                   void *in,
+                   void* user,
+                   void* in,
                    size_t len);
-static int cb_img(struct lws *wsi,
+static int cb_img(struct lws* wsi,
                   enum lws_callback_reasons reason,
-                  void *user,
-                  void *in, 
+                  void* user,
+                  void* in, 
                   size_t len);
-static int cb_hist(struct lws *wsi,
+static int cb_hist(struct lws* wsi,
                    enum lws_callback_reasons reason,
-                   void *user,
-                   void *in, 
+                   void* user,
+                   void* in, 
                    size_t len);
-static int cb_cmd(struct lws *wsi,
+static int cb_cmd(struct lws* wsi,
                   enum lws_callback_reasons reason,
-                  void *user,
-                  void *in, 
+                  void* user,
+                  void* in, 
                   size_t len);
 
 static const struct lws_extension exts[] = {
@@ -142,6 +156,8 @@ int start_server(struct server* srv)
         struct lws_context_creation_info info;
         int status;
 
+        sess_mgr = pie_sess_mgr_create();
+
         context_root = srv->context_root;
         memset(&info, 0, sizeof(info));
         info.port = srv->port;
@@ -184,28 +200,70 @@ int start_server(struct server* srv)
                 /* Check for stop condition or img/hist is computed */
                 /* If nothing to do, return after 100ms */
                 status = lws_service(srv->context, 100);
+                /* Reap sessions with inactivity for one hour */
+                pie_sess_mgr_reap(sess_mgr, 60*60);
         }
 
         lws_context_destroy(srv->context);
+        pie_sess_mgr_destroy(sess_mgr);
         
         return 0;
 }
 
-static int cb_http(struct lws *wsi, 
+static int cb_http(struct lws* wsi, 
                    enum lws_callback_reasons reason, 
-                   void *user,
-                   void *in,
+                   void* user,
+                   void* in,
                    size_t len)
 {
 	/* unsigned char buffer[LWS_PRE + 4096]; */
         char url[256];
+        unsigned char headers[256];
+        char cookie[128];
+        struct pie_sess* session;
         const char* mimetype;
-        char headers[256];
+        struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
+        int hn = 0;
         int n;
 
+#if 0
+        if (reason != 31)
+        {
+                printf("HTTP: %d (%p)\n", reason, wsi);
+        }
+#endif 
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
+                /* Look for session */
+                session = get_session(wsi);
+                if (session == NULL)
+                {
+                        unsigned char* p = headers;
+                        session = malloc(sizeof(struct pie_sess));
+                        pie_sess_init(session);
+                        
+                        hn = snprintf(cookie, 
+                                      128,
+                                      "pie-session=%s;Max Age=3600",
+                                      session->token);
+                        if (lws_add_http_header_by_name(wsi,
+                                                        (unsigned char*)"set-cookie:",
+                                                        (unsigned char*)cookie,
+                                                        hn,
+                                                        &p,
+                                                        headers + 256))
+                        {
+                                /* Can't set header */
+                                return -1;
+                        }
+#if DEBUG > 1
+                        printf("Creating session\n");
+#endif
+                        pie_sess_mgr_put(sess_mgr, session);
+                        hn = p - headers;
+                }
+
 		if (len < 1)
                 {
 			lws_return_http_status(wsi,
@@ -229,6 +287,7 @@ static int cb_http(struct lws *wsi,
                 }
                 url[sizeof(url) - 1] = 0;
 		mimetype = get_mimetype(url);
+                printf("GET %s\n", url);
 		if (!mimetype)
                 {
 			lws_return_http_status(wsi,
@@ -239,7 +298,7 @@ static int cb_http(struct lws *wsi,
 
                 /* TODO add cookies */
                 /* Serve file async */
-                n = lws_serve_http_file(wsi, url, mimetype, headers, 0);
+                n = lws_serve_http_file(wsi, url, mimetype, (char*)headers, hn);
                 if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
                 {
                         return -1;
@@ -248,6 +307,8 @@ static int cb_http(struct lws *wsi,
                 break;
 
 	case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+                break;
+        default:
                 break;
         }
         return 0;
@@ -262,97 +323,162 @@ keepalive:
 	return 0;
 }
 
-static int cb_img(struct lws *wsi,
+static int cb_img(struct lws* wsi,
                   enum lws_callback_reasons reason,
-                  void *user,
-                  void *in, 
+                  void* user,
+                  void* in, 
                   size_t len)
 {
-        int ret = -1;
         unsigned char buf[LWS_PRE + 1024];
         unsigned char* p = &buf[LWS_PRE];
+        struct pie_sess* session;
+        struct pie_ctx_img* ctx = (struct pie_ctx_img*)user;
+        int ret = -1;
 
         printf("HEJ %s %d\n", __func__, reason);
 
         switch (reason)
         {
+        case LWS_CALLBACK_ESTABLISHED:
+                /* Copy the session token, it is not available later on */
+                if (session = get_session(wsi))
+                {
+                        strcpy(ctx->token, session->token);
+                }
+                ctx->tx = 0;
+                break;
         case LWS_CALLBACK_RECEIVE:
                 printf("[cb_img]Got data: '%s'\n", in);
 
                 break;
+        default:
+                break;
         }
-
-        printf("[cb_img]Frame length: %lu\n", len);
 
         ret = 0;
 
         return ret;
 }
 
-static int cb_hist(struct lws *wsi,
+static int cb_hist(struct lws* wsi,
                    enum lws_callback_reasons reason,
-                   void *user,
-                   void *in, 
+                   void* user,
+                   void* in, 
                    size_t len)
 {
-        int ret = -1;
         unsigned char buf[LWS_PRE + 1024];
         unsigned char* p = &buf[LWS_PRE];
+        struct pie_sess* session;
+        struct pie_ctx_hist* ctx = (struct pie_ctx_hist*)user;
+        int ret = -1;
 
         printf("HEJ %s %d\n", __func__, reason);
 
         switch (reason)
         {
+        case LWS_CALLBACK_ESTABLISHED:
+                /* Copy the session token, it is not available later on */
+                if (session = get_session(wsi))
+                {
+                        strcpy(ctx->token, session->token);
+                }
+                ctx->tx = 0;
+                break;
         case LWS_CALLBACK_RECEIVE:
                 printf("[cb_hist]Got data: '%s'\n", in);
 
                 break;
+        default:
+                break;
         }
-
-        printf("[cb_hist]Frame length: %lu\n", len);
 
         ret = 0;
 
         return ret;
 }
 
-static int cb_cmd(struct lws *wsi,
+static int cb_cmd(struct lws* wsi,
                   enum lws_callback_reasons reason,
-                  void *user,
-                  void *in, 
+                  void* user,
+                  void* in, 
                   size_t len)
 {
-        int ret = -1;
-        unsigned char buf[LWS_PRE + 1024];
-        unsigned char* p = &buf[LWS_PRE];
-        int data[4] = {123, 234, 345, 456};
+        int ret = 0;
+        int data[2] = {0x01020304, 0x05060708};
+        int width = 1024;
+        int height = 100;
+        int tx_len = width * height * 4;
+        int row_stride = 4 * width;
+        unsigned char* big = malloc(LWS_PRE + tx_len);
+        unsigned char* img = big + LWS_PRE;
+        struct pie_sess* session;
         int bw;
+        struct pie_ctx_cmd* ctx = (struct pie_ctx_cmd*)user;
 
-        printf("HEJ %s %d\n", __func__, reason);
+        /* Init with linear gradient */
+        for (int y = 0; y < height; y++)
+        {
+                for (int x = 0; x < width; x++)
+                {
+                        int c = x / 4;
+#if 0
+                        if (x == 1023)
+                        {
+                                printf("tx:len %d\n", tx_len);
+                                printf("c: %d\n", c);
+                        }
+#endif
+
+                        img[y * row_stride + x * 4] = (unsigned char)c;
+                        img[y * row_stride + x * 4 + 1] = (unsigned char)c;
+                        img[y * row_stride + x * 4 + 2] = (unsigned char)c;
+                        img[y * row_stride + x * 4 + 3] = 255;
+                }
+        }
 
         switch (reason)
         {
-        case LWS_CALLBACK_SERVER_WRITEABLE:
-                bw = lws_write(wsi, (unsigned char*)data, sizeof(data), LWS_WRITE_BINARY);
-                if (bw < sizeof(data))
+        case LWS_CALLBACK_ESTABLISHED:
+                /* Copy the session token, it is not available later on */
+                if (session = get_session(wsi))
                 {
-                        printf("Error write\n");
+                        strcpy(ctx->token, session->token);
+                }
+                ctx->tx = 0;
+                break;
+        case LWS_CALLBACK_SERVER_WRITEABLE:
+                if (ctx->tx)
+                {
+                        bw = lws_write(wsi, big + LWS_PRE, tx_len, LWS_WRITE_BINARY);
+                        if (bw < tx_len)
+                        {
+                                printf("Error write %d of %d\n", bw, tx_len);
+                                ret = -1;
+                        }
+                        ctx->tx = 0;
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
+                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+                if (!session)
+                {
+                        printf("%s: No session found\n", __func__);
+                        return -1;
+                }
                 printf("[cb_cmd]Got data: '%s'\n", in);
+                ctx->tx = 1;
                 lws_callback_on_writable(wsi);
                 break;
+        default:
+                printf("HEJ %s %d\n", __func__, reason);
+                break;
         }
-
-        printf("[cb_cmd]Frame length: %lu\n", len);
-
-        ret = 0;
+        free(big);
 
         return ret;
 }
 
-const char* get_mimetype(const char *path)
+static const char* get_mimetype(const char *path)
 {
 	int n = strlen(path);
 
@@ -381,6 +507,46 @@ const char* get_mimetype(const char *path)
         {
 		return "text/jpeg";
         }
+	if (strcmp(&path[n - 3], ".js") == 0)
+        {
+		return "text/javascript";
+        }
 
 	return NULL;
+}
+
+static struct pie_sess* get_session(struct lws* wsi)
+{
+        char headers[MAX_HEADERS];
+        struct pie_sess* session;
+        int n = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_COOKIE);
+        
+        if (n == 0)
+        {
+                return NULL;
+        }
+        
+        lws_hdr_copy(wsi,
+                     headers,
+                     MAX_HEADERS,
+                     WSI_TOKEN_HTTP_COOKIE);
+        if (strlen(headers))
+        {
+                char* t = strchr(headers, '=');
+
+                if (t == NULL)
+                {
+                        return NULL;
+                }
+                t++;
+                session = pie_sess_mgr_get(sess_mgr,
+                                           t);
+#if DEBUG > 1
+                if (session)
+                {
+                        printf("Found session %s\n", t);
+                }
+#endif
+        }
+        return session;
 }

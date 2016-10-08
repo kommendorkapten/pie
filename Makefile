@@ -54,8 +54,8 @@ endif
 
 DIRS     = obj bin
 IO_SRC   = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC  = timing.c
-SRV_SRC  = pie_server.c
+LIB_SRC  = timing.c hmap.c
+SRV_SRC  = pie_server.c pie_session.c
 ALG_SRC  = pie_hist.c
 SOURCES  = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC) $(ALG_SRC)
 OBJS     = $(SOURCES:%.c=obj/%.o)
@@ -112,4 +112,4 @@ bin/histinfo: testp/histinfo.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: testp/server.c $(OBJS) $(SRV_OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets -lmd $(LFLAGS)
