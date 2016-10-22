@@ -17,6 +17,11 @@
 #include <stdint.h>
 
 #define PIE_HIST_RES 256
+#if defined(LWS_PRE)
+# define PROXY_RGBA_OFF LWS_PRE
+#else
+# define PROXY_RGBA_OFF 16
+#endif
 
 enum pie_color_type {
         PIE_COLOR_TYPE_GRAY = 1,
@@ -100,23 +105,30 @@ struct pie_img_settings
         float rotate;
 };
 
-struct pie_img_workspace
-{
-        struct pie_img_settings settings;
-        /* Unmodified full resolution image */
-        struct bitmap_f32rgb* raw;
-        /* Downsampled unmodified proxy image */
-        struct bitmap_f32rgb* proxy;
-        /* Downsampled and rendered proxy image */
-        struct bitmap_f32rgb* proxy_out;
-};
-
 struct pie_histogram
 {
         unsigned int lum[PIE_HIST_RES];
         unsigned int c_red[PIE_HIST_RES];
         unsigned int c_green[PIE_HIST_RES];
         unsigned int c_blue[PIE_HIST_RES];
+};
+
+struct pie_img_workspace
+{
+        struct pie_histogram hist;
+        struct pie_img_settings settings;
+        /* Unmodified full resolution image */
+        struct bitmap_f32rgb raw;
+        /* Downsampled unmodified proxy image */
+        struct bitmap_f32rgb proxy;
+        /* Downsampled and rendered proxy image */
+        struct bitmap_f32rgb proxy_out;
+        /* proxy out coded as unsigned chars, in rgba format.
+           With prelude of LWS_PRE header size */
+        unsigned char* buf;
+        /* Pointer to start of image in buf */
+        unsigned char* proxy_out_rgba;
+        unsigned int proxy_out_len;
 };
 
 #endif /* __PIE_TYPES_H__ */
