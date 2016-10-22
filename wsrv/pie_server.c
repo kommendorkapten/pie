@@ -13,9 +13,15 @@
 
 #include "pie_server.h"
 #include "pie_session.h"
+#include "../pie_types.h"
+#include "../msg/pie_msg.h"
+#include "../lib/chan.h"
+#include "../lib/timing.h"
 #include <libwebsockets.h>
+#include <string.h>
 
 #define MAX_HEADERS 4096
+#define MAX_CMD 256
 
 enum pie_protocols
 {
@@ -34,25 +40,23 @@ struct pie_ctx_http
 
 struct pie_ctx_img
 {
-        char token[TOKEN_LEN];
-        char tx;
+        char token[PIE_SESS_TOKEN_LEN];
 };
 
 struct pie_ctx_hist
 {
-        char token[TOKEN_LEN];
-        char tx;
+        char token[PIE_SESS_TOKEN_LEN];
 };
 
 struct pie_ctx_cmd
 {
-        char token[TOKEN_LEN];
-        char tx;
+        char token[PIE_SESS_TOKEN_LEN];
 };
 
-/* Global path, if multiple servers are started they MUST use the same
- * context root */
+/* Global root to asset directory */
 static const char* context_root;
+/* Only one server can be executed at a time */
+static struct pie_server* server;
 static struct pie_sess_mgr* sess_mgr;
 
 /**
@@ -69,6 +73,23 @@ static const char* get_mimetype(const char*);
  * @return pointer to the session, or NULL if no session is found.
  */
 static struct pie_sess* get_session(struct lws*);
+
+/**
+ * Init the session with current server related data.
+ * @param the session to init.
+ * @return void.
+ */
+static void srv_init_session(struct pie_sess*);
+
+/**
+ * Parse a command line and fill data in the pie_msg.
+ * @param the pie_msg to initialize
+ * @param the command string
+ * @param the length of the command string, without the NULL terminator
+ * @return 0 if message could be constructed from the command. Non zero
+ *         otherwise.
+ */
+static  int parse_cmd_msg(struct pie_msg*, char*, size_t);
 
 /**
  * Callback methods.
@@ -115,7 +136,7 @@ static const struct lws_extension exts[] = {
         {NULL, NULL, NULL}
 };
 
-int start_server(struct server* srv)
+int start_server(struct pie_server* srv)
 {
         struct lws_protocols protocols[] = {
                 /* HTTP must be first */
@@ -159,6 +180,8 @@ int start_server(struct server* srv)
         sess_mgr = pie_sess_mgr_create();
 
         context_root = srv->context_root;
+        server = srv;
+
         memset(&info, 0, sizeof(info));
         info.port = srv->port;
         info.iface = NULL; /* all ifaces */
@@ -197,13 +220,78 @@ int start_server(struct server* srv)
         while (status >= 0 && srv->run)
         {
                 /* Run state machine here */
+                /* Receiver is responsible to free data */
+                struct chan_msg msg;
+                int n;
+
+                n = chan_read(srv->response, &msg, 0);
+                if (n == 0)
+                {
+                        struct pie_msg* resp = (struct pie_msg*)msg.data;
+                        struct pie_sess* session;
+
+#if DEBUG > 0
+                        printf("%s: [%s] received message %d (RTT %ldusec).\n",
+                               __func__,
+                               resp->token,
+                               resp->type,
+                               timing_dur_usec(&resp->t));
+#endif
+
+                        if (msg.len != sizeof(struct pie_msg))
+                        {
+                                printf("%s: invalid message received.\n",
+                                       __func__);
+                                goto msg_done;
+                        }
+                        
+                        session = pie_sess_mgr_get(sess_mgr, resp->token);
+                        if (session == NULL)
+                        {
+                                printf("%s: [%s] ERROR: not found.\n",
+                                       __func__,
+                                       resp->token);
+                                goto msg_done;
+                        }
+                        switch (resp->type)
+                        {
+                        case PIE_MSG_LOAD_DONE:
+                                /* On load done, a new image workspace 
+                                   is created, store it in the session. */
+                                session->img = resp->img;
+                        case PIE_MSG_RENDER_DONE:
+                                /* Update session with tx ready */
+                                session->tx_ready = (PIE_TX_IMG | PIE_TX_HIST);
+                                lws_callback_on_writable_all_protocol(srv->context, 
+                                                                      &protocols[PIE_PROTO_IMG]);
+                                lws_callback_on_writable_all_protocol(srv->context,
+                                                                      &protocols[PIE_PROTO_HIST]);
+                                break;
+                        default:
+                                printf("%s: [%s] invalid message: %d\n",
+                                       __func__,
+                                       resp->token,
+                                       resp->type);
+                        }
+
+                msg_done:
+                        pie_msg_free(msg.data);
+                }
+                else if (n != EAGAIN)
+                {
+                        printf("%s: Error reading channel %d\n", __func__, n);
+                        srv->run = 0;
+                }
+
+        lws_service:
                 /* Check for stop condition or img/hist is computed */
                 /* If nothing to do, return after 100ms */
-                status = lws_service(srv->context, 100);
+                status = lws_service(srv->context, 50);
                 /* Reap sessions with inactivity for one hour */
-                pie_sess_mgr_reap(sess_mgr, 60*60);
+                pie_sess_mgr_reap(sess_mgr, 60 * 60);
         }
 
+        printf("Shutdown server.\n");
         lws_context_destroy(srv->context);
         pie_sess_mgr_destroy(sess_mgr);
         
@@ -216,22 +304,14 @@ static int cb_http(struct lws* wsi,
                    void* in,
                    size_t len)
 {
-	/* unsigned char buffer[LWS_PRE + 4096]; */
         char url[256];
         unsigned char headers[256];
-        char cookie[128];
         struct pie_sess* session;
         const char* mimetype;
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
         int hn = 0;
         int n;
 
-#if 0
-        if (reason != 31)
-        {
-                printf("HTTP: %d (%p)\n", reason, wsi);
-        }
-#endif 
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
@@ -239,9 +319,11 @@ static int cb_http(struct lws* wsi,
                 session = get_session(wsi);
                 if (session == NULL)
                 {
+                        char cookie[128];
                         unsigned char* p = headers;
                         session = malloc(sizeof(struct pie_sess));
                         pie_sess_init(session);
+                        srv_init_session(session);
                         
                         hn = snprintf(cookie, 
                                       128,
@@ -257,11 +339,15 @@ static int cb_http(struct lws* wsi,
                                 /* Can't set header */
                                 return -1;
                         }
-#if DEBUG > 1
-                        printf("Creating session\n");
+#if DEBUG > 0
+                        printf("%s: [%s] Init session\n",
+                               __func__,
+                               session->token);
+
 #endif
                         pie_sess_mgr_put(sess_mgr, session);
                         hn = p - headers;
+
                 }
 
 		if (len < 1)
@@ -287,7 +373,11 @@ static int cb_http(struct lws* wsi,
                 }
                 url[sizeof(url) - 1] = 0;
 		mimetype = get_mimetype(url);
-                printf("GET %s\n", url);
+                printf("%s: [%s] GET %s\n", 
+                       __func__,
+                       session->token,
+                       url);
+                
 		if (!mimetype)
                 {
 			lws_return_http_status(wsi,
@@ -296,7 +386,6 @@ static int cb_http(struct lws* wsi,
                         goto keepalive;
 		}
 
-                /* TODO add cookies */
                 /* Serve file async */
                 n = lws_serve_http_file(wsi, url, mimetype, (char*)headers, hn);
                 if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
@@ -334,8 +423,12 @@ static int cb_img(struct lws* wsi,
         struct pie_sess* session;
         struct pie_ctx_img* ctx = (struct pie_ctx_img*)user;
         int ret = -1;
+        int bw;
 
-        printf("HEJ %s %d\n", __func__, reason);
+        if (user && reason != LWS_CALLBACK_ESTABLISHED)
+        {
+                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+        }
 
         switch (reason)
         {
@@ -345,10 +438,46 @@ static int cb_img(struct lws* wsi,
                 {
                         strcpy(ctx->token, session->token);
                 }
-                ctx->tx = 0;
+                else
+                {
+                        printf("%s: No session found\n", __func__);
+                        return -1;
+                }
+                break;
+        case LWS_CALLBACK_SERVER_WRITEABLE:
+                if (!session)
+                {
+                        printf("%s: No session found\n", __func__);
+                        return -1;
+                }
+                printf("%s: [%s] tx_ready: 0x%x\n",
+                       __func__, 
+                       session->token,
+                       session->tx_ready);
+
+                if (session->tx_ready)
+                {
+                        bw = lws_write(wsi, 
+                                       session->img->proxy_out_rgba,
+                                       session->img->proxy_out_len, 
+                                       LWS_WRITE_BINARY);
+                        if (bw < session->img->proxy_out_len)
+                        {
+                                printf("%s: [%s] ERROR write %d of %d\n",
+                                       __func__,
+                                       session->token,
+                                       bw,
+                                       session->img->proxy_out_len);
+                                ret = -1;
+                        }
+                        session->tx_ready = 0;
+                }
                 break;
         case LWS_CALLBACK_RECEIVE:
-                printf("[cb_img]Got data: '%s'\n", in);
+                printf("%s: [%s] Got data: '%s'\n", 
+                       __func__,
+                       session->token,
+                       in);
 
                 break;
         default:
@@ -372,7 +501,10 @@ static int cb_hist(struct lws* wsi,
         struct pie_ctx_hist* ctx = (struct pie_ctx_hist*)user;
         int ret = -1;
 
-        printf("HEJ %s %d\n", __func__, reason);
+        if (user && reason != LWS_CALLBACK_ESTABLISHED)
+        {
+                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+        }
 
         switch (reason)
         {
@@ -381,11 +513,28 @@ static int cb_hist(struct lws* wsi,
                 if (session = get_session(wsi))
                 {
                         strcpy(ctx->token, session->token);
+
                 }
-                ctx->tx = 0;
+                else
+                {
+                        printf("%s: No session found\n", __func__);
+                        return -1;
+                }
+                break;
+        case LWS_CALLBACK_SERVER_WRITEABLE:
+
+                if (!session)
+                {
+                        printf("%s: No session found\n", __func__);
+                        return -1;
+                }
+                printf("%s [%s] tx_ready: 0x%x\n",
+                       __func__, 
+                       session->token,
+                       session->tx_ready);
                 break;
         case LWS_CALLBACK_RECEIVE:
-                printf("[cb_hist]Got data: '%s'\n", in);
+                printf("%s [%s]Got data: '%s'\n", __func__, session->token, in);
 
                 break;
         default:
@@ -403,37 +552,15 @@ static int cb_cmd(struct lws* wsi,
                   void* in, 
                   size_t len)
 {
-        int ret = 0;
-        int data[2] = {0x01020304, 0x05060708};
-        int width = 1024;
-        int height = 100;
-        int tx_len = width * height * 4;
-        int row_stride = 4 * width;
-        unsigned char* big = malloc(LWS_PRE + tx_len);
-        unsigned char* img = big + LWS_PRE;
+        struct chan_msg envelope;
         struct pie_sess* session;
-        int bw;
+        struct pie_msg* msg;
         struct pie_ctx_cmd* ctx = (struct pie_ctx_cmd*)user;
+        int ret = 0;
 
-        /* Init with linear gradient */
-        for (int y = 0; y < height; y++)
+        if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
-                for (int x = 0; x < width; x++)
-                {
-                        int c = x / 4;
-#if 0
-                        if (x == 1023)
-                        {
-                                printf("tx:len %d\n", tx_len);
-                                printf("c: %d\n", c);
-                        }
-#endif
-
-                        img[y * row_stride + x * 4] = (unsigned char)c;
-                        img[y * row_stride + x * 4 + 1] = (unsigned char)c;
-                        img[y * row_stride + x * 4 + 2] = (unsigned char)c;
-                        img[y * row_stride + x * 4 + 3] = 255;
-                }
+                session = pie_sess_mgr_get(sess_mgr, ctx->token);
         }
 
         switch (reason)
@@ -444,37 +571,66 @@ static int cb_cmd(struct lws* wsi,
                 {
                         strcpy(ctx->token, session->token);
                 }
-                ctx->tx = 0;
-                break;
-        case LWS_CALLBACK_SERVER_WRITEABLE:
-                if (ctx->tx)
-                {
-                        bw = lws_write(wsi, big + LWS_PRE, tx_len, LWS_WRITE_BINARY);
-                        if (bw < tx_len)
-                        {
-                                printf("Error write %d of %d\n", bw, tx_len);
-                                ret = -1;
-                        }
-                        ctx->tx = 0;
-                }
-                break;
-        case LWS_CALLBACK_RECEIVE:
-                session = pie_sess_mgr_get(sess_mgr, ctx->token);
-                if (!session)
+                else
                 {
                         printf("%s: No session found\n", __func__);
                         return -1;
                 }
-                printf("[cb_cmd]Got data: '%s'\n", in);
-                ctx->tx = 1;
-                lws_callback_on_writable(wsi);
+                break;
+        case LWS_CALLBACK_RECEIVE:
+                msg = pie_msg_alloc();
+                strncpy(msg->token, session->token, PIE_MSG_TOKEN_LEN);
+                if (parse_cmd_msg(msg, (char*)in, len))
+                {
+                        printf("%s: failed to parse message: '%s'\n",
+                               __func__, in);
+                }
+                else
+                {
+                        if (msg->type != PIE_MSG_LOAD && session->img == NULL)
+                        {
+                                printf("%s: [%s] No image loaded\n",
+                                       __func__,
+                                       session->token);
+                                goto done;
+                        }
+                        /* Copy image from session to message */
+                        msg->img = session->img;
+                        envelope.data = msg;
+                        envelope.len = sizeof(struct pie_msg);
+                        timing_start(&msg->t);
+                        
+                        if (chan_write(session->command, &envelope))
+                        {
+                                printf("%s: failed to write to chan\n",
+                                       __func__);
+                        }
+                }
+
+#if 0
+                msg->type = PIE_MSG_SET_CONTRAST;
+                msg->i1 = 50;
+
+                if (chan_write(session->command, &envelope))
+                {
+                        printf("%s: failed to write to chan\n",
+                               __func__);
+                }
+
+                /* HACK */
+                msg = pie_msg_alloc();
+                msg->type = PIE_MSG_LOAD;
+                strncpy(msg->token, session->token, PIE_MSG_TOKEN_LEN);
+                envelope.data = msg;
+                envelope.len = sizeof(struct pie_msg);
+#endif
+
                 break;
         default:
-                printf("HEJ %s %d\n", __func__, reason);
                 break;
         }
-        free(big);
 
+done:
         return ret;
 }
 
@@ -549,4 +705,135 @@ static struct pie_sess* get_session(struct lws* wsi)
 #endif
         }
         return session;
+}
+
+static void srv_init_session(struct pie_sess* s)
+{
+        s->command = server->command;
+        s->response = server->response;
+        s->img = NULL;
+        s->tx_ready = 0;
+}
+
+static int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
+{
+        char buf[MAX_CMD];
+        char copy[MAX_CMD];
+        char* lasts = buf;
+        char* t;
+        
+        if (len >= MAX_CMD)
+        {
+                /* To long command */
+                printf("%s: [%s] to long command: '%s'\n", 
+                       __func__,
+                       msg->token,
+                       data);
+                return -1;
+        }
+
+        /* Len does not include NULL */
+        strncpy(copy, data, len);
+        copy[len] = '\0';
+        t = strtok_r(copy, " ", &lasts);
+
+        if (t == NULL)
+        {
+                return -1;
+        }
+
+        if (strcmp(t, "LOAD") == 0)
+        {
+                msg->type = PIE_MSG_LOAD;
+        }
+        else if (strcmp(t, "CONTR") == 0)
+        {
+                /* CONTR {val} 
+                   val = [0, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+                        
+                        if (t != p)
+                        {
+                                msg->type = PIE_MSG_SET_CONTRAST;
+                                msg->f1 = v / 50.f;
+                        }
+                        else
+                        {
+                                printf("%s: [%s] not an int: '%s'\n",
+                                       __func__,
+                                       msg->token,
+                                       data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        printf("%s: [%s] not a valid command '%s'\n",
+                               __func__,
+                               msg->token,
+                               data);
+                        return -1;
+                }
+        }
+        else if (strcmp(t, "EXPOS") == 0)
+        {
+                printf("parse EXPOS\n");                
+        }
+        else if (strcmp(t, "HIGHL") == 0)
+        {
+                printf("parse HIGHL\n");                
+        }
+        else if (strcmp(t, "SHADO") == 0)
+        {
+                printf("parse SHADO\n");                
+        }
+        else if (strcmp(t, "WHITE") == 0)
+        {
+                printf("parse WHITE\n");                
+        }
+        else if (strcmp(t, "BLACK") == 0)
+        {
+                printf("parse BLACK\n");                
+        }
+        else if (strcmp(t, "CLARI") == 0)
+        {
+                printf("parse CLARI\n");                
+        }
+        else if (strcmp(t, "VIBRA") == 0)
+        {
+                printf("parse VIBRA\n");                
+        }
+        else if (strcmp(t, "SATUR") == 0)
+        {
+                printf("parse SATUR\n");                
+        }
+        else if (strcmp(t, "ROTAT") == 0)
+        {
+                printf("parse ROTAT\n");                
+        }
+        else if (strcmp(t, "CROP") == 0)
+        {
+                printf("parse CROP\n");                
+        }
+        else 
+        {
+                printf("%s: [%s] unknown command '%s'\n",
+                       __func__,
+                       msg->token,
+                       data);
+                return -1;
+        }
+                
+#if 0
+        while (t)
+        {
+                printf("Got token: %s\n", t);
+                t = strtok_r(NULL, " ", &lasts);
+        }
+#endif
+        return 0;
 }

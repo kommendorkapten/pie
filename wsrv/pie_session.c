@@ -29,7 +29,7 @@ void pie_sess_init(struct pie_sess* s)
         {
                 sprintf(s->token + i * 2, "%02x", sum[i]);
         }
-        s->token[TOKEN_LEN-1] = 0;
+        s->token[PIE_SESS_TOKEN_LEN-1] = 0;
 }
 
 struct pie_sess_mgr* pie_sess_mgr_create(void)
@@ -97,9 +97,14 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
                 if (s->access_ts < tv.tv_sec - threshold)
                 {
 #if DEBUG > 0
-                        printf("Destroy session %s\n", (char*)s->token);
-#endif                        
-
+                        printf("Destroy session [%s]@%p\n", 
+                               (char*)s->token,
+                                elems[i].data);
+#endif      
+                        /* sessions are allocated in cb_http,
+                           no references should ever be kept to
+                           it except from this hmap. Free the session. */
+                        free(elems[i].data);
                         hmap_del(sm->store, elems[i].key);
                 }
         }

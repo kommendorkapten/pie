@@ -14,15 +14,32 @@
 #ifndef __PIE_SESSION_H__
 #define __PIE_SESSION_H__
 
-#define TOKEN_LEN 41 /* Token is 40 chars, add one for null */
+#define PIE_SESS_TOKEN_LEN 41 /* Token is 40 chars, add one for null */
+#define PIE_TX_IMG  0x1
+#define PIE_TX_HIST 0x2
 
 struct pie_sess_mgr;
+struct pie_img_workspace;
+struct chan;
 
+/**
+ * Represents a session.
+ * All data kept in the session must be managed by a third party.
+ * The session manager is free to de-alocate a session at any time,
+ * and hence the data referenced by the session must be managed by
+ * another entity to avoid memory leaks.
+ */
 struct pie_sess
 {
-        char token[TOKEN_LEN];
+        char token[PIE_SESS_TOKEN_LEN];
+        struct pie_img_workspace* img;
+        /* Server sends commands */
+        struct chan* command;
+        /* Server receives responses */
+        struct chan* response;
         long access_ts;
-        void* data;
+        /* New data can be written to client */
+        char tx_ready;
 };
 
 /**

@@ -1,5 +1,5 @@
 CC     = gcc
-CFLAGS = -m64 -I/usr/local/include
+CFLAGS = -m64 -I/usr/local/include -DMT_SAFE
 LFLAGS += -lm -lpng -ljpeg
 LSCUT  = -L/usr/local/lib -lscut
 OS     = $(shell uname -s)
@@ -20,7 +20,7 @@ endif
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
-    CFLAGS += -v -xO5
+    CFLAGS += -v -xO5 -mt
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
     endif
@@ -54,17 +54,18 @@ endif
 
 DIRS     = obj bin
 IO_SRC   = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC  = timing.c hmap.c
+LIB_SRC  = timing.c hmap.c chan.o chan_poll.o lock.o
 SRV_SRC  = pie_server.c pie_session.c
+MSG_SRC  = pie_msg.c
 ALG_SRC  = pie_hist.c
-SOURCES  = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC) $(ALG_SRC)
+SOURCES  = pie_bm.c pie_cspace.c $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC)
 OBJS     = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS = $(SRV_SRC:%.c=obj/%.o)
 BINS     = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
            histinfo server
 P_BINS   = $(BINS:%=bin/%)
 
-VPATH = io lib alg wsrv
+VPATH = io lib alg wsrv msg
 
 .PHONY: clean
 .PHONY: lint

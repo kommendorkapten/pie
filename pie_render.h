@@ -11,25 +11,11 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_SERVER_H__
-#define __PIE_SERVER_H__
+#ifndef __PIE_RENDER_H__
+#define __PIE_RENDER_H__
 
-#include <signal.h>
+#include "pie_types.h"
 
-struct chan;
-struct lws_context;
+extern int pie_render(struct pie_img_workspace*);
 
-struct pie_server
-{
-        const char* context_root;
-        struct lws_context* context;
-        /* server initiates commands */
-        struct chan* command;
-        struct chan* response;
-        int port;
-        volatile int run;
-};
-
-extern int start_server(struct pie_server*);
-
-#endif /* __PIE_SERVER_H__ */
+#endif /* __PIE_RENDER_H__ */

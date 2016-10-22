@@ -10,26 +10,22 @@
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
+#include "pie_msg.h"
 
-#ifndef __PIE_SERVER_H__
-#define __PIE_SERVER_H__
-
-#include <signal.h>
-
-struct chan;
-struct lws_context;
-
-struct pie_server
+struct pie_msg* pie_msg_alloc(void)
 {
-        const char* context_root;
-        struct lws_context* context;
-        /* server initiates commands */
-        struct chan* command;
-        struct chan* response;
-        int port;
-        volatile int run;
-};
+        struct pie_msg* m = malloc(sizeof(struct pie_msg));
 
-extern int start_server(struct pie_server*);
+        m->type = PIE_MSG_INVALID;
+        m->img = NULL;
+        m->f1 = 0.0f;
+        m->i1 = 0;
 
-#endif /* __PIE_SERVER_H__ */
+        return m;
+        
+}
+
+void pie_msg_free(struct pie_msg* m)
+{
+        free(m);
+}
