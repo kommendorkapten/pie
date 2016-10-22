@@ -1,6 +1,7 @@
 *~
 bin/*
 obj/*
-~.o
+*.o
 *.jpg
 *.png
+core
