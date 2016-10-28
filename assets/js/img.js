@@ -108,7 +108,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("CONTR " + targ.value);
-        }, 100);
+        }, 50);
 
 
         return true;
