@@ -9,8 +9,10 @@ int main(int argc, char** argv)
 {
         int ret;
         struct bitmap_f32rgb img;
+        struct bitmap_u8rgb out;
         struct timing t;
         unsigned long dur;
+        float amount = 1.0f;
 
         if (argc != 2)
         {
@@ -30,17 +32,17 @@ int main(int argc, char** argv)
 
         timing_start(&t);
         pie_alg_contr(img.c_red,
-                      0.4f,
+                      amount,
                       img.width,
                       img.height,
                       img.row_stride);
         pie_alg_contr(img.c_green,
-                      0.4f,
+                      amount,
                       img.width,
                       img.height,
                       img.row_stride);
         pie_alg_contr(img.c_blue,
-                      0.4f,
+                      amount,
                       img.width,
                       img.height,
                       img.row_stride);
@@ -48,6 +50,12 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Calculate contrast took %luusec\n", dur);
 
+        bm_conv_bd(&out, PIE_COLOR_8B,
+                   &img, PIE_COLOR_32B);
+
+        png_u8rgb_write("out.png", &out);
+
         bm_free_f32(&img);
+        bm_free_u8(&out);
         return 0;
 }
