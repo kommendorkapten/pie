@@ -89,4 +89,16 @@ extern struct chan* chan_fan_in(struct chan**, unsigned int);
  */
 extern int chan_fan_out(struct chan**, unsigned int, struct chan*);
 
+/**
+ * Read one msg from a channel.
+ * This function is for internal use, do not call.
+ * Performs a non blocking read of one mesage.
+ * @return
+ *     0: Message successfully read.
+ *     -1: Error occured.
+ *     EBADF: Channel is closed.
+ *     EAGAIN: Nothing to read.
+ */
+extern int chan_read_msg(struct chan*, struct chan_msg*);
+
 #endif /* __CHAN_H__ */

@@ -14,8 +14,25 @@
 #ifndef __PIE_RENDER_H__
 #define __PIE_RENDER_H__
 
-#include "pie_types.h"
+struct bitmap_f32rgb;
+struct pie_img_settings;
 
-extern int pie_render(struct pie_img_workspace*);
+/**
+ * Init settings to default values.
+ * @param settings.
+ * @return void.
+ */
+extern void pie_img_init_settings(struct pie_img_settings*);
+
+/**
+ * Render a bitmap.
+ * @param bitmap to render.
+ * @param temporary buffer, large enough to hold a single channel.
+ * @param settings to apply.
+ * @return 0 on success.
+ */
+extern int pie_img_render(struct bitmap_f32rgb*,
+                          float*,
+                          const struct pie_img_settings*);
 
 #endif /* __PIE_RENDER_H__ */

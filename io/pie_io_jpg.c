@@ -15,7 +15,6 @@
 #include "../pie_bm.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <jpeglib.h>
 #include <setjmp.h>
 
@@ -34,7 +33,7 @@ struct pie_jpg_error_mgr
  * Called when an error occurs during decoding.
  * Log the error and then return.
  */
-void pie_jpg_error_exit(j_common_ptr cinfo)
+static void pie_jpg_error_exit(j_common_ptr cinfo)
 {
         /* cinfo->err is the pie_jpg_error_mgr we provisioned */
         struct pie_jpg_error_mgr* err = (struct pie_jpg_error_mgr*) cinfo->err;
@@ -48,7 +47,7 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         struct jpeg_decompress_struct cinfo;
         FILE* fp;
         JSAMPLE* row;
-        int y;
+        unsigned int y;
         struct pie_jpg_error_mgr jerr;
 
         fp = fopen(path, "rb");
@@ -133,7 +132,7 @@ int jpg_u8rgb_write(const char* path, struct bitmap_u8rgb* bm, int quality)
         struct jpeg_error_mgr jerr;
         FILE* fp;
         JSAMPLE* row;
-        int y = 0;
+        unsigned int y = 0;
 
         fp = fopen(path, "wb");
         if (fp == NULL)

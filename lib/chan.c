@@ -1,5 +1,6 @@
 #include "chan.h"
 #include "chan_def.h"
+#include "chan_poll.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -10,9 +11,9 @@
 
 /* TODO: Better channel handling on select (remove closed etc) */
 
-void* fun_fan_in(void*);
-void* fun_fan_out(void*);
-void sig_noop(int);
+static void* fun_fan_in(void*);
+static void* fun_fan_out(void*);
+static void sig_noop(int);
 
 struct chan* chan_create(void)
 {
@@ -160,7 +161,7 @@ int chan_fan_out(struct chan** tgts, unsigned int num, struct chan* src)
         return ret;
 }
 
-int read_msg(struct chan* c, struct chan_msg* m)
+int chan_read_msg(struct chan* c, struct chan_msg* m)
 {
 	int result;
 	ssize_t br;
@@ -219,7 +220,7 @@ int read_msg(struct chan* c, struct chan_msg* m)
 	return result;
 }
 
-void* fun_fan_in(void* arg)
+static void* fun_fan_in(void* arg)
 {
         struct sigaction sa;
         sigset_t sigset;
@@ -255,7 +256,7 @@ void* fun_fan_in(void* arg)
 
         for (;;)
         {
-                struct chan_msg msg;
+                struct chan_msg msg = {0};
                 int ret = chan_select(chans + 1, num, &msg, -1);
 
                 if (ret == 0)
@@ -273,7 +274,7 @@ void* fun_fan_in(void* arg)
         return NULL;
 }
 
-void* fun_fan_out(void* arg)
+static void* fun_fan_out(void* arg)
 {
         sigset_t sigset;
         struct chan** chans = (struct chan**)arg;
@@ -296,7 +297,7 @@ void* fun_fan_out(void* arg)
         }
         for (;;)
         {
-                struct chan_msg msg;
+                struct chan_msg msg = {0};
                 
                 if (chan_read(src, &msg, -1))
                 {
@@ -315,7 +316,7 @@ void* fun_fan_out(void* arg)
 
 /* Do nothing, only needed to be able to catch SIG_USR1 so we can wake
    up blocking thread in fan_in. */
-void sig_noop(int signum)
+static void sig_noop(int signum)
 {
         /* Really stupid code. But's here just to trick compiler from
            generating warning on signum not used. */
@@ -324,4 +325,15 @@ void sig_noop(int signum)
                 return;
         }
         return;
+}
+
+int chan_read(struct chan* c, struct chan_msg* m, int to)
+{
+        return chan_poll_read(c, m, to);
+}
+
+
+int chan_select(struct chan** c, unsigned int nc, struct chan_msg* m, int to)
+{
+        return chan_poll_select(c, nc, m, to);
 }

@@ -12,8 +12,65 @@
 */
 
 #include "pie_render.h"
+#include "pie_types.h"
+#include "alg/pie_contr.h"
+#include "lib/timing.h"
+#include "pie_log.h"
 
-int pie_render(struct pie_img_workspace* img)
+void pie_img_init_settings(struct pie_img_settings* s)
 {
-        return 1;
+        s->exposure = 0.0f;
+        s->contrast = 1.0f;
+        s->highlights = 0.0f;
+        s->shadows = 0.0f;
+        s->white = 0.0f;
+        s->black = 0.0f;
+        s->clarity = 0.0f;
+        s->vibrance = 0.0f;
+        s->saturation = 0.0f;
+        s->rotate = 0.0f;
+}
+
+int pie_img_render(struct bitmap_f32rgb* img,
+                   float* buf,
+                   const struct pie_img_settings* s)
+{
+        struct timing t1;
+        struct timing t2;
+        
+        timing_start(&t1);
+#if 0
+        s->exposure = 0.0f;
+#endif
+        timing_start(&t2);
+        pie_alg_contr(img->c_red,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        pie_alg_contr(img->c_green,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        pie_alg_contr(img->c_blue,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render contrast in %ldusec", timing_dur_usec(&t2));
+#if 0
+        s->highlights = 0.0f;
+        s->shadows = 0.0f;
+        s->white = 0.0f;
+        s->black = 0.0f;
+        s->clarity = 0.0f;
+        s->vibrance = 0.0f;
+        s->saturation = 0.0f;
+        s->rotate = 0.0f;        
+#endif
+                      
+        PIE_DEBUG("Render total in %ldusec", timing_dur_usec(&t1));
+
+        return 0;
 }

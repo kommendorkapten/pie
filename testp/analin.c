@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-        int scale;
+        /* int scale; */
         int ret;
         struct bitmap_f32rgb img;
 
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
                 printf("Usage: analin file scalefactor\n");
                 return 1;
         }
-        scale = atoi(argv[2]);
+        /* scale = atoi(argv[2]); */
         
         ret = pie_io_load(&img, argv[1]);
         if (ret)

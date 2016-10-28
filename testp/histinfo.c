@@ -31,7 +31,7 @@ int main(int argc, char** argv)
         printf("Loaded media in %luusec\n", dur);
 
         timing_start(&t);
-        pie_hist_lum(&h, &img);
+        pie_alg_hist_lum(&h, &img);
         dur = timing_dur_usec(&t);
         printf("Calculate historgram took %luusec\n", dur);
 
@@ -41,9 +41,11 @@ int main(int argc, char** argv)
                 printf("%03d % 7u\n", i, h.lum[i]);
         }
 
-        printf("Counted %u pixels, expected is %u\n", 
-               count, img.width * img.height);
-
+        if (count != img.width * img.height)
+        {
+                printf("Counted %u pixels, expected is %u\n", 
+                       count, img.width * img.height);
+        }
         bm_free_f32(&img);
         return 0;
 }

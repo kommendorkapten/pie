@@ -13,6 +13,7 @@
 
 #include "pie_io.h"
 #include "../pie_bm.h"
+#include "../pie_log.h"
 #include <png.h>
 #include <stdlib.h>
 
@@ -104,7 +105,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         if (png_get_gAMA(pngp, infop, &gamma))
         {
                 /* png_set_gamma(pngp, display_exponent, gamma); */
-                printf("Read gamma from file: %f\n", gamma);
+                PIE_DEBUG("Read gamma from file: %f.", gamma);
         }
         
         /* Update with any transformations set */
@@ -137,11 +138,11 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
                         float red = (float)*row++;
                         float green = (float)*row++;
                         float blue = (float)*row++;
-                        int offset = y * bm->row_stride + x;
+                        unsigned int offset = y * bm->row_stride + x;
 
                         /* refactor to set methods */
                         bm->c_red[offset] = red / 255.0f;
-                        bm->c_green[offset] = blue / 255.0f;
+                        bm->c_green[offset] = green / 255.0f;
                         bm->c_blue[offset] = blue / 255.0f;
                 }
 

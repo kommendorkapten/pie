@@ -1,11 +1,9 @@
 #include "chan.h"
 #include "chan_def.h"
-#include <stdio.h>
-#include <unistd.h>
 #include <poll.h>
 #include <errno.h>
 
-int chan_read(struct chan* c, struct chan_msg* m, int timeout)
+int chan_poll_read(struct chan* c, struct chan_msg* m, int timeout)
 {
 	struct pollfd pfd;
 	int ready;
@@ -26,7 +24,7 @@ int chan_read(struct chan* c, struct chan_msg* m, int timeout)
         }
         else if (pfd.revents & POLLIN) 
         {
-                result = read_msg(c, m);
+                result = chan_read_msg(c, m);
         }
         else if (pfd.revents & POLLHUP)
         {
@@ -40,10 +38,10 @@ int chan_read(struct chan* c, struct chan_msg* m, int timeout)
 	return result;
 }
 
-int chan_select(struct chan** c, 
-		unsigned int nc, 
-		struct chan_msg* m, 
-		int timeout)
+int chan_poll_select(struct chan** c, 
+                     unsigned int nc, 
+                     struct chan_msg* m, 
+                     int timeout)
 {
 	struct pollfd pfd[nc];
 	int ready;
@@ -84,7 +82,7 @@ int chan_select(struct chan** c,
 				continue;
 			}
 
-                        ret = read_msg(c[i], m);
+                        ret = chan_read_msg(c[i], m);
                         
                         if (ret == 0)
                         {
@@ -118,4 +116,3 @@ int chan_select(struct chan** c,
 	}
 	return result;
 }
-

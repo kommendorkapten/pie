@@ -12,9 +12,8 @@
 */
 
 #include "pie_io.h"
-#include "../lib/timing.h"
+#include "../pie_log.h"
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -56,9 +55,7 @@ int pie_io_load(struct bitmap_f32rgb* bm, const char* path)
 {
         /* Read the magic bytes */
         unsigned char magic[PIE_MAGIC_MAX];
-#if DEBUG > 1
-        struct timing t;
-#endif
+
         ssize_t br;
         int fd;
         int ret;
@@ -77,9 +74,6 @@ int pie_io_load(struct bitmap_f32rgb* bm, const char* path)
         }
         ft = pie_get_magic(magic, br);
 
-#if DEBUG > 1
-        timing_start(&t);
-#endif
         switch (ft)
         {
         case PIE_FT_JPG:
@@ -91,9 +85,6 @@ int pie_io_load(struct bitmap_f32rgb* bm, const char* path)
         default:
                 ret = PIE_IO_UNSUPPORTED_FMT;
         }
-#if DEBUG > 1
-        printf("Read %s in %luusec\n", path, timing_dur_usec(&t));
-#endif
         
         return ret;
 }
@@ -107,14 +98,11 @@ static enum pie_file_type pie_get_magic(unsigned char magic[PIE_MAGIC_MAX],
                 ssize_t stop = len < fmts[i].len ? len : fmts[i].len;
                 int eq = 1;
 
-#if DEBUG > 1
-                printf("Format: %d\n", fmts[i].type);
-#endif
+                PIE_TRACE("Format: %d.", fmts[i].type);
                 for (ssize_t j = 0; j < stop; j++)
                 {
-#if DEBUG > 1
-                        printf("%d %d\n", magic[j], fmts[i].magic[j]);
-#endif
+                        PIE_TRACE("%d %d", magic[j], fmts[i].magic[j]);
+
                         if (magic[j] != fmts[i].magic[j])
                         {
                                 eq = 0;

@@ -93,15 +93,25 @@ struct bitmap_f32rgb
 
 struct pie_img_settings
 {
-        float contrast;
+        /* [-5, 5]     def 0 */
         float exposure;
+        /* [0,2]       def 1 */
+        float contrast;
+        /* [-100, 100] def 0 */
         float highlights;
+        /* [-100, 100] def 0 */
         float shadows;
+        /* [-100, 100] def 0 */
         float white;
+        /* [-100, 100] def 0 */
         float black;
+        /* [-100, 100] def 0 */
         float clarity;
+        /* [-100, 100] def 0 */
         float vibrance;
+        /* [-100, 100] def 0 */
         float saturation;
+        /* [0, 359]    def 0 */
         float rotate;
 };
 
@@ -128,7 +138,7 @@ struct pie_img_workspace
         unsigned char* buf;
         /* Pointer to start of image in buf */
         unsigned char* proxy_out_rgba;
-        unsigned int proxy_out_len;
+        int proxy_out_len;
 };
 
 #endif /* __PIE_TYPES_H__ */

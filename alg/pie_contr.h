@@ -11,25 +11,24 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_HIST_H__
-#define __PIE_HIST_H__
-
-#include "../pie_types.h"
+#ifndef __PIE_CONTR_H__
+#define __PIE_CONTR_H__
 
 /**
- * Calculate the luminance histogram for a bitmap.
- * @param the histogram to store data in.
- * @param the the bitmap to read from.
- * @return void
+ * Apply contrast.
+ * Contrast amount is in range [0,2]. 0 -> 1 is less contrast,
+ * 1 is no contrast and 1 -> 2 is more contrast.
+ * @param channel to apply contrast to.
+ * @param amount of contrast, in range [0,2].
+ * @param image width.
+ * @param image height.
+ * @param image row stride.
+ * @reurn void.
  */
-extern void pie_alg_hist_lum(struct pie_histogram*, struct bitmap_f32rgb*);
+void pie_alg_contr(float* restrict,
+                   float,
+                   unsigned int,
+                   unsigned int,
+                   unsigned int);
 
-/**
- * Calculate the crominance (RGB) histogram for a bitmap.
- * @param the histogram to store data in.
- * @param the the bitmap to read from.
- * @return void
- */
-extern void pie_alg_hist_rgb(struct pie_histogram*, struct bitmap_f32rgb*);
-
-#endif /* __PIE_HIST_H__ */
+#endif /* __PIE_CONTR_H__ */

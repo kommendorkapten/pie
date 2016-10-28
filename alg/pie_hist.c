@@ -31,7 +31,7 @@ static float vec_255[4] = {255.0f, 255.0f, 255.0f, 255.0f};
 #ifdef _HAS_SIMD
 # ifdef _HAS_SSE
 
-void pie_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
+void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
 	__m128 coeff_red = _mm_load_ps(lum_redv);
 	__m128 coeff_green = _mm_load_ps(lum_greenv);
@@ -94,7 +94,7 @@ void pie_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 # endif
 #else
 
-void pie_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
+void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
         memset(hist->lum, 0, sizeof(unsigned int) * PIE_HIST_RES);
         /* memset(hist->c_red, 0, sizeof(unsigned int) * PIE_HIST_RES); */

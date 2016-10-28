@@ -159,8 +159,8 @@ void bm_free_f32(struct bitmap_f32rgb* bm)
 
 void pixel_u8rgb_get(struct pixel_u8rgb* p, 
                      const struct bitmap_u8rgb* bm,
-                     int x,
-                     int y)
+                     unsigned int x,
+                     unsigned int y)
 {
         unsigned int offset = bm->row_stride * y + x;
 
@@ -170,8 +170,8 @@ void pixel_u8rgb_get(struct pixel_u8rgb* p,
 }
 
 void pixel_u8rgb_set(struct bitmap_u8rgb* bm,
-                     int x,
-                     int y,
+                     unsigned int x,
+                     unsigned int y,
                      struct pixel_u8rgb* p)
 {
         unsigned int offset = bm->row_stride * y + x;
@@ -207,7 +207,7 @@ int bm_conv_bd(void* restrict dst,
                         u8_dst->width = u8_src->width;
                         u8_dst->height = u8_src->height;
                         u8_dst->color_type = u8_src->color_type;
-                        bm_alloc_u8(u8_src);
+                        bm_alloc_u8(u8_dst);
                         len = u8_src->row_stride * u8_src->height * sizeof(uint8_t);
                         memcpy(u8_dst->c_red, u8_src->c_red, len);
                         if (u8_src->color_type == PIE_COLOR_TYPE_RGB)
@@ -222,7 +222,7 @@ int bm_conv_bd(void* restrict dst,
                         u16_dst->width = u16_src->width;
                         u16_dst->height = u16_src->height;
                         u16_dst->color_type = u16_src->color_type;
-                        bm_alloc_u16(u16_src);
+                        bm_alloc_u16(u16_dst);
                         len = u16_src->row_stride * u16_src->height * sizeof(uint16_t);
                         memcpy(u16_dst->c_red, u16_src->c_red, len);
                         if (u16_src->color_type == PIE_COLOR_TYPE_RGB)
@@ -237,7 +237,7 @@ int bm_conv_bd(void* restrict dst,
                         f32_dst->width = f32_src->width;
                         f32_dst->height = f32_src->height;
                         f32_dst->color_type = f32_src->color_type;
-                        bm_alloc_f32(f32_src);
+                        bm_alloc_f32(f32_dst);
                         len = f32_src->row_stride * f32_src->height * sizeof(float);
                         memcpy(f32_dst->c_red, f32_src->c_red, len);
                         if (f32_src->color_type == PIE_COLOR_TYPE_RGB)

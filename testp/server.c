@@ -17,6 +17,8 @@
 #include "../msg/pie_msg.h"
 #include "../pie_types.h"
 #include "../pie_bm.h"
+#include "../pie_log.h"
+#include "../pie_render.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -58,12 +60,19 @@ static void* i_handler(void*);
 static enum pie_msg_type cb_msg_load(struct pie_msg*);
 
 /**
- * Callbak. Update an image and renders the image.
+ * Callback. Update an image and renders the image.
  * @param message to acton.
  * @return if the message should be retransmit, the new msg type,
  *         if message should be dropped, PIE_MSG_INVALID.
  */
 static enum pie_msg_type cb_msg_render(struct pie_msg*);
+
+/**
+ * Encode the proxy_out into rgba format.
+ * @param the image workspace to encode.
+ * @return void
+ */
+static void encode_rgba(struct pie_img_workspace*);
 
 int main(void)
 {
@@ -85,7 +94,7 @@ int main(void)
                             (void*) &server);
         if (ok)
         {
-                printf("main::pthread_create:thr_int: %d\n", ok);
+                PIE_LOG("pthread_create:thr_int: %d", ok);
                 goto cleanup;
 
         }
@@ -104,7 +113,7 @@ int main(void)
                             (void*) &server);
         if (ok)
         {
-                printf("main::pthread_create:thr_ev_loop: %d\n", ok);
+                PIE_LOG("pthread_create:thr_ev_loop: %d", ok);
                 goto cleanup;
 
         }
@@ -112,11 +121,11 @@ int main(void)
         server.run = 1;
         if (start_server(&server))
         {
-                printf("Failed\n");
+                PIE_ERR("Failed");
         }
 
         
-        printf("Shutdown main.\n");
+        PIE_LOG("Shutdown main.");
         ok = 1;
         chan_close(server.command);
         chan_close(server.response);
@@ -125,18 +134,18 @@ int main(void)
         if (ret)
         {
                 ok = 0;
-                printf("Interrupt handler reported error\n");
+                PIE_ERR("Interrupt handler reported error.");
         }
         pthread_join(thr_ev_loop, &ret);
         if (ret)
         {
                 ok = 0;
-                printf("Event loop reported error\n");
+                PIE_ERR("Event loop reported error.");
         }
 
         if (ok)
         {
-                printf("All services exited cleanly.\n");
+                PIE_LOG("All services exited cleanly.");
         }
 cleanup:
         chan_destroy(server.command);
@@ -147,7 +156,6 @@ cleanup:
 
 static void sig_h(int signum)
 {
-        printf("IN SIG_H %d\n", signum);
         if (signum == SIGINT)
         {
                 server.run = 0;
@@ -171,7 +179,8 @@ static void* i_handler(void* a)
         }
         
         pause();
-        printf("%s: leaving.\n", __func__);
+        PIE_DEBUG("Leaving.");
+        s->run = 0;
 
         return ret;
 }
@@ -182,38 +191,34 @@ static void* ev_loop(void* a)
         struct pie_server* s = (struct pie_server*)a;
         void* ret = NULL;
 
-#if DEBUG > 0
-        printf("%s: ready for messages.\n", __func__);
-#endif
+        PIE_DEBUG("Ready for messages.");
 
         while (s->run)
         {
                 /* Select on multiple channels,
                    after a load issue the response will appear*/
                 int n = chan_read(s->command, &msg, -1);
-#if DEBUG > 1
-                printf("%s: Got chan_read: %d\n", __func__, n);
-#endif
+
+                PIE_TRACE("Got chan_read: %d", n);
+
                 if (n == 0)
                 {
                         struct pie_msg* cmd = (struct pie_msg*)msg.data;
-                        struct timing t;
+                        struct timing t_proc;
+                        struct timing t_enc;
                         int processed = 1;
                         enum pie_msg_type new = PIE_MSG_INVALID;
 
                         if (msg.len != sizeof(struct pie_msg))
                         {
-                                printf("%s: invalid message received.\n",
-                                       __func__);
+                                PIE_WARN("invalid message received.");
                                 continue;
                         }
-#if DEBUG > 0
-                        printf("%s: [%s] received message %d.\n",
-                               __func__,
+                        PIE_DEBUG("[%s] received message %d.",
                                cmd->token,
                                cmd->type);
-#endif
-                        timing_start(&t);
+
+                        timing_start(&t_proc);
                         switch (cmd->type)
                         {
                         case PIE_MSG_LOAD:
@@ -230,19 +235,22 @@ static void* ev_loop(void* a)
                         case PIE_MSG_SET_SATURATION:
                         case PIE_MSG_SET_ROTATE:
                                 new = cb_msg_render(cmd);
+                                timing_start(&t_enc);
+                                encode_rgba(cmd->img);
+                                PIE_DEBUG("Encoded proxy in %ldusec.",
+                                          timing_dur_usec(&t_enc));
+                                
                                 break;
                         default:
                                 processed = 0;
-                                printf("%s: unknown message %d.\n", 
-                                       __func__,
-                                       cmd->type);
+                                PIE_WARN("Unknown message %d.", 
+                                         cmd->type);
                         }
                         if (processed)
                         {
-                                printf("%s: processed message %d in %ldusec\n",
-                                       __func__,
-                                       cmd->type,
-                                       timing_dur_usec(&t));
+                                PIE_DEBUG("Processed message %d in %ldusec.",
+                                          cmd->type,
+                                          timing_dur_usec(&t_proc));
                         }
                         if (new != PIE_MSG_INVALID)
                         {
@@ -252,9 +260,8 @@ static void* ev_loop(void* a)
                                 cmd->type = new;
                                 if (chan_write(s->response, &msg))
                                 {
-                                        printf("%s: failed to send response %d\n",
-                                               __func__, 
-                                               cmd->type);
+                                        PIE_ERR("Failed to send response %d.",
+                                                cmd->type);
                                 }
                         }
                         else
@@ -271,15 +278,13 @@ static void* ev_loop(void* a)
                 }
                 else if (n != EAGAIN)
                 {
-                        printf("ev_loop: channel reported error.\n");
+                        PIE_ERR("Channel reported error.");
                         ret = (void*)0x1L;
                         break;
                 }
         }
 
-#if DEBUG > 0
-        printf("%s: leaving.\n", __func__);
-#endif
+        PIE_DEBUG("Leaving.");
 
         return ret;
 }
@@ -290,30 +295,40 @@ static void* ev_loop(void* a)
  */
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
-        unsigned char* p;
-        int status;
         int width = 1024;
         int height = 100;
         unsigned int row_stride;
+        unsigned int len;
         assert(msg->img == NULL);
 
         /* HACK */
         msg->img = malloc(sizeof(struct pie_img_workspace));
         memset(msg->img, 0, sizeof(struct pie_img_workspace));
+        pie_img_init_settings(&msg->img->settings);
         msg->img->raw.width = width;
         msg->img->raw.height = height;
         msg->img->raw.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_f32(&msg->img->raw); 
+        bm_alloc_f32(&msg->img->raw);
         msg->img->proxy_out_len = msg->img->raw.width * msg->img->raw.height * 4;
         msg->img->buf = malloc(msg->img->proxy_out_len + PROXY_RGBA_OFF);
         msg->img->proxy_out_rgba = msg->img->buf + PROXY_RGBA_OFF;
         row_stride = msg->img->raw.row_stride;
-        p = msg->img->proxy_out_rgba;
+        len = msg->img->raw.height * msg->img->raw.row_stride * sizeof(float);
+
+        /* Create proxy versions */
+        bm_conv_bd(&msg->img->proxy,
+                   PIE_COLOR_32B,
+                   &msg->img->raw,
+                   PIE_COLOR_32B);
+        bm_conv_bd(&msg->img->proxy_out,
+                   PIE_COLOR_32B,
+                   &msg->img->raw,
+                   PIE_COLOR_32B);
 
         /* Init with linear gradient */
-        for (int y = 0; y < msg->img->raw.height; y++)
+        for (unsigned int y = 0; y < msg->img->raw.height; y++)
         {
-                for (int x = 0; x < msg->img->raw.width; x++)
+                for (unsigned int x = 0; x < msg->img->raw.width; x++)
                 {
                         int c = x / 4;
                         float f = c / 255.0f;
@@ -324,24 +339,18 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 }
         }        
 
+        /* Copy raw to proxy */
+        memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
+        memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
+        memcpy(msg->img->proxy.c_blue, msg->img->raw.c_blue, len);
+
+        /* Copy proxy to proxy out */
+        memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
+        memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
+        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);
+
         /* Encode proxy rgba */
-        for (int y = 0; y < msg->img->raw.height; y++)
-        {
-                for (int x = 0; x < msg->img->raw.width; x++)
-                {
-                        /* convert to sse */
-                        unsigned char r, g, b;
-                        
-                        r = (unsigned char)(msg->img->raw.c_red[y * row_stride + x] * 255.0f);
-                        g = (unsigned char)(msg->img->raw.c_green[y * row_stride + x] * 255.0f);
-                        b = (unsigned char)(msg->img->raw.c_blue[y * row_stride + x] * 255.0f);
-                        
-                        *p++ = r;
-                        *p++ = g;
-                        *p++ = b;
-                        *p++ = 255;
-                }
-        }
+        encode_rgba(msg->img);
 
         /* Issue a load cmd */
 
@@ -351,16 +360,16 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 {
         int status = 0;
+        int resample = 0;
         
         switch (msg->type)
         {
         case PIE_MSG_SET_CONTRAST:
                 if (msg->f1 < 0.0f || msg->f1 > 2.0f)
                 {
-                        printf("%s: [%s] invalid contrast: %f\n",
-                               __func__,
-                               msg->token,
-                               msg->f1);
+                        PIE_WARN("[%s] invalid contrast: %f.",
+                                 msg->token,
+                                 msg->f1);
                         status = -1;
                 }
                 else
@@ -377,24 +386,71 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         case PIE_MSG_SET_VIBRANCE:
         case PIE_MSG_SET_SATURATION:
         case PIE_MSG_SET_ROTATE:
-                printf("%s: [%s] Not implemented yet %d\n",
-                       __func__,
-                       msg->token,
-                       msg->type);
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         msg->type);
                 status = -1;
                 break;
         default:
-                printf("%s: [%s] Invalid message: %d\n",
-                       __func__,
-                       msg->token,
-                       msg->type);
+                PIE_WARN("[%s] Invalid message: %d.",
+                         msg->token,
+                         msg->type);
                 status = -1;
+        }
+
+        if (resample)
+        {
+                PIE_ERR("Resample not implemeted");
+                abort();
         }
 
         if (status == 0)
         {
+                struct timing t1;
+                struct bitmap_f32rgb* org = &msg->img->proxy;
+                struct bitmap_f32rgb* new = &msg->img->proxy_out;
+                size_t len = org->height * org->row_stride * sizeof(float);
+                int r_ok;
+                
+                /* Copy fresh proxy */
+                timing_start(&t1);
+                memcpy(new->c_red, org->c_red, len);
+                memcpy(new->c_green, org->c_green, len);
+                memcpy(new->c_blue, org->c_blue, len);
+                PIE_DEBUG("Reset proxy in %ldusec.",
+                          timing_dur_usec(&t1));
+                
+                r_ok = pie_img_render(new,
+                                      NULL,
+                                      &msg->img->settings);
+                assert(r_ok == 0);
+                
                 return PIE_MSG_RENDER_DONE;
         }
 
         return PIE_MSG_INVALID;
+}
+
+static void encode_rgba(struct pie_img_workspace* img)
+{
+        unsigned char* p = img->proxy_out_rgba;
+        unsigned int stride = img->raw.row_stride;
+
+        for (unsigned int y = 0; y < img->proxy_out.height; y++)
+        {
+                for (unsigned int x = 0; x < img->proxy_out.width; x++)
+                {
+                        /* convert to sse */
+                        unsigned char r, g, b;
+                        
+                        r = (unsigned char)(img->proxy_out.c_red[y * stride + x] * 255.0f);
+                        g = (unsigned char)(img->proxy_out.c_green[y * stride + x] * 255.0f);
+                        b = (unsigned char)(img->proxy_out.c_blue[y * stride + x] * 255.0f);
+                        
+                        *p++ = r;
+                        *p++ = g;
+                        *p++ = b;
+                        *p++ = 255;
+                }
+        }        
 }

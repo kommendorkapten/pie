@@ -46,7 +46,7 @@ suseconds_t timing_dur_usec(const struct timing* t)
 
 suseconds_t timing_dur_msec(const struct timing* t)
 {
-	int usec = timing_dur_usec(t);
+	suseconds_t usec = timing_dur_usec(t);
 
 	return usec / 1000;
 }

@@ -7,7 +7,7 @@
 # include <pthread.h>
 #endif
 
-struct lock_s
+struct lock
 {
 #ifdef LOCK_FREE
         uint32_t l;
@@ -17,9 +17,9 @@ struct lock_s
 #endif
 };
 
-lock lk_create(void)
+struct lock* lk_create(void)
 {
-        lock l = malloc(sizeof(struct lock_s));
+        struct lock* l = malloc(sizeof(struct lock));
 
 #ifdef LOCK_FREE
         l->l = 0;
@@ -30,7 +30,7 @@ lock lk_create(void)
         return l;
 }
 
-int lk_lock(lock l)
+int lk_lock(struct lock* l)
 {
 #ifdef LOCK_FREE
         for (;;)
@@ -48,7 +48,7 @@ int lk_lock(lock l)
 #endif        
 }
 
-void lk_unlock(lock l)
+void lk_unlock(struct lock* l)
 {
 #ifdef LOCK_FREE
         l->l = 0;
@@ -57,7 +57,7 @@ void lk_unlock(lock l)
 #endif        
 }
 
-void lk_destroy(lock l)
+void lk_destroy(struct lock* l)
 {
 #ifdef LOCK_FREE
 #else
