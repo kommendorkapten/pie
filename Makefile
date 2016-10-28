@@ -63,7 +63,7 @@ SOURCES  = pie_render.c pie_bm.c pie_cspace.c \
 OBJS     = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS = $(SRV_SRC:%.c=obj/%.o)
 BINS     = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-           histinfo server
+           histinfo server contr
 P_BINS   = $(BINS:%=bin/%)
 LINT_SRC = $(shell find . -name '*.c')
 
@@ -112,6 +112,9 @@ bin/analin: testp/analin.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/histinfo: testp/histinfo.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/contr: testp/contr.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: testp/server.c $(OBJS) $(SRV_OBJS)
