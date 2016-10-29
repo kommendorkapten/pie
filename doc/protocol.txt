@@ -1,6 +1,6 @@
 pie-img-cmd: client->server
 LOAD  [path w h]
-EXPOS [-5.00 5.00]
+EXPOS [-50.0 50.0]
 CONTR [-100 100]
 HIGHL [-100 100]
 SHADO [-100 100]
