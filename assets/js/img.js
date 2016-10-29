@@ -65,7 +65,7 @@ window.addEventListener("load", function(evt) {
             conslog.log("ERROR: Got data: " + evt.data);
         } else {
             var pixels = new Uint8ClampedArray(evt.data);
-            var bm = new ImageData(pixels, 1024, 100);
+            var bm = new ImageData(pixels, 640, 100);
 
             /* Update canvas */
             var c = document.getElementById("img_canvas");
@@ -89,7 +89,10 @@ window.addEventListener("load", function(evt) {
         return false;
     };
 
-    document.getElementById("range1").oninput = function(evt) {
+    /*
+     * I N P U T   S L I D E R S
+     */
+    document.getElementById("sl_exposure").oninput = function(evt) {
         var targ;
 
         if (!wsCmd) {
@@ -99,8 +102,36 @@ window.addEventListener("load", function(evt) {
         if (evt.target) {
             targ = evt.target;
         } else {
-            tart = evt.srcElement;
+            targ = evt.srcElement;
         }
+        
+        document.getElementById("in_exposure").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("EXPOS " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_contrast").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_contrast").value=targ.value;
 
         if (targ.wsCall) {
             clearTimeout(targ.wsCall);
@@ -110,7 +141,351 @@ window.addEventListener("load", function(evt) {
             wsCmd.send("CONTR " + targ.value);
         }, 50);
 
+        return true;
+    };
+
+    document.getElementById("sl_highlights").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_highlights").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("HIGHL " + targ.value);
+        }, 50);
 
         return true;
+    };
+
+    document.getElementById("sl_shadows").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_shadows").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("SHADO " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_white").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_white").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("WHITE " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_black").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_black").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("BLACK " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_clarity").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_clarity").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("CLARI " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_vibrance").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_vibrance").value = targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("VIBRA " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_saturation").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_saturation").value = targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("SATUR " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    /*
+     * I N P U T   V A L I D A T O R S
+     */
+    document.getElementById("in_contrast").oninput = function(evt) {
+        /* validate input here */
+    };
+
+    /*
+     * M A P   I N P U T   T O   S L I D E R S 
+     */
+    document.getElementById("in_exposure").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_exposure").value=targ.value;
+        wsCmd.send("EXPOS " + targ.value);
+    };
+
+    document.getElementById("in_contrast").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_contrast").value=targ.value;
+        wsCmd.send("CONTR " + targ.value);
+    };
+
+    document.getElementById("in_highlights").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_highlights").value=targ.value;
+        wsCmd.send("HIGHL " + targ.value);
+    };
+
+    document.getElementById("in_shadows").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_shadows").value=targ.value;
+        wsCmd.send("SHADO " + targ.value);
+    };
+
+    document.getElementById("in_white").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_white").value=targ.value;
+        wsCmd.send("WHITE " + targ.value);
+    };
+
+    document.getElementById("in_black").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_black").value=targ.value;
+        wsCmd.send("BLACK " + targ.value);
+    };
+
+    document.getElementById("in_clarity").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_clarity").value=targ.value;
+        wsCmd.send("CLARI " + targ.value);
+    };
+
+    document.getElementById("in_vibrance").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_vibrance").value=targ.value;
+        wsCmd.send("VIBRA " + targ.value);
+    };
+
+    document.getElementById("in_saturation").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        document.getElementById("sl_saturation").value=targ.value;
+        wsCmd.send("SATUR " + targ.value);
     };
 });

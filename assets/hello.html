@@ -2,14 +2,122 @@
   <head>
     <meta charset="utf-8"> 
     <script type="text/javascript" charset="utf-8" src="js/img.js"></script>
+    <link rel="stylesheet" href="css/pie.css">
   </head>
   <body>
     <!-- ratio is 3:2 -->
-    <canvas id="img_canvas" width="1024" height="200" style="border:1px solid #000000;">
+    <canvas id="img_canvas" width="640" height="427" style="border:1px solid #000000;">
     </canvas>
     <form>
       <button id="get">Load image</button>
     </form>
-    <input type="range" id="range1" value="50"/>
+
+    <table id="edit_settings_tbl">
+      <tr>
+        <td>
+          <!-- tone -->
+          Exposure
+        </td>
+        <td>
+          <input type="range" id="sl_exposure" value="0" min="-5" max="5"/>
+        </td>
+        <td>
+          <input type="text" id="in_exposure" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Contrast
+        </td>
+        <td>
+          <input type="range" id="sl_contrast" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_contrast" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <!-- marker -->
+        <td>
+          Highlights
+        </td>
+        <td>
+          <input type="range" id="sl_highlights" value="0" 
+                 min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_highlights" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Shadows
+        </td>
+        <td>
+          <input type="range" id="sl_shadows" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_shadows" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          White
+        </td>
+        <td>
+          <input type="range" id="sl_white" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_white" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Black
+        </td>
+        <td>
+          <input type="range" id="sl_black" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_black" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <!-- presecne -->
+        <td>
+          Clarity
+        </td>
+        <td>
+          <input type="range" id="sl_clarity" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_clarity" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Vibrance
+        </td>
+        <td>
+          <input type="range" id="sl_vibrance" value="0" min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_vibrance" class="edit-in" value="0">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Saturation
+        </td>
+        <td>
+          <input type="range" id="sl_saturation" value="0" 
+                 min="-100" max="100"/>
+        </td>
+        <td>
+          <input type="text" id="in_saturation" class="edit-in"
+                 value="0">
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
