@@ -105,7 +105,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }
         
-        document.getElementById("in_exposure").value=targ.value;
+        document.getElementById("in_exposure").value=targ.value / 10.0;
 
         if (targ.wsCall) {
             clearTimeout(targ.wsCall);
@@ -329,8 +329,136 @@ window.addEventListener("load", function(evt) {
     /*
      * I N P U T   V A L I D A T O R S
      */
-    document.getElementById("in_contrast").oninput = function(evt) {
-        /* validate input here */
+    document.getElementById("in_exposure").onkeydown = function(evt) {
+        /* Only allow 0-9 - */
+        /* ASCII 0-9 is 48 to 57 */
+        /* - 189 or 173*/
+        /* . 190 */
+        /* arrows left right 37 39 */
+        /* backspace (8) delete (46) and enter (13)*/
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_contrast").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_highlights").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_shadows").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_white").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_black").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_clarity").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_vibrance").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_saturation").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
     };
 
     /*
@@ -349,7 +477,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
-        document.getElementById("sl_exposure").value=targ.value;
+        document.getElementById("sl_exposure").value=targ.value * 10;
         wsCmd.send("EXPOS " + targ.value);
     };
 
@@ -365,6 +493,14 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
 
         document.getElementById("sl_contrast").value=targ.value;
         wsCmd.send("CONTR " + targ.value);
