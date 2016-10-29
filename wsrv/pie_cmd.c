@@ -61,7 +61,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                         {
                                 msg->type = PIE_MSG_SET_CONTRAST;
                                 msg->f1 = (v + 100)/ 100.f;
-                                PIE_DEBUG("Contrast: %f", msg->f1);
+                                PIE_TRACE("Contrast: %f", msg->f1);
                         }
                         else
                         {
