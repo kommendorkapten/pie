@@ -295,10 +295,11 @@ static void* ev_loop(void* a)
  */
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
-        int width = 1024;
+        int width = 640;
         int height = 100;
         unsigned int row_stride;
         unsigned int len;
+        float step = width / 255.0f;
         assert(msg->img == NULL);
 
         /* HACK */
@@ -330,8 +331,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         {
                 for (unsigned int x = 0; x < msg->img->raw.width; x++)
                 {
-                        int c = x / 4;
-                        float f = c / 255.0f;
+                        float f = (x / step) / 255.0f;
 
                         msg->img->raw.c_red[y * row_stride + x] = f;
                         msg->img->raw.c_green[y * row_stride + x] = f;
