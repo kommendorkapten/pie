@@ -13,6 +13,7 @@
 
 #include "pie_server.h"
 #include "pie_session.h"
+#include "pie_cmd.h"
 #include "../pie_log.h"
 #include "../pie_types.h"
 #include "../msg/pie_msg.h"
@@ -22,7 +23,6 @@
 #include <string.h>
 
 #define MAX_HEADERS 4096
-#define MAX_CMD 256
 
 enum pie_protocols
 {
@@ -82,16 +82,6 @@ static struct pie_sess* get_session(struct lws*);
  * @return void.
  */
 static void srv_init_session(struct pie_sess*);
-
-/**
- * Parse a command line and fill data in the pie_msg.
- * @param the pie_msg to initialize
- * @param the command string
- * @param the length of the command string, without the NULL terminator
- * @return 0 if message could be constructed from the command. Non zero
- *         otherwise.
- */
-static  int parse_cmd_msg(struct pie_msg*, char*, size_t);
 
 /**
  * Callback methods.
@@ -699,123 +689,4 @@ static void srv_init_session(struct pie_sess* s)
         s->response = server->response;
         s->img = NULL;
         s->tx_ready = 0;
-}
-
-static int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
-{
-        char buf[MAX_CMD];
-        char copy[MAX_CMD];
-        char* lasts = buf;
-        char* t;
-        
-        if (len >= MAX_CMD)
-        {
-                /* To long command */
-                PIE_WARN("[%s] to long command: '%s'", 
-                         msg->token,
-                         data);
-                return -1;
-        }
-
-        /* Len does not include NULL */
-        strncpy(copy, data, len);
-        copy[len] = '\0';
-        t = strtok_r(copy, " ", &lasts);
-
-        if (t == NULL)
-        {
-                return -1;
-        }
-
-        if (strcmp(t, "LOAD") == 0)
-        {
-                msg->type = PIE_MSG_LOAD;
-        }
-        else if (strcmp(t, "CONTR") == 0)
-        {
-                /* CONTR {val} 
-                   val = [0, 100] */
-                t = strtok_r(NULL, " ", &lasts);
-                if (t)
-                {
-                        char* p;
-                        long v = strtol(t, &p, 10);
-                        
-                        if (t != p)
-                        {
-                                msg->type = PIE_MSG_SET_CONTRAST;
-                                msg->f1 = v / 50.f;
-                        }
-                        else
-                        {
-                                PIE_WARN("[%s] not an int: '%s'\n",
-                                         msg->token,
-                                         data);
-                                return -1;
-                        }
-                }
-                else
-                {
-                        PIE_WARN("[%s] not a valid command '%s'\n",
-                                 msg->token,
-                                 data);
-                        return -1;
-                }
-        }
-        else if (strcmp(t, "EXPOS") == 0)
-        {
-                printf("parse EXPOS\n");                
-        }
-        else if (strcmp(t, "HIGHL") == 0)
-        {
-                printf("parse HIGHL\n");                
-        }
-        else if (strcmp(t, "SHADO") == 0)
-        {
-                printf("parse SHADO\n");                
-        }
-        else if (strcmp(t, "WHITE") == 0)
-        {
-                printf("parse WHITE\n");                
-        }
-        else if (strcmp(t, "BLACK") == 0)
-        {
-                printf("parse BLACK\n");                
-        }
-        else if (strcmp(t, "CLARI") == 0)
-        {
-                printf("parse CLARI\n");                
-        }
-        else if (strcmp(t, "VIBRA") == 0)
-        {
-                printf("parse VIBRA\n");                
-        }
-        else if (strcmp(t, "SATUR") == 0)
-        {
-                printf("parse SATUR\n");                
-        }
-        else if (strcmp(t, "ROTAT") == 0)
-        {
-                printf("parse ROTAT\n");                
-        }
-        else if (strcmp(t, "CROP") == 0)
-        {
-                printf("parse CROP\n");                
-        }
-        else 
-        {
-                PIE_WARN("[%s] unknown command '%s'\n",
-                         msg->token,
-                         data);
-                return -1;
-        }
-                
-#if 0
-        while (t)
-        {
-                printf("Got token: %s\n", t);
-                t = strtok_r(NULL, " ", &lasts);
-        }
-#endif
-        return 0;
 }
