@@ -26,8 +26,16 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
+#include <netinet/in.h>
 
 struct pie_server server;
+
+struct config
+{
+        char* lib_path;
+};
+static struct config config;
 
 /**
  * Signal handler.
@@ -82,6 +90,7 @@ int main(void)
         void* ret;
         int ok;
 
+        config.lib_path = "test-images";
         server.context_root = "assets";
         server.port = 8080;
         server.command = chan_create();
@@ -310,7 +319,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img->raw.height = height;
         msg->img->raw.color_type = PIE_COLOR_TYPE_RGB;
         bm_alloc_f32(&msg->img->raw);
-        msg->img->proxy_out_len = msg->img->raw.width * msg->img->raw.height * 4;
+        msg->img->proxy_out_len = msg->img->raw.width * msg->img->raw.height * 4 + 2 * sizeof(unsigned int);
         msg->img->buf = malloc(msg->img->proxy_out_len + PROXY_RGBA_OFF);
         msg->img->proxy_out_rgba = msg->img->buf + PROXY_RGBA_OFF;
         row_stride = msg->img->raw.row_stride;
@@ -435,6 +444,14 @@ static void encode_rgba(struct pie_img_workspace* img)
 {
         unsigned char* p = img->proxy_out_rgba;
         unsigned int stride = img->raw.row_stride;
+        
+        uint32_t w = htonl(img->proxy_out.width);
+        uint32_t h = htonl(img->proxy_out.height);
+
+        memcpy(p, &w, sizeof(uint32_t));
+        p += sizeof(uint32_t);
+        memcpy(p, &h, sizeof(uint32_t));
+        p += sizeof(uint32_t);
 
         for (unsigned int y = 0; y < img->proxy_out.height; y++)
         {

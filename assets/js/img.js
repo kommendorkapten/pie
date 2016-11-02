@@ -1,4 +1,5 @@
 var lowerPaneHeight = 220;
+var bigEndian = 1;
 
 var pieStateHack = {
     "image": "lena.png"
@@ -80,6 +81,15 @@ window.addEventListener("load", function(evt) {
 
     pieInitEdit();
 
+    /* Determine endianess */
+    var b = new ArrayBuffer(4);
+    var a = new Uint32Array(b);
+    var c = new Uint8Array(b);
+    a[0] = 0xcafebabe;
+    if (c[0] == 0xbe) {
+        bigEndian = 0;
+    }
+
     wsCmd = new WebSocket(getWsUrl(), "pie-cmd");
     wsCmd.binaryType = "arraybuffer";
     wsHist = new WebSocket(getWsUrl(), "pie-hist");
@@ -115,8 +125,20 @@ window.addEventListener("load", function(evt) {
         if (typeof evt.data === "string") {
             conslog.log("ERROR: Got data: " + evt.data);
         } else {
-            var pixels = new Uint8ClampedArray(evt.data);
-            var bm = new ImageData(pixels, 640, 100);
+            var le = true;
+            var w;
+            var h;
+
+            /* Data arrives as :
+               0:3 width (uint32, network order)
+               4:7 height (uint32, network order)
+               8:  rgba
+
+            /* width and height are in network order */
+            w = new DataView(evt.data, 0, 4).getUint32(0, false);
+            h = new DataView(evt.data, 4, 4).getUint32(0, false);
+            var pixels = new Uint8ClampedArray(evt.data, 8);
+            var bm = new ImageData(pixels, w, h);
 
             /* Update canvas */
             var c = document.getElementById("img_canvas");
