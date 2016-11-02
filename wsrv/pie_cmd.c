@@ -45,7 +45,68 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
 
         if (strcmp(t, "LOAD") == 0)
         {
+                int w;
+                int h;
+
+                /* LOAD path w h */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] (LOAD) No path provided",
+                                 msg->token);
+                        return -1;
+                }
+                strncpy(msg->buf, t, PIE_MSG_BUF_LEN);
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        w = atoi(t);
+                        
+                        if (w == 0)
+                        {
+                                PIE_WARN("[%s] (LOAD)Invalid width: '%s'",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token, 
+                                 data);
+                        return -1;
+                }
+                t = strtok_r(NULL, " ", &lasts);                
+                if (t)
+                {
+                        h = atoi(t);
+                        
+                        if (h == 0)
+                        {
+                                PIE_WARN("[%s] (LOAD)Invalid height: '%s'",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token, 
+                                 data);
+                        return -1;
+                }                
+
+                msg->i1 = w;
+                msg->i2 = h;
                 msg->type = PIE_MSG_LOAD;
+                PIE_TRACE("[%s] Load %s %d %d", 
+                          msg->token,
+                          msg->buf,
+                          msg->i1,
+                          msg->i2);
         }
         else if (strcmp(t, "CONTR") == 0)
         {
@@ -61,7 +122,9 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                         {
                                 msg->type = PIE_MSG_SET_CONTRAST;
                                 msg->f1 = (v + 100)/ 100.f;
-                                PIE_TRACE("Contrast: %f", msg->f1);
+                                PIE_TRACE("[%s] Contrast: %f", 
+                                          msg->token,
+                                          msg->f1);
                         }
                         else
                         {
