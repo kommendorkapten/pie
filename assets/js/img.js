@@ -1,3 +1,9 @@
+var lowerPaneHeight = 220;
+
+var pieStateHack = {
+    "image": "lena.png"
+};
+
 function getWsUrl(){
     var pcol;
     var u = document.URL;
@@ -34,14 +40,19 @@ function pieInitEdit() {
         w = 640;
     }
     h = Math.ceil((w / 3) * 2);
-    if ((window.outerHeight - h) < 300) {
-        h = window.outerHeight - 300;
+    if ((window.outerHeight - h) < lowerPaneHeight) {
+        h = window.outerHeight - lowerPaneHeight;
         w = (h * 3) / 2;
+        
+        if (w < 640) {
+            w = 640;
+            h = Math.ceil((w / 3) * 2);
+        }
     }
 
     c.width = w;
     c.height = h;
-
+    
 }
 
 window.onresize = function(evt) {
@@ -55,10 +66,9 @@ window.onresize = function(evt) {
         w = 640;
     }
     h = Math.ceil((w / 3) * 2);
-    if ((window.outerHeight - h) < 300) {
+    if ((window.outerHeight - h) < lowerPaneHeight) {
         return;
     }
-    console.log("new w " + w);
     c.width = w;
     c.height = h;
 }
@@ -67,6 +77,8 @@ window.addEventListener("load", function(evt) {
     var wsCmd;
     var wsHist;
     var wsImg;
+
+    pieInitEdit();
 
     wsCmd = new WebSocket(getWsUrl(), "pie-cmd");
     wsCmd.binaryType = "arraybuffer";
@@ -117,13 +129,14 @@ window.addEventListener("load", function(evt) {
         }
     }
 
-    document.getElementById("get").onclick = function(evt) {
+    document.getElementById("load").onclick = function(evt) {
         if (!wsCmd) {
             return false;
         }
 
+        var c = document.getElementById("img_canvas");
         wsCmd.pieStartTs = Date.now();
-        wsCmd.send("LOAD");
+        wsCmd.send("LOAD " + pieStateHack.image + " " + c.width + " " + c.height);
 
         return false;
     };
