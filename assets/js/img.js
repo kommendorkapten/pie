@@ -1,5 +1,4 @@
-function get_appropriate_ws_url()
-{
+function getWsUrl(){
     var pcol;
     var u = document.URL;
 
@@ -24,16 +23,56 @@ function get_appropriate_ws_url()
     return pcol + u[0] + "/xxx";
 }
 
+function pieInitEdit() {
+    var w = window.innerWidth;
+    var c = document.getElementById("img_canvas");
+    var h;
+
+    w = w - 282 - 50; // edit pane and margin
+    
+    if (w < 640) {
+        w = 640;
+    }
+    h = Math.ceil((w / 3) * 2);
+    if ((window.outerHeight - h) < 300) {
+        h = window.outerHeight - 300;
+        w = (h * 3) / 2;
+    }
+
+    c.width = w;
+    c.height = h;
+
+}
+
+window.onresize = function(evt) {
+    var w = window.innerWidth;
+    var c = document.getElementById("img_canvas");
+    var h;
+
+    w = w - 282 - 50; // edit pane and margin
+
+    if (w < 640) {
+        w = 640;
+    }
+    h = Math.ceil((w / 3) * 2);
+    if ((window.outerHeight - h) < 300) {
+        return;
+    }
+    console.log("new w " + w);
+    c.width = w;
+    c.height = h;
+}
+
 window.addEventListener("load", function(evt) {
     var wsCmd;
     var wsHist;
     var wsImg;
 
-    wsCmd = new WebSocket(get_appropriate_ws_url(),"pie-cmd");
+    wsCmd = new WebSocket(getWsUrl(), "pie-cmd");
     wsCmd.binaryType = "arraybuffer";
-    wsHist = new WebSocket(get_appropriate_ws_url(),"pie-hist");
+    wsHist = new WebSocket(getWsUrl(), "pie-hist");
     wsHist.binaryType = "arraybuffer";
-    wsImg = new WebSocket(get_appropriate_ws_url(),"pie-img");
+    wsImg = new WebSocket(getWsUrl(), "pie-img");
     wsImg.binaryType = "arraybuffer";
 
     wsCmd.onopen = function(evt) {
@@ -477,6 +516,14 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 5) {
+            targ.value = 5;
+        } else if (targ.value < -5) {
+            targ.value = -5;
+        }
+
         document.getElementById("sl_exposure").value=targ.value * 10;
         wsCmd.send("EXPOS " + targ.value);
     };
@@ -519,6 +566,14 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
+
         document.getElementById("sl_highlights").value=targ.value;
         wsCmd.send("HIGHL " + targ.value);
     };
@@ -535,6 +590,14 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
 
         document.getElementById("sl_shadows").value=targ.value;
         wsCmd.send("SHADO " + targ.value);
@@ -553,6 +616,14 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
+
         document.getElementById("sl_white").value=targ.value;
         wsCmd.send("WHITE " + targ.value);
     };
@@ -569,6 +640,14 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
 
         document.getElementById("sl_black").value=targ.value;
         wsCmd.send("BLACK " + targ.value);
@@ -587,6 +666,14 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
+
         document.getElementById("sl_clarity").value=targ.value;
         wsCmd.send("CLARI " + targ.value);
     };
@@ -603,6 +690,14 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
 
         document.getElementById("sl_vibrance").value=targ.value;
         wsCmd.send("VIBRA " + targ.value);
@@ -621,7 +716,23 @@ window.addEventListener("load", function(evt) {
             targ = evt.srcElement;
         }        
 
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < -100) {
+            targ.value = -100;
+        }
+
         document.getElementById("sl_saturation").value=targ.value;
         wsCmd.send("SATUR " + targ.value);
     };
 });
+
+/*
+  window.innerWidth // without toolbars etc
+  window.innerHeight
+  window.outerWidth // with toolbars etc
+  window.outerHeight
+*/
+
