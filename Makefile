@@ -52,29 +52,38 @@ else
   CFLAGS += -DNDEBUG
 endif
 
-DIRS     = obj bin
-IO_SRC   = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC  = timing.c hmap.c chan.c chan_poll.c lock.c
-SRV_SRC  = pie_server.c pie_session.c pie_cmd.c
-MSG_SRC  = pie_msg.c
-ALG_SRC  = pie_hist.c pie_contr.c
-SOURCES  = pie_render.c pie_bm.c pie_cspace.c \
-	   $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC)
-OBJS     = $(SOURCES:%.c=obj/%.o)
-SRV_OBJS = $(SRV_SRC:%.c=obj/%.o)
-BINS     = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-           histinfo server contr
-P_BINS   = $(BINS:%=bin/%)
-LINT_SRC = $(shell find . -name '*.c')
+DIRS      = obj bin
+IO_SRC    = pie_io_jpg.c pie_io_png.c pie_io.c
+LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
+SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
+MSG_SRC   = pie_msg.c
+ALG_SRC   = pie_hist.c pie_contr.c
+SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
+	    $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC)
+OBJS      = $(SOURCES:%.c=obj/%.o)
+SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
+TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
+            histinfo contr
+EXE_BINS  = server
+T_BINS    = $(TEST_BINS:%=bin/%)
+E_BINS    = $(EXE_BINS:%=bin/%)
+LINT_SRC  = $(shell find . -name '*.c')
 
 VPATH = io lib alg wsrv msg
 
+.PHONY: all
+.PHONY: exe
+.PHONY: test
 .PHONY: clean
 .PHONY: lint
 
 ########################################################################
 
-all: $(OBJS) $(P_BINS)
+all: $(OBJS) exe test
+
+exe: $(E_BINS)
+
+test: $(T_BINS) 
 
 dir: $(DIRS)
 
@@ -117,5 +126,5 @@ bin/histinfo: testp/histinfo.c $(OBJS)
 bin/contr: testp/contr.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/server: testp/server.c $(OBJS) $(SRV_OBJS)
+bin/server: exe/server.c $(OBJS) $(SRV_OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets -lmd $(LFLAGS)
