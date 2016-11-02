@@ -59,7 +59,9 @@ struct pie_msg
         struct pie_img_workspace* img;
         struct timing t;
         float f1;
+        float f2;
         int i1;
+        int i2;
 };
 
 /**
