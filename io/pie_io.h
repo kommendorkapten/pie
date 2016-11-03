@@ -25,7 +25,7 @@
 #include "pie_io_jpg.h"
 
 /**
- * Open a file and load content into bitmap.
+ * Open a file and load content into an empty bitmap.
  * @param the bitmap to load content into.
  * @param the path to open.
  * @return 0 on success.
