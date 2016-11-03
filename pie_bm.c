@@ -14,6 +14,7 @@
 #include "pie_bm.h"
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 static void bm_conv_u8_u16(struct bitmap_u8rgb*, 
                            const struct bitmap_u16rgb*);
@@ -32,6 +33,8 @@ int bm_alloc_u8(struct bitmap_u8rgb* bm)
 {
         unsigned int rem = bm->width % 4;
         size_t s;
+
+        assert(bm->color_type != PIE_COLOR_INVALID);
 
         /* Make sure each row has good alignment */
         if (rem == 0)
@@ -61,6 +64,8 @@ int bm_alloc_u16(struct bitmap_u16rgb* bm)
         unsigned int rem = bm->width % 4;
         size_t s;
 
+        assert(bm->color_type != PIE_COLOR_INVALID);
+
         /* Make sure each row has good alignment */
         if (rem == 0)
         {
@@ -89,6 +94,8 @@ int bm_alloc_f32(struct bitmap_f32rgb* bm)
         unsigned int rem = bm->width % 4;
         size_t s;
 
+        assert(bm->color_type != PIE_COLOR_INVALID);
+
         /* Make sure each row has good alignment */
         if (rem == 0)
         {
@@ -114,10 +121,16 @@ int bm_alloc_f32(struct bitmap_f32rgb* bm)
 
 void bm_free_u8(struct bitmap_u8rgb* bm)
 {
+        assert(bm);
+        assert(bm->c_red);
+
         free(bm->c_red);
         
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
+                assert(bm->c_green);
+                assert(bm->c_blue);
+
                 free(bm->c_green);
                 free(bm->c_blue);
         }
@@ -129,10 +142,16 @@ void bm_free_u8(struct bitmap_u8rgb* bm)
 
 void bm_free_u16(struct bitmap_u16rgb* bm)
 {
+        assert(bm);
+        assert(bm->c_red);
+
         free(bm->c_red);
         
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
+                assert(bm->c_green);
+                assert(bm->c_blue);
+
                 free(bm->c_green);
                 free(bm->c_blue);
         }
@@ -144,10 +163,16 @@ void bm_free_u16(struct bitmap_u16rgb* bm)
 
 void bm_free_f32(struct bitmap_f32rgb* bm)
 {
+        assert(bm);
+        assert(bm->c_red);
+
         free(bm->c_red);
         
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
+                assert(bm->c_green);
+                assert(bm->c_blue);
+
                 free(bm->c_green);
                 free(bm->c_blue);
         }
