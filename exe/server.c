@@ -19,6 +19,7 @@
 #include "../pie_bm.h"
 #include "../pie_log.h"
 #include "../pie_render.h"
+#include "../io/pie_io.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -277,6 +278,9 @@ static void* ev_loop(void* a)
                         {
                                 /* Message was not properly handled
                                    Free it. */
+                                PIE_ERR("[%s] Failed to handle message %d",
+                                        cmd->token,
+                                        cmd->type);
                                 pie_msg_free(cmd);
                         }
                 }
@@ -304,50 +308,52 @@ static void* ev_loop(void* a)
  */
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
-        int width = 640;
-        int height = 100;
+        char buf[PIE_PATH_LEN];
         unsigned int row_stride;
         unsigned int len;
-        float step = width / 255.0f;
+        int res;
+        int w;
+        int h;
+
         assert(msg->img == NULL);
 
-        /* HACK */
-        msg->img = malloc(sizeof(struct pie_img_workspace));
-        memset(msg->img, 0, sizeof(struct pie_img_workspace));
-        pie_img_init_settings(&msg->img->settings);
-        msg->img->raw.width = width;
-        msg->img->raw.height = height;
-        msg->img->raw.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_f32(&msg->img->raw);
-        msg->img->proxy_out_len = msg->img->raw.width * msg->img->raw.height * 4 + 2 * sizeof(unsigned int);
-        msg->img->buf = malloc(msg->img->proxy_out_len + PROXY_RGBA_OFF);
-        msg->img->proxy_out_rgba = msg->img->buf + PROXY_RGBA_OFF;
-        row_stride = msg->img->raw.row_stride;
-        len = msg->img->raw.height * msg->img->raw.row_stride * sizeof(float);
-
-        /* Create proxy versions */
-        bm_conv_bd(&msg->img->proxy,
-                   PIE_COLOR_32B,
-                   &msg->img->raw,
-                   PIE_COLOR_32B);
-        bm_conv_bd(&msg->img->proxy_out,
-                   PIE_COLOR_32B,
-                   &msg->img->raw,
-                   PIE_COLOR_32B);
-
-        /* Init with linear gradient */
-        for (unsigned int y = 0; y < msg->img->raw.height; y++)
+        msg->img = malloc(sizeof(struct pie_img_workspace));        
+        snprintf(buf, PIE_PATH_LEN, "%s/%s", config.lib_path, msg->buf);
+        res = pie_io_load(&msg->img->raw, buf);
+        if (res)
         {
-                for (unsigned int x = 0; x < msg->img->raw.width; x++)
-                {
-                        float f = (x / step) / 255.0f;
+                PIE_ERR("[%s] Could not open '%s'",
+                        msg->token,
+                        buf);
+                free(msg->img);
+                return PIE_MSG_INVALID;
+        }
+        
+        w = msg->i1 < msg->img->raw.width ? msg->i1 : msg->img->raw.height;
+        h = msg->i1 < msg->img->raw.height ? msg->i1 : msg->img->raw.height;
 
-                        msg->img->raw.c_red[y * row_stride + x] = f;
-                        msg->img->raw.c_green[y * row_stride + x] = f;
-                        msg->img->raw.c_blue[y * row_stride + x] = f;
-                }
-        }        
+        PIE_DEBUG("[%s] Load proxy with size %dx%d", msg->token, w, h);
+        strncpy(msg->img->path, buf, PIE_PATH_LEN);
+        /* Read from database to get settings */
+        pie_img_init_settings(&msg->img->settings);
+        /* Allocate proxy images */
+        msg->img->proxy.width = w;
+        msg->img->proxy.height = h;
+        msg->img->proxy.color_type = PIE_COLOR_TYPE_RGB;
+        bm_alloc_f32(&msg->img->proxy);
+        msg->img->proxy_out.width = w;
+        msg->img->proxy_out.height = h;
+        msg->img->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
+        bm_alloc_f32(&msg->img->proxy_out);
 
+        /* Allocate output buffer */
+        len = w * h * 4 + 2 * sizeof(uint32_t);
+        msg->img->buf = malloc(len + PROXY_RGBA_OFF);
+        msg->img->proxy_out_rgba = msg->img->buf + PROXY_RGBA_OFF;
+        msg->img->proxy_out_len = len;
+
+        /* Call pie_downsample */
+        len = w * msg->img->raw.row_stride * sizeof(float);
         /* Copy raw to proxy */
         memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
         memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
