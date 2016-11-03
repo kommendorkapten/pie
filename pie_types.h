@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 #define PIE_HIST_RES 256
+#define PIE_PATH_LEN 256
 #if defined(LWS_PRE)
 # define PROXY_RGBA_OFF LWS_PRE
 #else
@@ -24,11 +25,13 @@
 #endif
 
 enum pie_color_type {
+        PIE_COLOR_TYPE_INVALID = 0,
         PIE_COLOR_TYPE_GRAY = 1,
         PIE_COLOR_TYPE_RGB = 3
 };
 
 enum pie_color_bit_depth {
+        PIE_COLOR_INVALID  = 0,
         PIE_COLOR_8B = 8,   /* unsigned 8 bit int */
         PIE_COLOR_16B = 16, /* unsigned 16 bit int */
         PIE_COLOR_32B = 32  /* single precision 32 bit float */
@@ -125,6 +128,7 @@ struct pie_histogram
 
 struct pie_img_workspace
 {
+        char path[PIE_PATH_LEN];
         struct pie_histogram hist;
         struct pie_img_settings settings;
         /* Unmodified full resolution image */
