@@ -20,6 +20,7 @@
 #include "../pie_log.h"
 #include "../pie_render.h"
 #include "../io/pie_io.h"
+#include "../pie_cspace.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -29,6 +30,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <netinet/in.h>
+
+#define _USE_GAMMA_CONV 0
 
 struct pie_server server;
 
@@ -309,7 +312,7 @@ static void* ev_loop(void* a)
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         char buf[PIE_PATH_LEN];
-        unsigned int row_stride;
+        unsigned int stride;
         unsigned int len;
         int res;
         int w;
@@ -328,7 +331,20 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 free(msg->img);
                 return PIE_MSG_INVALID;
         }
-        
+        stride = msg->img->raw.row_stride;
+#if _USE_GAMMA_CONV > 0
+        for (unsigned int y = 0; y < msg->img->raw.height; y++)
+        {
+                srgb_to_linearv(msg->img->raw.c_red + y * stride, 
+                                msg->img->raw.width);
+                srgb_to_linearv(msg->img->raw.c_green + y * stride, 
+                                msg->img->raw.width);
+                srgb_to_linearv(msg->img->raw.c_blue + y * stride, 
+                                msg->img->raw.width);
+                                
+        }
+#endif        
+
         w = msg->i1 < msg->img->raw.width ? msg->i1 : msg->img->raw.height;
         h = msg->i1 < msg->img->raw.height ? msg->i1 : msg->img->raw.height;
 
@@ -353,7 +369,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img->proxy_out_len = len;
 
         /* Call pie_downsample */
-        len = w * msg->img->raw.row_stride * sizeof(float);
+        len = w * stride * sizeof(float);
         /* Copy raw to proxy */
         memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
         memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
@@ -393,6 +409,18 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 break;
         case PIE_MSG_SET_ESPOSURE:
+                if (msg->f1 < -5.0f || msg->f1 > 5.0f)
+                {
+                        PIE_WARN("[%s] invalid exposure: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.exposure = msg->f1;
+                }
+                break;
         case PIE_MSG_SET_HIGHL:
         case PIE_MSG_SET_SHADOW:
         case PIE_MSG_SET_WHITE:
@@ -461,6 +489,15 @@ static void encode_rgba(struct pie_img_workspace* img)
 
         for (unsigned int y = 0; y < img->proxy_out.height; y++)
         {
+#if _USE_GAMMA_CONV > 0
+                /* Convert to sRGB */
+                linear_to_srgbv(img->proxy_out.c_red + y * stride, 
+                                img->proxy_out.width);
+                linear_to_srgbv(img->proxy_out.c_green + y * stride, 
+                                img->proxy_out.width);
+                linear_to_srgbv(img->proxy_out.c_blue + y * stride, 
+                                img->proxy_out.width);
+#endif
                 for (unsigned int x = 0; x < img->proxy_out.width; x++)
                 {
                         /* convert to sse */
