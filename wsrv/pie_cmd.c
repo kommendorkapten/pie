@@ -144,7 +144,37 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         }
         else if (strcmp(t, "EXPOS") == 0)
         {
-                printf("parse EXPOS\n");                
+                /* EXPOS 1.234 
+                   val = [-5.0, 5.0]*/
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+
+                        if (t != p && v >= -50 && v <= 50)
+                        {
+                                msg->type = PIE_MSG_SET_ESPOSURE;
+                                msg->f1 = v/10.0f;
+                                PIE_TRACE("[%s] Exposure: %f", 
+                                          msg->token,
+                                          msg->f1);
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] Invalid exposure: '%s'\n",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "HIGHL") == 0)
         {
