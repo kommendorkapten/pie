@@ -154,6 +154,10 @@ window.addEventListener("load", function(evt) {
         }
     }
 
+    wsHist.onmessage = function(evt) {
+        console.log("Histogram: " + evt.data);
+    }
+
     document.getElementById("load").onclick = function(evt) {
         if (!wsCmd) {
             return false;

@@ -21,6 +21,8 @@
 #include "../pie_render.h"
 #include "../io/pie_io.h"
 #include "../pie_cspace.h"
+#include "../encoding/pie_json.h"
+#include "../alg/pie_hist.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -32,6 +34,7 @@
 #include <netinet/in.h>
 
 #define _USE_GAMMA_CONV 0
+#define JSON_HIST_SIZE (10 * 1024)
 
 struct pie_server server;
 
@@ -318,9 +321,16 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         int w;
         int h;
 
+        /* HACK */
+        if (msg->img)
+        {
+                return PIE_MSG_LOAD_DONE;
+        }
+
         assert(msg->img == NULL);
 
-        msg->img = malloc(sizeof(struct pie_img_workspace));        
+        msg->img = malloc(sizeof(struct pie_img_workspace));
+        memset(msg->img, 0, sizeof(struct pie_img_workspace));
         snprintf(buf, PIE_PATH_LEN, "%s/%s", config.lib_path, msg->buf);
         res = pie_io_load(&msg->img->raw, buf);
         if (res)
@@ -345,8 +355,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         }
 #endif        
 
-        w = msg->i1 < msg->img->raw.width ? msg->i1 : msg->img->raw.height;
-        h = msg->i1 < msg->img->raw.height ? msg->i1 : msg->img->raw.height;
+        w = msg->i1 < msg->img->raw.width ? msg->i1 : msg->img->raw.width;
+        h = msg->i1 < msg->img->raw.height ? msg->i2 : msg->img->raw.height;
 
         PIE_DEBUG("[%s] Load proxy with size %dx%d", msg->token, w, h);
         strncpy(msg->img->path, buf, PIE_PATH_LEN);
@@ -364,9 +374,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 
         /* Allocate output buffer */
         len = w * h * 4 + 2 * sizeof(uint32_t);
-        msg->img->buf = malloc(len + PROXY_RGBA_OFF);
-        msg->img->proxy_out_rgba = msg->img->buf + PROXY_RGBA_OFF;
+        msg->img->buf_proxy = malloc(len + PROXY_RGBA_OFF);
+        msg->img->proxy_out_rgba = msg->img->buf_proxy + PROXY_RGBA_OFF;
         msg->img->proxy_out_len = len;
+
+        /* Allocate JSON output buffer */
+        msg->img->buf_hist = malloc(JSON_HIST_SIZE + PROXY_RGBA_OFF);
+        msg->img->hist_json = msg->img->buf_hist + PROXY_RGBA_OFF;
 
         /* Call pie_downsample */
         len = w * stride * sizeof(float);
@@ -382,6 +396,11 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 
         /* Encode proxy rgba */
         encode_rgba(msg->img);
+
+        /* Create histogram */
+        msg->img->hist_json_len = pie_json_hist((char*)msg->img->hist_json, 
+                                                JSON_HIST_SIZE, 
+                                                &msg->img->hist);
 
         /* Issue a load cmd */
 
@@ -467,6 +486,13 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                       NULL,
                                       &msg->img->settings);
                 assert(r_ok == 0);
+
+                /* Create histogram */
+                timing_start(&t1);
+                pie_alg_hist_lum(&msg->img->hist,
+                                 new);
+                PIE_DEBUG("Created histogram in %ldusec.",
+                          timing_dur_usec(&t1));
                 
                 return PIE_MSG_RENDER_DONE;
         }

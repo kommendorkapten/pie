@@ -406,7 +406,6 @@ static int cb_img(struct lws* wsi,
         struct pie_sess* session = NULL;
         struct pie_ctx_img* ctx = (struct pie_ctx_img*)user;
         int ret = 0;
-        int bw;
 
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
@@ -432,13 +431,16 @@ static int cb_img(struct lws* wsi,
                 {
                         PIE_WARN("No session found");
                         ret = -1;
+                        break;
                 }
                 PIE_DEBUG("[%s] tx_ready: 0x%x",
                           session->token,
                           session->tx_ready);
 
-                if (session->tx_ready)
+                if (session->tx_ready & PIE_TX_IMG)
                 {
+                        int bw;
+
                         bw = lws_write(wsi, 
                                        session->img->proxy_out_rgba,
                                        session->img->proxy_out_len, 
@@ -451,7 +453,7 @@ static int cb_img(struct lws* wsi,
                                         session->img->proxy_out_len);
                                 ret = -1;
                         }
-                        session->tx_ready = 0;
+                        session->tx_ready ^= PIE_TX_IMG;
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
@@ -502,13 +504,30 @@ static int cb_hist(struct lws* wsi,
                 {
                         PIE_WARN("No session found");
                         ret = -1;
+                        break;
                 }
-                else
-                {
-                        PIE_LOG("[%s] tx_ready: 0x%x",
-                                session->token,
-                                session->tx_ready);
 
+                PIE_DEBUG("[%s] tx_ready: 0x%x",
+                          session->token,
+                          session->tx_ready);
+
+                if (session->tx_ready & PIE_TX_HIST)
+                {
+                        int bw;
+
+                        bw = lws_write(wsi,
+                                       session->img->hist_json,
+                                       session->img->hist_json_len,
+                                       LWS_WRITE_TEXT);
+                        if (bw < session->img->hist_json_len)
+                        {
+                                PIE_ERR("[%s] ERROR write %d of %d",
+                                        session->token,
+                                        bw,
+                                        session->img->hist_json_len);
+                                ret = -1;
+                        }
+                        session->tx_ready ^= PIE_TX_HIST;
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
