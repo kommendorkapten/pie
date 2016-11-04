@@ -2,6 +2,10 @@ body {
     background-color: #333333;
 }
 
+canvas {
+    background-color: #c8c8c8;
+}
+
 .center {
     margin: auto;
 }
