@@ -80,7 +80,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
         s->saturation = 0.0f;
         s->rotate = 0.0f;        
 #endif
-                      
+
         PIE_DEBUG("Render total in %ldusec", timing_dur_usec(&t1));
 
         return 0;
