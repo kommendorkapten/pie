@@ -14,6 +14,7 @@
 #include "pie_render.h"
 #include "pie_types.h"
 #include "alg/pie_contr.h"
+#include "alg/pie_expos.h"
 #include "lib/timing.h"
 #include "pie_log.h"
 
@@ -39,9 +40,19 @@ int pie_img_render(struct bitmap_f32rgb* img,
         struct timing t2;
         
         timing_start(&t1);
-#if 0
-        s->exposure = 0.0f;
-#endif
+
+        /* E X P O S U R E */
+        timing_start(&t2);
+        pie_alg_expos(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->exposure,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render exposure in %ldusec", timing_dur_usec(&t2));
+
+        /* C O N T R A S T */
         timing_start(&t2);
         pie_alg_contr(img->c_red,
                       s->contrast,
