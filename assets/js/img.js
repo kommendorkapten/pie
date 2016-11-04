@@ -2,7 +2,8 @@ var lowerPaneHeight = 220;
 var bigEndian = 1;
 
 var pieStateHack = {
-    "image": "lena.png"
+/*    "image": "lena.png"*/
+    "image": "walk.jpg"
 };
 
 function getWsUrl(){
@@ -142,8 +143,10 @@ window.addEventListener("load", function(evt) {
 
             /* Update canvas */
             var c = document.getElementById("img_canvas");
+            var x = (c.width - w) / 2;
+            var y = (c.height - h) / 2;
             var ctx = c.getContext("2d");
-            ctx.putImageData(bm, 0, 0);
+            ctx.putImageData(bm, x, y);
             now = Date.now();
             dur = now - wsCmd.pieStartTs;
             wsCmd.pieStartTs = now;
