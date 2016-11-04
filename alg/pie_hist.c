@@ -21,22 +21,15 @@
 #define LUM_GREEN 0.7152f
 #define LUM_BLUE  0.0722f
 
-#ifdef _HAS_SSE
-static float lum_redv[4] = {LUM_RED, LUM_RED, LUM_RED, LUM_RED};
-static float lum_greenv[4] = {LUM_GREEN, LUM_GREEN, LUM_GREEN, LUM_GREEN};
-static float lum_bluev[4] = {LUM_BLUE, LUM_BLUE, LUM_BLUE, LUM_BLUE};
-static float vec_255[4] = {255.0f, 255.0f, 255.0f, 255.0f};
-#endif
-
 #ifdef _HAS_SIMD
 # ifdef _HAS_SSE
 
 void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
-	__m128 coeff_red = _mm_load_ps(lum_redv);
-	__m128 coeff_green = _mm_load_ps(lum_greenv);
-	__m128 coeff_blue = _mm_load_ps(lum_bluev);
-	__m128 coeff_scale = _mm_load_ps(vec_255);
+	__m128 coeff_red = _mm_set1_ps(LUM_RED);
+	__m128 coeff_green = _mm_set1_ps(LUM_GREEN);
+	__m128 coeff_blue = _mm_set1_ps(LUM_GREEN);
+	__m128 coeff_scale = _mm_set1_ps(255.0f);
 	unsigned int rem = bm->width % 4;
 	unsigned int stop = bm->width - rem;
 
@@ -109,9 +102,9 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			unsigned int p = y * bm->row_stride + x;
 			unsigned char hp;
 
-			l = LUM_RED * bm->c_red[p];
-			l += LUM_GREEN * bm->c_green[p];
-			l += LUM_BLUE * bm->c_blue[p];
+			l = LUM_RED * bm->c_red[p] + 
+                                LUM_GREEN * bm->c_green[p] +
+                                LUM_BLUE * bm->c_blue[p];
 
 			hp = (unsigned char)(l * 255.0f);
                         hist->lum[hp]++;
