@@ -39,15 +39,12 @@ void pie_alg_expos(float* r,
            The relationship is virtually linear across the complete 
            luma scale [0,1], so just take a number and calculate. */
 
-        printf("Input factor: %f\n", e);
         e = powf(2.0f, e);
-        printf("Adjustment factor: %f\n", e);
         float l = powf(0.5f, GAMMA_C);
         l *= e;
         l = powf(l, (1.0f / GAMMA_C));
         /* Get the factor the color increased */
         l = l / 0.5f;
-        printf("Gamma adjusted factor: %f\n", l);
 
         /* Calculate a table per luminosity level to get a smoother
            exposure compensation, that avoids blowing out highlights */
@@ -72,7 +69,7 @@ void pie_alg_expos(float* r,
                 }
                 float delta = l - 1.0f;
                 scale[i] = 1.0 + delta * scale[i];
-                printf("%d: %f\n", i, scale[i]);
+                /* printf("%d: %f\n", i, scale[i]); */
         }
 
         for (unsigned int y = 0; y < height; y++)
