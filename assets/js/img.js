@@ -560,7 +560,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_exposure").value=targ.value * 10;
-        wsCmd.send("EXPOS " + targ.value);
+        wsCmd.send("EXPOS " + Math.ceil(targ.value * 10));
     };
 
     document.getElementById("in_contrast").onchange = function(evt) {
