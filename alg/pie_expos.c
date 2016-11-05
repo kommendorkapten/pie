@@ -42,31 +42,50 @@ void pie_alg_expos(float* r,
         l = powf(l, (1.0f / GAMMA_C));
         /* Get the factor the color increased */
         l = l / 0.5f;
-
         /* Calculate a table per luminosity level to get a smoother
            exposure compensation, that avoids blowing out highlights */
-        for (int i = 0; i < 256; i++)
+        if (e >= 1.0f) 
         {
-                if (i < 40)
+                for (int i = 0; i < 256; i++)
                 {
-                        scale[i] = i / 40.0f;
-                }
-                else if (i > 130 && i < 181)
+                        if (i < 40)
+                        {
+                                scale[i] = i / 40.0f;
+                        }
+                        else if (i > 130 && i < 181)
+                        {
+                                scale[i] = (255 - i) / 125.0f;
+                        }
+                        else if (i > 180)
+                        {
+                                scale[i] = (255 - i) / 125.0f;
+                                scale[i] = powf(scale[i], 1.35f);
+                        }
+                        else
+                        {
+                                scale[i] = 1.0f;
+                        }
+                        float delta = l - 1.0f;
+                        scale[i] = 1.0 + delta * scale[i];
+                        /* printf("%d: %f\n", i, scale[i]); */
+                }                
+        }
+        else
+        {
+                l = l / 2.5f;
+                for (int i = 0; i < 256; i++)
                 {
-                        scale[i] = (255 - i) / 125.0f;
-                }
-                else if (i > 180)
-                {
-                        scale[i] = (255 - i) / 125.0f;
-                        scale[i] = powf(scale[i], 1.35f);
-                }
-                else
-                {
-                        scale[i] = 1.0f;
-                }
-                float delta = l - 1.0f;
-                scale[i] = 1.0 + delta * scale[i];
-                /* printf("%d: %f\n", i, scale[i]); */
+                        if (i < 40)
+                        {
+                                scale[i] = i / 40.0f;
+                        }
+                        else
+                        {
+                                scale[i] = 1.0f;
+                        }
+                        float delta = l - 1.0f;
+                        scale[i] = 1.0 + delta * scale[i];
+                }                                
         }
 
         for (unsigned int y = 0; y < height; y++)
