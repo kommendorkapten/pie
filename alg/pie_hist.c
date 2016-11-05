@@ -164,7 +164,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			float l;
 			unsigned int p = y * bm->row_stride + x;
 			unsigned char hp;
-#if _USE_GAMMA > 0
+#if _USE_GAMMA_CONV > 0
                         float r = linear_to_srgb(bm->c_red[p]);
                         float g = linear_to_srgb(bm->c_green[p]);
                         float b = linear_to_srgb(bm->c_blue[p]);
@@ -201,7 +201,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 		{
 			unsigned int p = y * bm->row_stride + x;
 			unsigned char hp;
-#if _USE_GAMMA > 0
+#if _USE_GAMMA_CONV > 0
                         float r = linear_to_srgb(bm->c_red[p]);
                         float g = linear_to_srgb(bm->c_green[p]);
                         float b = linear_to_srgb(bm->c_blue[p]);
