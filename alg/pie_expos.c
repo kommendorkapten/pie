@@ -21,9 +21,6 @@
 #define LUM_BLUE  0.0722f
 #define GAMMA_C   2.33f     
 
-static float e_min = 85.0f/255.0f;
-static float e_max = 170.0f/255.0f;
-
 void pie_alg_expos(float* r,
                    float* g,
                    float* b,
