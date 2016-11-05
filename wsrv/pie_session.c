@@ -2,7 +2,11 @@
 #include "../lib/hmap.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <sha1.h>
+#ifdef _USE_OPEN_SSL
+# include <openssl/sha.h>
+#else
+# include <sha1.h>
+#endif
 #include <sys/time.h>
 
 struct pie_sess_mgr
@@ -14,16 +18,25 @@ void pie_sess_init(struct pie_sess* s)
 {
         char buf[64];
         unsigned char sum[20];
+#ifdef _USE_OPEN_SSL
+        SHA_CTX ctx;
+#else
         SHA1_CTX ctx;
+#endif
         struct timeval tv;
         unsigned int n;
 
         gettimeofday(&tv, NULL);
         n = snprintf(buf, 64, "x&y_z%ld%ld", tv.tv_sec, tv.tv_usec);
+#ifdef _USE_OPEN_SSL
+        SHA1_Init(&ctx);
+        SHA1_Update(&ctx, (void*)buf, n);
+        SHA1_Final(sum, &ctx);
+#else
         SHA1Init(&ctx);
         SHA1Update(&ctx, (unsigned char*)buf, n);
         SHA1Final(sum, &ctx);
-
+#endif
         /* hex encode */
         for (int i = 0; i < 20; i++)
         {

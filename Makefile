@@ -1,10 +1,11 @@
-CC     = gcc
-CFLAGS = -m64 -I/usr/local/include -DMT_SAFE
-LFLAGS += -lm -lpng -ljpeg
-LSCUT  = -L/usr/local/lib -lscut
-OS     = $(shell uname -s)
-ISA    = $(shell uname -p)
-DEBUG  = 1
+CC      = gcc
+CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE
+LFLAGS  += -lm -lpng -ljpeg
+LSCUT   = -L/usr/local/lib -lscut
+OS      = $(shell uname -s)
+ISA     = $(shell uname -p)
+DEBUG   = 1
+LCRYPTO = -lmd
 
 # Default to c99 on Solaris
 ifeq ($(OS), SunOS)
@@ -36,7 +37,9 @@ else ifeq ($(OS), FreeBSD)
     CFLAGS += -mtune=$(ISA) -mcpu=$(ISA)
   endif
 else ifeq ($(OS), Darwin)
-  CFLAGS += -mtune=native -mcpu=native
+  CFLAGS  += -march=native -D_USE_OPEN_SSL
+  LCRYPTO = -lcrypto
+  LFLAGS  += -L/usr/local/lib
 endif
 
 # Configuration based on ISA
@@ -130,4 +133,4 @@ bin/contr: testp/contr.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: exe/server.c $(OBJS) $(SRV_OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets -lmd $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
