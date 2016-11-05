@@ -38,15 +38,15 @@ int pie_json_hist(char* buf, size_t len, const struct pie_histogram* h)
         {
                 bw += snprintf(buf + bw, len - bw, ",%d", h->c_red[i]);
         }
-        bw += snprintf(buf + bw, len - bw, "],\"g\":[%d", h->c_blue[0]);
-        for (int i = 1; i < PIE_HIST_RES; i++)
-        {
-                bw += snprintf(buf + bw, len - bw, ",%d", h->c_blue[i]);
-        }
         bw += snprintf(buf + bw, len - bw, "],\"g\":[%d", h->c_green[0]);
         for (int i = 1; i < PIE_HIST_RES; i++)
         {
                 bw += snprintf(buf + bw, len - bw, ",%d", h->c_green[i]);
+        }
+        bw += snprintf(buf + bw, len - bw, "],\"b\":[%d", h->c_blue[0]);
+        for (int i = 1; i < PIE_HIST_RES; i++)
+        {
+                bw += snprintf(buf + bw, len - bw, ",%d", h->c_blue[i]);
         }
         bw += snprintf(buf + bw, len - bw, "]}");
 
