@@ -43,9 +43,8 @@ var histDataB = {
     }]
 };
 
-
 var pieStateHack = {
-    /*    "image": "lena.png"*/
+    "image2": "lena.png",
     "image": "walk.jpg"
 };
 
