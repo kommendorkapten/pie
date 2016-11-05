@@ -26,8 +26,8 @@
  * @return the number of bytes written (excluding the null byte; if 
  *         it was written).
  */
-extern int pie_json_hist(char*, size_t, const struct pie_histogram*);
+extern int pie_json_enc_hist(char*, size_t, const struct pie_histogram*);
 
-extern int pie_json_settings(char*, size_t, const struct pie_img_settings*);
+extern int pie_json_enc_settings(char*, size_t, const struct pie_img_settings*);
 
 #endif /* __PIE_JSON_H__ */

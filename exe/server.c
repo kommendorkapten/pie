@@ -221,7 +221,6 @@ static void* ev_loop(void* a)
                 {
                         struct pie_msg* cmd = (struct pie_msg*)msg.data;
                         struct timing t_proc;
-                        struct timing t_enc;
                         int processed = 1;
                         enum pie_msg_type new = PIE_MSG_INVALID;
 
@@ -251,17 +250,6 @@ static void* ev_loop(void* a)
                         case PIE_MSG_SET_SATURATION:
                         case PIE_MSG_SET_ROTATE:
                                 new = cb_msg_render(cmd);
-                                timing_start(&t_enc);
-                                encode_rgba(cmd->img);
-                                PIE_DEBUG("Encoded proxy in %ldusec.",
-                                          timing_dur_usec(&t_enc));
-                                timing_start(&t_enc);
-                                cmd->img->hist_json_len = pie_json_hist((char*)cmd->img->hist_json, 
-                                                                        JSON_HIST_SIZE, 
-                                                                        &cmd->img->hist);
-                                PIE_DEBUG("JSON encoded histogram in %ldusec.",
-                                          timing_dur_usec(&t_enc));
-                                
                                 break;
                         default:
                                 processed = 0;
@@ -406,9 +394,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         /* Create histogram */
         pie_alg_hist_lum(&msg->img->hist, &msg->img->proxy_out);
         pie_alg_hist_rgb(&msg->img->hist, &msg->img->proxy_out);
-        msg->img->hist_json_len = pie_json_hist((char*)msg->img->hist_json, 
-                                                JSON_HIST_SIZE, 
-                                                &msg->img->hist);
+        msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
+                                                    JSON_HIST_SIZE, 
+                                                    &msg->img->hist);
         /* Issue a load cmd */
 
         return PIE_MSG_LOAD_DONE;
@@ -500,10 +488,22 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                  new);
                 pie_alg_hist_rgb(&msg->img->hist,
                                  new);
-
                 PIE_DEBUG("Created histogram in %ldusec.",
                           timing_dur_usec(&t1));
                 
+                /* Write proxy to RGBA */
+                timing_start(&t1);
+                encode_rgba(msg->img);
+                PIE_DEBUG("Encoded proxy in %ldusec.",
+                          timing_dur_usec(&t1));
+                timing_start(&t1);
+                /* Create JSON for hist */
+                msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
+                                                            JSON_HIST_SIZE, 
+                                                            &msg->img->hist);
+                PIE_DEBUG("JSON encoded histogram in %ldusec.",
+                          timing_dur_usec(&t1));
+
                 return PIE_MSG_RENDER_DONE;
         }
 

@@ -24,7 +24,7 @@ Encode to following structure (without newlines)
     "b": [1,2,3]
 }
  */
-int pie_json_hist(char* buf, size_t len, const struct pie_histogram* h)
+int pie_json_enc_hist(char* buf, size_t len, const struct pie_histogram* h)
 {
         int bw = 0;
 
