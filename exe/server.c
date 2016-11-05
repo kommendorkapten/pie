@@ -32,6 +32,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <netinet/in.h>
+#ifdef _HAS_SSE
+# include <nmmintrin.h> /* sse 4.2 */
+#endif
 
 #define _USE_GAMMA_CONV 0
 #define JSON_HIST_SIZE (10 * 1024)
@@ -312,8 +315,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         unsigned int stride;
         unsigned int len;
         int res;
-        int w;
-        int h;
+        unsigned int w;
+        unsigned int h;
 
         /* HACK */
         if (msg->img)
@@ -348,9 +351,10 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                 
         }
 #endif        
-
-        w = msg->i1 < msg->img->raw.width ? msg->i1 : msg->img->raw.width;
-        h = msg->i1 < msg->img->raw.height ? msg->i2 : msg->img->raw.height;
+        w = (unsigned int)msg->i1;
+        h = (unsigned int)msg->i2;
+        w = w < msg->img->raw.width ? w : msg->img->raw.width;
+        h = h < msg->img->raw.height ? h : msg->img->raw.height;
 
         PIE_DEBUG("[%s] Load proxy with size %dx%d", msg->token, w, h);
         strncpy(msg->img->path, buf, PIE_PATH_LEN);
@@ -510,6 +514,85 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         return PIE_MSG_INVALID;
 }
 
+#ifdef _HAS_SIMD
+# ifdef _HAS_SSE
+
+static void encode_rgba(struct pie_img_workspace* img)
+{
+        __m128 coeff_scale = _mm_set1_ps(255.0f);
+        unsigned char* p = img->proxy_out_rgba;
+        unsigned int stride = img->raw.row_stride;
+        unsigned int rem = img->proxy_out.width % 4;
+        unsigned int stop = img->proxy_out.width - rem;
+        uint32_t w = htonl(img->proxy_out.width);
+        uint32_t h = htonl(img->proxy_out.height);
+        float or[4];
+        float og[4];
+        float ob[4];
+
+        memcpy(p, &w, sizeof(uint32_t));
+        p += sizeof(uint32_t);
+        memcpy(p, &h, sizeof(uint32_t));
+        p += sizeof(uint32_t);
+
+        for (unsigned int y = 0; y < img->proxy_out.height; y++)
+        {
+                for (unsigned int x = 0; x < stop; x += 4)
+                {
+                        unsigned int i = y * stride + x;
+                        __m128 r = _mm_load_ps(&img->proxy_out.c_red[i]);
+                        __m128 g = _mm_load_ps(&img->proxy_out.c_green[i]);
+                        __m128 b = _mm_load_ps(&img->proxy_out.c_blue[i]);
+
+                        r = _mm_mul_ps(r, coeff_scale);
+                        g = _mm_mul_ps(g, coeff_scale);
+                        b = _mm_mul_ps(b, coeff_scale);
+
+                        _mm_store_ps(or, r);
+                        _mm_store_ps(og, g);
+                        _mm_store_ps(ob, b);
+
+                        *p++ = (unsigned char)or[0];
+                        *p++ = (unsigned char)og[0];
+                        *p++ = (unsigned char)ob[0];
+                        *p++ = 255;
+                        *p++ = (unsigned char)or[1];
+                        *p++ = (unsigned char)og[1];
+                        *p++ = (unsigned char)ob[1];
+                        *p++ = 255;
+                        *p++ = (unsigned char)or[2];
+                        *p++ = (unsigned char)og[2];
+                        *p++ = (unsigned char)ob[2];
+                        *p++ = 255;
+                        *p++ = (unsigned char)or[3];
+                        *p++ = (unsigned char)og[3];
+                        *p++ = (unsigned char)ob[3];
+                        *p++ = 255;
+                }
+
+                for (unsigned int x = stop; x < img->proxy_out.width; x++)
+                {
+                        unsigned int i = y * stride + x;
+                        unsigned char r, g, b;
+                        r = (unsigned char)(img->proxy_out.c_red[i] * 255.0f);
+                        g = (unsigned char)(img->proxy_out.c_green[i] * 255.0f);
+                        b = (unsigned char)(img->proxy_out.c_blue[i] * 255.0f);
+                        
+                        *p++ = r;
+                        *p++ = g;
+                        *p++ = b;
+                        *p++ = 255;
+                }
+        }        
+        
+}
+
+# elif _HAS_ALTIVEC
+#  error ALTIVET NOT IMPLEMENTED
+# endif
+
+#else
+
 static void encode_rgba(struct pie_img_workspace* img)
 {
         unsigned char* p = img->proxy_out_rgba;
@@ -536,7 +619,6 @@ static void encode_rgba(struct pie_img_workspace* img)
 #endif
                 for (unsigned int x = 0; x < img->proxy_out.width; x++)
                 {
-                        /* convert to sse */
                         unsigned char r, g, b;
                         
                         r = (unsigned char)(img->proxy_out.c_red[y * stride + x] * 255.0f);
@@ -550,3 +632,5 @@ static void encode_rgba(struct pie_img_workspace* img)
                 }
         }        
 }
+
+#endif /* _HAS_SIMD */
