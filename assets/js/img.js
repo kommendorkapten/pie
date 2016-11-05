@@ -155,7 +155,7 @@ window.addEventListener("load", function(evt) {
     }
 
     wsHist.onmessage = function(evt) {
-        console.log("Histogram: " + evt.data);
+
     }
 
     document.getElementById("load").onclick = function(evt) {
@@ -769,12 +769,10 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_saturation").value=targ.value;
         wsCmd.send("SATUR " + targ.value);
     };
+
+    var hist = document.getElementById("hist_canvas");
+    console.log(hist);
+
 });
 
-/*
-  window.innerWidth // without toolbars etc
-  window.innerHeight
-  window.outerWidth // with toolbars etc
-  window.outerHeight
-*/
 

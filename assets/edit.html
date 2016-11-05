@@ -17,9 +17,20 @@
       </div>
       <div class="fixed-edit-pane">
         <div class="center" >
-          <canvas id="hist_canvas" width="200" height="200" 
-                  style="border:1px solid #000000;">
-          </canvas>
+          <div class="edit-meta">
+            <canvas id="hist_canvas" width="270" height="150" 
+                    style="border:1px solid #000000;margin-top:5px;">
+            </canvas>
+            <table id="meta_data_tbl" class="edit-meta-text">
+              <tr>
+                <td>ISO 6400</td>
+                <td>600 mm</td>
+                <td style="text-align: right;">f/5.6</td>
+                <td style="text-align: right;">1/650 sec</td>
+              </tr>
+            </table>
+          </div>
+          <div class="edit-meta" style="margin-top: 7px;">
           <table id="edit_settings_tbl" style="margin: 0 auto;">
             <tr>
               <td>
@@ -135,6 +146,7 @@
               </td>
             </tr>
           </table>
+          </div>
         </div>
       </div>
     </div>

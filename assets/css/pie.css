@@ -29,6 +29,18 @@ table {
     font-size:	 10px;
 }
 
+.edit-meta {
+    background-color: #686868;
+    border:1px solid #000000;
+}
+
+.edit-meta-text {
+    width: 100%;
+    margin: 0 auto;
+    font-size: 12px;
+    padding: 5;
+}
+
 .edit-in {
     width:            34px;
     background-color: #333333;
