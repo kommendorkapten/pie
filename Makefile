@@ -35,6 +35,8 @@ else ifeq ($(OS), FreeBSD)
   ifeq ($(CC), gcc)
     CFLAGS += -mtune=$(ISA) -mcpu=$(ISA)
   endif
+else ifeq ($(OS), Darwin)
+  CFLAGS += -mtune=native -mcpu=native
 endif
 
 # Configuration based on ISA
