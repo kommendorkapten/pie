@@ -34,7 +34,7 @@ int bm_alloc_u8(struct bitmap_u8rgb* bm)
         unsigned int rem = bm->width % 4;
         size_t s;
 
-        assert(bm->color_type != PIE_COLOR_INVALID);
+        assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
 
         /* Make sure each row has good alignment */
         if (rem == 0)
@@ -64,7 +64,7 @@ int bm_alloc_u16(struct bitmap_u16rgb* bm)
         unsigned int rem = bm->width % 4;
         size_t s;
 
-        assert(bm->color_type != PIE_COLOR_INVALID);
+        assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
 
         /* Make sure each row has good alignment */
         if (rem == 0)
@@ -94,7 +94,7 @@ int bm_alloc_f32(struct bitmap_f32rgb* bm)
         unsigned int rem = bm->width % 4;
         size_t s;
 
-        assert(bm->color_type != PIE_COLOR_INVALID);
+        assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
 
         /* Make sure each row has good alignment */
         if (rem == 0)
