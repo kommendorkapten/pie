@@ -1,8 +1,51 @@
+var histChart;
 var lowerPaneHeight = 220;
+var histYMax = 255;
 var bigEndian = 1;
+var histDataL = {
+    borderColor: "rgba(200, 200, 200, 0.5)",
+    backgroundColor: "rgba(200, 200, 200, 0.7)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataR = {
+    borderColor: "rgba(255, 0, 0, 0.5)",
+    backgroundColor: "rgba(255, 0, 0, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataG = {
+    borderColor: "rgba(0, 255, 0, 0.5)",
+    backgroundColor: "rgba(0, 255, 0, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataB = {
+    borderColor: "rgba(0, 0, 255, 0.5)",
+    backgroundColor: "rgba(0, 0, 255, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+
 
 var pieStateHack = {
-/*    "image": "lena.png"*/
+    /*    "image": "lena.png"*/
     "image": "walk.jpg"
 };
 
@@ -155,7 +198,63 @@ window.addEventListener("load", function(evt) {
     }
 
     wsHist.onmessage = function(evt) {
+        var h = JSON.parse(evt.data);
+        var max = 0;
+        var pl = [];
+        var pr = [];
+        var pg = [];
+        var pb = [];
+        var i = 0;
 
+        for (c of h.l) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (c of h.r) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (c of h.g) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (c of h.b) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (i = 0; i < h.l.length; i++) {
+            var nl = (h.l[i] / max) * histYMax;
+            var nr = (h.r[i] / max) * histYMax;
+            var ng = (h.g[i] / max) * histYMax;
+            var nb = (h.b[i] / max) * histYMax;
+
+            pl[i] = {
+                x: i,
+                y: nl
+            };
+            pr[i] = {
+                x: i,
+                y: nr
+            };
+            pg[i] = {
+                x: i,
+                y: ng
+            };
+            pb[i] = {
+                x: i,
+                y: nb
+            };
+        }
+
+        histDataL.data = pl;
+        histDataR.data = pr;
+        histDataG.data = pg;
+        histDataB.data = pb;
+        histChart.update();
     }
 
     document.getElementById("load").onclick = function(evt) {
@@ -771,72 +870,15 @@ window.addEventListener("load", function(evt) {
     };
 
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
-    var histChart = new Chart(histCanvas, {
+    histChart = new Chart(histCanvas, {
         type: 'line',
         data: {
             datasets: [
-                {
-                    pointRadius: 0,
-                    lineTension: 0,
-                    data: [{
-                        x: 0,
-                        y: 100
-                    }, {
-                        x: 20,
-                        y: 10
-                    }, {
-                        x: 60,
-                        y: 80
-                    }]
-                },
-                {
-                    borderColor: "rgba(255, 0, 0, 0.5)",
-                    backgroundColor: "rgba(255, 0, 0,0.4)",
-                    pointRadius: 0,
-                    lineTension: 0,
-                    data: [{
-                        x: 0,
-                        y: 10
-                    }, {
-                        x: 10,
-                        y: 10
-                    }, {
-                        x: 255,
-                        y: 18
-                    }]
-                },
-                {
-                    borderColor: "rgba(0, 255, 0, 0.5)",
-                    backgroundColor: "rgba(0, 255, 0, 0.4)",
-                    pointRadius: 0,
-                    lineTension: 0,
-                    data: [{
-                        x: 0,
-                        y: 0
-                    }, {
-                        x: 15,
-                        y: 10
-                    }, {
-                        x: 240,
-                        y: 50
-                    }]
-                },
-                {
-                    borderColor: "rgba(0, 0, 255, 0.5)",
-                    backgroundColor: "rgba(0, 0, 255, 0.4)",
-                    pointRadius: 0,
-                    lineTension: 0,
-                    data: [{
-                        x: 0,
-                        y: 0
-                    }, {
-                        x: 20,
-                        y: 10
-                    }, {
-                        x: 200,
-                        y: 100
-                    }]
-                }]
+                histDataL,
+                histDataR,
+                histDataG,
+                histDataB
+            ]
         },
         options: {
             legend: {
@@ -858,7 +900,7 @@ window.addEventListener("load", function(evt) {
                     display: false,
                     ticks: {
                         min: 0,
-                        max: 400
+                        max: histYMax
                     }
                 }]
             }
