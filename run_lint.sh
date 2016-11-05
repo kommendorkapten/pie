@@ -5,7 +5,7 @@ set -u
 l_p="-Xc99 -m64 -u -m -errchk=%all -Ncheck=%all"
 #l_p="${l_p} -errwarn=%all"
 l_p="${l_p} -Nlevel=1 -errtags=yes"
-l_p="${l_p} -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT,E_FUNC_DECL_VAR_ARG,E_ASGN_RESET,E_ENUM_UNUSE"
+l_p="${l_p} -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT,E_FUNC_DECL_VAR_ARG,E_ASGN_RESET,E_ENUM_UNUSE,E_CONSTANT_CONDITION"
 
 
 io=`find io -name '*.c'`
