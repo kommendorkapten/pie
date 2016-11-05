@@ -38,7 +38,8 @@ int pie_img_render(struct bitmap_f32rgb* img,
 {
         struct timing t1;
         struct timing t2;
-        
+
+        (void)buf;
         timing_start(&t1);
 
         /* E X P O S U R E */
