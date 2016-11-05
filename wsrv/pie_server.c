@@ -271,7 +271,7 @@ int start_server(struct pie_server* srv)
 
                 /* Check for stop condition or img/hist is computed */
                 /* If nothing to do, return after Xms */
-                status = lws_service(srv->context, 10);
+                status = lws_service(srv->context, 5);
                 /* Reap sessions with inactivity for one hour */
                 pie_sess_mgr_reap(sess_mgr, 60 * 60);
         }
