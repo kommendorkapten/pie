@@ -407,6 +407,8 @@ static int cb_img(struct lws* wsi,
         struct pie_ctx_img* ctx = (struct pie_ctx_img*)user;
         int ret = 0;
 
+        (void)len;
+
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
                 session = pie_sess_mgr_get(sess_mgr, ctx->token);
@@ -478,6 +480,8 @@ static int cb_hist(struct lws* wsi,
         struct pie_sess* session = NULL;
         struct pie_ctx_hist* ctx = (struct pie_ctx_hist*)user;
         int ret = 0;
+
+        (void)len;
 
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {

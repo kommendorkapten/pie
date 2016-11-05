@@ -39,7 +39,7 @@ struct pie_sess
         struct chan* response;
         long access_ts;
         /* New data can be written to client */
-        char tx_ready;
+        unsigned char tx_ready;
 };
 
 /**
