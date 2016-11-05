@@ -770,52 +770,100 @@ window.addEventListener("load", function(evt) {
         wsCmd.send("SATUR " + targ.value);
     };
 
-    var hist = document.getElementById("hist_canvas").getContext("2d");
-
-var myChart = new Chart(hist, {
-    type: 'line',
-    data: {
-        datasets: [{
-            pointRadius: 0,
-            lineTension: 0,
-            data: [{
-                x: -10,
-                y: 0
-            }, {
-                x: 0,
-                y: 10
-            }, {
-                x: 10,
-                y: 5
-            }]
-        }]
-    },
-    options: {
-        legend: {
-            display: false
+    var histCanvas = document.getElementById("hist_canvas").getContext("2d");
+    var histChart = new Chart(histCanvas, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    pointRadius: 0,
+                    lineTension: 0,
+                    data: [{
+                        x: 0,
+                        y: 100
+                    }, {
+                        x: 20,
+                        y: 10
+                    }, {
+                        x: 60,
+                        y: 80
+                    }]
+                },
+                {
+                    borderColor: "rgba(255, 0, 0, 0.5)",
+                    backgroundColor: "rgba(255, 0, 0,0.4)",
+                    pointRadius: 0,
+                    lineTension: 0,
+                    data: [{
+                        x: 0,
+                        y: 10
+                    }, {
+                        x: 10,
+                        y: 10
+                    }, {
+                        x: 255,
+                        y: 18
+                    }]
+                },
+                {
+                    borderColor: "rgba(0, 255, 0, 0.5)",
+                    backgroundColor: "rgba(0, 255, 0, 0.4)",
+                    pointRadius: 0,
+                    lineTension: 0,
+                    data: [{
+                        x: 0,
+                        y: 0
+                    }, {
+                        x: 15,
+                        y: 10
+                    }, {
+                        x: 240,
+                        y: 50
+                    }]
+                },
+                {
+                    borderColor: "rgba(0, 0, 255, 0.5)",
+                    backgroundColor: "rgba(0, 0, 255, 0.4)",
+                    pointRadius: 0,
+                    lineTension: 0,
+                    data: [{
+                        x: 0,
+                        y: 0
+                    }, {
+                        x: 20,
+                        y: 10
+                    }, {
+                        x: 200,
+                        y: 100
+                    }]
+                }]
         },
-        responsive: false,
-        scales: {
-            xAxes: [{
-                type: 'linear',
-                position: 'bottom',
-                display: false,
-                ticks: {
-                    min: 0,
-                    max: 255
-                }
-            }],
-            yAxes: [{
-                type: 'linear',
-                display: false,
-                ticks: {
-                    min: 0,
-                    max: 70
-                }
-            }]
+        options: {
+            legend: {
+                display: false
+            },
+            responsive: false,
+            scales: {
+                xAxes: [{
+                    type: 'linear',
+                    position: 'bottom',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: 255
+                    }
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: 400
+                    }
+                }]
+            }
         }
-    }
-});
+    });
 
 });
 
