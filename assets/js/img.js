@@ -770,8 +770,52 @@ window.addEventListener("load", function(evt) {
         wsCmd.send("SATUR " + targ.value);
     };
 
-    var hist = document.getElementById("hist_canvas");
-    console.log(hist);
+    var hist = document.getElementById("hist_canvas").getContext("2d");
+
+var myChart = new Chart(hist, {
+    type: 'line',
+    data: {
+        datasets: [{
+            pointRadius: 0,
+            lineTension: 0,
+            data: [{
+                x: -10,
+                y: 0
+            }, {
+                x: 0,
+                y: 10
+            }, {
+                x: 10,
+                y: 5
+            }]
+        }]
+    },
+    options: {
+        legend: {
+            display: false
+        },
+        responsive: false,
+        scales: {
+            xAxes: [{
+                type: 'linear',
+                position: 'bottom',
+                display: false,
+                ticks: {
+                    min: 0,
+                    max: 255
+                }
+            }],
+            yAxes: [{
+                type: 'linear',
+                display: false,
+                ticks: {
+                    min: 0,
+                    max: 70
+                }
+            }]
+        }
+    }
+});
 
 });
 
