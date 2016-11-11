@@ -61,6 +61,25 @@ extern void pie_kernel5x5_apply(float*,
                                 unsigned int);
 
 /**
+ * Apply a separable kernel to a channel.
+ * @param channel to alter.
+ * @param kernel to apply
+ * @param length of kernel
+ * @param temporary buffer. Must be at least as large as the channel.
+ * @param row width
+ * @param row height
+ * @param row stride
+ * @return void
+ */
+extern void pie_kernel_sep_apply(float*,
+                                 float*,
+                                 int,
+                                 float*,
+                                 unsigned int,
+                                 unsigned int,
+                                 unsigned int);
+
+/**
  * Initialize a kernel with a Gauss distribution (E=1).
  * @param kernel to initialize.
  * @param variance.
@@ -77,5 +96,17 @@ extern void pie_kernel3x3_gauss(struct pie_kernel3x3*,
  */
 extern void pie_kernel5x5_gauss(struct pie_kernel5x5*,
                                 float);
+
+/**
+ * Initialize a separable Gauss kernel.
+ * @param result to store parameters
+ * @param number of elements, must be odd.
+ * @param variance.
+ * @return void.
+ */
+extern void pie_kernel_sep_gauss(float*,
+                                 int,
+                                 float);
+                                 
 
 #endif /* __PIE_KERNEL_H__ */

@@ -14,6 +14,9 @@
 #include "pie_kernel.h"
 #include "../math/pie_math.h"
 #include <string.h>
+#ifdef _HAS_SSE
+# include <nmmintrin.h> /* sse 4.2 */
+#endif
 
 void pie_kernel3x3_apply(float* c,
                          struct pie_kernel3x3* k,
@@ -349,6 +352,108 @@ void pie_kernel5x5_apply(float* c,
 
                 for (unsigned int x = 2; x < w - 2; x++)
                 {
+/* SSE Does not appear to be any faster */
+#ifdef _HAS_SIMD
+# ifdef _HAS_SSE
+                        __m128 v1 = _mm_load_ps(&k->v[0]);
+                        __m128 v2 = _mm_load_ps(&k->v[4]);
+                        __m128 v3 = _mm_load_ps(&k->v[8]);
+                        __m128 v4 = _mm_load_ps(&k->v[12]);
+                        __m128 v5 = _mm_load_ps(&k->v[16]);
+                        __m128 v6 = _mm_load_ps(&k->v[20]);
+                        __m128 c1;
+                        __m128 c2;
+                        __m128 c3;
+                        __m128 c4;
+                        __m128 c5;
+                        __m128 c6;
+#ifdef _USE_MEMCPY
+                        float f[24];
+#endif
+                        float f1[4]; 
+                        float f2[4];
+                        float f3[4];
+                        float f4[4];
+                        float f5[4];
+                        float f6[4];
+
+#ifdef _USE_MEMCPY                        
+                        memcpy(f, &c[(y - 2) * s + x - 2],
+                               5 * sizeof(float));
+                        memcpy(f + 5, &c[(y - 1) * s + x - 2],
+                               5 * sizeof(float));
+                        memcpy(f + 10, &c[y * s + x - 2],
+                               5 * sizeof(float));
+                        memcpy(f + 15, &c[(y + 1) * s + x - 2],
+                               5 * sizeof(float));
+                        memcpy(f + 20, &c[(y + 2) * s + x - 2],
+                               4 * sizeof(float));
+                        memcpy(f1, f, 4 * sizeof(float));
+                        memcpy(f2, f + 4, 4 * sizeof(float));
+                        memcpy(f3, f + 8, 4 * sizeof(float));
+                        memcpy(f4, f + 12, 4 * sizeof(float));
+                        memcpy(f5, f + 16, 4 * sizeof(float));
+                        memcpy(f6, f + 20, 4 * sizeof(float));
+                        
+#else
+
+                        f1[0] = c[(y - 2) * s + x - 2];
+                        f1[1] = c[(y - 2) * s + x - 1];
+                        f1[2] = c[(y - 2) * s + x];    
+                        f1[3] = c[(y - 2) * s + x + 1]; 
+                        f2[0] = c[(y - 2) * s + x + 2];
+                        f2[1] = c[(y - 1) * s + x - 2];
+                        f2[2] = c[(y - 1) * s + x - 1];
+                        f2[3] = c[(y - 1) * s + x];    
+                        f3[0] = c[(y - 1) * s + x + 1];
+                        f3[1] = c[(y - 1) * s + x + 2];
+                        f3[2] = c[y * s + x - 2];
+                        f3[3] = c[y * s + x - 1];
+                        f4[0] = c[y * s + x];    
+                        f4[1] = c[y * s + x + 1];
+                        f4[2] = c[y * s + x + 2];
+                        f4[3] = c[(y + 1) * s + x - 2];
+                        f5[0] = c[(y + 1) * s + x - 1];
+                        f5[1] = c[(y + 1) * s + x];
+                        f5[2] = c[(y + 1) * s + x + 1];
+                        f5[3] = c[(y + 1) * s + x + 2];
+                        f6[0] = c[(y + 2) * s + x - 2];
+                        f6[1] = c[(y + 2) * s + x - 1];
+                        f6[2] = c[(y + 2) * s + x];    
+                        f6[3] = c[(y + 2) * s + x + 1];
+
+#endif
+
+                        c1 = _mm_load_ps(f1);
+                        c2 = _mm_load_ps(f2);
+                        c3 = _mm_load_ps(f3);
+                        c4 = _mm_load_ps(f4);
+                        c5 = _mm_load_ps(f5);
+                        c6 = _mm_load_ps(f6);
+
+                        /* Store result in least significant addr */
+                        v1 = _mm_dp_ps(v1, c1, 0xf1);
+                        v2 = _mm_dp_ps(v2, c2, 0xf1);
+                        v3 = _mm_dp_ps(v3, c3, 0xf1);
+                        v4 = _mm_dp_ps(v4, c4, 0xf1);
+                        v5 = _mm_dp_ps(v5, c5, 0xf1);
+                        v6 = _mm_dp_ps(v6, c6, 0xf1);
+
+                        c1 = _mm_add_ps(v1, v2);
+                        c2 = _mm_add_ps(v3, v4);
+                        c3 = _mm_add_ps(v5, v6);
+                        c4 = _mm_add_ps(c1, c2);
+                        c5 = _mm_add_ps(c3, c4);
+
+                        _mm_store_ps(f1, c5);
+
+                        /* add k->v[24] */
+                        buf[y * s + x] =
+                                f1[0] + k->v[24] * c[(y + 2) * s + x + 2];
+# else
+# error ALTIVEC not yet supported
+# endif
+# else
                         buf[y * s + x] = 
                                 k->v[0] * c[(y - 2) * s + x - 2] +
                                 k->v[1] * c[(y - 2) * s + x - 1] +
@@ -379,6 +484,7 @@ void pie_kernel5x5_apply(float* c,
                                 k->v[22] * c[(y + 2) * s + x] +    
                                 k->v[23] * c[(y + 2) * s + x + 1] +
                                 k->v[24] * c[(y + 2) * s + x + 2];
+#endif
                 }
 
                 /* second last column, x = w - 2 */
@@ -548,6 +654,65 @@ void pie_kernel5x5_apply1(float* c,
         memcpy(c, buf, h * s * sizeof(float));        
 }
 
+void pie_kernel_sep_apply(float* c,
+                          float* k,
+                          int len,
+                          float* buf,
+                          unsigned int w,
+                          unsigned int h,
+                          unsigned int s)
+{
+        int half = len >> 1;
+        /* x */
+        for (int y = 0; y < h; y++)
+        {
+                for (int x = 0; x < w; x++)
+                {
+                        float sum = 0.0f;
+                        for (int i = 0; i < len; i++)
+                        {
+                                int p = x + i - half;
+
+                                if (p < 0)
+                                {
+                                        p = 0;
+                                }
+                                else if (p > w - 1)
+                                {
+                                        p = w - 1;
+                                }
+                                sum += c[y * s + p] * k[i];
+                        }
+                        buf[y * s + x] = sum;
+                }
+        }
+
+        /* y */
+        for (int y = 0; y < h; y++)
+        {
+                for (int x = 0; x < w; x++)
+                {
+                        float sum = 0.0f;
+                        for (int i = 0; i < len; i++)
+                        {
+                                int p = y + i - half;
+
+                                if (p < 0)
+                                {
+                                        p = 0;
+                                }
+                                else if (p > h - 1)
+                                {
+                                        p = h - 1;
+                                }
+                                sum += buf[p * s + x] * k[i];
+
+                        }
+                        c[y * s + x] = sum;
+                }
+        }        
+}
+
 void pie_kernel3x3_gauss(struct pie_kernel3x3* k,
                          float var)
 {
@@ -595,3 +760,25 @@ void pie_kernel5x5_gauss(struct pie_kernel5x5* k,
         }
 }
 
+void pie_kernel_sep_gauss(float* r,
+                          int len,
+                          float var)
+{
+        float sum = 0;
+        int h = len >> 1;
+
+        for (int i = 0; i < len; i++)
+        {
+                float g = pie_gauss((float)(i - h), var);
+
+                r[i] = g;
+                sum += g;
+        }
+
+        /* Normalize */
+        for (int i = 0; i < len; i++)
+        {
+                r[i] /= sum;
+        }
+}
+        

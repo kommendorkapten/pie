@@ -15,12 +15,20 @@
 #define __PIE_MATH_H__
 
 /**
+ * Calculate a value for a Gauss distribution.
+ * @param distance in x.
+ * @param variance of the distribution.
+ * @return the Gauss density value.
+ */
+extern float pie_gauss(float, float);
+
+/**
  * Calculate a value for a Gauss 2d distribution.
  * @param distance in x.
  * @param distance in y.
  * @param variance of the distribution.
  * @return the Gauss density value.
  */
-extern float pie_gauss_2d(float dx, float dy, float);
+extern float pie_gauss_2d(float, float, float);
 
 #endif /* __PIE_MATH_H__ */

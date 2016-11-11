@@ -14,6 +14,22 @@
 #include "pie_math.h"
 #include <math.h>
 
+float pie_gauss(float dx, float var)
+{
+        float ret;
+        float numerator = dx * dx;
+        float denominator = 2 * var;
+        float c1;
+        float c2;
+
+        c1 = expf(- (numerator / denominator));
+        c2 = sqrtf(2 * M_PI * var);
+
+        ret = c1 / c2;
+
+        return ret;
+}
+
 float pie_gauss_2d(float dx, float dy, float var)
 {
         float ret;
