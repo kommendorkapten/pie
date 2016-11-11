@@ -25,10 +25,10 @@
  * @param image row stride.
  * @reurn void.
  */
-void pie_alg_contr(float* restrict,
-                   float,
-                   unsigned int,
-                   unsigned int,
-                   unsigned int);
+extern void pie_alg_contr(float* restrict,
+                          float,
+                          unsigned int,
+                          unsigned int,
+                          unsigned int);
 
 #endif /* __PIE_CONTR_H__ */
