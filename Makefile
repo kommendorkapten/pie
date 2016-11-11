@@ -32,7 +32,7 @@ ifeq ($(OS), SunOS)
   endif
 else ifeq ($(OS), FreeBSD)
   # libpng and libjpeg is found in /usr/local/lib when installed via ports
-  LFLAGS := -L/usr/local/lib $(LFLAGS)
+  LFLAGS := -L/usr/local/lib $(LFLAGS) -lpthread
   ifeq ($(CC), gcc)
     CFLAGS += -mtune=$(ISA) -mcpu=$(ISA)
   endif
@@ -46,7 +46,7 @@ endif
 ifeq ($(ISA), i386)
 CFLAGS += -D_HAS_SIMD -D_HAS_SSE
 else ifeq ($(ISA), powerpc64)
-CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
+CFLAGS += -D_HAS_SIMD_NOT_YET -D_HAS_ALTIVEC 
 else ifeq ($(ISA), sparc)
 else
 endif
