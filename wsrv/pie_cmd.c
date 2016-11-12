@@ -102,7 +102,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 msg->i1 = w;
                 msg->i2 = h;
                 msg->type = PIE_MSG_LOAD;
-                PIE_TRACE("[%s] Load %s %d %d", 
+                PIE_DEBUG("[%s] Load %s %d %d", 
                           msg->token,
                           msg->buf,
                           msg->i1,
