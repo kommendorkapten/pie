@@ -10,10 +10,11 @@ int main(int argc, char** argv)
         /* int scale; */
         int ret;
         struct bitmap_f32rgb img;
-
-        if (argc != 3)
+        float gamma = 0.454550f;
+        
+        if (argc != 2)
         {
-                printf("Usage: analin file scalefactor\n");
+                printf("Usage: analin file\n");
                 return 1;
         }
         /* scale = atoi(argv[2]); */
@@ -25,13 +26,19 @@ int main(int argc, char** argv)
                 return 1;
         }
 
-        /* Gamma decompress second row */
-        srgb_to_linearv(img.c_red + img.row_stride, img.width);
+        printf("  x lin gma\n");
+        printf("-----------\n");        
         for (unsigned int x = 0; x < img.width; x+=4)
         {
-                int l = (int)(img.c_red[x] * 255.0);
-                int c = (int)(img.c_red[img.row_stride + x] * 255.0f);
+                int l = (int)(img.c_red[x] * 255.0f);
+                int c = (int)(pie_gamma(img.c_red[x], gamma) * 255.0f);
                 printf("%03d %03d %03d\n", x/4, l, c);
+
+                if (((x/ 4) + 1)% 24 == 0)
+                {
+                        printf("  x lin gma\n");
+                        printf("-----------\n");
+                }
         }
 
         bm_free_f32(&img);
