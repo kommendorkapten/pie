@@ -21,7 +21,7 @@ endif
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
-    CFLAGS += -v -fast -mt # use -fast and compare to only -xO5
+    CFLAGS += -v -O2 -mt # use -fast and compare to only -xO5
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
     endif
@@ -71,7 +71,7 @@ SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
 OBJS      = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
 TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-            histinfo contr gauss
+            histinfo contr gauss unsharp tojpg
 EXE_BINS  = server
 T_BINS    = $(TEST_BINS:%=bin/%)
 E_BINS    = $(EXE_BINS:%=bin/%)
@@ -135,6 +135,12 @@ bin/contr: testp/contr.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/gauss: testp/gauss.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/unsharp: testp/unsharp.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/tojpg: testp/tojpg.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: exe/server.c $(OBJS) $(SRV_OBJS)
