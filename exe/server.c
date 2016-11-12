@@ -381,7 +381,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img->hist_json = msg->img->buf_hist + PROXY_RGBA_OFF;
 
         /* Call pie_downsample */
-        len = w * stride * sizeof(float);
+        len = h * stride * sizeof(float);
         /* Copy raw to proxy */
         memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
         memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
