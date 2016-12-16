@@ -22,10 +22,10 @@ int main(int argc, char** argv)
         struct pie_kernel3x3 k3;
         struct pie_kernel5x5 k5;
         float kn[SEP_LEN];
-        float s1 = 0.84089642;
-        float s2 = 0.54089642;
+        /* float s1 = 0.84089642; */
+        /* float s2 = 0.54089642; */
         float* buf;
-        float sum = 0.0f;
+        /* float sum = 0.0f; */
         float s = 10;
         if (argc != 2)
         {

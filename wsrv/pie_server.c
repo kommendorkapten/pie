@@ -24,6 +24,12 @@
 
 #define MAX_HEADERS 4096
 
+#ifdef __sun
+# include <note.h>
+#else
+# define NOTE(X)
+#endif
+
 enum pie_protocols
 {
         PIE_PROTO_HTTP,
@@ -224,7 +230,7 @@ int start_server(struct pie_server* srv)
 
                         PIE_DEBUG("[%s] received message %d (RTT %ldusec).",
                                   resp->token,
-                                  resp->type,
+                                  (int)resp->type,
                                   timing_dur_usec(&resp->t));
 
                         if (msg.len != sizeof(struct pie_msg))
@@ -246,6 +252,7 @@ int start_server(struct pie_server* srv)
                                 /* On load done, a new image workspace 
                                    is created, store it in the session. */
                                 session->img = resp->img;
+                        NOTE(FALLTHRU)
                         case PIE_MSG_RENDER_DONE:
                                 /* Update session with tx ready */
                                 session->tx_ready = (PIE_TX_IMG | PIE_TX_HIST);
@@ -294,7 +301,7 @@ static int cb_http(struct lws* wsi,
         struct pie_sess* session;
         const char* mimetype;
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
-        int hn = 0;
+        ptrdiff_t hn = 0;
         int n;
 
         switch (reason)
@@ -305,7 +312,7 @@ static int cb_http(struct lws* wsi,
                 if (session == NULL)
                 {
                         char cookie[128];
-                        unsigned char* p = headers;
+                        unsigned char* p = &headers[0];
                         session = malloc(sizeof(struct pie_sess));
                         pie_sess_init(session);
                         srv_init_session(session);
@@ -317,7 +324,7 @@ static int cb_http(struct lws* wsi,
                         if (lws_add_http_header_by_name(wsi,
                                                         (unsigned char*)"set-cookie:",
                                                         (unsigned char*)cookie,
-                                                        hn,
+                                                        (int)hn,
                                                         &p,
                                                         headers + 256))
                         {
@@ -328,9 +335,8 @@ static int cb_http(struct lws* wsi,
                         PIE_DEBUG("[%s] Init session",
                                   session->token);
 
-
                         pie_sess_mgr_put(sess_mgr, session);
-                        hn = (int)(p - headers);
+                        hn = p - &headers[0];
                         strncpy(ctx->token, 
                                 session->token, 
                                 PIE_SESS_TOKEN_LEN);
@@ -372,7 +378,11 @@ static int cb_http(struct lws* wsi,
 		}
 
                 /* Serve file async */
-                n = lws_serve_http_file(wsi, url, mimetype, (char*)headers, hn);
+                n = lws_serve_http_file(wsi,
+                                        url,
+                                        mimetype,
+                                        (char*)headers,
+                                        (int)hn);
                 if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
                 {
                         return -1;

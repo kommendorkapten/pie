@@ -16,7 +16,6 @@
 #endif
 #include <string.h>
 #include "pie_hist.h"
-#include "../pie_cspace.h"
 
 #define LUM_RED   0.2126f
 #define LUM_GREEN 0.7152f
