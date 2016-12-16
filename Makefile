@@ -64,14 +64,14 @@ SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c
 ENC_SRC   = pie_json.c
-MTH_SRC   = pie_math.c
+MTH_SRC   = pie_math.c pie_catmull.c
 SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
 	    $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC) $(ENC_SRC) \
             $(MTH_SRC)
 OBJS      = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
 TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-            histinfo contr gauss unsharp tojpg
+            histinfo contr gauss unsharp tojpg catm
 EXE_BINS  = server
 T_BINS    = $(TEST_BINS:%=bin/%)
 E_BINS    = $(EXE_BINS:%=bin/%)
@@ -141,6 +141,9 @@ bin/unsharp: testp/unsharp.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/tojpg: testp/tojpg.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/catm: testp/catm.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: exe/server.c $(OBJS) $(SRV_OBJS)
