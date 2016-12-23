@@ -148,12 +148,16 @@ void pie_kernel3x3_apply(float* c,
 void pie_kernel5x5_apply(float* c,
                          struct pie_kernel5x5* k,
                          float* buf,
-                         unsigned int w,
-                         unsigned int h,
-                         unsigned int s)
+                         unsigned int wu,
+                         unsigned int hu,
+                         unsigned int su)
 {
+        int w = (int)wu;
+        int h = (int)hu;
+        int s = (int)su;
+
         /* Repeat the edge pixels */
-        for (unsigned int x = 2; x < w - 2; x++)
+        for (int x = 2; x < w - 2; x++)
         {
                 /* y = 0 */
                 buf[x] = 
@@ -284,7 +288,7 @@ void pie_kernel5x5_apply(float* c,
                         k->v[24] * c[(h - 1) * s + x + 2];
         }
 
-        for (unsigned int y = 2; y < h - 2; y++)
+        for (int y = 2; y < h - 2; y++)
         {
                 /* First column, x = 0 */
                 buf[y * s] = 
@@ -350,7 +354,7 @@ void pie_kernel5x5_apply(float* c,
                         k->v[23] * c[(y + 2) * s + 2] +
                         k->v[24] * c[(y + 2) * s + 3];
 
-                for (unsigned int x = 2; x < w - 2; x++)
+                for (int x = 2; x < w - 2; x++)
                 {
 /* SSE Does not appear to be any faster */
 #ifdef _HAS_SIMD
@@ -567,7 +571,7 @@ void pie_kernel5x5_apply(float* c,
                         
                         for (int ky = 0; ky < 5; ky++)
                         {
-                                int py = y + ky - 2;
+                                int py = (int)(y + ky - 2);
 
                                 if (py < 0)
                                 {
@@ -607,10 +611,14 @@ void pie_kernel5x5_apply(float* c,
 void pie_kernel5x5_apply1(float* c,
                          struct pie_kernel5x5* k,
                          float* buf,
-                         unsigned int w,
-                         unsigned int h,
-                         unsigned int s)
+                         unsigned int wu,
+                         unsigned int hu,
+                         unsigned int su)
 {
+        int w = (int)wu;
+        int h = (int)hu;
+        int s = (int)su;        
+        
         for (int y = 0; y < h; y++)
         {
                 for (int x = 0; x < w; x++)
@@ -658,11 +666,15 @@ void pie_kernel_sep_apply(float* c,
                           float* k,
                           int len,
                           float* buf,
-                          unsigned int w,
-                          unsigned int h,
-                          unsigned int s)
+                          unsigned int wu,
+                          unsigned int hu,
+                          unsigned int su)
 {
         int half = len >> 1;
+        int w = (int)wu;
+        int h = (int)hu;
+        int s = (int)su;
+
         /* x */
         for (int y = 0; y < h; y++)
         {
