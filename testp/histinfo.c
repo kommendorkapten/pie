@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         for (int i = 0; i < 256; i++)
         {
                 count += h.lum[i];
-                printf("%03d % 7u\n", i, h.lum[i]);
+                printf("%03d %7u\n", i, h.lum[i]);
         }
 
         if (count != img.width * img.height)
