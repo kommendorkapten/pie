@@ -37,8 +37,8 @@ int main ()
                 {
                         struct pixel_u8rgb pixel;
 
-                        pixel.red = pix(x, out.width);
-                        pixel.green = pix(y, out.height);
+                        pixel.red = (uint8_t)pix(x, out.width);
+                        pixel.green = (uint8_t)pix(y, out.height);
                         pixel.blue = 0;
 
                         pixel_u8rgb_set(&out, x, y, &pixel);

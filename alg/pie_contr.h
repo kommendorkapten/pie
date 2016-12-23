@@ -25,7 +25,7 @@
  * @param image row stride.
  * @reurn void.
  */
-extern void pie_alg_contr(float* restrict,
+extern void pie_alg_contr(float*,
                           float,
                           int,
                           int,

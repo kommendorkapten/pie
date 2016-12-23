@@ -84,7 +84,7 @@ void pie_alg_contr(float* img,
         }
 }
 # else
-#  error ALTIVECT not supported yet
+#  error ALTIVEC not supported yet
 # endif
 #else
 

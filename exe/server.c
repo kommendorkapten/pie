@@ -20,7 +20,6 @@
 #include "../pie_log.h"
 #include "../pie_render.h"
 #include "../io/pie_io.h"
-#include "../pie_cspace.h"
 #include "../encoding/pie_json.h"
 #include "../alg/pie_hist.h"
 #include <stdio.h>
@@ -30,11 +29,11 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include <stdint.h>
 #include <netinet/in.h>
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#include <note.h>
 
 #define _USE_GAMMA_CONV 0
 #define JSON_HIST_SIZE (10 * 1024)
@@ -137,6 +136,9 @@ int main(void)
 
         }
 
+        PIE_LOG("Start with config:");
+        PIE_LOG("  image library path: %s", config.lib_path);
+        
         server.run = 1;
         if (start_server(&server))
         {
@@ -257,10 +259,11 @@ static void* ev_loop(void* a)
                         default:
                                 processed = 0;
                                 PIE_WARN("Unknown message %d.", 
-                                         cmd->type);
+                                         (int)cmd->type);
                         }
                         if (processed)
                         {
+                                NOTE(EMPTY)
                                 PIE_DEBUG("Processed message %d in %ldusec.",
                                           cmd->type,
                                           timing_dur_usec(&t_proc));
@@ -274,7 +277,7 @@ static void* ev_loop(void* a)
                                 if (chan_write(s->response, &msg))
                                 {
                                         PIE_ERR("Failed to send response %d.",
-                                                cmd->type);
+                                                (int)cmd->type);
                                 }
                         }
                         else
@@ -283,7 +286,7 @@ static void* ev_loop(void* a)
                                    Free it. */
                                 PIE_ERR("[%s] Failed to handle message %d",
                                         cmd->token,
-                                        cmd->type);
+                                        (int)cmd->type);
                                 pie_msg_free(cmd);
                         }
                 }
@@ -371,7 +374,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         bm_alloc_f32(&msg->img->proxy_out);
 
         /* Allocate output buffer */
-        len = w * h * 4 + 2 * sizeof(uint32_t);
+        len = (int)(w * h * 4 + 2 * sizeof(uint32_t));
         msg->img->buf_proxy = malloc(len + PROXY_RGBA_OFF);
         msg->img->proxy_out_rgba = msg->img->buf_proxy + PROXY_RGBA_OFF;
         msg->img->proxy_out_len = len;
@@ -381,7 +384,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img->hist_json = msg->img->buf_hist + PROXY_RGBA_OFF;
 
         /* Call pie_downsample */
-        len = h * stride * sizeof(float);
+        len = (int)(h * stride * sizeof(float));
         /* Copy raw to proxy */
         memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
         memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
@@ -409,8 +412,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 {
         int status = 0;
+#if 0
         int resample = 0;
-        
+#endif        
         switch (msg->type)
         {
         case PIE_MSG_SET_CONTRAST:
@@ -449,22 +453,23 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         case PIE_MSG_SET_ROTATE:
                 PIE_WARN("[%s] Not implemented yet %d.",
                          msg->token,
-                         msg->type);
+                         (int)msg->type);
                 status = -1;
                 break;
         default:
                 PIE_WARN("[%s] Invalid message: %d.",
                          msg->token,
-                         msg->type);
+                         (int)msg->type);
                 status = -1;
         }
 
+#if 0
         if (resample)
         {
                 PIE_ERR("Resample not implemeted");
                 abort();
         }
-
+#endif
         if (status == 0)
         {
                 struct timing t1;
@@ -597,8 +602,8 @@ static void encode_rgba(struct pie_img_workspace* img)
 {
         unsigned char* p = img->proxy_out_rgba;
         int stride = img->raw.row_stride;
-        int32_t w = htonl(img->proxy_out.width);
-        int32_t h = htonl(img->proxy_out.height);
+        uint32_t w = htonl(img->proxy_out.width);
+        uint32_t h = htonl(img->proxy_out.height);
 
         memcpy(p, &w, sizeof(uint32_t));
         p += sizeof(uint32_t);

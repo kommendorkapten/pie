@@ -307,10 +307,11 @@ static int cb_http(struct lws* wsi,
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
-                /* Look for session */
+                /* Look for existing session */
                 session = get_session(wsi);
                 if (session == NULL)
                 {
+                        /* Create a new */
                         char cookie[128];
                         unsigned char* p = &headers[0];
                         session = malloc(sizeof(struct pie_sess));

@@ -26,8 +26,8 @@ int main(int argc, char** argv)
         printf("width:     %d\n", bm.width);
         printf("height:    %d\n", bm.height);
         printf("stride:    %d\n", bm.row_stride);
-        printf("channels:  %d\n", bm.color_type);
-        printf("bit depth: %d\n", bm.bit_depth);
+        printf("channels:  %d\n", (int)bm.color_type);
+        printf("bit depth: %d\n", (int)bm.bit_depth);
         bm_free_f32(&bm);
         
         return ret;

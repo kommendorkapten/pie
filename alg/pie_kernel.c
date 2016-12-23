@@ -603,8 +603,9 @@ void pie_kernel5x5_apply(float* c,
         memcpy(c, buf, h * s * sizeof(float));
 }
 
+#if 0
 /* Generic kernel a x a */
-void pie_kernel5x5_apply1(float* c,
+void pie_kernel5x5_apply(float* c,
                          struct pie_kernel5x5* k,
                          float* buf,
                          int w,
@@ -653,6 +654,7 @@ void pie_kernel5x5_apply1(float* c,
         /* Copy result back into c */
         memcpy(c, buf, h * s * sizeof(float));        
 }
+#endif
 
 void pie_kernel_sep_apply(float* c,
                           float* k,

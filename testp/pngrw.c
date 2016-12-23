@@ -19,7 +19,7 @@ int main(void)
         {
                 for (int x = 0; x < src.width; x++)
                 {
-                        uint8_t c = y * src.width + x;
+                        uint8_t c = (uint8_t)(y * src.width + x);
                         int o = y * src.row_stride + x;
 
                         src.c_red[o] = c;
@@ -38,7 +38,7 @@ int main(void)
                 printf("Failed to read\n");
         }
 
-        printf("%d %d %d\n", dst.width, dst.height, dst.color_type);
+        printf("%d %d %d\n", dst.width, dst.height, (int)dst.color_type);
 
         for (int y = 0; y < dst.height; y++)
         {

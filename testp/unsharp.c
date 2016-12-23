@@ -6,7 +6,6 @@
 #include "../io/pie_io.h"
 #include "../lib/timing.h"
 #include "../alg/pie_kernel.h"
-#include "../math/pie_math.h"
 
 #define SEP_LEN 51
 
@@ -27,7 +26,7 @@ int main(int argc, char** argv)
         float* buf;
         float* cpy;
         float s = 60;
-        int size;
+        size_t size;
         float amount = 0.1;
 
         if (argc != 2)

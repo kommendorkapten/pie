@@ -5,7 +5,6 @@
 #include "../io/pie_io.h"
 #include "../lib/timing.h"
 #include "../alg/pie_kernel.h"
-#include "../math/pie_math.h"
 
 #define SEP_LEN 9
 

@@ -11,7 +11,6 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_math.h"
 #include <math.h>
 
 float pie_gauss(float dx, float var)
