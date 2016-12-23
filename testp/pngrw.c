@@ -15,12 +15,12 @@ int main(void)
         src.color_type = PIE_COLOR_TYPE_RGB;
         bm_alloc_u8(&src);
 
-        for (unsigned int y = 0; y < src.height; y++)
+        for (int y = 0; y < src.height; y++)
         {
-                for (unsigned int x = 0; x < src.width; x++)
+                for (int x = 0; x < src.width; x++)
                 {
                         uint8_t c = y * src.width + x;
-                        unsigned int o = y * src.row_stride + x;
+                        int o = y * src.row_stride + x;
 
                         src.c_red[o] = c;
                         src.c_green[o] = c;
@@ -40,14 +40,14 @@ int main(void)
 
         printf("%d %d %d\n", dst.width, dst.height, dst.color_type);
 
-        for (unsigned int y = 0; y < dst.height; y++)
+        for (int y = 0; y < dst.height; y++)
         {
-                for (unsigned int x = 0; x < dst.width; x++)
+                for (int x = 0; x < dst.width; x++)
                 {
-                        unsigned int offset = y * src.row_stride + x;
-                        unsigned int red = (int)(dst.c_red[offset] * 255.0f);
-                        unsigned int green = (int)(dst.c_green[offset] * 255.0f);
-                        unsigned int blue = (int)(dst.c_blue[offset] * 255.0f);
+                        int offset = y * src.row_stride + x;
+                        int red = (int)(dst.c_red[offset] * 255.0f);
+                        int green = (int)(dst.c_green[offset] * 255.0f);
+                        int blue = (int)(dst.c_blue[offset] * 255.0f);
 
                         printf("%02d ", blue);
 

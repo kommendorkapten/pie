@@ -30,20 +30,20 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 	__m128 coeff_green = _mm_set1_ps(LUM_GREEN);
 	__m128 coeff_blue = _mm_set1_ps(LUM_BLUE);
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
-	unsigned int rem = bm->width % 4;
-	unsigned int stop = bm->width - rem;
+	int rem = bm->width % 4;
+	int stop = bm->width - rem;
 
         memset(hist->lum, 0, sizeof(unsigned int) * PIE_HIST_RES);
 
-	for (unsigned int y = 0; y < bm->height; y++)
+	for (int y = 0; y < bm->height; y++)
 	{
-		for (unsigned int x = 0; x < stop; x+=4)
+		for (int x = 0; x < stop; x+=4)
 		{
                         __m128 red;
                         __m128 green;
                         __m128 blue;
                         float out[4];
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
 
 			red = _mm_load_ps(&bm->c_red[p]);
 			green = _mm_load_ps(&bm->c_green[p]);
@@ -65,9 +65,9 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[3]]++;
 		}
 
-		for (unsigned int x = stop; x < bm->width; x++)
+		for (int x = stop; x < bm->width; x++)
 		{
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
 			unsigned char hp;
 			float l;
 
@@ -88,16 +88,16 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
         float or[4];
         float og[4];
         float ob[4];
-        unsigned int rem = bm->width % 4;
-        unsigned int stop = bm->width - rem;
+        int rem = bm->width % 4;
+        int stop = bm->width - rem;
 
         memset(hist->c_red, 0, sizeof(unsigned int) * PIE_HIST_RES);
         memset(hist->c_blue, 0, sizeof(unsigned int) * PIE_HIST_RES);
         memset(hist->c_green, 0, sizeof(unsigned int) * PIE_HIST_RES);
 
-        for (unsigned int y = 0; y < bm->height; y++)
+        for (int y = 0; y < bm->height; y++)
         {
-                for (unsigned int x = 0; x < stop; x += 4)
+                for (int x = 0; x < stop; x += 4)
                 {
 			unsigned int p = y * bm->row_stride + x;
                         __m128 r = _mm_load_ps(&bm->c_red[p]);
@@ -126,9 +126,9 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                         hist->c_blue[(unsigned char)ob[3]]++;
                 }
 
-		for (unsigned int x = stop; x < bm->width; x++)
+		for (int x = stop; x < bm->width; x++)
 		{
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
 			unsigned char hp;
                         float r = bm->c_red[p];
                         float g = bm->c_green[p];
@@ -152,16 +152,13 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
         memset(hist->lum, 0, sizeof(unsigned int) * PIE_HIST_RES);
-        /* memset(hist->c_red, 0, sizeof(unsigned int) * PIE_HIST_RES); */
-        /* memset(hist->c_blue, 0, sizeof(unsigned int) * PIE_HIST_RES); */
-        /* memset(hist->c_green, 0, sizeof(unsigned int) * PIE_HIST_RES); */
 
-	for (unsigned int y = 0; y < bm->height; y++)
+	for (int y = 0; y < bm->height; y++)
 	{
-		for (unsigned int x = 0; x < bm->width; x++)
+		for (int x = 0; x < bm->width; x++)
 		{
 			float l;
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
 			unsigned char hp;
 #if _USE_GAMMA_CONV > 0
                         float r = linear_to_srgb(bm->c_red[p]);
@@ -178,12 +175,6 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                                 LUM_BLUE * b;
 			hp = (unsigned char)(l * 255.0f);
                         hist->lum[hp]++;
-                        /* hp = (unsigned char)(bm->c_red[p] * 255.0f); */
-                        /* hist->c_red[hp]++; */
-                        /* hp = (unsigned char)(bm->c_blue[p] * 255.0f); */
-                        /* hist->c_blue[hp]++; */
-                        /* hp = (unsigned char)(bm->c_green[p] * 255.0f); */
-                        /* hist->c_green[hp]++; */
                 }
 	}
 }
@@ -194,11 +185,11 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
         memset(hist->c_blue, 0, sizeof(unsigned int) * PIE_HIST_RES);
         memset(hist->c_green, 0, sizeof(unsigned int) * PIE_HIST_RES);
 
-	for (unsigned int y = 0; y < bm->height; y++)
+	for (int y = 0; y < bm->height; y++)
 	{
-		for (unsigned int x = 0; x < bm->width; x++)
+		for (int x = 0; x < bm->width; x++)
 		{
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
 			unsigned char hp;
 #if _USE_GAMMA_CONV > 0
                         float r = linear_to_srgb(bm->c_red[p]);

@@ -131,9 +131,9 @@ void pie_alg_expos(float* r,
                    float* g,
                    float* b,
                    float e,
-                   unsigned int width,
-                   unsigned int height,
-                   unsigned int stride)
+                   int width,
+                   int height,
+                   int stride)
 {
         struct pie_point_2d p[5];
         struct pie_point_2d c[2 * SEGMENT_LEN];
@@ -157,8 +157,8 @@ void pie_alg_expos(float* r,
         
 #ifdef _HAS_SIMD
 # ifdef _HAS_SSE
-        unsigned int rem = width % 4;
-        unsigned int stop = width - rem;
+        int rem = width % 4;
+        int stop = width - rem;
 
         /* For smaller image on newer hardware, SSE version seems to take
            more time, most likely due to the extra copying, and the calculation
@@ -167,11 +167,11 @@ void pie_alg_expos(float* r,
         stop = 0;
 #endif
         
-        for (unsigned int y = 0; y < height; y++)
+        for (int y = 0; y < height; y++)
         {
-                for (unsigned x = 0; x < stop; x += 4)
+                for (int x = 0; x < stop; x += 4)
                 {
-                        unsigned int p = y * stride + x;
+                        int p = y * stride + x;
                         __m128 redv = _mm_load_ps(r + p);
                         __m128 greenv = _mm_load_ps(g + p);
                         __m128 bluev = _mm_load_ps(b + p);
@@ -203,9 +203,9 @@ void pie_alg_expos(float* r,
                         b[p + 3] = lut[(int)blue[3]];
                 }
 
-                for (unsigned x = stop; x < width; x++)
+                for (int x = stop; x < width; x++)
                 {
-                        unsigned int p = y * stride + x;
+                        int p = y * stride + x;
                         
                         r[p] = lut[(int)(r[p] * scale)];
                         g[p] = lut[(int)(g[p] * scale)];
@@ -216,11 +216,11 @@ void pie_alg_expos(float* r,
 #  error ALTIVET NOT IMPLEMENTED
 # endif
 #else
-        for (unsigned int y = 0; y < height; y++)
+        for (int y = 0; y < height; y++)
         {
-                for (unsigned int x = 0; x < width; x++)
+                for (int x = 0; x < width; x++)
                 {
-                        unsigned int p = y * stride + x;
+                        int p = y * stride + x;
 
                         r[p] = lut[(int)(r[p] * scale)];
                         g[p] = lut[(int)(g[p] * scale)];

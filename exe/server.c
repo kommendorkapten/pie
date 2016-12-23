@@ -312,11 +312,11 @@ static void* ev_loop(void* a)
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         char buf[PIE_PATH_LEN];
-        unsigned int stride;
-        unsigned int len;
+        int stride;
+        int len;
         int res;
-        unsigned int w;
-        unsigned int h;
+        int w;
+        int h;
 
         /* HACK */
         if (msg->img)
@@ -340,7 +340,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         }
         stride = msg->img->raw.row_stride;
 #if _USE_GAMMA_CONV > 0
-        for (unsigned int y = 0; y < msg->img->raw.height; y++)
+        for (int y = 0; y < msg->img->raw.height; y++)
         {
                 srgb_to_linearv(msg->img->raw.c_red + y * stride, 
                                 msg->img->raw.width);
@@ -351,8 +351,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                 
         }
 #endif        
-        w = (unsigned int)msg->i1;
-        h = (unsigned int)msg->i2;
+        w = msg->i1;
+        h = msg->i2;
         w = w < msg->img->raw.width ? w : msg->img->raw.width;
         h = h < msg->img->raw.height ? h : msg->img->raw.height;
 
@@ -521,9 +521,9 @@ static void encode_rgba(struct pie_img_workspace* img)
 {
         __m128 coeff_scale = _mm_set1_ps(255.0f);
         unsigned char* p = img->proxy_out_rgba;
-        unsigned int stride = img->raw.row_stride;
-        unsigned int rem = img->proxy_out.width % 4;
-        unsigned int stop = img->proxy_out.width - rem;
+        int stride = img->raw.row_stride;
+        int rem = img->proxy_out.width % 4;
+        int stop = img->proxy_out.width - rem;
         uint32_t w = htonl(img->proxy_out.width);
         uint32_t h = htonl(img->proxy_out.height);
         float or[4];
@@ -535,11 +535,11 @@ static void encode_rgba(struct pie_img_workspace* img)
         memcpy(p, &h, sizeof(uint32_t));
         p += sizeof(uint32_t);
 
-        for (unsigned int y = 0; y < img->proxy_out.height; y++)
+        for (int y = 0; y < img->proxy_out.height; y++)
         {
-                for (unsigned int x = 0; x < stop; x += 4)
+                for (int x = 0; x < stop; x += 4)
                 {
-                        unsigned int i = y * stride + x;
+                        int i = y * stride + x;
                         __m128 r = _mm_load_ps(&img->proxy_out.c_red[i]);
                         __m128 g = _mm_load_ps(&img->proxy_out.c_green[i]);
                         __m128 b = _mm_load_ps(&img->proxy_out.c_blue[i]);
@@ -570,9 +570,9 @@ static void encode_rgba(struct pie_img_workspace* img)
                         *p++ = 255;
                 }
 
-                for (unsigned int x = stop; x < img->proxy_out.width; x++)
+                for (int x = stop; x < img->proxy_out.width; x++)
                 {
-                        unsigned int i = y * stride + x;
+                        int i = y * stride + x;
                         unsigned char r, g, b;
                         r = (unsigned char)(img->proxy_out.c_red[i] * 255.0f);
                         g = (unsigned char)(img->proxy_out.c_green[i] * 255.0f);
@@ -596,17 +596,16 @@ static void encode_rgba(struct pie_img_workspace* img)
 static void encode_rgba(struct pie_img_workspace* img)
 {
         unsigned char* p = img->proxy_out_rgba;
-        unsigned int stride = img->raw.row_stride;
-        
-        uint32_t w = htonl(img->proxy_out.width);
-        uint32_t h = htonl(img->proxy_out.height);
+        int stride = img->raw.row_stride;
+        int32_t w = htonl(img->proxy_out.width);
+        int32_t h = htonl(img->proxy_out.height);
 
         memcpy(p, &w, sizeof(uint32_t));
         p += sizeof(uint32_t);
         memcpy(p, &h, sizeof(uint32_t));
         p += sizeof(uint32_t);
 
-        for (unsigned int y = 0; y < img->proxy_out.height; y++)
+        for (int y = 0; y < img->proxy_out.height; y++)
         {
 #if _USE_GAMMA_CONV > 0
                 /* Convert to sRGB */
@@ -617,7 +616,7 @@ static void encode_rgba(struct pie_img_workspace* img)
                 linear_to_srgbv(img->proxy_out.c_blue + y * stride, 
                                 img->proxy_out.width);
 #endif
-                for (unsigned int x = 0; x < img->proxy_out.width; x++)
+                for (int x = 0; x < img->proxy_out.width; x++)
                 {
                         unsigned char r, g, b;
                         

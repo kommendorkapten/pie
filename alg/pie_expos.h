@@ -31,9 +31,9 @@ extern void pie_alg_expos(float*,
                           float*,
                           float*,
                           float,
-                          unsigned int,
-                          unsigned int,
-                          unsigned int);
+                          int,
+                          int,
+                          int);
 
 /**
  * Create an exposure correction curve. Used internally by pie_alg_expos.

@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
         printf("  x lin gma\n");
         printf("-----------\n");        
-        for (unsigned int x = 0; x < img.width; x+=4)
+        for (int x = 0; x < img.width; x+=4)
         {
                 int l = (int)(img.c_red[x] * 255.0f);
                 int c = (int)(pie_gamma(img.c_red[x], gamma) * 255.0f);

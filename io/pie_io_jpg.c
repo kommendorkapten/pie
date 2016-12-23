@@ -47,7 +47,7 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         struct jpeg_decompress_struct cinfo;
         FILE* fp;
         JSAMPLE* row;
-        unsigned int y;
+        int y;
         struct pie_jpg_error_mgr jerr;
 
         fp = fopen(path, "rb");
@@ -89,8 +89,8 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
                 return PIE_IO_UNSUPPORTED_FMT;
         }
 
-        bm->width = cinfo.output_width;
-        bm->height = cinfo.output_height;
+        bm->width = (int)cinfo.output_width;
+        bm->height = (int)cinfo.output_height;
         bm_alloc_f32(bm);
         y = 0;
         row = malloc(sizeof(JSAMPLE) * 
@@ -103,7 +103,7 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
                 /* Read one line at a time */
                 jpeg_read_scanlines(&cinfo, &row, 1);
 
-                for (unsigned int i = 0; i < cinfo.output_width; i++)
+                for (int i = 0; i < (int)cinfo.output_width; i++)
                 {
                         bm->c_red[y + i] = row[jpos++] / 255.0f;
                         bm->c_green[y + i] = row[jpos++] / 255.0f;
@@ -132,7 +132,7 @@ int jpg_u8rgb_write(const char* path, struct bitmap_u8rgb* bm, int quality)
         struct jpeg_error_mgr jerr;
         FILE* fp;
         JSAMPLE* row;
-        unsigned int y = 0;
+        int y = 0;
 
         fp = fopen(path, "wb");
         if (fp == NULL)
@@ -179,7 +179,7 @@ int jpg_u8rgb_write(const char* path, struct bitmap_u8rgb* bm, int quality)
                 int jpos = 0;
 
                 /* Only send one row at a time */
-                for (unsigned int i = 0; i < cinfo.image_width; i++)
+                for (int i = 0; i < (int)cinfo.image_width; i++)
                 {
                         row[jpos++] = (JSAMPLE) bm->c_red[y + i];
                         row[jpos++] = (JSAMPLE) bm->c_green[y + i];

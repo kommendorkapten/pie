@@ -74,8 +74,8 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         /* The first 8 bytes are already checkd */
         png_set_sig_bytes(pngp, 8);
         png_read_info(pngp, infop);
-        bm->width = png_get_image_width(pngp, infop);
-        bm->height = png_get_image_height(pngp, infop);
+        bm->width = (int)png_get_image_width(pngp, infop);
+        bm->height = (int)png_get_image_height(pngp, infop);
         color_type = png_get_color_type(pngp, infop);
         bit_depth = png_get_bit_depth(pngp, infop);
 
@@ -122,7 +122,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         }
 
         rows = malloc(sizeof(png_byte*) * bm->height);
-        for (unsigned int y = 0; y < bm->height; y++)
+        for (int y = 0; y < bm->height; y++)
         {
                 rows[y] = malloc(png_get_rowbytes(pngp, infop));
         }
@@ -131,16 +131,16 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         bm_alloc_f32(bm);
 
         /* Copy data to bitmap */
-        for (unsigned int y = 0; y < bm->height; y++)
+        for (int y = 0; y < bm->height; y++)
         {
                 png_byte* row = rows[y];
 
-                for (unsigned int x = 0; x < bm->width; x++)
+                for (int x = 0; x < bm->width; x++)
                 {
                         float red = (float)*row++;
                         float green = (float)*row++;
                         float blue = (float)*row++;
-                        unsigned int offset = y * bm->row_stride + x;
+                        int offset = y * bm->row_stride + x;
 
                         /* refactor to set methods */
                         bm->c_red[offset] = red / 255.0f;
@@ -209,12 +209,12 @@ int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
     
         /* Write rows to PNG obj */
         rows = malloc(bitmap->height * sizeof(png_byte*));
-        for (unsigned int y = 0; y < bitmap->height; y++)
+        for (int y = 0; y < bitmap->height; y++)
         {
                 size_t row_size = sizeof(uint8_t) * bitmap->width * pixel_size;
                 png_byte* row = malloc(row_size);
                 rows[y] = row;
-                for (unsigned int x = 0; x < bitmap->width; ++x)
+                for (int x = 0; x < bitmap->width; ++x)
                 {
                         struct pixel_u8rgb p;
 
@@ -233,7 +233,7 @@ int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
                       PNG_TRANSFORM_IDENTITY, /* No transform */
                       NULL); /* not used */
     
-        for (unsigned int y = 0; y < bitmap->height; y++) 
+        for (int y = 0; y < bitmap->height; y++) 
         {
                 free(rows[y]);
         }

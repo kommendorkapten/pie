@@ -39,9 +39,9 @@ struct pie_kernel5x5
 extern void pie_kernel3x3_apply(float*,
                                 struct pie_kernel3x3*,
                                 float*,
-                                unsigned int,
-                                unsigned int,
-                                unsigned int);
+                                int,
+                                int,
+                                int);
 
 /**
  * Apply a kernel to a channel.
@@ -56,9 +56,9 @@ extern void pie_kernel3x3_apply(float*,
 extern void pie_kernel5x5_apply(float*,
                                 struct pie_kernel5x5*,
                                 float*,
-                                unsigned int,
-                                unsigned int,
-                                unsigned int);
+                                int,
+                                int,
+                                int);
 
 /**
  * Apply a separable kernel to a channel.
@@ -75,9 +75,9 @@ extern void pie_kernel_sep_apply(float*,
                                  float*,
                                  int,
                                  float*,
-                                 unsigned int,
-                                 unsigned int,
-                                 unsigned int);
+                                 int,
+                                 int,
+                                 int);
 
 /**
  * Initialize a kernel with a Gauss distribution (E=1).

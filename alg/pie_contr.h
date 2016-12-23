@@ -27,8 +27,8 @@
  */
 extern void pie_alg_contr(float* restrict,
                           float,
-                          unsigned int,
-                          unsigned int,
-                          unsigned int);
+                          int,
+                          int,
+                          int);
 
 #endif /* __PIE_CONTR_H__ */

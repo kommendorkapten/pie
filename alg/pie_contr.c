@@ -27,27 +27,27 @@
 
 void pie_alg_contr(float* img,
                    float c,
-                   unsigned int w,
-                   unsigned int h,
-                   unsigned int stride)
+                   int w,
+                   int h,
+                   int stride)
 {
         __m128 sv = _mm_set1_ps(0.5f);
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
-	unsigned int rem = w % 4;
-	unsigned int stop = w - rem;
+	int rem = w % 4;
+	int stop = w - rem;
 
         assert(c >= 0.0f);
         assert(c <= 2.0f);
 
-        for (unsigned int y = 0; y < h; y++)
+        for (int y = 0; y < h; y++)
         {
-                for (unsigned int x = 0; x < stop; x += 4)
+                for (int x = 0; x < stop; x += 4)
                 {
                         __m128 data;
                         __m128 cmpv;
-                        unsigned int p = y * stride + x;
+                        int p = y * stride + x;
 
                         data = _mm_load_ps(img + p);
                         data = _mm_sub_ps(data, sv);
@@ -66,7 +66,7 @@ void pie_alg_contr(float* img,
                         _mm_store_ps(img + p, data);
                 }
 
-                for (unsigned int x = stop; x < w; x++)
+                for (int x = stop; x < w; x++)
                 {
                         float* p = img + y * stride + x;
 
@@ -90,17 +90,17 @@ void pie_alg_contr(float* img,
 
 void pie_alg_contr(float* img,
                    float c,
-                   unsigned int w,
-                   unsigned int h,
-                   unsigned int stride)
+                   int w,
+                   int h,
+                   int stride)
 {
         assert(c >= 0.0f);
         assert(c <= 2.0f);
 
 /*        return c(in - 0.5f) + 0.5f + b; */
-        for (unsigned int y = 0; y < h; y++)
+        for (int y = 0; y < h; y++)
         {
-                for (unsigned int x = 0; x < w; x++)
+                for (int x = 0; x < w; x++)
                 {
                         float* p = img + y * stride + x;
 

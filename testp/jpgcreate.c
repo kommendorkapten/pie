@@ -31,9 +31,9 @@ int main ()
 
         bm_alloc_u8(&out);
 
-        for (unsigned int y = 0; y < out.height; y++)
+        for (int y = 0; y < out.height; y++)
         {
-                for (unsigned int x = 0; x < out.width; x++)
+                for (int x = 0; x < out.width; x++)
                 {
                         struct pixel_u8rgb pixel;
 

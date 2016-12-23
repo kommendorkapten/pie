@@ -31,7 +31,7 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb*,
 
 int bm_alloc_u8(struct bitmap_u8rgb* bm)
 {
-        unsigned int rem = bm->width % 4;
+        int rem = bm->width % 4;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -61,7 +61,7 @@ int bm_alloc_u8(struct bitmap_u8rgb* bm)
 
 int bm_alloc_u16(struct bitmap_u16rgb* bm)
 {
-        unsigned int rem = bm->width % 4;
+        int rem = bm->width % 4;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -91,7 +91,7 @@ int bm_alloc_u16(struct bitmap_u16rgb* bm)
 
 int bm_alloc_f32(struct bitmap_f32rgb* bm)
 {
-        unsigned int rem = bm->width % 4;
+        int rem = bm->width % 4;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -184,10 +184,10 @@ void bm_free_f32(struct bitmap_f32rgb* bm)
 
 void pixel_u8rgb_get(struct pixel_u8rgb* p, 
                      const struct bitmap_u8rgb* bm,
-                     unsigned int x,
-                     unsigned int y)
+                     int x,
+                     int y)
 {
-        unsigned int offset = bm->row_stride * y + x;
+        int offset = bm->row_stride * y + x;
 
         p->red = bm->c_red[offset];
         p->green = bm->c_green[offset];
@@ -195,11 +195,11 @@ void pixel_u8rgb_get(struct pixel_u8rgb* p,
 }
 
 void pixel_u8rgb_set(struct bitmap_u8rgb* bm,
-                     unsigned int x,
-                     unsigned int y,
+                     int x,
+                     int y,
                      struct pixel_u8rgb* p)
 {
-        unsigned int offset = bm->row_stride * y + x;
+        int offset = bm->row_stride * y + x;
 
         bm->c_red[offset] = p->red;
         bm->c_green[offset] = p->green;
@@ -342,11 +342,11 @@ static void bm_conv_u8_u16(struct bitmap_u8rgb* dst,
 
         bm_alloc_u8(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
 
                         dst->c_red[o] = (uint8_t) ((src->c_red[o] / 65535.0f) * 255.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
@@ -367,11 +367,11 @@ static void bm_conv_u8_f32(struct bitmap_u8rgb* dst,
 
         bm_alloc_u8(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 255.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
@@ -392,11 +392,11 @@ static void bm_conv_u16_u8(struct bitmap_u16rgb* dst,
 
         bm_alloc_u16(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint16_t) ((src->c_red[o] / 255.0f) * 65535.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
@@ -417,11 +417,11 @@ static void bm_conv_u16_f32(struct bitmap_u16rgb* dst,
 
         bm_alloc_u16(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 65535.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
@@ -442,11 +442,11 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb* dst,
 
         bm_alloc_f32(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = src->c_red[o] / 255.0f;
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
@@ -467,11 +467,11 @@ static void bm_conv_f32_u16(struct bitmap_f32rgb* dst,
 
         bm_alloc_f32(dst);
 
-        for (unsigned int y = 0; y < src->height; y++)
+        for (int y = 0; y < src->height; y++)
         {
-                for (unsigned int x = 0; x < src->width; x++)
+                for (int x = 0; x < src->width; x++)
                 {
-                        unsigned int o = y * src->row_stride + x;
+                        int o = y * src->row_stride + x;
                   
                         dst->c_red[o] = src->c_red[o] / 65535.0f;
                         if (src->color_type == PIE_COLOR_TYPE_RGB)

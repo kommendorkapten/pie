@@ -23,11 +23,11 @@ int main(void)
 
         bm_alloc_f32(&img);
 
-        for (unsigned int y = 0; y < img.height; y++)
+        for (int y = 0; y < img.height; y++)
         {
-                for (unsigned int x = 0; x < img.width; x++)
+                for (int x = 0; x < img.width; x++)
                 {
-                        unsigned int p = y * img.row_stride + x;
+                        int p = y * img.row_stride + x;
                         float c = x / (4 * 255.0);
 
                         img.c_red[p] = c;
@@ -45,7 +45,7 @@ int main(void)
 #endif
 
         /* Convert to sRGB */
-        for (unsigned int y = 0; y < img.height; y++)
+        for (int y = 0; y < img.height; y++)
         {
                 linear_to_srgbv(img.c_red + y * img.row_stride, img.width);
                 linear_to_srgbv(img.c_green + y * img.row_stride, img.width);

@@ -83,8 +83,8 @@ void bm_free_f32(struct bitmap_f32rgb*);
  */
 void pixel_u8rgb_get(struct pixel_u8rgb*,
                      const struct bitmap_u8rgb*, 
-                     unsigned int, 
-                     unsigned int);
+                     int, 
+                     int);
 
 /**
  * Set a pixel int the bitmap.
@@ -95,8 +95,8 @@ void pixel_u8rgb_get(struct pixel_u8rgb*,
  * @return void
  */
 void pixel_u8rgb_set(struct bitmap_u8rgb*, 
-                     unsigned int, 
-                     unsigned int,
+                     int, 
+                     int,
                      struct pixel_u8rgb*);
 
 /**

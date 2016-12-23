@@ -65,9 +65,9 @@ struct bitmap_u8rgb
         uint8_t* c_blue;
         enum pie_color_type color_type;
         enum pie_color_bit_depth bit_depth;
-        unsigned int width;
-        unsigned int height;
-        unsigned int row_stride;
+        int width;
+        int height;
+        int row_stride;
 };
 
 struct bitmap_u16rgb
@@ -77,9 +77,9 @@ struct bitmap_u16rgb
         uint16_t* c_blue;
         enum pie_color_type color_type;
         enum pie_color_bit_depth bit_depth;
-        unsigned int width;
-        unsigned int height;
-        unsigned int row_stride;
+        int width;
+        int height;
+        int row_stride;
 };
 
 struct bitmap_f32rgb
@@ -89,9 +89,9 @@ struct bitmap_f32rgb
         float* c_blue;
         enum pie_color_type color_type;
         enum pie_color_bit_depth bit_depth;
-        unsigned int width;
-        unsigned int height;
-        unsigned int row_stride;
+        int width;
+        int height;
+        int row_stride;
 };
 
 struct pie_img_settings

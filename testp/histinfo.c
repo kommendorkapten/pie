@@ -12,7 +12,7 @@ int main(int argc, char** argv)
         struct bitmap_f32rgb img;
         struct timing t;
         unsigned long dur;
-        unsigned int count = 0;
+        int count = 0;
 
         if (argc != 2)
         {

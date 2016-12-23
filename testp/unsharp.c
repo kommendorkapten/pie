@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         float* buf;
         float* cpy;
         float s = 60;
-        unsigned int size;
+        int size;
         float amount = 0.1;
 
         if (argc != 2)
@@ -60,9 +60,9 @@ int main(int argc, char** argv)
                              img.height,
                              img.row_stride);
 
-        for (unsigned int y = 0; y < img.height; y++)
+        for (int y = 0; y < img.height; y++)
         {
-                for (unsigned int x = 0; x < img.width; x++)
+                for (int x = 0; x < img.width; x++)
                 {
                         int p = y * img.row_stride + x;
                         float mask = img.c_red[p] - cpy[p];
@@ -89,9 +89,9 @@ int main(int argc, char** argv)
                              img.height,
                              img.row_stride);
 
-        for (unsigned int y = 0; y < img.height; y++)
+        for (int y = 0; y < img.height; y++)
         {
-                for (unsigned int x = 0; x < img.width; x++)
+                for (int x = 0; x < img.width; x++)
                 {
                         int p = y * img.row_stride + x;
                         float mask = img.c_green[p] - cpy[p];
@@ -118,9 +118,9 @@ int main(int argc, char** argv)
                              img.height,
                              img.row_stride);        
 
-        for (unsigned int y = 0; y < img.height; y++)
+        for (int y = 0; y < img.height; y++)
         {
-                for (unsigned int x = 0; x < img.width; x++)
+                for (int x = 0; x < img.width; x++)
                 {
                         int p = y * img.row_stride + x;
                         float mask = img.c_blue[p] - cpy[p];
