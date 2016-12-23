@@ -301,7 +301,7 @@ static int cb_http(struct lws* wsi,
         struct pie_sess* session;
         const char* mimetype;
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
-        ptrdiff_t hn = 0;
+        int hn = 0;
         int n;
 
         switch (reason)
@@ -324,7 +324,7 @@ static int cb_http(struct lws* wsi,
                         if (lws_add_http_header_by_name(wsi,
                                                         (unsigned char*)"set-cookie:",
                                                         (unsigned char*)cookie,
-                                                        (int)hn,
+                                                        hn,
                                                         &p,
                                                         headers + 256))
                         {
@@ -336,7 +336,13 @@ static int cb_http(struct lws* wsi,
                                   session->token);
 
                         pie_sess_mgr_put(sess_mgr, session);
-                        hn = p - &headers[0];
+                        /* 
+                         * This is usually safe. P should never be incremented
+                         * more than the size of headers.
+                         * P can never be decremented.
+                         * But it's not beautiful, but needed to silence lint.
+                         */
+                        hn = (int)((unsigned long)p - (unsigned long)&headers[0]);
                         strncpy(ctx->token, 
                                 session->token, 
                                 PIE_SESS_TOKEN_LEN);
@@ -382,7 +388,7 @@ static int cb_http(struct lws* wsi,
                                         url,
                                         mimetype,
                                         (char*)headers,
-                                        (int)hn);
+                                        hn);
                 if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
                 {
                         return -1;
@@ -465,7 +471,7 @@ static int cb_img(struct lws* wsi,
                                         session->img->proxy_out_len);
                                 ret = -1;
                         }
-                        session->tx_ready ^= PIE_TX_IMG;
+                        session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_IMG);
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
@@ -541,7 +547,7 @@ static int cb_hist(struct lws* wsi,
                                         session->img->hist_json_len);
                                 ret = -1;
                         }
-                        session->tx_ready ^= PIE_TX_HIST;
+                        session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_HIST);
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:

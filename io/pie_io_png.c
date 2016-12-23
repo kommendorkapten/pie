@@ -16,6 +16,7 @@
 #include "../pie_log.h"
 #include <png.h>
 #include <stdlib.h>
+#include <note.h>
 
 /*
   TODO fix scan lines
@@ -105,6 +106,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         if (png_get_gAMA(pngp, infop, &gamma))
         {
                 /* png_set_gamma(pngp, display_exponent, gamma); */
+                NOTE(EMPTY);
                 PIE_DEBUG("Read gamma from file: %f.", gamma);
         }
         
