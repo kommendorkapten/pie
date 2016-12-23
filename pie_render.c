@@ -15,6 +15,7 @@
 #include "pie_types.h"
 #include "alg/pie_contr.h"
 #include "alg/pie_expos.h"
+#include "alg/pie_satur.h"
 #include "lib/timing.h"
 #include "pie_log.h"
 
@@ -28,7 +29,7 @@ void pie_img_init_settings(struct pie_img_settings* s)
         s->black = 0.0f;
         s->clarity = 0.0f;
         s->vibrance = 0.0f;
-        s->saturation = 0.0f;
+        s->saturation = 1.0f;
         s->rotate = 0.0f;
 }
 
@@ -51,7 +52,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render exposure in %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render exposure:       %ldusec", timing_dur_usec(&t2));
 
         /* C O N T R A S T */
         timing_start(&t2);
@@ -70,7 +71,8 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render contrast in %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render contrast:       %ldusec", timing_dur_usec(&t2));
+
 #if 0
         s->highlights = 0.0f;
         s->shadows = 0.0f;
@@ -78,11 +80,22 @@ int pie_img_render(struct bitmap_f32rgb* img,
         s->black = 0.0f;
         s->clarity = 0.0f;
         s->vibrance = 0.0f;
-        s->saturation = 0.0f;
+#endif 
+        /* S A T U R A T I O N */        
+        timing_start(&t2);
+        pie_alg_satur(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->saturation,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render saturation:     %ldusec", timing_dur_usec(&t2));
+#if 0
         s->rotate = 0.0f;        
 #endif
 
-        PIE_DEBUG("Render total in %ldusec", timing_dur_usec(&t1));
+        PIE_DEBUG("Render total:          %ldusec", timing_dur_usec(&t1));
 
         return 0;
 }

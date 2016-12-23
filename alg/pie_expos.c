@@ -127,9 +127,9 @@ static struct pie_point_2d ep5[5] = {
  * Creates a look up table for the chosen exposure value.
  * For each color channel, apply the curve function.
  */
-void pie_alg_expos(float* r,
-                   float* g,
-                   float* b,
+void pie_alg_expos(float* restrict r,
+                   float* restrict g,
+                   float* restrict b,
                    float e,
                    int width,
                    int height,

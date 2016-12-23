@@ -100,6 +100,7 @@ int main(void)
         int ok;
 
         config.lib_path = "test-images";
+        server.run = 1;
         server.context_root = "assets";
         server.port = 8080;
         server.command = chan_create();
@@ -139,7 +140,6 @@ int main(void)
         PIE_LOG("Start with config:");
         PIE_LOG("  image library path: %s", config.lib_path);
         
-        server.run = 1;
         if (start_server(&server))
         {
                 PIE_ERR("Failed");
@@ -315,6 +315,7 @@ static void* ev_loop(void* a)
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         char buf[PIE_PATH_LEN];
+        struct timing t;
         int stride;
         int len;
         int res;
@@ -332,7 +333,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img = malloc(sizeof(struct pie_img_workspace));
         memset(msg->img, 0, sizeof(struct pie_img_workspace));
         snprintf(buf, PIE_PATH_LEN, "%s/%s", config.lib_path, msg->buf);
+        timing_start(&t);
         res = pie_io_load(&msg->img->raw, buf);
+        PIE_DEBUG("Loaded %s %ldusec", buf, timing_dur_usec(&t));        
         if (res)
         {
                 PIE_ERR("[%s] Could not open '%s'",
@@ -444,12 +447,54 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 break;
         case PIE_MSG_SET_HIGHL:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_SHADOW:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_WHITE:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_BLACK:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_CLARITY:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_VIBRANCE:
+                PIE_WARN("[%s] Not implemented yet %d.",
+                         msg->token,
+                         (int)msg->type);
+                status = -1;
+                break;
         case PIE_MSG_SET_SATURATION:
+                if (msg->f1 < 0.0f || msg->f1 > 2.0f)
+                {
+                        PIE_WARN("[%s] invalid saturation: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.saturation = msg->f1;
+                }
+                break;
         case PIE_MSG_SET_ROTATE:
                 PIE_WARN("[%s] Not implemented yet %d.",
                          msg->token,
@@ -483,7 +528,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 memcpy(new->c_red, org->c_red, len);
                 memcpy(new->c_green, org->c_green, len);
                 memcpy(new->c_blue, org->c_blue, len);
-                PIE_DEBUG("Reset proxy in %ldusec.",
+                PIE_DEBUG(" Reset proxy:           %ldusec",
                           timing_dur_usec(&t1));
                 
                 r_ok = pie_img_render(new,
@@ -497,20 +542,20 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                  new);
                 pie_alg_hist_rgb(&msg->img->hist,
                                  new);
-                PIE_DEBUG("Created histogram in %ldusec.",
+                PIE_DEBUG(" Created histogram:     %ldusec",
                           timing_dur_usec(&t1));
                 
                 /* Write proxy to RGBA */
                 timing_start(&t1);
                 encode_rgba(msg->img);
-                PIE_DEBUG("Encoded proxy in %ldusec.",
+                PIE_DEBUG(" Encoded proxy:         %ldusec",
                           timing_dur_usec(&t1));
                 timing_start(&t1);
                 /* Create JSON for hist */
                 msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
                                                             JSON_HIST_SIZE, 
                                                             &msg->img->hist);
-                PIE_DEBUG("JSON encoded histogram in %ldusec.",
+                PIE_DEBUG("JSON encoded histogram: %ldusec",
                           timing_dur_usec(&t1));
 
                 return PIE_MSG_RENDER_DONE;

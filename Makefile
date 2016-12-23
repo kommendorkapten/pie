@@ -62,7 +62,8 @@ IO_SRC    = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
 SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
 MSG_SRC   = pie_msg.c
-ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c
+ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
+            pie_satur.c
 ENC_SRC   = pie_json.c
 MTH_SRC   = pie_math.c pie_catmull.c
 SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
@@ -71,11 +72,10 @@ SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
 OBJS      = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
 TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-            histinfo contr gauss unsharp tojpg catm
+            histinfo contr gauss unsharp tojpg catm tapply
 EXE_BINS  = server
 T_BINS    = $(TEST_BINS:%=bin/%)
 E_BINS    = $(EXE_BINS:%=bin/%)
-LINT_SRC  = $(shell find . -name '*.c')
 
 VPATH = io lib alg wsrv msg encoding math
 
@@ -103,9 +103,6 @@ obj/%.o: %.c
 
 clean:
 	rm -rf obj/*.o bin/* $(P_BINS)
-
-lint:
-	lint -I/usr/local/include -Xc99 -m64 -errwarn=%all -errchk=%all -Ncheck=%all -Nlevel=1 -u -m -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT $(LINT_SRC)
 
 bin/pngrw: testp/pngrw.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
@@ -144,6 +141,9 @@ bin/tojpg: testp/tojpg.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/catm: testp/catm.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/tapply: testp/tapply.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/server: exe/server.c $(OBJS) $(SRV_OBJS)

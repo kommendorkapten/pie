@@ -626,25 +626,10 @@ static int cb_cmd(struct lws* wsi,
                         {
                                 PIE_ERR("failed to write to chan");
                         }
+                        PIE_DEBUG("[%s] Wrote message type %d to channel",
+                                  session->token,
+                                  (int)msg->type);
                 }
-
-#if 0
-                msg->type = PIE_MSG_SET_CONTRAST;
-                msg->i1 = 50;
-
-                if (chan_write(session->command, &envelope))
-                {
-                        PIE_ERR("failed to write to chan\n");
-                }
-
-                /* HACK */
-                msg = pie_msg_alloc();
-                msg->type = PIE_MSG_LOAD;
-                strncpy(msg->token, session->token, PIE_MSG_TOKEN_LEN);
-                envelope.data = msg;
-                envelope.len = sizeof(struct pie_msg);
-#endif
-
                 break;
         default:
                 break;

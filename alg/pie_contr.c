@@ -97,7 +97,6 @@ void pie_alg_contr(float* img,
         assert(c >= 0.0f);
         assert(c <= 2.0f);
 
-/*        return c(in - 0.5f) + 0.5f + b; */
         for (int y = 0; y < h; y++)
         {
                 for (int x = 0; x < w; x++)

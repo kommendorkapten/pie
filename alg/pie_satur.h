@@ -11,23 +11,25 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_EXPOS_H__
-#define __PIE_EXPOS_H__
-
-#include "../math/pie_point.h"
+#ifndef __PIE_SATUR_H__
+#define __PIE_SATUR_H__
 
 /**
- * Adjust exposure.
- * Exposure is adjusted in complete steps, i.e 0 is unchanged.
+ * Alter the saturation of the image.
+ * 0.0 creates a bw image
+ * 0.5 reduces the saturation to half.
+ * 1.0 no changes.
+ * 2.0 doubles the saturation.
  * @param the red channel.
  * @param the green channel.
- * @param the blue channel.
- * @param the exposure adjustment.
- * @param width of image.
- * @param height of image.
- * @param row stride in memory.
+ * @param the blue channel
+ * @param desired saturation in range [0,2].
+ * @param image width.
+ * @param image height.
+ * @param image row stride.
+ * @reurn void.
  */
-extern void pie_alg_expos(float* restrict,
+extern void pie_alg_satur(float* restrict,
                           float* restrict,
                           float* restrict,
                           float,
@@ -35,13 +37,4 @@ extern void pie_alg_expos(float* restrict,
                           int,
                           int);
 
-/**
- * Create an exposure correction curve. Used internally by pie_alg_expos.
- * @param array of points to store the control points in.
- * @param the desired exposure level, from -5 to 5.
- * @return void.
- */
-extern void pie_alg_expos_curve(struct pie_point_2d[5],
-                                float);
-
-#endif /* __PIE_EXPOS_H__ */
+#endif /* __PIE_SATUR_H__ */

@@ -7,7 +7,6 @@ l_p="-Xc99 -m64 -u -m -errchk=%all -Ncheck=%all"
 l_p="${l_p} -errtags=yes"
 l_p="${l_p} -erroff=E_FUNC_RET_ALWAYS_IGNOR,E_SIGN_EXTENSION_PSBL,E_CAST_INT_TO_SMALL_INT,E_FUNC_DECL_VAR_ARG,E_ASGN_RESET,E_ENUM_UNUSE,E_CONSTANT_CONDITION,E_CAST_UINT_TO_SIGNED_INT,E_H_C_CHECK0,E_INCONS_ARG_DECL"
 
-
 io=`find io -name '*.c'`
 lint ${l_p} ${io}
 
