@@ -14,6 +14,8 @@
 #ifndef __PIE_EXPOS_H__
 #define __PIE_EXPOS_H__
 
+#include "../math/pie_point.h"
+
 /**
  * Adjust exposure.
  * Exposure is adjusted in complete steps, i.e 0 is unchanged.
@@ -32,5 +34,14 @@ extern void pie_alg_expos(float*,
                           unsigned int,
                           unsigned int,
                           unsigned int);
+
+/**
+ * Create an exposure correction curve. Used internally by pie_alg_expos.
+ * @param array of points to store the control points in.
+ * @param the desired exposure level, from -5 to 5.
+ * @return void.
+ */
+extern void pie_alg_expos_curve(struct pie_point_2d[5],
+                                float);
 
 #endif /* __PIE_EXPOS_H__ */

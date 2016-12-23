@@ -23,6 +23,8 @@ int main(void)
         p[4].x = 2.0f;
         p[4].y = 1.2f;
 
+        /* test */
+        pie_alg_expos_curve(p, 0.0);        
         pie_catm_rom_chain(o, p, 5, NUM_P);
 
 #if 1
@@ -61,7 +63,7 @@ int main(void)
         }
 #endif
 
-        pie_alg_expos_curve(p, -2.5);
+        pie_alg_expos_curve(p, -0.1);
         for (int i = 0; i < 5; i++)
         {
                 printf("%f %f\n", p[i].x, p[i].y);

@@ -45,7 +45,10 @@ var histDataB = {
 
 var pieStateHack = {
     "image2": "lena.png",
-    "image": "walk.jpg"
+    "image4": "lin.jpg",
+    "image1": "walk.jpg",
+    "image": "selfie.jpg",
+    "image3": "lin_small.jpg"
 };
 
 function getWsUrl(){

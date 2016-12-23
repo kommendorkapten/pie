@@ -21,7 +21,7 @@ endif
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
-    CFLAGS += -v -O2 -mt # use -fast and compare to only -xO5
+    CFLAGS += -v -mt -fast# use -fast and compare to only -xO5
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
     endif
@@ -62,7 +62,7 @@ IO_SRC    = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
 SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
 MSG_SRC   = pie_msg.c
-ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c
+ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c
 ENC_SRC   = pie_json.c
 MTH_SRC   = pie_math.c pie_catmull.c
 SOURCES   = pie_render.c pie_bm.c pie_cspace.c \
