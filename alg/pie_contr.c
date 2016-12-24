@@ -17,13 +17,10 @@
 #include <assert.h>
 
 /* 
-   c is amount of contrast int [0, 2]
-   c [0, 1] less contrast
-   c [1,+] more contrast
-*/
-
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+ * c is amount of contrast int [0, 2]
+ * c [0, 1] less contrast
+ * c [1,+] more contrast
+ */
 
 void pie_alg_contr(float* img,
                    float c,
@@ -31,18 +28,28 @@ void pie_alg_contr(float* img,
                    int h,
                    int stride)
 {
+#ifdef _HAS_SSE
         __m128 sv = _mm_set1_ps(0.5f);
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
+#endif
+#ifdef _HAS_SIMD
 	int rem = w % 4;
 	int stop = w - rem;
-
+#else
+        int stop = 0;
+#endif
+        
         assert(c >= 0.0f);
         assert(c <= 2.0f);
 
         for (int y = 0; y < h; y++)
         {
+
+#ifdef _HAS_SIMD
+# ifdef _HAS_SSE
+                
                 for (int x = 0; x < stop; x += 4)
                 {
                         __m128 data;
@@ -66,6 +73,11 @@ void pie_alg_contr(float* img,
                         _mm_store_ps(img + p, data);
                 }
 
+# else
+#  error ALTIVEC not supported yet
+# endif
+#endif
+                
                 for (int x = stop; x < w; x++)
                 {
                         float* p = img + y * stride + x;
@@ -83,38 +95,3 @@ void pie_alg_contr(float* img,
                 }
         }
 }
-# else
-#  error ALTIVEC not supported yet
-# endif
-#else
-
-void pie_alg_contr(float* img,
-                   float c,
-                   int w,
-                   int h,
-                   int stride)
-{
-        assert(c >= 0.0f);
-        assert(c <= 2.0f);
-
-        for (int y = 0; y < h; y++)
-        {
-                for (int x = 0; x < w; x++)
-                {
-                        float* p = img + y * stride + x;
-
-                        *p = c * (*p - 0.5f) + 0.5f;
-
-                        if (*p > 1.0f)
-                        {
-                                *p = 1.0f;
-                        } 
-                        else if (*p < 0.0f)
-                        {
-                                *p = 0.0f;
-                        }
-                }
-        }
-}
-
-#endif
