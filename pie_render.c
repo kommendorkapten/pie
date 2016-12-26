@@ -13,10 +13,11 @@
 
 #include "pie_render.h"
 #include "pie_types.h"
+#include "alg/pie_black.h"
 #include "alg/pie_contr.h"
 #include "alg/pie_expos.h"
 #include "alg/pie_satur.h"
-#include "alg/pie_black.h"
+#include "alg/pie_white.h"
 #include "lib/timing.h"
 #include "pie_log.h"
 
@@ -77,8 +78,17 @@ int pie_img_render(struct bitmap_f32rgb* img,
 #if 0
         s->highlights = 0.0f;
         s->shadows = 0.0f;
-        s->white = 0.0f;
 #endif
+        /* W H I T E */
+        timing_start(&t2);
+        pie_alg_white(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->white,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render white:          %ldusec", timing_dur_usec(&t2));
 
         /* B L A C K */
         timing_start(&t2);

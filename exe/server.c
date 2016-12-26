@@ -459,10 +459,17 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 status = -1;
                 break;
         case PIE_MSG_SET_WHITE:
-                PIE_WARN("[%s] Not implemented yet %d.",
-                         msg->token,
-                         (int)msg->type);
-                status = -1;
+                if (msg->f1 < -1.0f || msg->f1 > 1.0f)
+                {
+                        PIE_WARN("[%s] invalid white: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.white = msg->f1;
+                }
                 break;
         case PIE_MSG_SET_BLACK:
                 if (msg->f1 < -1.0f || msg->f1 > 1.0f)
