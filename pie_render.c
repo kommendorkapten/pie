@@ -16,6 +16,7 @@
 #include "alg/pie_contr.h"
 #include "alg/pie_expos.h"
 #include "alg/pie_satur.h"
+#include "alg/pie_black.h"
 #include "lib/timing.h"
 #include "pie_log.h"
 
@@ -77,7 +78,19 @@ int pie_img_render(struct bitmap_f32rgb* img,
         s->highlights = 0.0f;
         s->shadows = 0.0f;
         s->white = 0.0f;
-        s->black = 0.0f;
+#endif
+
+        /* B L A C K */
+        timing_start(&t2);
+        pie_alg_black(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->black,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render black:          %ldusec", timing_dur_usec(&t2));
+#if 0
         s->clarity = 0.0f;
         s->vibrance = 0.0f;
 #endif 
