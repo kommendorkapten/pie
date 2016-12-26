@@ -605,8 +605,10 @@ static int cb_cmd(struct lws* wsi,
                 strncpy(msg->token, session->token, PIE_MSG_TOKEN_LEN);
                 if (parse_cmd_msg(msg, (char*)in, len))
                 {
-                        PIE_WARN("failed to parse message: '%s'",
+                        PIE_WARN("[%s] Failed to parse message: '%s'",
+                                 session->token,
                                  (char*)in);
+                        pie_msg_free(msg);
                 }
                 else
                 {
@@ -624,11 +626,17 @@ static int cb_cmd(struct lws* wsi,
                         
                         if (chan_write(session->command, &envelope))
                         {
-                                PIE_ERR("failed to write to chan");
+                                PIE_ERR("[%s] Failed to write msg %d to chan",
+                                        session->token,
+                                        (int)msg->type);
+                                pie_msg_free(msg);
                         }
-                        PIE_DEBUG("[%s] Wrote message type %d to channel",
-                                  session->token,
-                                  (int)msg->type);
+                        else
+                        {
+                                PIE_DEBUG("[%s] Wrote message type %d to channel",
+                                          session->token,
+                                          (int)msg->type);
+                        }
                 }
                 break;
         default:
