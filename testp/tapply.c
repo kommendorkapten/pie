@@ -12,7 +12,6 @@ int main(int argc, char** argv)
         struct bitmap_u8rgb out;
         struct timing t;
         struct pie_img_settings settings;
-        char* name;
         char* out_name = "out.jpg";
         float* buf;
         unsigned long dur;

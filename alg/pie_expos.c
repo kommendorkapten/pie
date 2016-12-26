@@ -13,9 +13,6 @@
 
 #include <math.h>
 #include <assert.h>
-#ifdef _HAS_SSE
-# include <nmmintrin.h> /* sse 4.2 */
-#endif
 #include "../math/pie_catmull.h"
 #include "pie_curve.h"
 #include "pie_expos.h"

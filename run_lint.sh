@@ -20,7 +20,7 @@ wsrv=`find wsrv -name '*.c'`
 lint -DEVENT_POLL=1 -I/usr/local/include ${l_p} -errhdr=no%/usr/local/include ${wsrv}
 
 alg=`find alg -name '*.c'` 
-lint ${l_p} ${alg}
+lint -D_HAS_SSE -D_HAS_SIMD ${l_p} ${alg}
 
 math=`find math -name '*.c'` 
 lint ${l_p} ${math}

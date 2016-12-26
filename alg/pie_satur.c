@@ -58,7 +58,6 @@ void pie_alg_satur(float* restrict r,
                         __m128 sqv;
                         __m128 dv;
                         __m128 cmpv;
-                        float out[4];
                         int p = y * s + x;
 
                         rv = _mm_load_ps(r + p);
