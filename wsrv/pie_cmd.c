@@ -369,13 +369,6 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                          data);
                 return -1;
         }
-                
-#if 0
-        while (t)
-        {
-                printf("Got token: %s\n", t);
-                t = strtok_r(NULL, " ", &lasts);
-        }
-#endif
+
         return 0;
 }
