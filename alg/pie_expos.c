@@ -139,71 +139,24 @@ void pie_alg_expos(float* restrict r,
         struct pie_point_2d c[2 * SEGMENT_LEN];
         float lut[LUT_SIZE];
         const float scale = LUT_SIZE - 1.0f;        
-#ifdef _HAS_SSE
-        __m128 scalev = _mm_set1_ps(scale);
-#endif
 
-        /* Create LUT */
+        /* Create curve */
         pie_alg_expos_curve(p, e);
         pie_catm_rom_chain(c, p, 5, SEGMENT_LEN);
 
         for (int i = 0; i < LUT_SIZE; i++)
         {
                 float out;
+                int ret;
 
-                pie_alg_curve_get(&out, &c[0], i / scale, 2 * SEGMENT_LEN);
+                ret = pie_alg_curve_get(&out, &c[0], i / scale, 2 * SEGMENT_LEN);
+                assert(ret == 0);
                 lut[i] = out;
         }
         
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
-        int rem = width % 4;
-        int stop = width - rem;
-
-        /* For smaller image on newer hardware, SSE version seems to take
-           more time, most likely due to the extra copying, and the calculation
-           is very simple, only a single multiplication */
-#if 1
-        stop = 0;
-#endif
-        
         for (int y = 0; y < height; y++)
         {
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-                        __m128 redv = _mm_load_ps(r + p);
-                        __m128 greenv = _mm_load_ps(g + p);
-                        __m128 bluev = _mm_load_ps(b + p);
-                        float red[4];
-                        float green[4];
-                        float blue[4];
-
-                        redv = _mm_mul_ps(redv, scalev);
-                        greenv = _mm_mul_ps(greenv, scalev);
-                        bluev = _mm_mul_ps(bluev, scalev);
-
-                        _mm_store_ps(red, redv);
-                        _mm_store_ps(green, greenv);
-                        _mm_store_ps(blue, bluev);
-
-                        r[p]     = lut[(int)red[0]];
-                        r[p + 1] = lut[(int)red[1]];
-                        r[p + 2] = lut[(int)red[2]];
-                        r[p + 3] = lut[(int)red[3]];                        
-
-                        g[p]     = lut[(int)green[0]];
-                        g[p + 1] = lut[(int)green[1]];
-                        g[p + 2] = lut[(int)green[2]];
-                        g[p + 3] = lut[(int)green[3]];
-
-                        b[p]     = lut[(int)blue[0]];
-                        b[p + 1] = lut[(int)blue[1]];
-                        b[p + 2] = lut[(int)blue[2]];
-                        b[p + 3] = lut[(int)blue[3]];
-                }
-
-                for (int x = stop; x < width; x++)
+                for (int x = 0; x < width; x++)
                 {
                         int p = y * stride + x;
                         
@@ -212,22 +165,6 @@ void pie_alg_expos(float* restrict r,
                         b[p] = lut[(int)(b[p] * scale)];
                 }
         }
-# elif _HAS_ALTIVEC
-#  error ALTIVET NOT IMPLEMENTED
-# endif
-#else
-        for (int y = 0; y < height; y++)
-        {
-                for (int x = 0; x < width; x++)
-                {
-                        int p = y * stride + x;
-
-                        r[p] = lut[(int)(r[p] * scale)];
-                        g[p] = lut[(int)(g[p] * scale)];
-                        b[p] = lut[(int)(b[p] * scale)];                        
-                }
-        }
-#endif /* _HAS_SIMD */
 }
 
 /*
@@ -240,6 +177,7 @@ void pie_alg_expos_curve(struct pie_point_2d o[5], float e)
         struct pie_point_2d* beg;
         struct pie_point_2d* end;
         float phi; /* percentage of position from beg to end */
+
         assert(e <= 5.0f);
         assert(e >= -5.0f);
 
