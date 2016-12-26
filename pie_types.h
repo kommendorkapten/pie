@@ -100,19 +100,19 @@ struct pie_img_settings
         float exposure;
         /* [0,2]       def 1 */
         float contrast;
-        /* [-100, 100] def 0 */
+        /* [-1, 1] def 0 */
         float highlights;
-        /* [-100, 100] def 0 */
+        /* [-1, 1] def 0 */
         float shadows;
-        /* [-100, 100] def 0 */
+        /* [-1, 1] def 0 */
         float white;
-        /* [-100, 100] def 0 */
+        /* [-1, 1] def 0 */
         float black;
         /* [-100, 100] def 0 */
         float clarity;
         /* [-100, 100] def 0 */
         float vibrance;
-        /* [-100, 100] def 0 */
+        /* [-100, 100] def 1 */
         float saturation;
         /* [0, 359]    def 0 */
         float rotate;
