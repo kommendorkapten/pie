@@ -178,19 +178,139 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         }
         else if (strcmp(t, "HIGHL") == 0)
         {
-                printf("parse HIGHL\n");                
+                /* HIGHL {val} 
+                   val = [-100, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+                        
+                        if (t != p && v >= -100 && v <= 100)
+                        {
+                                msg->type = PIE_MSG_SET_HIGHL;
+                                msg->f1 = v / 100.f;
+                                PIE_TRACE("[%s] Highlights: %f", 
+                                          msg->token,
+                                          msg->f1);
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] Invalid highlights: '%s'\n",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "SHADO") == 0)
         {
-                printf("parse SHADO\n");                
+                /* SHADO {val} 
+                   val = [-100, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+                        
+                        if (t != p && v >= -100 && v <= 100)
+                        {
+                                msg->type = PIE_MSG_SET_SHADOW;
+                                msg->f1 = v / 100.f;
+                                PIE_TRACE("[%s] Shadow: %f", 
+                                          msg->token,
+                                          msg->f1);
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] Invalid shadow: '%s'\n",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "WHITE") == 0)
         {
-                printf("parse WHITE\n");                
+                /* WHITE {val} 
+                   val = [-100, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+                        
+                        if (t != p && v >= -100 && v <= 100)
+                        {
+                                msg->type = PIE_MSG_SET_WHITE;
+                                msg->f1 = v / 100.f;
+                                PIE_TRACE("[%s] White: %f", 
+                                          msg->token,
+                                          msg->f1);
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] Invalid white: '%s'\n",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "BLACK") == 0)
         {
-                printf("parse BLACK\n");                
+                /* BLACK {val} 
+                   val = [-100, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t)
+                {
+                        char* p;
+                        long v = strtol(t, &p, 10);
+                        
+                        if (t != p && v >= -100 && v <= 100)
+                        {
+                                msg->type = PIE_MSG_SET_BLACK;
+                                msg->f1 = v / 100.f;
+                                PIE_DEBUG("[%s] Black: %f", 
+                                          msg->token,
+                                          msg->f1);
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] Invalid black: '%s'\n",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+                else
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "CLARI") == 0)
         {
@@ -233,7 +353,6 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                                  data);
                         return -1;
                 }
-
         }
         else if (strcmp(t, "ROTAT") == 0)
         {
