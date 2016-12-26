@@ -13,6 +13,7 @@
 
 #include "../math/pie_point.h"
 #include "pie_curve.h"
+#include "../pie_log.h"
 
 int pie_alg_curve_get(float* out,
                       const struct pie_point_2d* p,
@@ -29,11 +30,14 @@ int pie_alg_curve_get(float* out,
         }
 
         /* check for x ~ 1 */
-        if (x > p[len - 1].x && (x - p[len - 1].x) < 0.005)
+        if (x > p[len - 1].x && (x - p[len - 1].x) < 0.01)
         {
                 *out = p[len - 1].y;
                 return 0;
         }
+
+        PIE_WARN("No curve defined for input %f", x);
+        PIE_WARN("Valid range are [%f, %f]", p[0].x, p[len - 1].x);
         
         return 1;
 }
