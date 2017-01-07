@@ -11,7 +11,6 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include <math.h>
 #include <assert.h>
 #include "../math/pie_catmull.h"
 #include "pie_curve.h"
@@ -24,7 +23,8 @@
 
 /* Centripetal Catmull-Rom spline parameters for curves matching 
    the desired exposure levels */
-static struct pie_point_2d em0[5] = {
+static struct pie_point_2d em0[5] =
+{
         {.x = -1.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.75f},
@@ -32,7 +32,8 @@ static struct pie_point_2d em0[5] = {
         {.x =  2.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em1[5] = {
+static struct pie_point_2d em1[5] =
+{
         {.x = -1.0f,  .y = -0.4f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.55f},
@@ -40,7 +41,8 @@ static struct pie_point_2d em1[5] = {
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em2[5] = {
+static struct pie_point_2d em2[5] =
+{
         {.x = -1.0f,  .y = -0.2f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.35f},
@@ -48,7 +50,8 @@ static struct pie_point_2d em2[5] = {
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em3[5] = {
+static struct pie_point_2d em3[5] =
+{
         {.x = -1.0f,  .y = -0.1f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.22f},
@@ -56,7 +59,8 @@ static struct pie_point_2d em3[5] = {
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em4[5] = {
+static struct pie_point_2d em4[5] =
+{
         {.x = -1.0f,  .y =  0.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.13f},
@@ -64,7 +68,8 @@ static struct pie_point_2d em4[5] = {
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em5[5] = {
+static struct pie_point_2d em5[5] =
+{
         {.x = -1.0f,  .y =  0.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.75f, .y =  0.074f},
@@ -72,7 +77,8 @@ static struct pie_point_2d em5[5] = {
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d ep0[5] = {
+static struct pie_point_2d ep0[5] =
+{
         {.x = -1.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.55f, .y =  0.55f},
@@ -80,7 +86,8 @@ static struct pie_point_2d ep0[5] = {
         {.x =  2.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d ep1[5] = {
+static struct pie_point_2d ep1[5] =
+{
         {.x = -0.4f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.55f, .y =  0.75f},
@@ -88,7 +95,8 @@ static struct pie_point_2d ep1[5] = {
         {.x =  2.0f,  .y =  1.2f}
 };
 
-static struct pie_point_2d ep2[5] = {
+static struct pie_point_2d ep2[5] =
+{
         {.x = -0.2f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.48f, .y =  0.82f},
@@ -96,7 +104,8 @@ static struct pie_point_2d ep2[5] = {
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep3[5] = {
+static struct pie_point_2d ep3[5] =
+{
         {.x = -0.2f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.3f,  .y =  0.85f},
@@ -104,7 +113,8 @@ static struct pie_point_2d ep3[5] = {
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep4[5] = {
+static struct pie_point_2d ep4[5] =
+{
         {.x =  0.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.24f, .y =  0.9f},
@@ -112,7 +122,8 @@ static struct pie_point_2d ep4[5] = {
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep5[5] = {
+static struct pie_point_2d ep5[5] =
+{
         {.x =  0.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
         {.x =  0.18f, .y =  0.9f},
