@@ -41,3 +41,21 @@ int pie_alg_curve_get(float* out,
         
         return 1;
 }
+
+void pie_alg_curve_intp(struct pie_point_2d* restrict o,
+                        const struct pie_point_2d* restrict b,
+                        const struct pie_point_2d* restrict e,
+                        int count,
+                        float phi)
+{
+        for (int i = 0; i < count; i++)
+        {
+                float delta;
+
+                delta = e[i].x - b[i].x;
+                o[i].x = b[i].x + phi * delta;
+                
+                delta = e[i].y - b[i].y;
+                o[i].y = b[i].y + phi * delta;
+        }        
+}

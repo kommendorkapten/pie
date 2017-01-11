@@ -31,4 +31,19 @@ extern int pie_alg_curve_get(float*,
                              float,
                              size_t);
 
+/**
+ * Linear interpolate curve parameters.
+ * @param output parameters.
+ * @param start parameters.
+ * @param end parameters.
+ * @param number of points in curve.
+ * @param percentage from beginning to end.
+ * @return void.
+ */
+void pie_alg_curve_intp(struct pie_point_2d* restrict,
+                        const struct pie_point_2d* restrict,
+                        const struct pie_point_2d* restrict,
+                        int,
+                        float);
+
 #endif /* __PIE_CURVE_H__ */

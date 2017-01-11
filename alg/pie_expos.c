@@ -267,14 +267,5 @@ void pie_alg_expos_curve(struct pie_point_2d o[5], float e)
         }
 
         /* Linear interpolation */
-        for (int i = 0; i < 5; i++)
-        {
-                float delta;
-
-                delta = end[i].x - beg[i].x;
-                o[i].x = beg[i].x + phi * delta;
-                
-                delta = end[i].y - beg[i].y;
-                o[i].y = beg[i].y + phi * delta;
-        }
+        pie_alg_curve_intp(&o[0], beg, end, 5, phi);
 }
