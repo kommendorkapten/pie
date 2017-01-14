@@ -17,85 +17,82 @@
 
 #define SEGMENT_LEN 150
 #define CURVE_LEN_M 6
-#define CURVE_LEN_P 8
+#define CURVE_LEN_P 7
 /* No use to have LUT larger than the curve, 5 * SEGMENT LEN */
-#define LUT_SIZE  (5 * SEGMENT_LEN)
+#define LUT_SIZE  (4 * SEGMENT_LEN)
 
 /**
- * Create an shadow adjustment curve. Used internally by pie_alg_shado.
+ * Create an highlight adjustment curve. Used internally by pie_alg_highl.
  * @param array of points to store the control points in.
  * @param the desired adjustment level, from -1 to 1.
  * @return number of control points in output curve.
  */
-static int pie_alg_shado_curve(struct pie_point_2d*, float);
+static int pie_alg_highl_curve(struct pie_point_2d*, float);
 
-static struct pie_point_2d sm0[6] =
+static struct pie_point_2d hm0[6] =
 {
         {.x = -1.0f,     .y = -1.0f},
         {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.23f,    .y =  0.23f},
         {.x =  0.53725f, .y =  0.53725f},
-        {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}
-};
-
-static struct pie_point_2d sm50[6] =
-{
-        {.x = -1.0f,     .y =  0.0f},
-        {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.23f,    .y =  0.15f},
-        {.x =  0.53725f, .y =  0.50588f},
-        {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}
-};
-
-static struct pie_point_2d sm100[6] =
-{
-        {.x = -1.0f,     .y =  0.0f},
-        {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.23f,    .y =  0.1f},
-        {.x =  0.53725f, .y =  0.488f},
+        {.x =  0.8f,     .y =  0.8f},
         {.x =  1.0f,     .y =  1.0f},
         {.x =  2.0f,     .y =  2.0f}        
 };
 
-static struct pie_point_2d sp0[8] =
+static struct pie_point_2d hm50[6] =
+{
+        {.x = -1.0f,     .y = -0.9f},
+        {.x =  0.0f,     .y =  0.0f},
+        {.x =  0.53725f, .y =  0.50588f},
+        {.x =  0.8f,     .y =  0.7f},
+        {.x =  1.0f,     .y =  0.98f},
+        {.x =  1.0f,     .y =  2.0f}
+};
+
+static struct pie_point_2d hm100[6] =
+{
+        {.x = -1.0f,     .y = -0.8f},
+        {.x =  0.0f,     .y =  0.0f},
+        {.x =  0.53725f, .y =  0.48235f},
+        {.x =  0.8f,     .y =  0.6f},
+        {.x =  1.0f,     .y =  0.94f},
+        {.x =  1.0f,     .y =  2.0f}
+};
+
+static struct pie_point_2d hp0[7] =
 {
         {.x = -1.0f,     .y = -1.0f},
         {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.13f,    .y =  0.13f},
-        {.x =  0.4f,     .y =  0.4f},
         {.x =  0.53725f, .y =  0.53725f},
         {.x =  0.6f,     .y =  0.6f},
+        {.x =  0.8f,     .y =  0.8f},
         {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}        
+        {.x =  2.0f,     .y =  2.0f}
 };
 
-static struct pie_point_2d sp50[8] =
+static struct pie_point_2d hp50[7] =
 {
-        {.x =  0.0f,     .y = -1.0f},
+        {.x = -0.9f,     .y = -1.0f},
         {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.13f,    .y =  0.23f},
-        {.x =  0.4f,     .y =  0.47f},
-        {.x =  0.53725f, .y =  0.55686f},
-        {.x =  0.6f,     .y =  0.62f},
+        {.x =  0.53725f, .y =  0.56f},
+        {.x =  0.6f,     .y =  0.65f},
+        {.x =  0.8f,     .y =  0.88f},
         {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}        
+        {.x =  2.0f,     .y =  1.0f}
 };
 
-static struct pie_point_2d sp100[8] =
+static struct pie_point_2d hp100[7] =
 {
-        {.x =  0.0f,     .y = -1.0f},
+        {.x = -0.8f,     .y = -1.0f},
         {.x =  0.0f,     .y =  0.0f},
-        {.x =  0.13f,    .y =  0.38f},
-        {.x =  0.4f,     .y =  0.53f},
-        {.x =  0.53725f, .y =  0.581f},
-        {.x =  0.6f,     .y =  0.64f},
+        {.x =  0.53725f, .y =  0.584f},
+        {.x =  0.6f,     .y =  0.7f},
+        {.x =  0.8f,     .y =  0.94f},
         {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}        
+        {.x =  2.0f,     .y =  1.0f}        
 };
 
-void pie_alg_shado(float* restrict r,
+void pie_alg_highl(float* restrict r,
                    float* restrict g,
                    float* restrict b,
                    float e,
@@ -110,7 +107,7 @@ void pie_alg_shado(float* restrict r,
         int len;
 
         /* Create curve */
-        len = pie_alg_shado_curve(p, e);
+        len = pie_alg_highl_curve(p, e);
         pie_catm_rom_chain(c, p, len, SEGMENT_LEN);
 
         for (int i = 0; i < LUT_SIZE; i++)
@@ -144,7 +141,7 @@ void pie_alg_shado(float* restrict r,
  * Use the provided exposure value to find the two curves that encloses it,
  * and linear interpolate the new curve parameters.
  */
-static int pie_alg_shado_curve(struct pie_point_2d* o, float e)
+static int pie_alg_highl_curve(struct pie_point_2d* o, float e)
 {
         struct pie_point_2d* beg;
         struct pie_point_2d* end;
@@ -159,15 +156,15 @@ static int pie_alg_shado_curve(struct pie_point_2d* o, float e)
                 len = CURVE_LEN_M;
                 if (e >= -0.5f)
                 {
-                        beg = &sm50[0];
-                        end = &sm0[0];
+                        beg = &hm50[0];
+                        end = &hm0[0];
 
                         phi = (e + 0.5f) * 2.0f;
                 }
                 else
                 {
-                        beg = &sm100[0];
-                        end = &sm50[0];
+                        beg = &hm100[0];
+                        end = &hm50[0];
 
                         phi = (e + 1.0f) * 2.0f;
                 }                
@@ -177,15 +174,15 @@ static int pie_alg_shado_curve(struct pie_point_2d* o, float e)
                 len = CURVE_LEN_P;
                 if (e < 0.5f)
                 {
-                        beg = &sp0[0];
-                        end = &sp50[0];
+                        beg = &hp0[0];
+                        end = &hp50[0];
 
                         phi = e * 2.0f;
                 }
                 else
                 {
-                        beg = &sp50[0];
-                        end = &sp100[0];
+                        beg = &hp50[0];
+                        end = &hp100[0];
 
                         phi = (e - 0.5f) * 2.0f;
                 }                                
