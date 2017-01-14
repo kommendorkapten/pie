@@ -19,11 +19,12 @@
 #define GAMMA_C   2.33f     
 #define SEGMENT_LEN 150
 /* No use to have LUT larger than the curve, 2 * SEGMENT LEN */
-#define LUT_SIZE  300
+#define LUT_SIZE  (2 * SEGMENT_LEN)
+#define CURVE_LEN 5
 
 /* Centripetal Catmull-Rom spline parameters for curves matching 
    the desired exposure levels */
-static struct pie_point_2d em0[5] =
+static struct pie_point_2d em0[CURVE_LEN] =
 {
         {.x = -1.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -32,7 +33,7 @@ static struct pie_point_2d em0[5] =
         {.x =  2.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em1[5] =
+static struct pie_point_2d em1[CURVE_LEN] =
 {
         {.x = -1.0f,  .y = -0.4f},
         {.x =  0.0f,  .y =  0.0f},
@@ -41,7 +42,7 @@ static struct pie_point_2d em1[5] =
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em2[5] =
+static struct pie_point_2d em2[CURVE_LEN] =
 {
         {.x = -1.0f,  .y = -0.2f},
         {.x =  0.0f,  .y =  0.0f},
@@ -50,7 +51,7 @@ static struct pie_point_2d em2[5] =
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em3[5] =
+static struct pie_point_2d em3[CURVE_LEN] =
 {
         {.x = -1.0f,  .y = -0.1f},
         {.x =  0.0f,  .y =  0.0f},
@@ -59,7 +60,7 @@ static struct pie_point_2d em3[5] =
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em4[5] =
+static struct pie_point_2d em4[CURVE_LEN] =
 {
         {.x = -1.0f,  .y =  0.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -68,7 +69,7 @@ static struct pie_point_2d em4[5] =
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d em5[5] =
+static struct pie_point_2d em5[CURVE_LEN] =
 {
         {.x = -1.0f,  .y =  0.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -77,7 +78,7 @@ static struct pie_point_2d em5[5] =
         {.x =  1.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d ep0[5] =
+static struct pie_point_2d ep0[CURVE_LEN] =
 {
         {.x = -1.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -86,7 +87,7 @@ static struct pie_point_2d ep0[5] =
         {.x =  2.0f,  .y =  2.0f}
 };
 
-static struct pie_point_2d ep1[5] =
+static struct pie_point_2d ep1[CURVE_LEN] =
 {
         {.x = -0.4f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -95,7 +96,7 @@ static struct pie_point_2d ep1[5] =
         {.x =  2.0f,  .y =  1.2f}
 };
 
-static struct pie_point_2d ep2[5] =
+static struct pie_point_2d ep2[CURVE_LEN] =
 {
         {.x = -0.2f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -104,7 +105,7 @@ static struct pie_point_2d ep2[5] =
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep3[5] =
+static struct pie_point_2d ep3[CURVE_LEN] =
 {
         {.x = -0.2f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -113,7 +114,7 @@ static struct pie_point_2d ep3[5] =
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep4[5] =
+static struct pie_point_2d ep4[CURVE_LEN] =
 {
         {.x =  0.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -122,7 +123,7 @@ static struct pie_point_2d ep4[5] =
         {.x =  2.0f,  .y =  1.0f}
 };
 
-static struct pie_point_2d ep5[5] =
+static struct pie_point_2d ep5[CURVE_LEN] =
 {
         {.x =  0.0f,  .y = -1.0f},
         {.x =  0.0f,  .y =  0.0f},
@@ -143,21 +144,24 @@ void pie_alg_expos(float* restrict r,
                    int height,
                    int stride)
 {
-        struct pie_point_2d p[5];
-        struct pie_point_2d c[2 * SEGMENT_LEN];
+        struct pie_point_2d p[CURVE_LEN];
+        struct pie_point_2d c[LUT_SIZE];
         float lut[LUT_SIZE];
         const float scale = LUT_SIZE - 1.0f;        
 
         /* Create curve */
         pie_alg_expos_curve(p, e);
-        pie_catm_rom_chain(c, p, 5, SEGMENT_LEN);
+        pie_catm_rom_chain(c, p, CURVE_LEN, SEGMENT_LEN);
 
         for (int i = 0; i < LUT_SIZE; i++)
         {
                 float out;
                 int ret;
 
-                ret = pie_alg_curve_get(&out, &c[0], i / scale, 2 * SEGMENT_LEN);
+                ret = pie_alg_curve_get(&out,
+                                        &c[0],
+                                        i / scale,
+                                        LUT_SIZE);
                 assert(ret == 0);
                 lut[i] = out;
         }
@@ -180,7 +184,7 @@ void pie_alg_expos(float* restrict r,
  * Use the provided exposure value to find the two curves that encloses it,
  * and linear interpolate the new curve parameters.
  */
-void pie_alg_expos_curve(struct pie_point_2d o[5], float e)
+void pie_alg_expos_curve(struct pie_point_2d o[CURVE_LEN], float e)
 {
         struct pie_point_2d* beg;
         struct pie_point_2d* end;
@@ -196,35 +200,35 @@ void pie_alg_expos_curve(struct pie_point_2d o[5], float e)
                         beg = &em1[0];
                         end = &em0[0];
 
-                        phi = e - (-1.0f);
+                        phi = e + 1.0f;
                 }
                 else if (e >= -2.0f)
                 {
                         beg = &em2[0];
                         end = &em1[0];
 
-                        phi = e - (-2.0f);                        
+                        phi = e + 2.0f;                        
                 }
                 else if (e >= -3.0f)
                 {
                         beg = &em3[0];
                         end = &em2[0];
 
-                        phi = e - (-3.0f);                        
+                        phi = e + 3.0f;                        
                 }
                 else if (e >= -4.0f)
                 {
                         beg = &em4[0];
                         end = &em3[0];
 
-                        phi = e - (-4.0f);
+                        phi = e + 4.0f;
                 }
                 else
                 {
                         beg = &em5[0];
                         end = &em4[0];
 
-                        phi = e - (-5.0f);
+                        phi = e + 5.0f;
                 }                
         }
         else
@@ -267,5 +271,5 @@ void pie_alg_expos_curve(struct pie_point_2d o[5], float e)
         }
 
         /* Linear interpolation */
-        pie_alg_curve_intp(&o[0], beg, end, 5, phi);
+        pie_alg_curve_intp(&o[0], beg, end, CURVE_LEN, phi);
 }
