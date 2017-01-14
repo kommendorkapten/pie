@@ -431,6 +431,9 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 else
                 {
                         msg->img->settings.contrast = msg->f1;
+                        PIE_TRACE("[%s] Set contrast: %f.",
+                                  msg->token,
+                                  msg->img->settings.contrast);
                 }
                 break;
         case PIE_MSG_SET_ESPOSURE:
@@ -444,19 +447,42 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 else
                 {
                         msg->img->settings.exposure = msg->f1;
+                        PIE_TRACE("[%s] Set exposure: %f.",
+                                  msg->token,
+                                  msg->img->settings.exposure);
                 }
                 break;
         case PIE_MSG_SET_HIGHL:
-                PIE_WARN("[%s] Not implemented yet %d.",
-                         msg->token,
-                         (int)msg->type);
-                status = -1;
+                if (msg->f1 < -1.0f || msg->f1 > 1.0f)
+                {
+                        PIE_WARN("[%s] invalid highlight: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.highlights = msg->f1;
+                        PIE_TRACE("[%s] Set highlights: %f.",
+                                  msg->token,
+                                  msg->img->settings.highlights);
+                }
                 break;
         case PIE_MSG_SET_SHADOW:
-                PIE_WARN("[%s] Not implemented yet %d.",
-                         msg->token,
-                         (int)msg->type);
-                status = -1;
+                if (msg->f1 < -1.0f || msg->f1 > 1.0f)
+                {
+                        PIE_WARN("[%s] invalid shadow: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.shadows = msg->f1;
+                        PIE_TRACE("[%s] Set shadows: %f.",
+                                  msg->token,
+                                  msg->img->settings.shadows);
+                }
                 break;
         case PIE_MSG_SET_WHITE:
                 if (msg->f1 < -1.0f || msg->f1 > 1.0f)
@@ -469,6 +495,9 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 else
                 {
                         msg->img->settings.white = msg->f1;
+                        PIE_TRACE("[%s] Set white: %f.",
+                                  msg->token,
+                                  msg->img->settings.white);
                 }
                 break;
         case PIE_MSG_SET_BLACK:
@@ -507,6 +536,9 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 else
                 {
                         msg->img->settings.saturation = msg->f1;
+                        PIE_TRACE("[%s] Set saturation: %f.",
+                                  msg->token,
+                                  msg->img->settings.saturation);
                 }
                 break;
         case PIE_MSG_SET_ROTATE:

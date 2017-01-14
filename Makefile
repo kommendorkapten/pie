@@ -63,7 +63,7 @@ LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
 SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
-            pie_satur.c pie_black.c pie_white.c
+            pie_satur.c pie_black.c pie_white.c pie_shado.o
 ENC_SRC   = pie_json.c
 MTH_SRC   = pie_math.c pie_catmull.c
 SOURCES   = pie_render.c pie_bm.c pie_cspace.c \

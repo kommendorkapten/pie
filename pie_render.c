@@ -18,6 +18,7 @@
 #include "alg/pie_expos.h"
 #include "alg/pie_satur.h"
 #include "alg/pie_white.h"
+#include "alg/pie_shado.h"
 #include "lib/timing.h"
 #include "pie_log.h"
 
@@ -77,8 +78,19 @@ int pie_img_render(struct bitmap_f32rgb* img,
 
 #if 0
         s->highlights = 0.0f;
-        s->shadows = 0.0f;
 #endif
+      
+        /* S H A D O W S */
+        timing_start(&t2);
+        pie_alg_shado(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->shadows,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render shadows:        %ldusec", timing_dur_usec(&t2));
+
         /* W H I T E */
         timing_start(&t2);
         pie_alg_white(img->c_red,
