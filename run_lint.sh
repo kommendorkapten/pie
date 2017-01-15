@@ -22,6 +22,9 @@ lint -DEVENT_POLL=1 -I/usr/local/include ${l_p} -errhdr=no%/usr/local/include ${
 alg=`find alg -name '*.c'` 
 lint -D_HAS_SSE -D_HAS_SIMD ${l_p} ${alg}
 
+bm=`find bm -name '*.c'` 
+lint -D_HAS_SSE -D_HAS_SIMD ${l_p} ${bm}
+
 math=`find math -name '*.c'` 
 lint ${l_p} ${math}
 
@@ -37,5 +40,5 @@ for i in ${exe}; do
     lint ${l_p} ${i}
 done
 
-base="pie_bm.c pie_cspace.c pie_render.c"
+base="pie_cspace.c"
 lint ${l_p} -errhdr=no%/usr/include ${base}
