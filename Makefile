@@ -67,7 +67,7 @@ ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c
 ENC_SRC   = pie_json.c
 MTH_SRC   = pie_math.c pie_catmull.c
-BM_SRC    = pie_bm.c
+BM_SRC    = pie_bm.c pie_dwn_smpl.c
 SOURCES   = pie_cspace.c \
 	    $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC) $(ENC_SRC) \
             $(MTH_SRC) $(BM_SRC)
@@ -75,7 +75,7 @@ OBJS      = $(SOURCES:%.c=obj/%.o)
 SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
 EXE_OBJS  = $(EXE_SRC:%.c=obj/%.o)
 TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-            histinfo contr gauss unsharp tojpg catm tapply
+            histinfo contr gauss unsharp tojpg catm tapply tdowns
 EXE_BINS  = server
 T_BINS    = $(TEST_BINS:%=bin/%)
 E_BINS    = $(EXE_BINS:%=bin/%)
@@ -147,6 +147,9 @@ bin/catm: testp/catm.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/tapply: testp/tapply.c $(OBJS) $(EXE_OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) $(EXE_OBJS) -o $@ $(LFLAGS)
+
+bin/tdowns: testp/tdowns.c $(OBJS) $(EXE_OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) $(EXE_OBJS) -o $@ $(LFLAGS)
 
 bin/server: exe/server.c $(OBJS) $(SRV_OBJS) $(EXE_OBJS)
