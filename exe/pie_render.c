@@ -56,7 +56,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render exposure:       %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render exposure:       %8ldusec", timing_dur_usec(&t2));
 
         /* C O N T R A S T */
         timing_start(&t2);
@@ -75,7 +75,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render contrast:       %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render contrast:       %8ldusec", timing_dur_usec(&t2));
 
         /* H I G H L I G H T S */
         timing_start(&t2);
@@ -86,7 +86,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render highlights:     %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render highlights:     %8ldusec", timing_dur_usec(&t2));
 
         /* S H A D O W S */
         timing_start(&t2);
@@ -97,7 +97,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render shadows:        %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render shadows:        %8ldusec", timing_dur_usec(&t2));
 
         /* W H I T E */
         timing_start(&t2);
@@ -108,7 +108,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render white:          %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render white:          %8ldusec", timing_dur_usec(&t2));
 
         /* B L A C K */
         timing_start(&t2);
@@ -119,7 +119,7 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render black:          %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render black:          %8ldusec", timing_dur_usec(&t2));
 #if 0
         s->clarity = 0.0f;
         s->vibrance = 0.0f;
@@ -133,12 +133,12 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->width,
                       img->height,
                       img->row_stride);
-        PIE_DEBUG("Render saturation:     %ldusec", timing_dur_usec(&t2));
+        PIE_DEBUG("Render saturation:     %8ldusec", timing_dur_usec(&t2));
 #if 0
         s->rotate = 0.0f;        
 #endif
 
-        PIE_DEBUG("Render total:          %ldusec", timing_dur_usec(&t1));
+        PIE_DEBUG("Render total:          %8ldusec", timing_dur_usec(&t1));
 
         return 0;
 }
