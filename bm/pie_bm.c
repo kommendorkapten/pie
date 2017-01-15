@@ -29,6 +29,10 @@ static void bm_conv_f32_u16(struct bitmap_f32rgb*,
 static void bm_conv_f32_u8(struct bitmap_f32rgb*, 
                            const struct bitmap_u8rgb*);
 
+/*
+ * TODO: Verify all malloc calls.
+ */
+
 int bm_alloc_u8(struct bitmap_u8rgb* bm)
 {
         int rem = bm->width % 4;
