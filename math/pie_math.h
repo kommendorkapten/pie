@@ -14,6 +14,8 @@
 #ifndef __PIE_MATH_H__
 #define __PIE_MATH_H__
 
+#include <stddef.h>
+
 /**
  * Calculate a value for a Gauss distribution.
  * @param distance in x.
@@ -30,5 +32,26 @@ extern float pie_gauss(float, float);
  * @return the Gauss density value.
  */
 extern float pie_gauss_2d(float, float, float);
+
+/**
+ * Create a square Gaussian blur matrix. Matrix will be row dominant.
+ * The created matrix will be normalized (sum of all elements equal. one).
+ * @param output matrix to store data in, must be at least (len*len) in size.
+ * @param the size for a row/column.
+ * @param the variance of the distribution.
+ * @return void.
+ */
+extern void pie_gauss_matrix(float*,
+                             size_t,
+                             float);
+
+/**
+ * Print a square matrix to std out.
+ * @param matrix to print.
+ * @param num elements for each row/column.
+ * @return void.
+ */
+extern void pie_matrix_print(float*,
+                             size_t);
 
 #endif /* __PIE_MATH_H__ */

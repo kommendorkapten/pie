@@ -719,48 +719,13 @@ void pie_kernel_sep_apply(float* c,
 void pie_kernel3x3_gauss(struct pie_kernel3x3* k,
                          float var)
 {
-        float sum = 0;
-        
-        for (int y = 0; y < 3; y++)
-        {
-                for (int x = 0; x < 3; x++)
-                {
-                        float dx = (float)(x - 1);
-                        float dy = (float)(y - 1);
-
-                        k->v[y * 3 + x] = pie_gauss_2d(dx, dy, var);
-                        sum += k->v[y * 3 + x];
-                }
-        }
-
-        for (int i = 0; i < 9; i++)
-        {
-                k->v[i] /= sum;
-        }        
+        pie_gauss_matrix(&k->v[0], 3, var);
 }
 
 void pie_kernel5x5_gauss(struct pie_kernel5x5* k,
                          float var)
 {
-        float sum = 0;
-
-        for (int y = 0; y < 5; y++)
-        {
-                for (int x = 0; x < 5; x++)
-                {
-                        float dx = (float)(x - 2);
-                        float dy = (float)(y - 2);
-
-                        k->v[y * 5 + x] = pie_gauss_2d(dx, dy, var);
-                        sum += k->v[y * 5 + x];
-                }
-        }
-
-        /* Normalize */
-        for (int i = 0; i < 25; i++)
-        {
-                k->v[i] /= sum;
-        }
+        pie_gauss_matrix(&k->v[0], 5, var);
 }
 
 void pie_kernel_sep_gauss(float* r,

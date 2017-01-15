@@ -11,7 +11,9 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <stdio.h>
 #include <math.h>
+#include "pie_math.h"
 
 float pie_gauss(float dx, float var)
 {
@@ -43,4 +45,42 @@ float pie_gauss_2d(float dx, float dy, float var)
         ret = c1 / c2;
 
         return ret;
+}
+
+void pie_gauss_matrix(float* m,
+                      size_t l,
+                      float var)
+{
+        float sum = 0;
+        float delta = l / 2;
+
+        for (size_t y = 0; y < l; y++)
+        {
+                for (size_t x = 0; x < l; x++)
+                {
+                        float dx = (float)(x - delta);
+                        float dy = (float)(y - delta);
+
+                        m[y * l + x] = pie_gauss_2d(dx, dy, var);
+                        sum += m[y * l + x];
+                }
+        }
+
+        for (size_t i = 0; i < (l * l); i++)
+        {
+                m[i] /= sum;
+        }                
+}
+
+void pie_matrix_print(float* m,
+                      size_t l)
+{
+        for (size_t y = 0; y < l; y++)
+        {
+                for (size_t x = 0; x < l; x++)
+                {
+                        printf("%f ", m[y * l + x]);
+                }
+                printf("\n");
+        }
 }
