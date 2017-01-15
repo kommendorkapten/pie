@@ -12,16 +12,16 @@
 */
 
 #include "pie_render.h"
-#include "pie_types.h"
-#include "alg/pie_black.h"
-#include "alg/pie_contr.h"
-#include "alg/pie_expos.h"
-#include "alg/pie_satur.h"
-#include "alg/pie_white.h"
-#include "alg/pie_shado.h"
-#include "alg/pie_highl.h"
-#include "lib/timing.h"
-#include "pie_log.h"
+#include "../pie_types.h"
+#include "../alg/pie_black.h"
+#include "../alg/pie_contr.h"
+#include "../alg/pie_expos.h"
+#include "../alg/pie_satur.h"
+#include "../alg/pie_white.h"
+#include "../alg/pie_shado.h"
+#include "../alg/pie_highl.h"
+#include "../lib/timing.h"
+#include "../pie_log.h"
 
 void pie_img_init_settings(struct pie_img_settings* s)
 {

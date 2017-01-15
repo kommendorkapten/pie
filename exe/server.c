@@ -18,10 +18,10 @@
 #include "../pie_types.h"
 #include "../pie_bm.h"
 #include "../pie_log.h"
-#include "../pie_render.h"
 #include "../io/pie_io.h"
 #include "../encoding/pie_json.h"
 #include "../alg/pie_hist.h"
+#include "pie_render.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>

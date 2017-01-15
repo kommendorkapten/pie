@@ -4,7 +4,7 @@
 #include "../pie_bm.h"
 #include "../io/pie_io.h"
 #include "../lib/timing.h"
-#include "../pie_render.h"
+#include "../exe/pie_render.h"
 
 int main(int argc, char** argv)
 {
