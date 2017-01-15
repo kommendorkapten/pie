@@ -12,7 +12,7 @@
 */
 
 #include "pie_io.h"
-#include "../pie_bm.h"
+#include "../bm/pie_bm.h"
 #include "../pie_log.h"
 #include <png.h>
 #include <stdlib.h>

@@ -14,7 +14,7 @@
 #ifndef __PIE_BM_H__
 #define __PIE_BM_H__
 
-#include "pie_types.h"
+#include "../pie_types.h"
 
 /**
  * Alloc data for pixel data. If color type is rgb, only

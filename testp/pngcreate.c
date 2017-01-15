@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../pie_types.h"
-#include "../pie_bm.h"
+#include "../bm/pie_bm.h"
 #include "../io/pie_io_png.h"
     
 /* Given "value" and "max", the maximum value which we expect "value"

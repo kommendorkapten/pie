@@ -1,5 +1,5 @@
 #include "../pie_types.h"
-#include "../pie_bm.h"
+#include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
 #include "../pie_cspace.h"
 #include <stdlib.h>
