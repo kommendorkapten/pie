@@ -1,0 +1,47 @@
+/*
+* Copyright (C) 2016 Fredrik Skogman, skogman - at - gmail.com.
+* This file is part of pie project
+*
+* The contents of this file are subject to the terms of the Common
+* Development and Distribution License (the "License"). You may not use this
+* file except in compliance with the License. You can obtain a copy of the
+* License at http://opensource.org/licenses/CDDL-1.0. See the License for the
+* specific language governing permissions and limitations under the License. 
+* When distributing the software, include this License Header Notice in each
+* file and include the License file at http://opensource.org/licenses/CDDL-1.0.
+*/
+
+#ifndef __PIE_UNSHARP_H__
+#define __PIE_UNSHARP_H__
+
+#include "../pie_types.h"
+
+/*
+ * Common values for sharpening:
+ * screen:      Amount:      50% Radius: 0.5 Threshold: 2
+ * portrait:    Amount:      75% Radius: 2.0 Threshold: 3
+ * all-purpose: Amount:      85% Radius: 1.0 Threshold: 4
+ * web:         Amount: 200-400% Radius: 0.3 Threshold: 0
+ *
+ * For local contrast enchancements:
+ *              Amount:    5-20% Radius: 30-100 Threshold 2-4
+ */
+
+struct pie_unsharp_param
+{
+        float amount;    /* typically between 0.3 and 0.7 (30 to 70%) */
+        float radius;    /* typically 0.5 to 2.0 */
+        float threshold; /* typically from 3 to 20 */
+};
+
+/**
+ * Apply an unsharp mask to a bitmap.
+ * @param Bitmap to apply sharpness to
+ * @param unsharp parameters.
+ * @return 0 on success. Non zero otherwise.
+ */
+extern int pie_unsharp(struct bitmap_f32rgb*,
+                       const struct pie_unsharp_param*);
+
+
+#endif /* __PIE_UNSHARP_H__ */

@@ -64,7 +64,8 @@ SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
 EXE_SRC   = pie_render.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
-            pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c
+            pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
+            pie_unsharp.c
 ENC_SRC   = pie_json.c
 MTH_SRC   = pie_math.c pie_catmull.c
 BM_SRC    = pie_bm.c pie_dwn_smpl.c
