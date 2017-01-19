@@ -574,7 +574,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 memcpy(new->c_red, org->c_red, len);
                 memcpy(new->c_green, org->c_green, len);
                 memcpy(new->c_blue, org->c_blue, len);
-                PIE_DEBUG(" Reset proxy:           %ldusec",
+                PIE_DEBUG(" Reset proxy:           %8ldusec",
                           timing_dur_usec(&t1));
                 
                 r_ok = pie_img_render(new,
@@ -588,20 +588,20 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                  new);
                 pie_alg_hist_rgb(&msg->img->hist,
                                  new);
-                PIE_DEBUG(" Created histogram:     %ldusec",
+                PIE_DEBUG(" Created histogram:     %8ldusec",
                           timing_dur_usec(&t1));
                 
                 /* Write proxy to RGBA */
                 timing_start(&t1);
                 encode_rgba(msg->img);
-                PIE_DEBUG(" Encoded proxy:         %ldusec",
+                PIE_DEBUG(" Encoded proxy:         %8ldusec",
                           timing_dur_usec(&t1));
                 timing_start(&t1);
                 /* Create JSON for hist */
                 msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
                                                             JSON_HIST_SIZE, 
                                                             &msg->img->hist);
-                PIE_DEBUG("JSON encoded histogram: %ldusec",
+                PIE_DEBUG("JSON encoded histogram: %8ldusec",
                           timing_dur_usec(&t1));
 
                 return PIE_MSG_RENDER_DONE;
