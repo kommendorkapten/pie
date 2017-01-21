@@ -165,7 +165,8 @@ void pie_alg_expos(float* restrict r,
                 assert(ret == 0);
                 lut[i] = out;
         }
-        
+
+        /* Takes "long" time */
         for (int y = 0; y < height; y++)
         {
                 for (int x = 0; x < width; x++)
