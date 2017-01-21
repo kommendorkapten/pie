@@ -33,19 +33,28 @@ void pie_alg_satur(float* restrict r,
         assert(v >= 0.0f);
         assert(v <= 2.0f);
 
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
-	int rem = w % 4;
-	int stop = w - rem;
+#ifdef _HAS_SSE
         __m128 prv = _mm_set1_ps(P_R);
         __m128 pgv = _mm_set1_ps(P_G);
         __m128 pbv = _mm_set1_ps(P_B);
         __m128 vv = _mm_set1_ps(v);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
+#endif
         
+#ifdef _HAS_SIMD
+	int rem = w % 4;
+	int stop = w - rem;
+#else
+        int stop = 0;
+#endif
+
         for (int y = 0; y < h; y++)
         {
+                
+#ifdef _HAS_SIMD        
+# ifdef _HAS_SSE
+                
                 for (int x = 0; x < stop; x+=4)
                 {
                         __m128 rv;
@@ -110,6 +119,11 @@ void pie_alg_satur(float* restrict r,
                         _mm_store_ps(b + p, accv);
                 }
 
+# else
+#  error ALTIVEC not supported yet
+# endif
+#endif
+                
                 for (int x = stop; x < w; x++)
                 {
                         int o = y * s + x;
@@ -149,51 +163,4 @@ void pie_alg_satur(float* restrict r,
                         }                        
                 }
         }
-# else
-#  error ALTIVEC not supported yet
-# endif
-#else
-        
-        for (int y = 0; y < h; y++)
-        {
-                for (int x = 0; x < w; x++)
-                {
-                        int o = y * s + x;
-                        float p = sqrtf(r[o] * r[o] * P_R +
-                                        g[o] * g[o] * P_G +
-                                        b[o] * b[o] * P_B);
-
-                        r[o] = p + (r[o] - p) * v;
-                        g[o] = p + (g[o] - p) * v;
-                        b[o] = p + (b[o] - p) * v;
-
-                        if (r[o] < 0.0f)
-                        {
-                                r[o] = 0.0f;
-                        }
-                        else if (r[o] > 1.0f)
-                        {
-                                r[o] = 1.0f;
-                        }
-
-                        if (g[o] < 0.0f)
-                        {
-                                g[o] = 0.0f;
-                        }
-                        else if (g[o] > 1.0f)
-                        {
-                                g[o] = 1.0f;
-                        }
-
-                        if (b[o] < 0.0f)
-                        {
-                                b[o] = 0.0f;
-                        }
-                        else if (b[o] > 1.0f)
-                        {
-                                b[o] = 1.0f;
-                        }
-                }
-        }
-#endif
 }
