@@ -48,9 +48,9 @@ var pieStateHack = {
     "image2": "lena.png",
     "image3": "lin_small.jpg",
     "image4": "lin.jpg",
-    "image5": "selfie.jpg",
+    "image": "selfie.jpg",
     "image6": "tofsmes.jpg",
-    "image": "siden_pie.png"
+    "image7": "siden_pie.png"
 };
 
 function getWsUrl(){
@@ -1017,8 +1017,8 @@ window.addEventListener("load", function(evt) {
 
         if (isNaN(targ.value)) {
             targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
+        } else if (targ.value > 300) {
+            targ.value = 300;
         } else if (targ.value < 0) {
             targ.value = -0;
         }
@@ -1047,8 +1047,8 @@ window.addEventListener("load", function(evt) {
             targ.value = 0;
         } else if (targ.value > 10) {
             targ.value = 10;
-        } else if (targ.value < 0) {
-            targ.value = 0;
+        } else if (targ.value < 0.1) {
+            targ.value = 0.1;
         }
 
         document.getElementById("sl_sharp_r").value=targ.value * 10;
