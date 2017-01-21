@@ -392,6 +392,71 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         {
                 printf("parse CROP\n");                
         }
+        else if (strcmp(t, "SHARP") == 0)
+        {
+                /* SHARP amount radius threshold  
+                   amount    = [0, 100]
+                   radius    = [0, 100]
+                   threshold = [0, 20] */
+                char* p;
+                long v;
+                float amount;
+                float radius;
+                float threshold;
+                
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token, 
+                                 data);
+                        return -1;
+                }
+                
+                v = strtol(t, &p, 10);
+                if (t != p && v >= 0 && v <= 300)
+                {
+                        amount = v / 100.0f;
+                }
+
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token, 
+                                 data);
+                        return -1;                        
+                }
+                v = strtol(t, &p, 10);
+                if (t != p && v >= 1 && v <= 100)
+                {
+                        radius = v / 10.0f;
+                }
+                
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token, 
+                                 data);
+                        return -1;                        
+                }
+                v = strtol(t, &p, 10);
+                if (t != p && v >= 0 && v <= 20)
+                {
+                        threshold = (float)v;
+                }
+
+                msg->f1 = amount;
+                msg->f2 = radius;
+                msg->f3 = threshold;
+                msg->type = PIE_MSG_SET_SHARP;
+                PIE_DEBUG("[%s] Sharp %f %f %f", 
+                          msg->token,
+                          msg->f1,
+                          msg->f2,
+                          msg->f3);
+        }        
         else 
         {
                 PIE_WARN("[%s] unknown command '%s'\n",

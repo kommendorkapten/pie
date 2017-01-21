@@ -44,9 +44,7 @@ enum pie_msg_type
         PIE_MSG_SET_VIBRANCE,
         PIE_MSG_SET_SATURATION,
         PIE_MSG_SET_ROTATE,
-        PIE_MSG_SET_SHARP_AMOUNT,
-        PIE_MSG_SET_SHARP_RADIUS,
-        PIE_MSG_SET_SHARP_THRSHLD,        
+        PIE_MSG_SET_SHARP,
         
         /* Always last */
         PIE_MSG_COUNT
@@ -63,8 +61,10 @@ struct pie_msg
         struct timing t;
         float f1;
         float f2;
+        float f3;
         int i1;
         int i2;
+        int i3;        
 };
 
 /**

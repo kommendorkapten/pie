@@ -254,6 +254,7 @@ static void* ev_loop(void* a)
                         case PIE_MSG_SET_VIBRANCE:
                         case PIE_MSG_SET_SATURATION:
                         case PIE_MSG_SET_ROTATE:
+                        case PIE_MSG_SET_SHARP:
                                 new = cb_msg_render(cmd);
                                 break;
                         default:
@@ -560,6 +561,30 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                          (int)msg->type);
                 status = -1;
                 break;
+        case PIE_MSG_SET_SHARP:
+                if (msg->f1 < 0.0f || msg->f1 > 3.0f ||
+                    msg->f2 < 0.1f || msg->f2 > 10.0f ||
+                    msg->f3 < 0.0f || msg->f3 > 20.0f)
+                {
+                        PIE_WARN("[%s] invalid sharpening: %f %f %f.",
+                                 msg->token,
+                                 msg->f1,
+                                 msg->f2,
+                                 msg->f3);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.sharpening.amount = msg->f1;
+                        msg->img->settings.sharpening.radius = msg->f2;
+                        msg->img->settings.sharpening.threshold = msg->f3;
+                        PIE_TRACE("[%s] Set sharpening: %f %f %f.",
+                                  msg->token,
+                                  msg->img->settings.sharpening.amount,
+                                  msg->img->settings.sharpening.radius,
+                                  msg->img->settings.sharpening.threshold);
+                }
+                break;                
         default:
                 PIE_WARN("[%s] Invalid message: %d.",
                          msg->token,
