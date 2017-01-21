@@ -34,121 +34,165 @@
             </table>
           </div>
           <div class="edit-meta" style="margin-top: 7px;">
-          <table id="edit_settings_tbl" style="margin: 0 auto;">
-            <tr>
-              <td>
-                <!-- tone -->
-                Exposure
-              </td>
-              <td>
-                <input type="range" id="sl_exposure" value="0" 
-                       min="-50" max="50"/>
-              </td>
-              <td>
-                <input type="text" id="in_exposure" class="edit-in" value="0"> 
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Contrast
-              </td>
-              <td>
-                <input type="range" id="sl_contrast" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_contrast" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <!-- marker -->
-              <td>
-                Highlights
-              </td>
-              <td>
-                <input type="range" id="sl_highlights" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_highlights" class="edit-in" 
-                       value="0">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Shadows
-              </td>
-              <td>
-                <input type="range" id="sl_shadows" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_shadows" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                White
-              </td>
-              <td>
-                <input type="range" id="sl_white" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_white" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Black
-              </td>
-              <td>
-                <input type="range" id="sl_black" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_black" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <!-- presecne -->
-              <td>
-                Clarity
-              </td>
-              <td>
-                <input type="range" id="sl_clarity" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_clarity" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Vibrance
-              </td>
-              <td>
-                <input type="range" id="sl_vibrance" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_vibrance" class="edit-in" value="0">
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Saturation
-              </td>
-              <td>
-                <input type="range" id="sl_saturation" value="0" 
-                       min="-100" max="100"/>
-              </td>
-              <td>
-                <input type="text" id="in_saturation" class="edit-in"
-                       value="0">
-              </td>
-            </tr>
-          </table>
+            Tone
+            <table style="margin: 0 auto;">
+              <tr>
+                <td>
+                  Exposure
+                </td>
+                <td>
+                  <input type="range" id="sl_exposure" value="0" 
+                         min="-50" max="50"/>
+                </td>
+                <td>
+                  <input type="text" id="in_exposure" class="edit-in" value="0"> 
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Contrast
+                </td>
+                <td>
+                  <input type="range" id="sl_contrast" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_contrast" class="edit-in" value="0">
+                </td>
+              </tr>
+              <tr>
+            </table>
+            <hr width="90%">
+            <table style="margin: 0 auto;">
+              <tr>
+                <td>
+                  Highlights
+                </td>
+                <td>
+                  <input type="range" id="sl_highlights" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_highlights" class="edit-in" 
+                         value="0">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Shadows
+                </td>
+                <td>
+                  <input type="range" id="sl_shadows" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_shadows" class="edit-in" value="0">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  White
+                </td>
+                <td>
+                  <input type="range" id="sl_white" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_white" class="edit-in" value="0">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Black
+                </td>
+                <td>
+                  <input type="range" id="sl_black" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_black" class="edit-in" value="0">
+                </td>
+              </tr>
+            </table>
+            Presence
+            <table style="margin: 0 auto;">
+              <tr>
+                <td>
+                  Clarity
+                </td>
+                <td>
+                  <input type="range" id="sl_clarity" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_clarity" class="edit-in" value="0">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Vibrance
+                </td>
+                <td>
+                  <input type="range" id="sl_vibrance" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_vibrance" class="edit-in" value="0">
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Saturation
+                </td>
+                <td>
+                  <input type="range" id="sl_saturation" value="0" 
+                         min="-100" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_saturation" class="edit-in"
+                         value="0">
+                </td>
+              </tr>
+            </table>
+            Sharpening
+            <table style="margin: 0 auto;">
+              <tr>
+                <td>
+                  Amount
+                </td>
+                <td>
+                  <input type="range" id="sl_sharp_a" value="0" 
+                         min="0" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_sharp_a" class="edit-in" value="0"> 
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Radius
+                </td>
+                <td>
+                  <input type="range" id="sl_sharp_r" value="0" 
+                         min="0" max="100"/>
+                </td>
+                <td>
+                  <input type="text" id="in_sharp_r" class="edit-in" value="0"> 
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  Threshold
+                </td>
+                <td>
+                  <input type="range" id="sl_sharp_t" value="0" 
+                         min="0" max="20"/>
+                </td>
+                <td>
+                  <input type="text" id="in_sharp_t" class="edit-in" value="0"> 
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>

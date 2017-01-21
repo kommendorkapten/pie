@@ -44,11 +44,13 @@ var histDataB = {
 };
 
 var pieStateHack = {
-    "image2": "lena.png",
-    "image4": "lin.jpg",
     "image1": "walk.jpg",
-    "image": "selfie.jpg",
-    "image3": "lin_small.jpg"
+    "image2": "lena.png",
+    "image3": "lin_small.jpg",
+    "image4": "lin.jpg",
+    "image5": "selfie.jpg",
+    "image6": "tofsmes.jpg",
+    "image": "siden_pie.png"
 };
 
 function getWsUrl(){
@@ -508,6 +510,93 @@ window.addEventListener("load", function(evt) {
         return true;
     };
 
+    document.getElementById("sl_sharp_a").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_sharp_a").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            var a = document.getElementById("sl_sharp_a").value;
+            var r = document.getElementById("sl_sharp_r").value;
+            var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");       
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_sharp_r").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_sharp_r").value=targ.value / 10.0;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            var a = document.getElementById("sl_sharp_a").value;
+            var r = document.getElementById("sl_sharp_r").value;
+            var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_sharp_t").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_sharp_t").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            var a = document.getElementById("sl_sharp_a").value;
+            var r = document.getElementById("sl_sharp_r").value;
+            var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
+        }, 50);
+
+        return true;
+    };    
+    
     /*
      * I N P U T   V A L I D A T O R S
      */
@@ -870,6 +959,90 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_saturation").value=targ.value;
         wsCmd.send("SATUR " + targ.value);
     };
+
+    document.getElementById("in_sharp_a").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 100) {
+            targ.value = 100;
+        } else if (targ.value < 0) {
+            targ.value = -0;
+        }
+
+        document.getElementById("sl_sharp_a").value=targ.value;
+        var a = document.getElementById("sl_sharp_a").value;
+        var r = document.getElementById("sl_sharp_r").value;
+        var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
+    };
+
+    document.getElementById("in_sharp_r").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 10) {
+            targ.value = 10;
+        } else if (targ.value < 0) {
+            targ.value = 0;
+        }
+
+        document.getElementById("sl_sharp_r").value=targ.value * 10;
+        var a = document.getElementById("sl_sharp_a").value;
+        var r = document.getElementById("sl_sharp_r").value;
+        var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
+    };
+
+    document.getElementById("in_sharp_t").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 20) {
+            targ.value = 20;
+        } else if (targ.value < 0) {
+            targ.value = 0;
+        }
+
+        document.getElementById("sl_sharp_t").value=targ.value;
+        var a = document.getElementById("sl_sharp_a").value;
+        var r = document.getElementById("sl_sharp_r").value;
+        var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
+    };    
 
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
     histChart = new Chart(histCanvas, {
