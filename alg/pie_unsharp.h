@@ -27,6 +27,8 @@
  *              Amount:    5-20% Radius: 30-100 Threshold 2-4
  */
 
+#define PIE_CLARITY_SCALE 0.01f
+
 /**
  * Apply an unsharp mask to a bitmap.
  * @param the red channel.

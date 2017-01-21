@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#define MAX_SEP_LEN 61
+#define MAX_SEP_LEN 81
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"

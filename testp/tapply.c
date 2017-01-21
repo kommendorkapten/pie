@@ -17,8 +17,6 @@ int main(int argc, char** argv)
         unsigned long dur;
         int ret;
 
-        pie_img_init_settings(&settings);
-        
         if (argc != 2)
         {
                 printf("Usage contr filename\n");
@@ -36,6 +34,7 @@ int main(int argc, char** argv)
         printf("Loaded media in %luusec\n", dur);
 
         buf = malloc(img.width * img.row_stride * sizeof(float));
+        pie_img_init_settings(&settings, img.width, img.height);
 
         settings.exposure = 1.0f;
         pie_img_render(&img, buf, &settings);

@@ -24,8 +24,10 @@
 #include "../lib/timing.h"
 #include "../pie_log.h"
 
-void pie_img_init_settings(struct pie_img_settings* s)
+void pie_img_init_settings(struct pie_img_settings* s, int w, int h)
 {
+        int m = w > h ? w : h;
+
         s->exposure = 0.0f;
         s->contrast = 1.0f;
         s->highlights = 0.0f;
@@ -33,8 +35,8 @@ void pie_img_init_settings(struct pie_img_settings* s)
         s->white = 0.0f;
         s->black = 0.0f;
         s->clarity.amount = 0.0f;
-        s->clarity.radius = 50.0f;
-        s->clarity.threshold = 4.0f;        
+        s->clarity.radius = m * PIE_CLARITY_SCALE;
+        s->clarity.threshold = 2.0f;        
         s->vibrance = 0.0f;
         s->saturation = 1.0f;
         s->sharpening.amount = 0.0f;

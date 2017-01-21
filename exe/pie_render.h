@@ -20,9 +20,11 @@ struct pie_img_settings;
 /**
  * Init settings to default values.
  * @param settings.
+ * @param width of image.
+ * @param height of image.
  * @return void.
  */
-extern void pie_img_init_settings(struct pie_img_settings*);
+extern void pie_img_init_settings(struct pie_img_settings*, int, int);
 
 /**
  * Render a bitmap.

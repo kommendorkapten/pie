@@ -365,7 +365,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         PIE_DEBUG("[%s] Load proxy with size %dx%d", msg->token, w, h);
         strncpy(msg->img->path, buf, PIE_PATH_LEN);
         /* Read from database to get settings */
-        pie_img_init_settings(&msg->img->settings);
+        pie_img_init_settings(&msg->img->settings, w, h);
         /* Allocate proxy images */
         msg->img->proxy.width = w;
         msg->img->proxy.height = h;
@@ -511,13 +511,26 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 else
                 {
                         msg->img->settings.black = msg->f1;
+                        PIE_TRACE("[%s] Set black: %f.",
+                                  msg->token,
+                                  msg->img->settings.black);
                 }
                 break;
         case PIE_MSG_SET_CLARITY:
-                PIE_WARN("[%s] Not implemented yet %d.",
-                         msg->token,
-                         (int)msg->type);
-                status = -1;
+                if (msg->f1 < -1.0f || msg->f1 > 1.0f)
+                {
+                        PIE_WARN("[%s] invalid clarity: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;                        
+                }
+                else
+                {
+                        msg->img->settings.clarity.amount = msg->f1;
+                        PIE_TRACE("[%s] Set clarity: %f.",
+                                  msg->token,
+                                  msg->img->settings.clarity.amount);
+                }
                 break;
         case PIE_MSG_SET_VIBRANCE:
                 PIE_WARN("[%s] Not implemented yet %d.",
