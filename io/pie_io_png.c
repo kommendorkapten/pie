@@ -16,7 +16,11 @@
 #include "../pie_log.h"
 #include <png.h>
 #include <stdlib.h>
-#include <note.h>
+#ifdef __sun
+# include <note.h>
+#else
+# define NOTE(X)
+#endif
 
 /*
   TODO fix scan lines
