@@ -21,7 +21,7 @@ endif
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
-    CFLAGS += -v -mt -fast# use -fast and compare to only -xO5
+    CFLAGS += -v -mt -fast # use -fast and compare to only -xO5
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
     endif
