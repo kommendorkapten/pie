@@ -44,6 +44,9 @@ enum pie_msg_type
         PIE_MSG_SET_VIBRANCE,
         PIE_MSG_SET_SATURATION,
         PIE_MSG_SET_ROTATE,
+        PIE_MSG_SET_SHARP_AMOUNT,
+        PIE_MSG_SET_SHARP_RADIUS,
+        PIE_MSG_SET_SHARP_THRSHLD,        
         
         /* Always last */
         PIE_MSG_COUNT
