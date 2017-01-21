@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#define MAX_SEP_LEN 60
+#define MAX_SEP_LEN 61
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
@@ -49,6 +49,12 @@ int pie_unsharp(struct bitmap_f32rgb* img,
         /* Dimension of kernel should be ceil(6*sigma) */
         int sep_len = 6 * (param->radius + 0.5f);
 
+        if ((sep_len & 0x1) == 0)
+        {
+                /* Always use an odd number for kernel dimension */
+                sep_len++;
+        }
+        
         if (sep_len > MAX_SEP_LEN)
         {
                 sep_len = MAX_SEP_LEN;

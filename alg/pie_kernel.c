@@ -665,55 +665,112 @@ void pie_kernel_sep_apply(float* c,
                           int s)
 {
         int half = len >> 1;
-
+        
         /* x */
         for (int y = 0; y < h; y++)
         {
                 for (int x = 0; x < w; x++)
                 {
                         float sum = 0.0f;
-                        for (int i = 0; i < len; i++)
+                        int stop1 = half - x;
+                        int stop2 = w + half - x;
+
+                        stop1 = stop1 > 0 ? stop1 : 0;
+                        stop2 = stop2 < len ? stop2 : len;
+
+                        /* p < 0 */
+                        for (int i = 0; i < stop1; i++)
+                        {
+                                int p = 0;
+                                
+                                sum += c[y * s + p] * k[i];
+                        }
+                        
+                        /* 0 <= p <= w - 1 */
+                        int rem = (stop2 - stop1) % 4;
+                        int par_stop = stop2 - rem;
+                        
+                        for (int i = stop1; i < par_stop; )
                         {
                                 int p = x + i - half;
 
-                                if (p < 0)
-                                {
-                                        p = 0;
-                                }
-                                else if (p > w - 1)
-                                {
-                                        p = w - 1;
-                                }
+                                sum += c[y * s + p++] * k[i++];
+                                sum += c[y * s + p++] * k[i++];
+                                sum += c[y * s + p++] * k[i++];
+                                sum += c[y * s + p] * k[i++];
+                                        
+                        }
+                        for (int i = par_stop; i < stop2; i++)
+                        {
+                                int p = x + i - half;
+
+                                sum += c[y * s + p] * k[i];
+                        }                        
+                        
+                        /* w - 1 < p */
+                        for (int i = stop2; i < len; i++)
+                        {
+                                int p = w - 1;
+                                
                                 sum += c[y * s + p] * k[i];
                         }
+
                         buf[y * s + x] = sum;
                 }
         }
 
         /* y */
-        for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
         {
-                for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
                 {
                         float sum = 0.0f;
-                        for (int i = 0; i < len; i++)
+                        int stop1 = half - y;
+                        int stop2 = h + half - y;
+
+                        stop1 = stop1 > 0 ? stop1 : 0;
+                        stop2 = stop2 < len ? stop2 : len;
+
+                        /* p < 0 */
+                        for (int i = 0; i < stop1; i++)
+                        {
+                                int p = 0;
+                                
+                                sum += buf[p * s + x] * k[i];
+                        }
+                        
+                        /* 0 <= p <= h - 1 */
+                        int rem = (stop2 - stop1) % 4;
+                        int par_stop = stop2 - rem;
+
+                        for (int i = stop1; i < par_stop; )
                         {
                                 int p = y + i - half;
 
-                                if (p < 0)
-                                {
-                                        p = 0;
-                                }
-                                else if (p > h - 1)
-                                {
-                                        p = h - 1;
-                                }
-                                sum += buf[p * s + x] * k[i];
-
+                                sum += buf[p++ * s + x] * k[i++];
+                                sum += buf[p++ * s + x] * k[i++];
+                                sum += buf[p++ * s + x] * k[i++];
+                                sum += buf[p * s + x] * k[i++];
                         }
+                        
+                        for (int i = par_stop; i < stop2; i++)
+                        {
+                                int p = y + i - half;
+
+                                sum += buf[p * s + x] * k[i];
+                        }
+
+                        /* h - 1 < p */
+                        for (int i = stop2; i < len; i++)
+                        {
+                                int p = h - 1;
+
+                                sum += buf[p * s + x] * k[i];
+                        }
+
                         c[y * s + x] = sum;
                 }
-        }        
+        }
 }
 
 void pie_kernel3x3_gauss(struct pie_kernel3x3* k,
