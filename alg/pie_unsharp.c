@@ -15,6 +15,9 @@
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
+#ifdef _HAS_SSE
+# include <nmmintrin.h> /* sse 4.2 */
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -120,7 +123,7 @@ int pie_unsharp(struct bitmap_f32rgb* img,
         return 0;
 }
 
-static void pie_unsharp_chan(float* restrict o,
+static void pie_unsharp_chan(float* restrict img,
                              const float* restrict blur,
                              const struct pie_unsharp_param* param,
                              int w,
@@ -128,27 +131,84 @@ static void pie_unsharp_chan(float* restrict o,
                              int s)
 {
         float threshold = param->threshold / 255.0f;
+
+#ifdef _HAS_SSE
+        __m128 amountv = _mm_set1_ps(param->amount);
+        __m128 thresholdv = _mm_set1_ps(threshold);
+        __m128 onev = _mm_set1_ps(1.0f);
+        __m128 zerov = _mm_set1_ps(0.0f);
+        __m128 sign_maskv = _mm_set1_ps(-0.f); 
+#endif
+#ifdef _HAS_SIMD
+	int rem = w % 4;
+	int stop = w - rem;
+#else
+        int stop = 0;
+#endif
         
         for (int y = 0; y < h; y++)
         {
-                for (int x = 0; x < w; x++)
+        
+#ifdef _HAS_SIMD
+# ifdef _HAS_SSE
+        
+                for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * s + x;
-                        float mask = o[p] - blur[p];
-                        float new = o[p] + mask * param->amount;
+                        __m128 imgv = _mm_load_ps(img + p);
+                        __m128 blurv = _mm_load_ps(blur + p);
+                        __m128 maskv;
+                        __m128 newv;
+                        __m128 cmpv;
+                        __m128 deltav;
 
-                        if (fabs(o[p] - new) > threshold)
+                        maskv = _mm_sub_ps(imgv, blurv);
+                        maskv = _mm_mul_ps(maskv, amountv);
+                        newv = _mm_add_ps(imgv, maskv);
+
+                        /* Threshold stuff */
+                        deltav = _mm_sub_ps(imgv, newv);
+                        /* Make sure all values are positive */
+                        _mm_andnot_ps(sign_maskv, deltav);
+
+                        cmpv = _mm_cmpnlt_ps(deltav, thresholdv);
+                        newv = _mm_blendv_ps(imgv, newv, cmpv);
+                        
+                        /* the ones less than zero will be 0xffffffff */
+                        cmpv = _mm_cmplt_ps(newv, zerov);
+                        /* d = a,b,m. if m == 0 a else b */
+                        newv = _mm_blendv_ps(newv, zerov, cmpv);
+
+                        /* the ones greater than one will be 0xffffffff */
+                        cmpv = _mm_cmpnlt_ps(newv, onev);
+                        newv = _mm_blendv_ps(newv, onev, cmpv);
+
+                        _mm_store_ps(img + p, newv);                        
+                }
+
+# else
+#  error ALTIVEC not supported yet
+# endif
+#endif
+
+                for (int x = stop; x < w; x++)
+                {
+                        int p = y * s + x;
+                        float mask = img[p] - blur[p];
+                        float new = img[p] + mask * param->amount;
+
+                        if (fabs(img[p] - new) > threshold)
                         {
-                                o[p] = new;
+                                img[p] = new;
                         }
                         
-                        if (o[p] < 0.0f)
+                        if (img[p] < 0.0f)
                         {
-                                o[p] = 0.0f;
+                                img[p] = 0.0f;
                         }
-                        else if (o[p] > 1.0f)
+                        else if (img[p] > 1.0f)
                         {
-                                o[p] = 1.0f;
+                                img[p] = 1.0f;
                         }
                 }
         }        

@@ -94,6 +94,13 @@ struct bitmap_f32rgb
         int row_stride;
 };
 
+struct pie_unsharp_param
+{
+        float amount;    /* typically between 0.3 and 0.7 (30 to 70%) */
+        float radius;    /* typically 0.5 to 2.0 */
+        float threshold; /* typically from 3 to 20 */
+};
+
 struct pie_img_settings
 {
         /* [-5, 5]     def 0 */
@@ -108,14 +115,16 @@ struct pie_img_settings
         float white;
         /* [-1, 1]     def 0 */
         float black;
-        /* [-100, 100] def 0 */
-        float clarity;
+        /* unknown def */
+        struct pie_unsharp_param clarity;
         /* [-100, 100] def 0 */
         float vibrance;
         /* [0, 2] def 1 */
         float saturation;
         /* [0, 359]    def 0 */
         float rotate;
+        /* unknown def */
+        struct pie_unsharp_param sharpening;        
 };
 
 struct pie_histogram

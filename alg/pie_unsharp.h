@@ -27,13 +27,6 @@
  *              Amount:    5-20% Radius: 30-100 Threshold 2-4
  */
 
-struct pie_unsharp_param
-{
-        float amount;    /* typically between 0.3 and 0.7 (30 to 70%) */
-        float radius;    /* typically 0.5 to 2.0 */
-        float threshold; /* typically from 3 to 20 */
-};
-
 /**
  * Apply an unsharp mask to a bitmap.
  * @param Bitmap to apply sharpness to

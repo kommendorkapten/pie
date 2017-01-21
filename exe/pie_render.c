@@ -20,6 +20,7 @@
 #include "../alg/pie_white.h"
 #include "../alg/pie_shado.h"
 #include "../alg/pie_highl.h"
+#include "../alg/pie_unsharp.h"
 #include "../lib/timing.h"
 #include "../pie_log.h"
 
@@ -31,9 +32,14 @@ void pie_img_init_settings(struct pie_img_settings* s)
         s->shadows = 0.0f;
         s->white = 0.0f;
         s->black = 0.0f;
-        s->clarity = 0.0f;
+        s->clarity.amount = 0.0f;
+        s->clarity.radius = 50.0f;
+        s->clarity.threshold = 4.0f;        
         s->vibrance = 0.0f;
         s->saturation = 1.0f;
+        s->sharpening.amount = 0.0f;
+        s->sharpening.radius = 1.0f;
+        s->sharpening.threshold = 4.0f;
         s->rotate = 0.0f;
 }
 
@@ -120,8 +126,12 @@ int pie_img_render(struct bitmap_f32rgb* img,
                       img->height,
                       img->row_stride);
         PIE_DEBUG("Render black:          %8ldusec", timing_dur_usec(&t2));
+
+        /* C L A R I T Y */
+        timing_start(&t2);        
+        pie_unsharp(img, &s->clarity);
+        PIE_DEBUG("Render clarity:        %8ldusec", timing_dur_usec(&t2));
 #if 0
-        s->clarity = 0.0f;
         s->vibrance = 0.0f;
 #endif 
         /* S A T U R A T I O N */        
@@ -138,6 +148,11 @@ int pie_img_render(struct bitmap_f32rgb* img,
         s->rotate = 0.0f;        
 #endif
 
+        /* S H A R P E N I N G */
+        timing_start(&t2);        
+        pie_unsharp(img, &s->sharpening);
+        PIE_DEBUG("Render sharpening:     %8ldusec", timing_dur_usec(&t2));
+        
         PIE_DEBUG("Render total:          %8ldusec", timing_dur_usec(&t1));
 
         return 0;
