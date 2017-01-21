@@ -732,6 +732,48 @@ window.addEventListener("load", function(evt) {
         evt.preventDefault();
     };
 
+    document.getElementById("in_sharp_a").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_sharp_r").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_sharp_t").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };    
+
     /*
      * M A P   I N P U T   T O   S L I D E R S 
      */
