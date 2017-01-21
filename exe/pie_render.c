@@ -129,7 +129,13 @@ int pie_img_render(struct bitmap_f32rgb* img,
 
         /* C L A R I T Y */
         timing_start(&t2);        
-        pie_unsharp(img, &s->clarity);
+        pie_unsharp(img->c_red,
+                    img->c_green,
+                    img->c_blue,
+                    &s->clarity,
+                    img->width,
+                    img->height,
+                    img->row_stride);
         PIE_DEBUG("Render clarity:        %8ldusec", timing_dur_usec(&t2));
 #if 0
         s->vibrance = 0.0f;
@@ -150,7 +156,13 @@ int pie_img_render(struct bitmap_f32rgb* img,
 
         /* S H A R P E N I N G */
         timing_start(&t2);        
-        pie_unsharp(img, &s->sharpening);
+        pie_unsharp(img->c_red,
+                    img->c_green,
+                    img->c_blue,
+                    &s->sharpening,
+                    img->width,
+                    img->height,
+                    img->row_stride);
         PIE_DEBUG("Render sharpening:     %8ldusec", timing_dur_usec(&t2));
         
         PIE_DEBUG("Render total:          %8ldusec", timing_dur_usec(&t1));

@@ -29,12 +29,22 @@
 
 /**
  * Apply an unsharp mask to a bitmap.
- * @param Bitmap to apply sharpness to
+ * @param the red channel.
+ * @param the green channel.
+ * @param the blue channel
  * @param unsharp parameters.
+ * @param image width.
+ * @param image height.
+ * @param image row stride.
  * @return 0 on success. Non zero otherwise.
  */
-extern int pie_unsharp(struct bitmap_f32rgb*,
-                       const struct pie_unsharp_param*);
+extern int pie_unsharp(float* restrict,
+                       float* restrict,
+                       float* restrict,
+                       const struct pie_unsharp_param*,
+                       int,
+                       int,
+                       int);
 
 
 #endif /* __PIE_UNSHARP_H__ */

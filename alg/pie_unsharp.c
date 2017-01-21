@@ -39,13 +39,18 @@ static void pie_unsharp_chan(float* restrict,
                              int,
                              int);
 
-int pie_unsharp(struct bitmap_f32rgb* img,
-                const struct pie_unsharp_param* param)
+int pie_unsharp(float* restrict r,
+                float* restrict g,
+                float* restrict b,
+                const struct pie_unsharp_param* param,
+                int w,
+                int h,
+                int s)
 {
         float kernel[MAX_SEP_LEN];
         size_t size;
         float* buf;
-        float* cpy;
+        float* blur;
         /* Dimension of kernel should be ceil(6*sigma) */
         int sep_len = 6 * (param->radius + 0.5f);
 
@@ -60,14 +65,14 @@ int pie_unsharp(struct bitmap_f32rgb* img,
                 sep_len = MAX_SEP_LEN;
         }
         
-        size = img->row_stride * img->height * sizeof(float);
+        size = s * h * sizeof(float);
         buf = malloc(size);
         if (buf == NULL)
         {
                 return -1;
         }
-        cpy = malloc(size);
-        if (cpy == NULL)
+        blur = malloc(size);
+        if (blur == NULL)
         {
                 free(buf);
                 return -1;
@@ -76,55 +81,55 @@ int pie_unsharp(struct bitmap_f32rgb* img,
         pie_kernel_sep_gauss(kernel, sep_len, param->radius * param->radius);
 
         /* Red channel */
-        memcpy(cpy, img->c_red, size);
-        pie_kernel_sep_apply(cpy,
+        memcpy(blur, r, size);
+        pie_kernel_sep_apply(blur,
                              kernel,
                              sep_len,
                              buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);
-        pie_unsharp_chan(&img->c_red[0],
-                         cpy,
+                             w,
+                             h,
+                             s);
+        pie_unsharp_chan(r,
+                         blur,
                          param,
-                         img->width,
-                         img->height,
-                         img->row_stride);
+                         w,
+                         h,
+                         s);
         
         /* Green channel */
-        memcpy(cpy, img->c_green, size);        
-        pie_kernel_sep_apply(cpy,
+        memcpy(blur, g, size);        
+        pie_kernel_sep_apply(blur,
                              kernel,
                              sep_len,
                              buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);
-        pie_unsharp_chan(&img->c_green[0],
-                         cpy,
+                             w,
+                             h,
+                             s);
+        pie_unsharp_chan(g,
+                         blur,
                          param,
-                         img->width,
-                         img->height,
-                         img->row_stride);
+                         w,
+                         h,
+                         s);
 
         /* Blue channel */        
-        memcpy(cpy, img->c_blue, size);        
-        pie_kernel_sep_apply(cpy,
+        memcpy(blur, b, size);        
+        pie_kernel_sep_apply(blur,
                              kernel,
                              sep_len,
                              buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);
-        pie_unsharp_chan(&img->c_blue[0],
-                         cpy,
+                             w,
+                             h,
+                             s);
+        pie_unsharp_chan(b,
+                         blur,
                          param,
-                         img->width,
-                         img->height,
-                         img->row_stride);
+                         w,
+                         h,
+                         s);
         
         free(buf);
-        free(cpy);
+        free(blur);
         
         return 0;
 }
