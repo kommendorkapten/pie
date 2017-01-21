@@ -43,7 +43,7 @@ int main(int argc, char** argv)
         bm_conv_bd(&out, PIE_COLOR_8B,
                    &dwn, PIE_COLOR_32B);
 
-        png_u8rgb_write("out.png", &out);
+        png_u8rgb_write("down.png", &out);
 
         bm_free_f32(&img);
         bm_free_f32(&dwn);        
