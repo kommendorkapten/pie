@@ -28,8 +28,8 @@ static float gauss_avg(const float* restrict img,
 
 int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
                  const struct bitmap_f32rgb* restrict src,
-                 int min_w,
-                 int min_h)
+                 int max_w,
+                 int max_h)
 {
         float blur[MAX_RADIUS * MAX_RADIUS];
         float ratio;
@@ -40,7 +40,7 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
         int status;
         int radius;
 
-        if (min_w < 0 && min_h < 0)
+        if (max_w < 0 && max_h < 0)
         {
                 PIE_WARN("Min width OR min height must be specified");
                 return -1;
@@ -48,14 +48,14 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
         
         ratio = (float)src->width / (float)src->height;
         
-        if (min_w > 0)
+        if (max_w > 0)
         {
-                if (min_h > 0)
+                if (max_h > 0)
                 {
                         // Both are provided, chose the smallest.
                         // Start with height.
-                        new_h = min_h;
-                        if ((int)(new_h * ratio) <= min_w)
+                        new_h = max_h;
+                        if ((int)(new_h * ratio) <= max_w)
                         {
                                 // new width fits inside provided box.
                                 new_w = (int)(new_h * ratio);
@@ -63,19 +63,19 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
                         else
                         {
                                 // New width is "tighter"
-                                new_w = min_w;
+                                new_w = max_w;
                                 new_h = (int)(new_w / ratio);
                         }
                 }
                 else
                 {
-                        new_w = min_w;
+                        new_w = max_w;
                         new_h = (int)(new_w / ratio);
                 }
         }
         else
         {
-                new_h = min_h;
+                new_h = max_h;
                 new_w = (int)(new_h * ratio);
         }
 
@@ -111,8 +111,9 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
 
         /* Create Gaussion blur matrix */
         pie_gauss_matrix(&blur[0], radius, sigma * sigma);
+#if DEBUG > 2
         pie_matrix_print(blur, radius);
-
+#endif
         for (int y = 0; y < dst->height; y++)
         {
                 int sy = (int)(y * step);
