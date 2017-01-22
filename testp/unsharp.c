@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <math.h>
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
