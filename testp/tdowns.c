@@ -32,7 +32,7 @@ int main(int argc, char** argv)
         
         timing_start(&t);
 
-        if (pie_dwn_smpl(&dwn, &img, 960, 640))
+        if (pie_dwn_smpl(&dwn, &img, 960, 960))
         {
                 abort();
         }
