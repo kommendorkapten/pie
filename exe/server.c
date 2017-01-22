@@ -409,7 +409,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 };
 
                 timing_start(&t);
-                /* Call pie_downsample */
                 res = pie_dwn_smpl(&msg->img->proxy,
                                    &msg->img->raw,
                                    proxy_w,
