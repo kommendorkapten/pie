@@ -48,9 +48,10 @@ var pieStateHack = {
     "image2": "lena.png",
     "image3": "lin_small.jpg",
     "image4": "lin.jpg",
-    "image": "selfie.jpg",
+    "image5": "selfie.jpg",
     "image6": "tofsmes.jpg",
-    "image7": "siden_pie.png"
+    "image7": "siden_pie.png",
+    "image": "b_portrait_small.png"
 };
 
 function getWsUrl(){

@@ -41,6 +41,12 @@ table {
     padding: 5;
 }
 
+.edit-meta-text-marker {
+    font-family: Arial, Verdana, sans-serif;
+    color:	 #a9a9a9;
+    text-align:  left;    
+}
+
 .edit-in {
     width:            34px;
     background-color: #333333;
