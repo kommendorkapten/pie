@@ -18,6 +18,7 @@
 #include "../pie_types.h"
 #include "../msg/pie_msg.h"
 #include "../lib/chan.h"
+#include "../lib/hmap.h"
 #include "../lib/timing.h"
 #include <libwebsockets.h>
 #include <string.h>
@@ -73,6 +74,14 @@ static struct pie_sess_mgr* sess_mgr;
  * @return the mimetype (e.g image/jpeg) or NULL if unknown.
  */
 static const char* get_mimetype(const char*);
+
+/**
+ * Exract request headers from the current request.
+ * Limitations: Only a signel value per key can be stored.
+ * @param the request
+ * @return pointer to a hash map of the headers.
+ */
+static struct hmap* get_request_headers(struct lws*);
 
 /**
  * Extract a session from the current request.
@@ -297,23 +306,32 @@ static int cb_http(struct lws* wsi,
                    size_t len)
 {
         char url[256];
-        unsigned char headers[256];
-        struct pie_sess* session;
+        unsigned char resp_headers[256];
+        struct hmap* req_headers = NULL;
+        struct pie_sess* session = NULL;
         const char* mimetype;
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
         int hn = 0;
         int n;
-
+        int ret = 0;
+        
+        /* Set to true if callback should attempt to keep the connection
+           open. */
+        int try_keepalive = 0;
+        
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
+                try_keepalive = 1;
+                req_headers = get_request_headers(wsi);
+
                 /* Look for existing session */
                 session = get_session(wsi);
                 if (session == NULL)
                 {
                         /* Create a new */
                         char cookie[128];
-                        unsigned char* p = &headers[0];
+                        unsigned char* p = &resp_headers[0];
                         session = malloc(sizeof(struct pie_sess));
                         pie_sess_init(session);
                         srv_init_session(session);
@@ -327,10 +345,12 @@ static int cb_http(struct lws* wsi,
                                                         (unsigned char*)cookie,
                                                         hn,
                                                         &p,
-                                                        headers + 256))
+                                                        resp_headers + 256))
                         {
                                 /* Can't set header */
-                                return -1;
+                                PIE_ERR("[%s] Can not write header",
+                                        session->token);
+                                goto bailout;
                         }
 
                         PIE_DEBUG("[%s] Init session",
@@ -343,7 +363,7 @@ static int cb_http(struct lws* wsi,
                          * P can never be decremented.
                          * But it's not beautiful, but needed to silence lint.
                          */
-                        hn = (int)((unsigned long)p - (unsigned long)&headers[0]);
+                        hn = (int)((unsigned long)p - (unsigned long)&resp_headers[0]);
                         strncpy(ctx->token, 
                                 session->token, 
                                 PIE_SESS_TOKEN_LEN);
@@ -354,6 +374,9 @@ static int cb_http(struct lws* wsi,
 			lws_return_http_status(wsi,
                                                HTTP_STATUS_BAD_REQUEST,
                                                NULL);
+                        PIE_DEBUG("[%s] Bad request, inpupt len %lu",
+                                  session->token,
+                                  len);
 			goto keepalive;
 		}
 
@@ -371,8 +394,8 @@ static int cb_http(struct lws* wsi,
                         strcat(url, "/index.html");
                 }
                 url[sizeof(url) - 1] = 0;
-		mimetype = get_mimetype(url);
-                PIE_TRACE("[%s] GET %s",
+                mimetype = get_mimetype(url);
+                PIE_LOG("[%s] GET %s",
                           session->token,
                           url);
                 
@@ -381,6 +404,9 @@ static int cb_http(struct lws* wsi,
 			lws_return_http_status(wsi,
                                                HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
                                                NULL);
+                        PIE_DEBUG("[%s] Bad mime type: %s",
+                                  session->token,
+                                  mimetype);
                         goto keepalive;
 		}
 
@@ -388,30 +414,59 @@ static int cb_http(struct lws* wsi,
                 n = lws_serve_http_file(wsi,
                                         url,
                                         mimetype,
-                                        (char*)headers,
+                                        (char*)resp_headers,
                                         hn);
                 if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
                 {
-                        return -1;
+                        PIE_WARN("[%s] Fail to close transaction",
+                                 session->token);
+                        goto bailout;
                 }
-
-                break;
-
-	case LWS_CALLBACK_HTTP_FILE_COMPLETION:
                 break;
         default:
                 break;
         }
-        return 0;
 
 /* HTTP/1.1 or 2.0, default is to keepalive */
 keepalive:
-	if (lws_http_transaction_completed(wsi))
-        {
-		return -1;                
-        }
+        ret = 0;
 
-	return 0;
+        if (try_keepalive)
+        {
+                if (lws_http_transaction_completed(wsi))
+                {
+                        char* token = "undef";
+
+                        if (session)
+                        {
+                                token = session->token;
+                        }
+                
+                        PIE_WARN("[%s] Failed to keep connection open",
+                                 token);
+                        goto bailout;
+                }
+        }        
+        goto cleanup;
+bailout:
+        ret = -1;
+cleanup:
+        if (req_headers)
+        {
+                size_t h_size;
+                struct hmap_entry* it = hmap_iter(req_headers, &h_size);
+
+                for (size_t i = 0; i < h_size; i++)
+                {
+                        free(it[i].key);
+                        free(it[i].data);
+                }
+                
+                free(it);
+                hmap_destroy(req_headers);
+        }
+        
+	return ret;
 }
 
 static int cb_img(struct lws* wsi,
@@ -633,6 +688,7 @@ static int cb_cmd(struct lws* wsi,
                         }
                         else
                         {
+                                NOTE(EMPTY)
                                 PIE_DEBUG("[%s] Wrote message type %d to channel",
                                           session->token,
                                           (int)msg->type);
@@ -682,6 +738,41 @@ static const char* get_mimetype(const char *path)
         }
 
 	return NULL;
+}
+
+static struct hmap* get_request_headers(struct lws* wsi)
+{
+        char header[256];
+        struct hmap* h = hmap_create(NULL, NULL, 8, 0.7f);
+        char* p;
+        int n = 0;
+
+        while (lws_hdr_copy_fragment(wsi, header, sizeof(header),
+                                     WSI_TOKEN_HTTP_URI_ARGS, n++) > 0) {
+                header[255] = 0;
+                p = strchr(header, '=');
+                if (p == NULL)
+                {
+                        continue;
+                }
+                ptrdiff_t key_len = p - &header[0];
+                size_t val_len = strlen(p + 1);
+                char* key = malloc(key_len + 1);
+                char* val = malloc(val_len + 1);
+
+                memcpy(key, header, key_len);
+                memcpy(val, p + 1, val_len);
+                key[key_len] = 0;
+                val[val_len] = 0;
+
+                PIE_TRACE("URL query parameter: %s", header);
+                PIE_TRACE("Extracted key '%s' with value '%s'",
+                          key, val);
+
+                hmap_set(h, key, val);
+        }
+
+        return h;
 }
 
 static struct pie_sess* get_session(struct lws* wsi)
