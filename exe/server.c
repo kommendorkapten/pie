@@ -18,9 +18,11 @@
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../bm/pie_bm.h"
+#include "../bm/pie_dwn_smpl.h"
 #include "../io/pie_io.h"
 #include "../encoding/pie_json.h"
 #include "../alg/pie_hist.h"
+#include "../alg/pie_unsharp.h"
 #include "pie_render.h"
 #include <stdio.h>
 #include <errno.h>
@@ -317,12 +319,16 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         char buf[PIE_PATH_LEN];
         struct timing t;
-        int stride;
+        struct timing t_l;        
         int len;
         int res;
-        int w;
-        int h;
+        int proxy_w;
+        int proxy_h;
+        int stride;
+        int downsample = 0;
 
+        timing_start(&t_l);
+        
         /* HACK */
         if (msg->img)
         {
@@ -335,8 +341,12 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         memset(msg->img, 0, sizeof(struct pie_img_workspace));
         snprintf(buf, PIE_PATH_LEN, "%s/%s", config.lib_path, msg->buf);
         timing_start(&t);
+        
         res = pie_io_load(&msg->img->raw, buf);
-        PIE_DEBUG("Loaded %s %ldusec", buf, timing_dur_usec(&t));        
+        PIE_DEBUG("[%s] Loaded %s %ldusec",
+                  msg->token,
+                  buf,
+                  timing_dur_usec(&t));
         if (res)
         {
                 PIE_ERR("[%s] Could not open '%s'",
@@ -358,47 +368,130 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                 
         }
 #endif        
-        w = msg->i1;
-        h = msg->i2;
-        w = w < msg->img->raw.width ? w : msg->img->raw.width;
-        h = h < msg->img->raw.height ? h : msg->img->raw.height;
+        proxy_w = msg->i1;
+        proxy_h = msg->i2;
+        PIE_DEBUG("[%s] Request proxy [%d, %d] for image [%d, %d]",
+                  msg->token,
+                  proxy_w,
+                  proxy_h,
+                  msg->img->raw.width,
+                  msg->img->raw.height);
 
-        PIE_DEBUG("[%s] Load proxy with size %dx%d", msg->token, w, h);
-        strncpy(msg->img->path, buf, PIE_PATH_LEN);
-        /* Read from database to get settings */
-        pie_img_init_settings(&msg->img->settings, w, h);
-        /* Allocate proxy images */
-        msg->img->proxy.width = w;
-        msg->img->proxy.height = h;
-        msg->img->proxy.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_f32(&msg->img->proxy);
-        msg->img->proxy_out.width = w;
-        msg->img->proxy_out.height = h;
+        if (proxy_w < msg->img->raw.width || proxy_h < msg->img->raw.height)
+        {
+                PIE_DEBUG("[%s] Downsampling needed", msg->token);
+                downsample = 1;
+        }
+        else
+        {
+                /* Do not do any up sampling */
+                if (proxy_w > msg->img->raw.width)
+                {
+                        proxy_w = msg->img->raw.width;
+                }
+                if (proxy_h > msg->img->raw.height)
+                {
+                        proxy_h = msg->img->raw.height;
+                }
+                PIE_DEBUG("[%s] Image smaller than proxy, new proxy size [%d, %d]",
+                          msg->token,
+                          proxy_w,
+                          proxy_h);
+        }
+
+        /* Allocate proxy images */        
+        if (downsample)
+        {
+                struct pie_unsharp_param up = {
+                        .amount = 0.5f,
+                        .radius = 0.5f,
+                        .threshold = 2.0f
+                };
+
+                timing_start(&t);
+                /* Call pie_downsample */
+                res = pie_dwn_smpl(&msg->img->proxy,
+                                   &msg->img->raw,
+                                   proxy_w,
+                                   proxy_h);
+                if (res)
+                {
+                        abort();
+                }
+                PIE_DEBUG("[%s] Downsampled proxy in %ldusec",
+                          msg->token,
+                          timing_dur_usec(&t));
+                
+                /* Add some sharpening to mitigate any blur created
+                   during downsampling. */
+                timing_start(&t);
+                res = pie_unsharp(msg->img->proxy.c_red,
+                                  msg->img->proxy.c_green,
+                                  msg->img->proxy.c_blue,
+                                  &up,
+                                  msg->img->proxy.width,
+                                  msg->img->proxy.height,
+                                  msg->img->proxy.row_stride);
+                if (res)
+                {
+                        abort();
+                }
+                PIE_DEBUG("[%s] Added post-downsampling sharpening in %ldusec",
+                          msg->token,
+                          timing_dur_usec(&t));                
+        }
+        else
+        {
+                msg->img->proxy.width = proxy_w;
+                msg->img->proxy.height = proxy_h;
+                msg->img->proxy.color_type = PIE_COLOR_TYPE_RGB;
+                bm_alloc_f32(&msg->img->proxy);
+                /* Copy raw to proxy */
+                len = (int)(proxy_h * stride * sizeof(float));
+                memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
+                memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
+                memcpy(msg->img->proxy.c_blue, msg->img->raw.c_blue, len);
+        }
+
+        /* Create a working copy of the proxy for editing */
+        msg->img->proxy_out.width = msg->img->proxy.width;
+        msg->img->proxy_out.height = msg->img->proxy.height;
         msg->img->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
         bm_alloc_f32(&msg->img->proxy_out);
 
+        /* Copy proxy to proxy out */
+        len = (int)(msg->img->proxy.height * msg->img->proxy.row_stride * sizeof(float));
+        memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
+        memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
+        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);        
+        
+        strncpy(msg->img->path, buf, PIE_PATH_LEN);
+        /* Read from database to get settings */
+        pie_img_init_settings(&msg->img->settings,
+                              msg->img->proxy.width,
+                              msg->img->proxy.height);
+        
         /* Allocate output buffer */
-        len = (int)(w * h * 4 + 2 * sizeof(uint32_t));
+        /* Outputbuffer format is x,y,rgba data.
+         * Buffer is intented for raw copy on ws channel, so allocate
+         * extra space in the beginning for ws related data. */
+        len = (int)(msg->img->proxy.width * msg->img->proxy.height * 4 + 2 * sizeof(uint32_t));
         msg->img->buf_proxy = malloc(len + PROXY_RGBA_OFF);
         msg->img->proxy_out_rgba = msg->img->buf_proxy + PROXY_RGBA_OFF;
         msg->img->proxy_out_len = len;
 
-        /* Allocate JSON output buffer */
+        /* Allocate JSON output buffer.
+         * Buffer is intented for raw copy on ws channel, so allocate
+         * extra space in the beginning for ws related data. */        
         msg->img->buf_hist = malloc(JSON_HIST_SIZE + PROXY_RGBA_OFF);
         msg->img->hist_json = msg->img->buf_hist + PROXY_RGBA_OFF;
 
-        /* Call pie_downsample */
-        len = (int)(h * stride * sizeof(float));
-        /* Copy raw to proxy */
-        memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
-        memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
-        memcpy(msg->img->proxy.c_blue, msg->img->raw.c_blue, len);
-
-        /* Copy proxy to proxy out */
-        memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
-        memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
-        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);
-
+        /* Call render */
+        res = pie_img_render(&msg->img->proxy_out,
+                             NULL,
+                             &msg->img->settings);
+        assert(res == 0);
+        
         /* Encode proxy rgba */
         encode_rgba(msg->img);
 
@@ -409,16 +502,23 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                                     JSON_HIST_SIZE, 
                                                     &msg->img->hist);
         /* Issue a load cmd */
-
+        PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
+                  msg->token,
+                  msg->img->proxy.width,
+                  msg->img->proxy.height,
+                  timing_dur_usec(&t_l));
+        
         return PIE_MSG_LOAD_DONE;
 }
 
 static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 {
         int status = 0;
+        enum pie_msg_type ret_msg = PIE_MSG_INVALID;
 #if 0
         int resample = 0;
-#endif        
+#endif
+        
         switch (msg->type)
         {
         case PIE_MSG_SET_CONTRAST:
@@ -599,6 +699,14 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 abort();
         }
 #endif
+
+        /* New parameters are set. Update the current workspace with the 
+         * following steps:
+         * 1 create a new copy of the stored proxy.
+         * 2 extract histogram data.
+         * 3 RGBA encode the proxy.
+         * 4 create json encoding of histogram.
+         */
         if (status == 0)
         {
                 struct timing t1;
@@ -642,10 +750,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 PIE_DEBUG("JSON encoded histogram: %8ldusec",
                           timing_dur_usec(&t1));
 
-                return PIE_MSG_RENDER_DONE;
+                ret_msg = PIE_MSG_RENDER_DONE;
         }
 
-        return PIE_MSG_INVALID;
+        return ret_msg;
 }
 
 #ifdef _HAS_SIMD
@@ -655,7 +763,7 @@ static void encode_rgba(struct pie_img_workspace* img)
 {
         __m128 coeff_scale = _mm_set1_ps(255.0f);
         unsigned char* p = img->proxy_out_rgba;
-        int stride = img->raw.row_stride;
+        int stride = img->proxy_out.row_stride;
         int rem = img->proxy_out.width % 4;
         int stop = img->proxy_out.width - rem;
         uint32_t w = htonl(img->proxy_out.width);
