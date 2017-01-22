@@ -418,6 +418,13 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 {
                         amount = v / 100.0f;
                 }
+                else
+                {
+                        PIE_WARN("[%s] Invalid amount: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
 
                 t = strtok_r(NULL, " ", &lasts);
                 if (t == NULL)
@@ -431,6 +438,13 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= 1 && v <= 100)
                 {
                         radius = v / 10.0f;
+                }
+                else
+                {
+                        PIE_WARN("[%s] Invalid radius: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
                 }
                 
                 t = strtok_r(NULL, " ", &lasts);
@@ -446,6 +460,13 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 {
                         threshold = (float)v;
                 }
+                else
+                {
+                        PIE_WARN("[%s] Invalid threshold: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }                
 
                 msg->f1 = amount;
                 msg->f2 = radius;
