@@ -14,6 +14,9 @@
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <string.h>
 #include "pie_hist.h"
 
@@ -28,6 +31,13 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 	__m128 coeff_green = _mm_set1_ps(LUM_GREEN);
 	__m128 coeff_blue = _mm_set1_ps(LUM_BLUE);
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
+#endif
+#ifdef _HAS_ALTIVEC
+        vector float coeff_red = (vector float){LUM_RED, LUM_RED, LUM_RED, LUM_RED};
+        vector float coeff_green = (vector float){LUM_GREEN, LUM_GREEN, LUM_GREEN, LUM_GREEN};
+        vector float coeff_blue = (vector float){LUM_BLUE, LUM_BLUE, LUM_BLUE, LUM_BLUE};
+        vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
 #ifdef _HAS_SIMD
 	int rem = bm->width % 4;
@@ -72,7 +82,34 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 		}
                 
 # elif _HAS_ALTIVEC
-#  error ALTIVEC NOT IMPLEMENTED
+
+                for (int x = 0; x < stop; x+=4)
+                {
+                        int p = sizeof(float) * (y * bm->row_stride + x);
+                        vector float red;
+                        vector float green;
+                        vector float blue;
+                        vector float acc;
+                        float out[4];
+
+                        red = vec_ld(p, bm->c_red);
+                        green = vec_ld(p, bm->c_green);
+                        blue = vec_ld(p, bm->c_blue);
+
+                        acc = vec_madd(red, coeff_red, zerov);
+                        acc = vec_madd(green, coeff_green, acc);
+                        acc = vec_madd(blue, coeff_blue, acc);
+
+                        acc = vec_madd(acc, coeff_scale, zerov);
+
+                        vec_st(acc, 0, out);
+
+			hist->lum[(unsigned char)out[0]]++;
+			hist->lum[(unsigned char)out[1]]++;
+			hist->lum[(unsigned char)out[2]]++;
+			hist->lum[(unsigned char)out[3]]++;
+                }
+                
 # endif
 #endif       
 
@@ -99,11 +136,15 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
 #ifdef _HAS_SSE
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
+#endif
+#ifdef _HAS_ALTIVEC
+        vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
+#endif
+#ifdef _HAS_SIMD
         float or[4];
         float og[4];
         float ob[4];
-#endif
-#ifdef _HAS_SIMD
         int rem = bm->width % 4;
         int stop = bm->width - rem;
 #else
@@ -122,7 +163,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 
                 for (int x = 0; x < stop; x += 4)
                 {
-			unsigned int p = y * bm->row_stride + x;
+			int p = y * bm->row_stride + x;
                         __m128 r = _mm_load_ps(bm->c_red + p);
                         __m128 g = _mm_load_ps(bm->c_green + p);
                         __m128 b = _mm_load_ps(bm->c_blue + p);
@@ -150,7 +191,36 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                 }
                 
 # elif _HAS_ALTIVEC
-#  error ALTIVEC NOT IMPLEMENTED
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = sizeof(float) * (y * bm->row_stride + x);
+                        vector float r = vec_ld(p, bm->c_red);
+                        vector float g = vec_ld(p, bm->c_green);
+                        vector float b = vec_ld(p, bm->c_blue);
+
+                        r = vec_madd(r, coeff_scale, zerov);
+                        g = vec_madd(g, coeff_scale, zerov);
+                        b = vec_madd(b, coeff_scale, zerov);
+
+                        vec_st(r, 0, or);
+                        vec_st(g, 0, og);
+                        vec_st(b, 0, ob);
+                        
+                        hist->c_red[(unsigned char)or[0]]++;
+                        hist->c_red[(unsigned char)or[1]]++;
+                        hist->c_red[(unsigned char)or[2]]++;
+                        hist->c_red[(unsigned char)or[3]]++;
+                        hist->c_green[(unsigned char)og[0]]++;
+                        hist->c_green[(unsigned char)og[1]]++;
+                        hist->c_green[(unsigned char)og[2]]++;
+                        hist->c_green[(unsigned char)og[3]]++;
+                        hist->c_blue[(unsigned char)ob[0]]++;
+                        hist->c_blue[(unsigned char)ob[1]]++;
+                        hist->c_blue[(unsigned char)ob[2]]++;
+                        hist->c_blue[(unsigned char)ob[3]]++;
+                }
+                
 # endif
 #endif
 

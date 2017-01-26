@@ -14,6 +14,9 @@
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <assert.h>
 
 /* 
@@ -33,6 +36,12 @@ void pie_alg_contr(float* img,
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
+#endif
+#ifdef _HAS_ALTIVEC
+        vector float sv = (vector float){0.5f, 0.5f, 0.5f, 0.5f};
+        vector float av = (vector float){c, c, c, c};
+        vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
 #ifdef _HAS_SIMD
 	int rem = w % 4;
@@ -74,7 +83,27 @@ void pie_alg_contr(float* img,
                 }
 
 # else
-#  error ALTIVEC not supported yet
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        vector float datav;
+                        vector int bool cmpv;
+                        int p = sizeof(float) * (y * stride + x);
+
+                        datav = vec_ld(p, img);
+                        datav = vec_sub(datav, sv);
+                        datav = vec_madd(datav, av, sv);
+
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(datav, onev);
+                        datav = vec_sel(datav, onev, cmpv);
+                        /* Min 0.0 */
+                        cmpv = vec_cmplt(datav, zerov);
+                        datav = vec_sel(datav, zerov, cmpv);
+        
+                        vec_st(datav, p, img);
+                }
+
 # endif
 #endif
                 

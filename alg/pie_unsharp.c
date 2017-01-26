@@ -18,6 +18,9 @@
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -150,13 +153,18 @@ static void pie_unsharp_chan(float* restrict img,
         __m128 zerov = _mm_set1_ps(0.0f);
         __m128 sign_maskv = _mm_set1_ps(-0.f); 
 #endif
+#ifdef _HAS_ALTIVEC
+        vector float amountv = (vector float){param->amount, param->amount, param->amount, param->amount};
+        vector float thresholdv = (vector float){threshold, threshold, threshold, threshold};
+        vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
+#endif
 #ifdef _HAS_SIMD
 	int rem = w % 4;
 	int stop = w - rem;
 #else
         int stop = 0;
 #endif
-        
         for (int y = 0; y < h; y++)
         {
         
@@ -197,8 +205,40 @@ static void pie_unsharp_chan(float* restrict img,
                         _mm_store_ps(img + p, newv);                        
                 }
 
-# else
-#  error ALTIVEC not supported yet
+# elif _HAS_ALTIVEC
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = sizeof(float) * (y * s + x);
+                        vector float imgv;
+                        vector float blurv;
+                        vector float maskv;
+                        vector float newv;
+                        vector int bool cmpv;
+                        vector float deltav;
+
+                        imgv = vec_ld(p, img);
+                        blurv = vec_ld(p, blur);
+
+                        maskv = vec_sub(imgv, blurv);
+                        newv = vec_madd(maskv, amountv, imgv);
+
+                        /* Threshold */
+                        deltav = vec_abs(vec_sub(imgv, newv));
+                        cmpv = vec_cmpgt(deltav, thresholdv);
+                        newv = vec_sel(imgv, newv, cmpv);
+
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(newv, onev);
+                        newv = vec_sel(newv, onev, cmpv);
+
+                        /* Min 0.0 */
+                        cmpv = vec_cmplt(newv, zerov);
+                        newv = vec_sel(newv, zerov, cmpv);
+
+                        vec_st(newv, p, img);
+                }
+
 # endif
 #endif
 

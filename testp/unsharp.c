@@ -13,12 +13,11 @@ int main(int argc, char** argv)
         struct timing t;
         struct pie_unsharp_param p;
         unsigned long dur;
-        float scale;
         
         //p.radius = 50.0f;
         p.radius = 1.0f;
-        p.amount = -0.4;    /* 0.3 to 0.7 is suitable values */
-        p.threshold = 2.0f; /* typical 3 to 20 */
+        p.amount = 0.85;    /* 0.3 to 0.7 is suitable values */
+        p.threshold = 4.0f; /* typical 3 to 20 */
 
         if (argc != 2)
         {
@@ -38,12 +37,6 @@ int main(int argc, char** argv)
 
         timing_start(&t);
 
-        scale = img.width;
-        if (scale < img.height)
-        {
-                scale = img.height;
-        }
-        p.radius = scale * 0.01;
         printf("Using radius: %f\n", p.radius);
         
         ret = pie_unsharp(img.c_red,

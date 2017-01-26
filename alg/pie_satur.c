@@ -14,6 +14,9 @@
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <math.h>
 #include <assert.h>
 
@@ -41,6 +44,16 @@ void pie_alg_satur(float* restrict r,
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
 #endif
+#ifdef _HAS_ALTIVEC
+        vector float prv = (vector float){P_R, P_R, P_R, P_R};
+        vector float pgv = (vector float){P_G, P_G, P_G, P_G};
+        vector float pbv = (vector float){P_B, P_B, P_B, P_B};
+        vector float vv = (vector float){v, v, v, v};
+        vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
+        vector float halfv = (vector float){0.5f, 0.5f, 0.5f, 0.5f};
+        vector float three_halfv = (vector float){1.5f, 1.5f, 1.5f, 1.5f};
+#endif
         
 #ifdef _HAS_SIMD
 	int rem = w % 4;
@@ -55,7 +68,7 @@ void pie_alg_satur(float* restrict r,
 #ifdef _HAS_SIMD        
 # ifdef _HAS_SSE
                 
-                for (int x = 0; x < stop; x+=4)
+                for (int x = 0; x < stop; x += 4)
                 {
                         __m128 rv;
                         __m128 gv;
@@ -120,7 +133,81 @@ void pie_alg_satur(float* restrict r,
                 }
 
 # else
-#  error ALTIVEC not supported yet
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        vector float rv;
+                        vector float gv;
+                        vector float bv;
+                        vector float rsv;
+                        vector float gsv;
+                        vector float bsv;
+                        vector float accv;
+                        vector float sqv;
+                        vector float dv;
+                        vector int bool cmpv;
+                        vector float input_halfv;
+                        vector float prodv;                        
+                        int p = sizeof(float) * (y * s + x);
+
+                        rv = vec_ld(p, r);
+                        gv = vec_ld(p, g);
+                        bv = vec_ld(p, b);                        
+                        
+                        rsv = vec_madd(rv, rv, zerov);
+                        gsv = vec_madd(gv, gv, zerov);
+                        bsv = vec_madd(bv, bv, zerov);
+
+                        accv = vec_madd(rsv, prv, zerov);
+                        accv = vec_madd(gsv, pgv, accv);
+                        accv = vec_madd(bsv, pbv, accv);
+
+                        /* Square root apprixmation. Relative error
+                           should be less than 0.0001 */
+                        input_halfv = vec_madd(halfv, accv, zerov);
+                        accv        = vec_rsqrte(accv);
+
+                        /* One iteration of  Netwon Raphson */
+                        /* x = approximation of rqrt(input)*/
+                        /* output = x * (threehalfs - (input / 2) * x * x); */
+                        prodv = vec_madd(accv, accv, zerov);
+                        prodv = vec_madd(input_halfv, prodv, zerov);
+                        prodv = vec_sub(three_halfv, prodv);
+                        prodv = vec_madd(accv, prodv, zerov);
+                        /* Invert to get sqrt approx */
+                        sqv    = vec_re(prodv);
+
+                        dv = vec_sub(rv, sqv);
+                        accv = vec_madd(dv, vv, sqv);
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(accv, onev);
+                        accv = vec_sel(accv, onev, cmpv);
+                        /* Min 0.0 */
+                        cmpv = vec_cmplt(accv, zerov);
+                        accv = vec_sel(accv, zerov, cmpv);
+                        vec_st(accv, p, r);
+
+                        dv   = vec_sub(gv, sqv);
+                        accv = vec_madd(dv, vv, sqv);
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(accv, onev);
+                        accv = vec_sel(accv, onev, cmpv);
+                        /* Min 0.0 */
+                        cmpv = vec_cmplt(accv, zerov);
+                        accv = vec_sel(accv, zerov, cmpv);
+                        vec_st(accv, p, g);
+
+                        dv   = vec_sub(bv, sqv);
+                        accv = vec_madd(dv, vv, sqv);
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(accv, onev);
+                        accv = vec_sel(accv, onev, cmpv);
+                        /* Min 0.0 */
+                        cmpv = vec_cmplt(accv, zerov);
+                        accv = vec_sel(accv, zerov, cmpv);
+                        vec_st(accv, p, b);                        
+                }
+                
 # endif
 #endif
                 

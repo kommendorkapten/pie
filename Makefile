@@ -15,7 +15,7 @@ endif
 
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
-  CFLAGS += -W -Wall -pedantic -std=c99 -O2
+  CFLAGS += -W -Wall -pedantic -std=c99 -O3
 endif
 
 # Configure based on OS/Compiler
@@ -34,7 +34,12 @@ else ifeq ($(OS), FreeBSD)
   # libpng and libjpeg is found in /usr/local/lib when installed via ports
   LFLAGS := -L/usr/local/lib $(LFLAGS) -lpthread
   ifeq ($(CC), gcc)
-    CFLAGS += -mtune=$(ISA) -mcpu=$(ISA)
+    ifeq ($(ISA), powerpc64)
+      # Assume ppc 970
+      CFLAGS += -mtune=970 -mcpu=970 -maltivec
+    else
+      CFLAGS += mtune=$(ISA) -mcpu=$(ISA)
+    endif
   endif
 else ifeq ($(OS), Darwin)
   CFLAGS  += -march=native -D_USE_OPEN_SSL
@@ -46,13 +51,13 @@ endif
 ifeq ($(ISA), i386)
 CFLAGS += -D_HAS_SIMD -D_HAS_SSE
 else ifeq ($(ISA), powerpc64)
-CFLAGS += -D_HAS_SIMD_NOT_YET -D_HAS_ALTIVEC 
+CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
 else ifeq ($(ISA), sparc)
 else
 endif
 
 ifeq ($(DEBUG), 1)
-  CFLAGS += -g -DDEBUG=2
+  CFLAGS += -g -DDEBUG=1
 else
   CFLAGS += -DNDEBUG
 endif

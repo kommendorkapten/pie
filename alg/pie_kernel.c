@@ -450,8 +450,8 @@ void pie_kernel5x5_apply(float* c,
                         /* add k->v[24] */
                         buf[y * s + x] =
                                 f1[0] + k->v[24] * c[(y + 2) * s + x + 2];
-# else
-# error ALTIVEC not yet supported
+# elif _HAS_ALTIVEC
+# error ALTIVEC not yet supported 
 # endif
 # else
                         buf[y * s + x] = 
