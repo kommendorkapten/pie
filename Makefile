@@ -22,8 +22,12 @@ endif
 ifeq ($(OS), SunOS)
   ifeq ($(CC), c99)
     CFLAGS += -v -mt -fast # use -fast and compare to only -xO5
+    # Architecture specifications here does not really matter as -fast sets
+    # architecture to native.
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
+    else ifeq ($(ISA), sparc)
+      CFLAGS += -xarch=sparcvis2
     endif
   else ifeq ($(CC), gcc)
     ifeq ($(ISA), i386)
@@ -36,7 +40,7 @@ else ifeq ($(OS), FreeBSD)
   ifeq ($(CC), gcc)
     ifeq ($(ISA), powerpc64)
       # Assume ppc 970
-      CFLAGS += -mtune=970 -mcpu=970 -maltivec
+      CFLAGS += -mtune=970 -mcpu=970 -maltivec -ffast-math -mfused-madd
     else
       CFLAGS += mtune=$(ISA) -mcpu=$(ISA)
     endif
