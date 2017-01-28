@@ -11,6 +11,9 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <math.h>
 #include <assert.h>
 
@@ -49,7 +52,36 @@ void pie_alg_black(float* restrict r,
 
         for (int y = 0; y < h; y++)
         {
-                for (int x = 0; x < w; x++)
+#ifdef __powerpc__
+                int rem = w % 4;
+                int stop = w - rem;
+#else
+                int stop = 0;
+#endif
+
+#ifdef __powerpc__
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * s + x;
+
+                        r[p]   = pie_alg_black_val(r[p], v, d, k);
+                        r[p+1] = pie_alg_black_val(r[p+1], v, d, k);
+                        r[p+2] = pie_alg_black_val(r[p+2], v, d, k);
+                        r[p+3] = pie_alg_black_val(r[p+3], v, d, k);
+
+                        g[p]   = pie_alg_black_val(g[p], v, d, k);
+                        g[p+1] = pie_alg_black_val(g[p+1], v, d, k);
+                        g[p+2] = pie_alg_black_val(g[p+2], v, d, k);
+                        g[p+3] = pie_alg_black_val(g[p+3], v, d, k);
+
+                        b[p]   = pie_alg_black_val(b[p], v, d, k);
+                        b[p+1] = pie_alg_black_val(b[p+1], v, d, k);
+                        b[p+2] = pie_alg_black_val(b[p+2], v, d, k);
+                        b[p+3] = pie_alg_black_val(b[p+3], v, d, k);
+                }
+#endif
+
+                for (int x = stop; x < w; x++)
                 {
                         int p = y * s + x;
 

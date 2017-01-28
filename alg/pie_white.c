@@ -11,6 +11,9 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <math.h>
 #include <assert.h>
 
@@ -47,7 +50,51 @@ void pie_alg_white(float* restrict r,
 
         for (int y = 0; y < h; y++)
         {
-                for (int x = 0; x < w; x++)
+                
+#ifdef _HAS_ALTIVEC
+                int rem = w % 4;
+                int stop = w - rem;
+                vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
+                vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
+                vector float kv = (vector float){k, k, k, k};
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = sizeof(float) * (y * s + x);
+                        vector float rv;
+                        vector float gv;
+                        vector float bv;
+                        vector int bool cmpv;
+
+                        rv = vec_ld(p, r);
+                        gv = vec_ld(p, g);
+                        bv = vec_ld(p, b);
+
+                        rv = vec_madd(rv, kv, zerov);
+                        gv = vec_madd(gv, kv, zerov);
+                        bv = vec_madd(bv, kv, zerov);                        
+                        
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(rv, onev);
+                        rv = vec_sel(rv, onev, cmpv);
+
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(gv, onev);
+                        gv = vec_sel(gv, onev, cmpv);
+
+                        /* Max 1.0 */
+                        cmpv = vec_cmpgt(bv, onev);
+                        bv = vec_sel(bv, onev, cmpv);
+        
+                        vec_st(rv, p, r);
+                        vec_st(gv, p, g);
+                        vec_st(bv, p, b);                        
+                }
+#else
+                int stop = 0;
+#endif
+
+                for (int x = stop; x < w; x++)
                 {
                         int p = y * s + x;
 
