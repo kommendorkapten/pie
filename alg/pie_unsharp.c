@@ -55,7 +55,7 @@ int pie_unsharp(float* restrict r,
         float* buf;
         float* blur;
         /* Dimension of kernel should be ceil(6*sigma) */
-        int sep_len = 6 * (param->radius + 0.5f);
+        int sep_len = (int)(6 * (param->radius + 0.5f));
 
         if ((sep_len & 0x1) == 0)
         {
