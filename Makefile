@@ -20,8 +20,15 @@ endif
 
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
-  ifeq ($(CC), c99)
-    CFLAGS += -v -mt -fast # use -fast and compare to only -xO5
+  ifeq ($(CC), cc)
+    CFLAGS += -std=c99 -pedantic -v -mt -fast
+    ifeq ($(ISA), i386)
+      CFLAGS += -xarch=sse4_2 
+    else ifeq ($(ISA), sparc)
+      CFLAGS += -xarch=sparcvis2
+    endif
+  else ifeq ($(CC), c99)
+    CFLAGS += -v -mt -fast
     # Architecture specifications here does not really matter as -fast sets
     # architecture to native.
     ifeq ($(ISA), i386)
@@ -61,7 +68,7 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
-  CFLAGS += -g -DDEBUG=1
+  CFLAGS += -g -DDEBUG=2
 else
   CFLAGS += -DNDEBUG
 endif
@@ -75,7 +82,7 @@ MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
             pie_unsharp.c
-ENC_SRC   = pie_json.c
+ENC_SRC   = pie_json.c pie_rgba.c
 MTH_SRC   = pie_math.c pie_catmull.c
 BM_SRC    = pie_bm.c pie_dwn_smpl.c
 SOURCES   = pie_cspace.c \

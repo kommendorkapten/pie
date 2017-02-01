@@ -20,10 +20,13 @@
 #include "../lib/chan.h"
 #include "../lib/hmap.h"
 #include "../lib/timing.h"
+#include "../encoding/pie_json.h"
+#include "../encoding/pie_rgba.h"
 #include <libwebsockets.h>
 #include <string.h>
 
 #define MAX_HEADERS 4096
+#define JSON_HIST_SIZE (10 * 1024)
 
 #ifdef __sun
 # include <note.h>
@@ -313,7 +316,7 @@ static int cb_http(struct lws* wsi,
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
         int hn = 0;
         int n;
-        int ret = 0;
+        int ret;
         
         /* Set to true if callback should attempt to keep the connection
            open. */
@@ -513,18 +516,38 @@ static int cb_img(struct lws* wsi,
 
                 if (session->tx_ready & PIE_TX_IMG)
                 {
+                        struct timing t;
                         int bw;
-
-                        bw = lws_write(wsi, 
-                                       session->img->proxy_out_rgba,
-                                       session->img->proxy_out_len, 
+                        
+                        /* Allocate output buffer */
+                        /* Outputbuffer format is x,y,rgba data.
+                         * Buffer is intented for raw copy on ws channel, 
+                         * so allocate extra space in the beginning for ws 
+                         * related data. */
+                        timing_start(&t);
+                        if (session->rgba == NULL)
+                        {
+                                session->rgba_len = (int)(session->img->proxy_out.width *
+                                                          session->img->proxy_out.height *
+                                                          4 + 2 * sizeof(uint32_t));
+                                session->rgba = malloc(session->rgba_len + LWS_PRE);
+                        }
+                        
+                        encode_rgba(session->rgba + LWS_PRE,
+                                    &session->img->proxy_out);
+                        PIE_DEBUG("Encoded proxy:         %8ldusec",
+                                  timing_dur_usec(&t));
+        
+                        bw = lws_write(wsi,
+                                       session->rgba + LWS_PRE,
+                                       session->rgba_len,
                                        LWS_WRITE_BINARY);
-                        if (bw < session->img->proxy_out_len)
+                        if (bw < session->rgba_len)
                         {
                                 PIE_ERR("[%s] ERROR write %d of %d",
                                         session->token,
                                         bw,
-                                        session->img->proxy_out_len);
+                                        session->rgba_len);
                                 ret = -1;
                         }
                         session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_IMG);
@@ -589,21 +612,33 @@ static int cb_hist(struct lws* wsi,
 
                 if (session->tx_ready & PIE_TX_HIST)
                 {
+                        struct timing t;
+                        unsigned char* buf;
                         int bw;
-
+                        int json_len;
+               
+                        timing_start(&t);
+                        buf = malloc(JSON_HIST_SIZE + LWS_PRE);
+                        json_len = pie_json_enc_hist((char*)buf + LWS_PRE,
+                                                     JSON_HIST_SIZE,
+                                                     &session->img->hist);
+                        PIE_DEBUG("JSON encoded histogram: %8ldusec",
+                                  timing_dur_usec(&t));
+                        
                         bw = lws_write(wsi,
-                                       session->img->hist_json,
-                                       session->img->hist_json_len,
+                                       buf + LWS_PRE,
+                                       json_len,
                                        LWS_WRITE_TEXT);
-                        if (bw < session->img->hist_json_len)
+                        if (bw < json_len)
                         {
                                 PIE_ERR("[%s] ERROR write %d of %d",
                                         session->token,
                                         bw,
-                                        session->img->hist_json_len);
+                                        json_len);
                                 ret = -1;
                         }
                         session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_HIST);
+                        free(buf);
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
@@ -814,3 +849,4 @@ static void srv_init_session(struct pie_sess* s)
         s->img = NULL;
         s->tx_ready = 0;
 }
+

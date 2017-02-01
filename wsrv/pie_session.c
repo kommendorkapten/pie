@@ -15,6 +15,7 @@
 #include "../lib/hmap.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #ifdef _USE_OPEN_SSL
 # include <openssl/sha.h>
 #else
@@ -56,6 +57,15 @@ void pie_sess_init(struct pie_sess* s)
                 sprintf(s->token + i * 2, "%02x", sum[i]);
         }
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
+        s->rgba = NULL;
+}
+
+void pie_sess_destroy(struct pie_sess* s)
+{
+        if (s->rgba)
+        {
+                free(s->rgba);
+        }
 }
 
 struct pie_sess_mgr* pie_sess_mgr_create(void)
@@ -127,11 +137,15 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
                                (char*)s->token,
                                 elems[i].data);
 #endif      
+                        char token[PIE_SESS_TOKEN_LEN];
                         /* sessions are allocated in cb_http,
                            no references should ever be kept to
                            it except from this hmap. Free the session. */
+
+                        memcpy(token, elems[i].key, PIE_SESS_TOKEN_LEN);
+                        pie_sess_destroy((struct pie_sess*)elems[i].data);
                         free(elems[i].data);
-                        hmap_del(sm->store, elems[i].key);
+                        hmap_del(sm->store, token);
                 }
         }
         free(elems);

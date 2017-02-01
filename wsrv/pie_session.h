@@ -33,11 +33,13 @@ struct pie_sess
 {
         char token[PIE_SESS_TOKEN_LEN];
         struct pie_img_workspace* img;
+        unsigned char* rgba;
         /* Server sends commands */
         struct chan* command;
         /* Server receives responses */
         struct chan* response;
         long access_ts;
+        int rgba_len;
         /* New data can be written to client */
         unsigned char tx_ready;
 };
@@ -49,6 +51,13 @@ struct pie_sess
  * @return void.
  */
 extern void pie_sess_init(struct pie_sess*);
+
+/**
+ * Destroy a session.
+ * @param the session to destroy.
+ * @return void.
+ */
+extern void pie_sess_destroy(struct pie_sess* s);
 
 /**
  * Create a session manager.

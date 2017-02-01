@@ -18,11 +18,6 @@
 
 #define PIE_HIST_RES 256
 #define PIE_PATH_LEN 256
-#if defined(LWS_PRE)
-# define PROXY_RGBA_OFF LWS_PRE
-#else
-# define PROXY_RGBA_OFF 16
-#endif
 
 enum pie_color_type {
         PIE_COLOR_TYPE_INVALID = 0,
@@ -146,16 +141,6 @@ struct pie_img_workspace
         struct bitmap_f32rgb proxy;
         /* Downsampled and rendered proxy image */
         struct bitmap_f32rgb proxy_out;
-        /* proxy out coded as unsigned chars, in rgba format.
-           With prelude of LWS_PRE header size */
-        unsigned char* buf_proxy;
-        /* Pointer to start of image in buf */
-        unsigned char* proxy_out_rgba;
-        int proxy_out_len;
-        /* buffer to encode histogram as JSON to */
-        unsigned char* buf_hist;
-        unsigned char* hist_json;
-        int hist_json_len;
 };
 
 #endif /* __PIE_TYPES_H__ */

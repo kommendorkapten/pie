@@ -20,7 +20,6 @@
 #include "../bm/pie_bm.h"
 #include "../bm/pie_dwn_smpl.h"
 #include "../io/pie_io.h"
-#include "../encoding/pie_json.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
 #include "pie_render.h"
@@ -31,14 +30,9 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include <netinet/in.h>
-#ifdef _HAS_SSE
-# include <nmmintrin.h> /* sse 4.2 */
-#endif
 #include <note.h>
 
 #define _USE_GAMMA_CONV 0
-#define JSON_HIST_SIZE (10 * 1024)
 
 struct pie_server server;
 
@@ -85,13 +79,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg*);
  *         if message should be dropped, PIE_MSG_INVALID.
  */
 static enum pie_msg_type cb_msg_render(struct pie_msg*);
-
-/**
- * Encode the proxy_out into rgba format.
- * @param the image workspace to encode.
- * @return void
- */
-static void encode_rgba(struct pie_img_workspace*);
 
 int main(void)
 {
@@ -469,21 +456,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         pie_img_init_settings(&msg->img->settings,
                               msg->img->proxy.width,
                               msg->img->proxy.height);
-        
-        /* Allocate output buffer */
-        /* Outputbuffer format is x,y,rgba data.
-         * Buffer is intented for raw copy on ws channel, so allocate
-         * extra space in the beginning for ws related data. */
-        len = (int)(msg->img->proxy.width * msg->img->proxy.height * 4 + 2 * sizeof(uint32_t));
-        msg->img->buf_proxy = malloc(len + PROXY_RGBA_OFF);
-        msg->img->proxy_out_rgba = msg->img->buf_proxy + PROXY_RGBA_OFF;
-        msg->img->proxy_out_len = len;
-
-        /* Allocate JSON output buffer.
-         * Buffer is intented for raw copy on ws channel, so allocate
-         * extra space in the beginning for ws related data. */        
-        msg->img->buf_hist = malloc(JSON_HIST_SIZE + PROXY_RGBA_OFF);
-        msg->img->hist_json = msg->img->buf_hist + PROXY_RGBA_OFF;
 
         /* Call render */
         res = pie_img_render(&msg->img->proxy_out,
@@ -491,15 +463,10 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                              &msg->img->settings);
         assert(res == 0);
         
-        /* Encode proxy rgba */
-        encode_rgba(msg->img);
-
         /* Create histogram */
         pie_alg_hist_lum(&msg->img->hist, &msg->img->proxy_out);
         pie_alg_hist_rgb(&msg->img->hist, &msg->img->proxy_out);
-        msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
-                                                    JSON_HIST_SIZE, 
-                                                    &msg->img->hist);
+        
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
                   msg->token,
@@ -703,8 +670,6 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
          * following steps:
          * 1 create a new copy of the stored proxy.
          * 2 extract histogram data.
-         * 3 RGBA encode the proxy.
-         * 4 create json encoding of histogram.
          */
         if (status == 0)
         {
@@ -736,141 +701,8 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 PIE_DEBUG(" Created histogram:     %8ldusec",
                           timing_dur_usec(&t1));
                 
-                /* Write proxy to RGBA */
-                timing_start(&t1);
-                encode_rgba(msg->img);
-                PIE_DEBUG(" Encoded proxy:         %8ldusec",
-                          timing_dur_usec(&t1));
-                timing_start(&t1);
-                /* Create JSON for hist */
-                msg->img->hist_json_len = pie_json_enc_hist((char*)msg->img->hist_json, 
-                                                            JSON_HIST_SIZE, 
-                                                            &msg->img->hist);
-                PIE_DEBUG("JSON encoded histogram: %8ldusec",
-                          timing_dur_usec(&t1));
-
                 ret_msg = PIE_MSG_RENDER_DONE;
         }
 
         return ret_msg;
 }
-
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
-
-static void encode_rgba(struct pie_img_workspace* img)
-{
-        __m128 coeff_scale = _mm_set1_ps(255.0f);
-        unsigned char* p = img->proxy_out_rgba;
-        int stride = img->proxy_out.row_stride;
-        int rem = img->proxy_out.width % 4;
-        int stop = img->proxy_out.width - rem;
-        uint32_t w = htonl(img->proxy_out.width);
-        uint32_t h = htonl(img->proxy_out.height);
-        float or[4];
-        float og[4];
-        float ob[4];
-
-        memcpy(p, &w, sizeof(uint32_t));
-        p += sizeof(uint32_t);
-        memcpy(p, &h, sizeof(uint32_t));
-        p += sizeof(uint32_t);
-
-        for (int y = 0; y < img->proxy_out.height; y++)
-        {
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int i = y * stride + x;
-                        __m128 r = _mm_load_ps(&img->proxy_out.c_red[i]);
-                        __m128 g = _mm_load_ps(&img->proxy_out.c_green[i]);
-                        __m128 b = _mm_load_ps(&img->proxy_out.c_blue[i]);
-
-                        r = _mm_mul_ps(r, coeff_scale);
-                        g = _mm_mul_ps(g, coeff_scale);
-                        b = _mm_mul_ps(b, coeff_scale);
-
-                        _mm_store_ps(or, r);
-                        _mm_store_ps(og, g);
-                        _mm_store_ps(ob, b);
-
-                        *p++ = (unsigned char)or[0];
-                        *p++ = (unsigned char)og[0];
-                        *p++ = (unsigned char)ob[0];
-                        *p++ = 255;
-                        *p++ = (unsigned char)or[1];
-                        *p++ = (unsigned char)og[1];
-                        *p++ = (unsigned char)ob[1];
-                        *p++ = 255;
-                        *p++ = (unsigned char)or[2];
-                        *p++ = (unsigned char)og[2];
-                        *p++ = (unsigned char)ob[2];
-                        *p++ = 255;
-                        *p++ = (unsigned char)or[3];
-                        *p++ = (unsigned char)og[3];
-                        *p++ = (unsigned char)ob[3];
-                        *p++ = 255;
-                }
-
-                for (int x = stop; x < img->proxy_out.width; x++)
-                {
-                        int i = y * stride + x;
-                        unsigned char r, g, b;
-                        r = (unsigned char)(img->proxy_out.c_red[i] * 255.0f);
-                        g = (unsigned char)(img->proxy_out.c_green[i] * 255.0f);
-                        b = (unsigned char)(img->proxy_out.c_blue[i] * 255.0f);
-                        
-                        *p++ = r;
-                        *p++ = g;
-                        *p++ = b;
-                        *p++ = 255;
-                }
-        }        
-        
-}
-
-# elif _HAS_ALTIVEC
-#  error ALTIVET NOT IMPLEMENTED
-# endif
-
-#else
-
-static void encode_rgba(struct pie_img_workspace* img)
-{
-        unsigned char* p = img->proxy_out_rgba;
-        int stride = img->raw.row_stride;
-        uint32_t w = htonl(img->proxy_out.width);
-        uint32_t h = htonl(img->proxy_out.height);
-
-        memcpy(p, &w, sizeof(uint32_t));
-        p += sizeof(uint32_t);
-        memcpy(p, &h, sizeof(uint32_t));
-        p += sizeof(uint32_t);
-
-        for (int y = 0; y < img->proxy_out.height; y++)
-        {
-#if _USE_GAMMA_CONV > 0
-                /* Convert to sRGB */
-                linear_to_srgbv(img->proxy_out.c_red + y * stride, 
-                                img->proxy_out.width);
-                linear_to_srgbv(img->proxy_out.c_green + y * stride, 
-                                img->proxy_out.width);
-                linear_to_srgbv(img->proxy_out.c_blue + y * stride, 
-                                img->proxy_out.width);
-#endif
-                for (int x = 0; x < img->proxy_out.width; x++)
-                {
-                        unsigned char r, g, b;
-                        
-                        r = (unsigned char)(img->proxy_out.c_red[y * stride + x] * 255.0f);
-                        g = (unsigned char)(img->proxy_out.c_green[y * stride + x] * 255.0f);
-                        b = (unsigned char)(img->proxy_out.c_blue[y * stride + x] * 255.0f);
-                        
-                        *p++ = r;
-                        *p++ = g;
-                        *p++ = b;
-                        *p++ = 255;
-                }
-        }        
-}
-
-#endif /* _HAS_SIMD */
