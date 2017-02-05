@@ -15,46 +15,60 @@
 #ifdef _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#ifdef _HAS_ALTIVEC
+# include <altivec.h>
+#endif
 #include <netinet/in.h>
 #include <string.h>
 #include "../pie_types.h"
 
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
-
 void encode_rgba(unsigned char* restrict buf,
                  const struct bitmap_f32rgb* restrict img)
 {
-        __m128 coeff_scale = _mm_set1_ps(255.0f);
-        int rem = img->width % 4;
-        int stop = img->width - rem;
         uint32_t w = htonl(img->width);
         uint32_t h = htonl(img->height);
-        float or[4];
-        float og[4];
-        float ob[4];
 
         memcpy(buf, &w, sizeof(uint32_t));
         buf += sizeof(uint32_t);
         memcpy(buf, &h, sizeof(uint32_t));
         buf += sizeof(uint32_t);
+        
+#ifdef _HAS_SIMD
+        int rem = img->width % 4;
+        int stop = img->width - rem;
+        float or[4];
+        float og[4];
+        float ob[4];
+#else
+        int stop = 0;
+#endif
+        
+#ifdef _HAS_SSE
+        __m128 scalev = _mm_set1_ps(255.0f);
+#endif
+#ifdef _HAS_ALTIVEC
+        vector float scalev = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
+        vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
+#endif
 
         for (int y = 0; y < img->height; y++)
         {
+                
+#ifdef _HAS_SSE
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * img->row_stride + x;
-                        __m128 r = _mm_load_ps(&img->c_red[p]);
-                        __m128 g = _mm_load_ps(&img->c_green[p]);
-                        __m128 b = _mm_load_ps(&img->c_blue[p]);
+                        __m128 rv = _mm_load_ps(&img->c_red[p]);
+                        __m128 gv = _mm_load_ps(&img->c_green[p]);
+                        __m128 bv = _mm_load_ps(&img->c_blue[p]);
 
-                        r = _mm_mul_ps(r, coeff_scale);
-                        g = _mm_mul_ps(g, coeff_scale);
-                        b = _mm_mul_ps(b, coeff_scale);
+                        rv = _mm_mul_ps(rv, scalev);
+                        gv = _mm_mul_ps(gv, scalev);
+                        bv = _mm_mul_ps(bv, scalev);
 
-                        _mm_store_ps(or, r);
-                        _mm_store_ps(og, g);
-                        _mm_store_ps(ob, b);
+                        _mm_store_ps(or, rv);
+                        _mm_store_ps(og, gv);
+                        _mm_store_ps(ob, bv);
 
                         *buf++ = (unsigned char)or[0];
                         *buf++ = (unsigned char)og[0];
@@ -73,6 +87,42 @@ void encode_rgba(unsigned char* restrict buf,
                         *buf++ = (unsigned char)ob[3];
                         *buf++ = 255;
                 }
+#endif
+                
+#ifdef _HAS_ALTIVEC
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * img->row_stride + x;
+                        vector float rv = vec_ld(p, img->c_red);
+                        vector float gv = vec_ld(p, img->c_green);
+                        vector float bv = vec_ld(p, img->c_blue);
+
+                        rv = vec_madd(rv, scalev, zerov);
+                        gv = vec_madd(gv, scalev, zerov);
+                        bv = vec_madd(bv, scalev, zerov);
+
+                        vec_st(rv, 0, &or[0]);
+                        vec_st(gv, 0, &og[0]);
+                        vec_st(bv, 0, &ob[0]);
+
+                        *buf++ = (unsigned char)or[0];
+                        *buf++ = (unsigned char)og[0];
+                        *buf++ = (unsigned char)ob[0];
+                        *buf++ = 255;
+                        *buf++ = (unsigned char)or[1];
+                        *buf++ = (unsigned char)og[1];
+                        *buf++ = (unsigned char)ob[1];
+                        *buf++ = 255;
+                        *buf++ = (unsigned char)or[2];
+                        *buf++ = (unsigned char)og[2];
+                        *buf++ = (unsigned char)ob[2];
+                        *buf++ = 255;
+                        *buf++ = (unsigned char)or[3];
+                        *buf++ = (unsigned char)og[3];
+                        *buf++ = (unsigned char)ob[3];
+                        *buf++ = 255;
+                }
+#endif
 
                 for (int x = stop; x < img->width; x++)
                 {
@@ -91,51 +141,3 @@ void encode_rgba(unsigned char* restrict buf,
         }        
         
 }
-
-# elif _HAS_ALTIVEC
-#  error ALTIVET NOT IMPLEMENTED
-# endif
-
-#else
-
-void encode_rgba(unsigned char* restrict buf,
-                 const struct bitmap_f32rgb* restrict img)
-{
-        int stride = img->row_stride;
-        uint32_t w = htonl(img->width);
-        uint32_t h = htonl(img->height);
-
-        memcpy(buf, &w, sizeof(uint32_t));
-        buf += sizeof(uint32_t);
-        memcpy(buf, &h, sizeof(uint32_t));
-        buf += sizeof(uint32_t);
-
-        for (int y = 0; y < img->height; y++)
-        {
-#if _USE_GAMMA_CONV > 0
-                /* Convert to sRGB */
-                linear_to_srgbv(img->c_red + y * stride,
-                                img->width);
-                linear_to_srgbv(img->c_green + y * stride,
-                                img->width);
-                linear_to_srgbv(img->c_blue + y * stride,
-                                img->width);
-#endif
-                for (int x = 0; x < img->width; x++)
-                {
-                        int p = y * stride + x;
-                        unsigned char r, g, b;
-                        
-                        r = (unsigned char)(img->c_red[p] * 255.0f);
-                        g = (unsigned char)(img->c_green[p] * 255.0f);
-                        b = (unsigned char)(img->c_blue[p] * 255.0f);
-                        
-                        *buf++ = r;
-                        *buf++ = g;
-                        *buf++ = b;
-                        *buf++ = 255;
-                }
-        }        
-}
-
-#endif /* _HAS_SIMD */

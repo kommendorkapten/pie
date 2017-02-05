@@ -18,6 +18,9 @@ struct bitmap_f32rgb;
 
 /**
  * Encode the proxy_out into rgba format.
+ * Rgba format is w, h, rgba, rgba etc.
+ * w and h are 32 uint, in network order.
+ * Min size of buffer is 8b + w * h * 4b.
  * @param buffer to encode to.
  * @param the bitmap to encode.
  * @return void
