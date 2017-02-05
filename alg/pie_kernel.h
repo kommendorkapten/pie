@@ -36,9 +36,9 @@ struct pie_kernel5x5
  * @param row stride
  * @return void
  */
-extern void pie_kernel3x3_apply(float*,
+extern void pie_kernel3x3_apply(float* restrict,
                                 struct pie_kernel3x3*,
-                                float*,
+                                float* restrict,
                                 int,
                                 int,
                                 int);
@@ -53,9 +53,9 @@ extern void pie_kernel3x3_apply(float*,
  * @param row stride
  * @return void
  */
-extern void pie_kernel5x5_apply(float*,
+extern void pie_kernel5x5_apply(float* restrict,
                                 struct pie_kernel5x5*,
-                                float*,
+                                float* restrict,
                                 int,
                                 int,
                                 int);
@@ -71,10 +71,10 @@ extern void pie_kernel5x5_apply(float*,
  * @param row stride
  * @return void
  */
-extern void pie_kernel_sep_apply(float*,
-                                 float*,
+extern void pie_kernel_sep_apply(float* restrict,
+                                 float* restrict,
                                  int,
-                                 float*,
+                                 float* restrict,
                                  int,
                                  int,
                                  int);

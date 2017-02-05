@@ -7,6 +7,13 @@ ISA     = $(shell uname -p)
 DEBUG   = 1
 LCRYPTO = -lmd
 
+# -ftree-loop-linear MAY introduce bugs.
+PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
+           -malign-natural -ffast-math -fstrict-aliasing \
+           -funroll-loops -ftree-loop-linear \
+           -mcpu=970 -mtune=970 -mpowerpc64 -mpowerpc-gpopt -fgcse-sm \
+           -mfused-madd -maltivec
+
 # Default to c99 on Solaris
 ifeq ($(OS), SunOS)
   CC = c99
@@ -47,22 +54,29 @@ else ifeq ($(OS), FreeBSD)
   ifeq ($(CC), gcc)
     ifeq ($(ISA), powerpc64)
       # Assume ppc 970
-      CFLAGS += -mtune=970 -mcpu=970 -maltivec -ffast-math -mfused-madd
+      CFLAGS += -mcpu=970 -mtune=970 -mpowerpc64 -mpowerpc-gpopt -maltivec
+      CFLAGS += -ffast-math -fgcse-sm 
     else
       CFLAGS += mtune=$(ISA) -mcpu=$(ISA)
     endif
   endif
 else ifeq ($(OS), Darwin)
-  CFLAGS  += -march=native -D_USE_OPEN_SSL
-  LCRYPTO = -lcrypto
-  LFLAGS  += -L/usr/local/lib
+  ifeq ($(ISA), powerpc)
+    CFLAGS  += -fast
+  else
+    CFLAGS  += -march=native -D_USE_OPEN_SSL
+    LCRYPTO = -lcrypto
+    LFLAGS  += -L/usr/local/lib
+  endif
 endif
 
 # Configuration based on ISA
 ifeq ($(ISA), i386)
-CFLAGS += -D_HAS_SIMD -D_HAS_SSE
+  CFLAGS += -D_HAS_SIMD -D_HAS_SSE
+else ifeq ($(ISA), powerpc)
+  CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC
 else ifeq ($(ISA), powerpc64)
-CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
+  CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
 else ifeq ($(ISA), sparc)
 else
 endif

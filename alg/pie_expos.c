@@ -185,17 +185,27 @@ void pie_alg_expos(float* restrict r,
                         r[p+1] = lut[(int)(r[p+1] * scale)];
                         r[p+2] = lut[(int)(r[p+2] * scale)];
                         r[p+3] = lut[(int)(r[p+3] * scale)];
+                }
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * stride + x;
                         
                         g[p]   = lut[(int)(g[p] * scale)];
                         g[p+1] = lut[(int)(g[p+1] * scale)];
                         g[p+2] = lut[(int)(g[p+2] * scale)];
                         g[p+3] = lut[(int)(g[p+3] * scale)];
+                }
 
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * stride + x;
+                        
                         b[p]   = lut[(int)(b[p] * scale)];
                         b[p+1] = lut[(int)(b[p+1] * scale)];
                         b[p+2] = lut[(int)(b[p+2] * scale)];
                         b[p+3] = lut[(int)(b[p+3] * scale)];
-                }
+                }                        
 #endif
                 for (int x = stop; x < width; x++)
                 {

@@ -18,9 +18,9 @@
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 
-void pie_kernel3x3_apply(float* c,
+void pie_kernel3x3_apply(float* restrict c,
                          struct pie_kernel3x3* k,
-                         float* buf,
+                         float* restrict buf,
                          int w,
                          int h,
                          int s)
@@ -145,9 +145,9 @@ void pie_kernel3x3_apply(float* c,
         memcpy(c, buf, h * s * sizeof(float));
 }
 
-void pie_kernel5x5_apply(float* c,
+void pie_kernel5x5_apply(float* restrict c,
                          struct pie_kernel5x5* k,
-                         float* buf,
+                         float* restrict buf,
                          int w,
                          int h,
                          int s)
@@ -605,9 +605,9 @@ void pie_kernel5x5_apply(float* c,
 
 #if 0
 /* Generic kernel a x a */
-void pie_kernel5x5_apply(float* c,
+void pie_kernel5x5_apply(float* restrict c,
                          struct pie_kernel5x5* k,
-                         float* buf,
+                         float* restrict buf,
                          int w,
                          int h,
                          int s)
@@ -656,10 +656,10 @@ void pie_kernel5x5_apply(float* c,
 }
 #endif
 
-void pie_kernel_sep_apply(float* c,
-                          float* k,
+void pie_kernel_sep_apply(float* restrict c,
+                          float* restrict k,
                           int len,
-                          float* buf,
+                          float* restrict buf,
                           int w,
                           int h,
                           int s)
@@ -689,7 +689,24 @@ void pie_kernel_sep_apply(float* c,
                         /* 0 <= p <= w - 1 */
                         int rem = (stop2 - stop1) % 4;
                         int par_stop = stop2 - rem;
+
+#ifdef __powerpc__
+                        float sum1 = 0.0f;
+                        float sum2 = 0.0f;
+                        float sum3 = 0.0f;
+                        float sum4 = 0.0f;
                         
+                        for (int i = stop1; i < par_stop; )
+                        {
+                                int p = x + i - half;
+
+                                sum1 += c[y * s + p++] * k[i++];
+                                sum2 += c[y * s + p++] * k[i++];
+                                sum3 += c[y * s + p++] * k[i++];
+                                sum4 += c[y * s + p] * k[i++];
+                        }
+                        sum += sum1 + sum2 + sum3 + sum4;
+#else
                         for (int i = stop1; i < par_stop; )
                         {
                                 int p = x + i - half;
@@ -698,8 +715,8 @@ void pie_kernel_sep_apply(float* c,
                                 sum += c[y * s + p++] * k[i++];
                                 sum += c[y * s + p++] * k[i++];
                                 sum += c[y * s + p] * k[i++];
-                                        
                         }
+#endif
                         for (int i = par_stop; i < stop2; i++)
                         {
                                 int p = x + i - half;
@@ -742,7 +759,23 @@ void pie_kernel_sep_apply(float* c,
                         /* 0 <= p <= h - 1 */
                         int rem = (stop2 - stop1) % 4;
                         int par_stop = stop2 - rem;
+#ifdef __powerpc__
+                        float sum1 = 0.0f;
+                        float sum2 = 0.0f;
+                        float sum3 = 0.0f;
+                        float sum4 = 0.0f;
+                        
+                        for (int i = stop1; i < par_stop; )
+                        {
+                                int p = y + i - half;
 
+                                sum1 += buf[p++ * s + x] * k[i++];
+                                sum2 += buf[p++ * s + x] * k[i++];
+                                sum3 += buf[p++ * s + x] * k[i++];
+                                sum4 += buf[p * s + x] * k[i++];
+                        }
+                        sum += sum1 + sum2 + sum3 + sum4;
+#else
                         for (int i = stop1; i < par_stop; )
                         {
                                 int p = y + i - half;
@@ -752,7 +785,8 @@ void pie_kernel_sep_apply(float* c,
                                 sum += buf[p++ * s + x] * k[i++];
                                 sum += buf[p * s + x] * k[i++];
                         }
-                        
+#endif
+
                         for (int i = par_stop; i < stop2; i++)
                         {
                                 int p = y + i - half;

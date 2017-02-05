@@ -68,11 +68,21 @@ void pie_alg_black(float* restrict r,
                         r[p+1] = pie_alg_black_val(r[p+1], v, d, k);
                         r[p+2] = pie_alg_black_val(r[p+2], v, d, k);
                         r[p+3] = pie_alg_black_val(r[p+3], v, d, k);
+                }
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * s + x;
 
                         g[p]   = pie_alg_black_val(g[p], v, d, k);
                         g[p+1] = pie_alg_black_val(g[p+1], v, d, k);
                         g[p+2] = pie_alg_black_val(g[p+2], v, d, k);
                         g[p+3] = pie_alg_black_val(g[p+3], v, d, k);
+                }
+
+                for (int x = 0; x < stop; x += 4)
+                {
+                        int p = y * s + x;
 
                         b[p]   = pie_alg_black_val(b[p], v, d, k);
                         b[p+1] = pie_alg_black_val(b[p+1], v, d, k);
