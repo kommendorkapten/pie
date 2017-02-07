@@ -329,7 +329,35 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         }
         else if (strcmp(t, "VIBRA") == 0)
         {
-                printf("parse VIBRA\n");                
+                /* VIBRA {val} 
+                   val = [-100, 100] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }          
+
+                char* p;
+                long v = strtol(t, &p, 10);
+                        
+                if (t != p && v >= -100 && v <= 100)
+                {
+                        msg->type = PIE_MSG_SET_VIBRANCE;
+                        msg->f1 = v/ 100.f;
+                        PIE_TRACE("[%s] Vibrance: %f",
+                                  msg->token,
+                                  msg->f1);
+                }
+                else
+                {
+                        PIE_WARN("[%s] Invalid vibrance: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
         }
         else if (strcmp(t, "SATUR") == 0)
         {

@@ -600,10 +600,20 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 break;
         case PIE_MSG_SET_VIBRANCE:
-                PIE_WARN("[%s] Not implemented yet %d.",
-                         msg->token,
-                         (int)msg->type);
-                status = -1;
+                if (msg->f1 < -1.0f || msg->f1 > 1.0f)
+                {
+                        PIE_WARN("[%s] invalid vibrance: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;                        
+                }
+                else
+                {
+                        msg->img->settings.vibrance = msg->f1;
+                        PIE_TRACE("[%s] Set vibrance: %f.",
+                                  msg->token,
+                                  msg->img->settings.vibrance);
+                }
                 break;
         case PIE_MSG_SET_SATURATION:
                 if (msg->f1 < 0.0f || msg->f1 > 2.0f)

@@ -22,7 +22,7 @@ endif
 
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
-  CFLAGS += -W -Wall -pedantic -std=c99 -O3
+  CFLAGS += -Wextra -Wall -Wconversion -pedantic -std=c99 -O3
 endif
 
 # Configure based on OS/Compiler
@@ -95,7 +95,7 @@ EXE_SRC   = pie_render.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
-            pie_unsharp.c
+            pie_unsharp.c pie_vibra.c
 ENC_SRC   = pie_json.c pie_rgba.c
 MTH_SRC   = pie_math.c pie_catmull.c
 BM_SRC    = pie_bm.c pie_dwn_smpl.c
