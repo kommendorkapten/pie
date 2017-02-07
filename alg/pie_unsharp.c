@@ -55,19 +55,19 @@ int pie_unsharp(float* restrict r,
         float* buf;
         float* blur;
         /* Dimension of kernel should be ceil(6*sigma) */
-        int sep_len = (int)(6 * (param->radius + 0.5f));
+        int sep_len = (int)((6.0f * param->radius) + 0.5f);
 
         if ((sep_len & 0x1) == 0)
         {
                 /* Always use an odd number for kernel dimension */
                 sep_len++;
         }
-        
+
         if (sep_len > MAX_SEP_LEN)
         {
                 sep_len = MAX_SEP_LEN;
         }
-        
+
         size = s * h * sizeof(float);
         buf = malloc(size);
         if (buf == NULL)
@@ -82,6 +82,8 @@ int pie_unsharp(float* restrict r,
         }
         /* Create a separable gauss kernel */
         pie_kernel_sep_gauss(kernel, sep_len, param->radius * param->radius);
+        /* for (int i = 0; i < sep_len; i++) */
+        /*         printf("%d: %f\n", i, kernel[i]); */
 
         /* Red channel */
         memcpy(blur, r, size);
