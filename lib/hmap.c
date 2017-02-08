@@ -163,7 +163,7 @@ void hmap_set(struct hmap* h, void* key, void* data)
         {
                 float lfactor;
                 h->size++;
-                lfactor = ((float)h->size) / h->cap;
+                lfactor = ((float)h->size) / (float)h->cap;
 
                 if (lfactor > h->lfactor)
                 {

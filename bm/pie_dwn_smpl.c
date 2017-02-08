@@ -55,28 +55,28 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
                         // Both are provided, chose the smallest.
                         // Start with height.
                         new_h = max_h;
-                        if ((int)(new_h * ratio) <= max_w)
+                        if ((int)((float)new_h * ratio) <= max_w)
                         {
                                 // new width fits inside provided box.
-                                new_w = (int)(new_h * ratio);
+                                new_w = (int)((float)new_h * ratio);
                         }
                         else
                         {
                                 // New width is "tighter"
                                 new_w = max_w;
-                                new_h = (int)(new_w / ratio);
+                                new_h = (int)((float)new_w / ratio);
                         }
                 }
                 else
                 {
                         new_w = max_w;
-                        new_h = (int)(new_w / ratio);
+                        new_h = (int)((float)new_w / ratio);
                 }
         }
         else
         {
                 new_h = max_h;
-                new_w = (int)(new_h * ratio);
+                new_w = (int)((float)new_h * ratio);
         }
 
         dst->width = new_w;
@@ -90,10 +90,10 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
         
         PIE_DEBUG("Downsample from (%d, %d) to (%d, %d)",
                   src->width, src->height, dst->width, dst->height);
-        step = 1.0f/(dst->width / (float)src->width);
+        step = 1.0f/((float)dst->width / (float)src->width);
         PIE_DEBUG("Scaling x: %f, y: %f",
-                  dst->width / (float)src->width,
-                  dst->height / (float)src->height);
+                  (float)dst->width / (float)src->width,
+                  (float)dst->height / (float)src->height);
         PIE_DEBUG("Step is %f", step);
         radius = (int)(step + 1.0f);
 
@@ -116,7 +116,7 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
 #endif
         for (int y = 0; y < dst->height; y++)
         {
-                int sy = (int)(y * step);
+                int sy = (int)((float)y * step);
 
                 if (sy >= src->height)
                 {
@@ -125,7 +125,7 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
                 
                 for (int x = 0; x < dst->width; x++)
                 {
-                        int sx = (int)(x * step);
+                        int sx = (int)((float)x * step);
 
                         if (sx >= src->width)
                         {

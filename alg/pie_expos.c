@@ -160,7 +160,7 @@ void pie_alg_expos(float* restrict r,
 
                 ret = pie_alg_curve_get(&out,
                                         &c[0],
-                                        i / scale,
+                                        (float)i / scale,
                                         LUT_SIZE);
                 assert(ret == 0);
                 lut[i] = out;

@@ -18,25 +18,25 @@ int main(void)
         p[1].y = 0.0f;
         p[2].x = 0.55f;
         p[2].y = 0.75f;
-        p[3].x = 1.005;
-        p[3].y = 1.005;
+        p[3].x = 1.005f;
+        p[3].y = 1.005f;
         p[4].x = 2.0f;
         p[4].y = 1.2f;
 
         /* test */
-        pie_alg_expos_curve(p, 0.0);        
+        pie_alg_expos_curve(p, 0.0f);        
         pie_catm_rom_chain(o, p, 5, NUM_P);
 
 #if 1
         int last = 0;
         for (int i = 0; i < 2 * NUM_P; i++)
         {
-                printf("%f %f %3d %3d\n", o[i].x, o[i].y, (int)(o[i].x*255.0), (int)(o[i].y * 255));
-                if ((last - (int)(o[i].x*255.0)) != -1)
+                printf("%f %f %3d %3d\n", o[i].x, o[i].y, (int)(o[i].x*255.0f), (int)(o[i].y * 255));
+                if ((last - (int)(o[i].x*255.0f)) != -1)
                 {
                         printf("*** ***\n");
                 }
-                last = (int)(o[i].x*255.0);
+                last = (int)(o[i].x*255.0f);
         }
 #endif
 
@@ -63,7 +63,7 @@ int main(void)
         }
 #endif
 
-        pie_alg_expos_curve(p, -0.1);
+        pie_alg_expos_curve(p, -0.1f);
         for (int i = 0; i < 5; i++)
         {
                 printf("%f %f\n", p[i].x, p[i].y);

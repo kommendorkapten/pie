@@ -17,7 +17,7 @@ int main(int argc, char** argv)
         struct pie_histogram hist;
         char* out_name = "out.jpg";
         float* buf;
-        unsigned long dur;
+        suseconds_t dur;
         int ret;
 
         if (argc != 2)

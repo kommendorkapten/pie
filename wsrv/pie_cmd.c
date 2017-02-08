@@ -122,7 +122,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_CONTRAST;
-                        msg->f1 = (v + 100)/ 100.f;
+                        msg->f1 = ((float)v + 100)/ 100.f;
                         PIE_TRACE("[%s] Contrast: %f", 
                                   msg->token,
                                   msg->f1);
@@ -154,7 +154,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -50 && v <= 50)
                 {
                         msg->type = PIE_MSG_SET_ESPOSURE;
-                        msg->f1 = v/10.0f;
+                        msg->f1 = (float)v / 10.0f;
                         PIE_TRACE("[%s] Exposure: %f", 
                                   msg->token,
                                   msg->f1);
@@ -186,7 +186,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_HIGHL;
-                        msg->f1 = v / 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_TRACE("[%s] Highlights: %f", 
                                   msg->token,
                                   msg->f1);
@@ -218,7 +218,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_SHADOW;
-                        msg->f1 = v / 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_TRACE("[%s] Shadow: %f", 
                                   msg->token,
                                   msg->f1);
@@ -250,7 +250,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_WHITE;
-                        msg->f1 = v / 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_TRACE("[%s] White: %f", 
                                   msg->token,
                                   msg->f1);
@@ -282,7 +282,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_BLACK;
-                        msg->f1 = v / 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_DEBUG("[%s] Black: %f", 
                                   msg->token,
                                   msg->f1);
@@ -314,7 +314,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_CLARITY;
-                        msg->f1 = v / 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_TRACE("[%s] Clarity: %f", 
                                   msg->token,
                                   msg->f1);
@@ -346,7 +346,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_VIBRANCE;
-                        msg->f1 = v/ 100.f;
+                        msg->f1 = (float)v / 100.f;
                         PIE_TRACE("[%s] Vibrance: %f",
                                   msg->token,
                                   msg->f1);
@@ -378,7 +378,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 if (t != p && v >= -100 && v <= 100)
                 {
                         msg->type = PIE_MSG_SET_SATURATION;
-                        msg->f1 = (v + 100)/ 100.f;
+                        msg->f1 = (float)(v + 100)/ 100.f;
                         PIE_TRACE("[%s] Saturation: %f", 
                                   msg->token,
                                   msg->f1);
@@ -423,7 +423,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 v = strtol(t, &p, 10);
                 if (t != p && v >= 0 && v <= 300)
                 {
-                        amount = v / 100.0f;
+                        amount = (float)v / 100.0f;
                 }
                 else
                 {
@@ -444,7 +444,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 v = strtol(t, &p, 10);
                 if (t != p && v >= 1 && v <= 100)
                 {
-                        radius = v / 10.0f;
+                        radius = (float)v / 10.0f;
                 }
                 else
                 {

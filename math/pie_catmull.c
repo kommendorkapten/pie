@@ -26,7 +26,7 @@ void pie_catm_rom(struct pie_point_2d* out,
         float t1 = pie_cm_tj(t0, &p[0], &p[1]);
         float t2 = pie_cm_tj(t1, &p[1], &p[2]);
         float t3 = pie_cm_tj(t2, &p[2], &p[3]);
-        float step = (t2 - t1) / num_p;
+        float step = (t2 - t1) / (float)num_p;
         float t = t1;
 
         for (int i = 0; i < num_p; i++)

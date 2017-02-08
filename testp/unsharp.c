@@ -12,11 +12,11 @@ int main(int argc, char** argv)
         struct bitmap_u8rgb out;
         struct timing t;
         struct pie_unsharp_param p;
-        unsigned long dur;
+        suseconds_t dur;
         
         //p.radius = 50.0f;
         p.radius = 1.0f;
-        p.amount = 0.85;    /* 0.3 to 0.7 is suitable values */
+        p.amount = 0.85f;    /* 0.3 to 0.7 is suitable values */
         p.threshold = 4.0f; /* typical 3 to 20 */
 
         if (argc != 2)

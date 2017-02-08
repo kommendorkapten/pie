@@ -36,7 +36,7 @@ void pie_img_init_settings(struct pie_img_settings* s, int w, int h)
         s->white = 0.0f;
         s->black = 0.0f;
         s->clarity.amount = 0.0f;
-        s->clarity.radius = m * PIE_CLARITY_SCALE;
+        s->clarity.radius = (float)m * PIE_CLARITY_SCALE;
         s->clarity.threshold = 2.0f;        
         s->vibrance = 0.0f;
         s->saturation = 1.0f;

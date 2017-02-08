@@ -28,7 +28,7 @@ int main(void)
                 for (int x = 0; x < img.width; x++)
                 {
                         int p = y * img.row_stride + x;
-                        float c = x / (4 * 255.0);
+                        float c = (float)x / (4.0f * 255.0f);
 
                         img.c_red[p] = c;
                         img.c_green[p] = c;

@@ -23,7 +23,7 @@ float pie_gauss(float dx, float var)
         float c2;
 
         c1 = expf(- (numerator / denominator));
-        c2 = sqrtf(2 * M_PI * var);
+        c2 = sqrtf(2.0f * (float)M_PI * var);
 
         ret = c1 / c2;
 
@@ -39,7 +39,7 @@ float pie_gauss_2d(float dx, float dy, float var)
         float c2;
 
         c1 = expf(- (numerator / denominator));
-        c2 = (2 * M_PI * var);
+        c2 = (2.0f * (float)M_PI * var);
 
         ret = c1 / c2;
 
@@ -51,14 +51,14 @@ void pie_gauss_matrix(float* m,
                       float var)
 {
         float sum = 0;
-        float delta = l / 2;
+        float delta = (float)l / 2;
 
         for (size_t y = 0; y < l; y++)
         {
                 for (size_t x = 0; x < l; x++)
                 {
-                        float dx = (float)(x - delta);
-                        float dy = (float)(y - delta);
+                        float dx = (float)((float)x - delta);
+                        float dy = (float)((float)y - delta);
 
                         m[y * l + x] = pie_gauss_2d(dx, dy, var);
                         sum += m[y * l + x];

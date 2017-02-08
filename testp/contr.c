@@ -11,7 +11,7 @@ int main(int argc, char** argv)
         struct bitmap_f32rgb img;
         struct bitmap_u8rgb out;
         struct timing t;
-        unsigned long dur;
+        suseconds_t dur;
         float amount = 1.0f;
 
         if (argc != 2)

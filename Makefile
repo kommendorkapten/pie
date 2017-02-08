@@ -22,13 +22,14 @@ endif
 
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
-  CFLAGS += -Wextra -Wall -Wconversion -pedantic -std=c99 -O3
+  CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
+  CFLAGS += -Wextra -Wall -Wconversion -Wno-sign-conversion -Wstrict-aliasing
 endif
 
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), cc)
-    CFLAGS += -std=c99 -pedantic -v -mt -fast
+    CFLAGS += -std=c99 -pedantic -v -mt -fast -xalias_level=std
     ifeq ($(ISA), i386)
       CFLAGS += -xarch=sse4_2 
     else ifeq ($(ISA), sparc)

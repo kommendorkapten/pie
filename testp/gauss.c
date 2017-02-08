@@ -17,7 +17,7 @@ int main(int argc, char** argv)
         struct bitmap_f32rgb img;
         struct bitmap_u8rgb out;
         struct timing t;
-        unsigned long dur;
+        suseconds_t dur;
         struct pie_kernel3x3 k3;
         struct pie_kernel5x5 k5;
         float kn[SEP_LEN];

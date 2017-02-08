@@ -120,7 +120,7 @@ void pie_alg_shado(float* restrict r,
 
                 ret = pie_alg_curve_get(&out,
                                         &c[0],
-                                        i / scale,
+                                        (float)i / scale,
                                         (len - 3) * SEGMENT_LEN);
                 assert(ret == 0);
                 lut[i] = out;
