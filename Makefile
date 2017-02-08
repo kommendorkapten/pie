@@ -36,7 +36,7 @@ ifeq ($(OS), SunOS)
       CFLAGS += -xarch=sparcvis2
     endif
   else ifeq ($(CC), c99)
-    CFLAGS += -v -mt -fast
+    CFLAGS += -v -mt -fast -xalias_level=std
     # Architecture specifications here does not really matter as -fast sets
     # architecture to native.
     ifeq ($(ISA), i386)
