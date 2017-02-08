@@ -41,21 +41,21 @@ void pie_alg_vibra(float* restrict r,
 
                         if (r[p] < max)
                         {
-                                float a = (max - r[p]) * v;
+                                float a = (max - r[p]) * pv;
 
                                 r[p] += a;
                         }
 
                         if (g[p] < max)
                         {
-                                float a = (max - g[p]) * v;
+                                float a = (max - g[p]) * pv;
 
                                 g[p] += a;
                         }
 
                         if (b[p] < max)
                         {
-                                float a = (max - b[p]) * v;
+                                float a = (max - b[p]) * pv;
 
                                 b[p] += a;
                         }
