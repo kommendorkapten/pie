@@ -21,13 +21,18 @@
 #include <netinet/in.h>
 #include <string.h>
 #include "../pie_types.h"
+#include "pie_rgba.h"
 
 void encode_rgba(unsigned char* restrict buf,
-                 const struct bitmap_f32rgb* restrict img)
+                 const struct bitmap_f32rgb* restrict img,
+                 enum pie_image_type type)
 {
         uint32_t w = htonl(img->width);
         uint32_t h = htonl(img->height);
+        uint32_t t = htonl((int)type);
 
+        memcpy(buf, &t, sizeof(uint32_t));
+        buf += sizeof(uint32_t);
         memcpy(buf, &w, sizeof(uint32_t));
         buf += sizeof(uint32_t);
         memcpy(buf, &h, sizeof(uint32_t));

@@ -321,7 +321,7 @@ static int cb_http(struct lws* wsi,
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
-        
+
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
@@ -419,10 +419,17 @@ static int cb_http(struct lws* wsi,
                                         mimetype,
                                         (char*)resp_headers,
                                         hn);
-                if (n < 0 || (n > 0 && lws_http_transaction_completed(wsi)))
+                if (n == 0)
                 {
-                        PIE_WARN("[%s] Fail to close transaction",
-                                 session->token);
+                        /* File is beeing served, but we can not 
+                           check for transaction completion yet */
+                        try_keepalive = 0;
+                }
+                if (n < 0)
+                {
+                        PIE_WARN("[%s] Fail to send file '%s'",
+                                 session->token,
+                                 url);
                         goto bailout;
                 }
                 break;
@@ -529,12 +536,13 @@ static int cb_img(struct lws* wsi,
                         {
                                 session->rgba_len = (int)(session->img->proxy_out.width *
                                                           session->img->proxy_out.height *
-                                                          4 + 2 * sizeof(uint32_t));
+                                                          4 + 3 * sizeof(uint32_t));
                                 session->rgba = malloc(session->rgba_len + LWS_PRE);
                         }
                         
                         encode_rgba(session->rgba + LWS_PRE,
-                                    &session->img->proxy_out);
+                                    &session->img->proxy_out,
+                                    PIE_IMAGE_TYPE_PRIMARY);
                         PIE_DEBUG("Encoded proxy:         %8ldusec",
                                   timing_dur_usec(&t));
         

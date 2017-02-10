@@ -19,13 +19,15 @@
 #define PIE_HIST_RES 256
 #define PIE_PATH_LEN 256
 
-enum pie_color_type {
+enum pie_color_type
+{
         PIE_COLOR_TYPE_INVALID = 0,
         PIE_COLOR_TYPE_GRAY = 1,
         PIE_COLOR_TYPE_RGB = 3
 };
 
-enum pie_color_bit_depth {
+enum pie_color_bit_depth
+{
         PIE_COLOR_INVALID  = 0,
         PIE_COLOR_8B = 8,   /* unsigned 8 bit int */
         PIE_COLOR_16B = 16, /* unsigned 16 bit int */

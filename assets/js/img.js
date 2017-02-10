@@ -51,7 +51,7 @@ var pieStateHack = {
     "image5": "selfie.jpg",
     "image6": "tofsmes.jpg",
     "image7": "siden_pie.png",
-    "image": "b_portrait_small.png"
+    "image": "b_portrait.jpg"
 };
 
 function getWsUrl(){
@@ -177,6 +177,7 @@ window.addEventListener("load", function(evt) {
             var le = true;
             var w;
             var h;
+            var t;
 
             /* Data arrives as :
                0:3 width (uint32, network order)
@@ -184,11 +185,14 @@ window.addEventListener("load", function(evt) {
                8:  rgba
 
             /* width and height are in network order */
-            w = new DataView(evt.data, 0, 4).getUint32(0, false);
-            h = new DataView(evt.data, 4, 4).getUint32(0, false);
-            var pixels = new Uint8ClampedArray(evt.data, 8);
+            t = new DataView(evt.data, 0, 4).getUint32(0, false);            
+            w = new DataView(evt.data, 4, 4).getUint32(0, false);
+            h = new DataView(evt.data, 8, 4).getUint32(0, false);
+            var pixels = new Uint8ClampedArray(evt.data, 12);
             var bm = new ImageData(pixels, w, h);
 
+            console.log("Type: " + t + " width: " + w + " height:" + h);
+            
             /* Update canvas */
             var c = document.getElementById("img_canvas");
             var x = (c.width - w) / 2;

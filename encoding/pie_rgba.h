@@ -14,6 +14,11 @@
 #ifndef __PIE_RGBA_H__
 #define __PIE_RGBA_H__
 
+enum pie_image_type
+{
+        PIE_IMAGE_TYPE_PRIMARY = 1,
+};
+
 struct bitmap_f32rgb;
 
 /**
@@ -26,6 +31,7 @@ struct bitmap_f32rgb;
  * @return void
  */
 extern void encode_rgba(unsigned char* restrict,
-                        const struct bitmap_f32rgb* restrict);
+                        const struct bitmap_f32rgb* restrict,
+                        enum pie_image_type);
 
 #endif /* __PIE_RGBA_H__ */
