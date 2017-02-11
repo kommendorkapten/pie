@@ -79,6 +79,32 @@ function getWsUrl(){
     return pcol + u[0] + "/xxx";
 }
 
+function getParameterByName(name, url) {
+    if (!url) {
+      url = window.location.href;
+    }
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function wsLoadImage(ws) {
+    var img = getParameterByName('img');    
+    var c = document.getElementById("img_canvas");
+
+    if (!img) {
+        return false;
+    }
+    
+    ws.pieStartTs = Date.now();
+    ws.send("LOAD " + img + " " + c.width + " " + c.height);
+
+    return true;
+}
+
 function pieInitEdit() {
     var w = window.innerWidth;
     var c = document.getElementById("img_canvas");
@@ -102,7 +128,6 @@ function pieInitEdit() {
 
     c.width = w;
     c.height = h;
-    
 }
 
 window.onresize = function(evt) {
@@ -127,6 +152,8 @@ window.addEventListener("load", function(evt) {
     var wsCmd;
     var wsHist;
     var wsImg;
+    /* Sync in a hackish way */
+    var wsSync = 3;
 
     pieInitEdit();
 
@@ -147,8 +174,31 @@ window.addEventListener("load", function(evt) {
     wsImg.binaryType = "arraybuffer";
 
     wsCmd.onopen = function(evt) {
-        console.log("Opening websocket...");
+        console.log("Opening command websocket..." + wsSync);
+        wsSync = wsSync - 1;
+
+        if (wsSync == 0) {
+            wsLoadImage(wsCmd);
+        }
     }
+
+    wsHist.onopen = function(evt) {
+        console.log("Opening metadata websocket..." + wsSync);
+        wsSync = wsSync - 1;
+
+        if (wsSync == 0) {
+            wsLoadImage(wsCmd);
+        }        
+    }
+
+    wsImg.onopen = function(evt) {
+        console.log("Opening image websocket..." + wsSync);
+        wsSync = wsSync - 1;        
+
+        if (wsSync == 0) {
+            wsLoadImage(wsCmd);
+        }
+    }    
 
     wsCmd.onclose = function(evt) {
         console.log("Closing websocket...");
@@ -265,18 +315,6 @@ window.addEventListener("load", function(evt) {
         histDataB.data = pb;
         histChart.update();
     }
-
-    document.getElementById("load").onclick = function(evt) {
-        if (!wsCmd) {
-            return false;
-        }
-
-        var c = document.getElementById("img_canvas");
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("LOAD " + pieStateHack.image + " " + c.width + " " + c.height);
-
-        return false;
-    };
 
     /*
      * I N P U T   S L I D E R S
