@@ -710,7 +710,19 @@ static int cb_cmd(struct lws* wsi,
                 }
                 else
                 {
-                        if (msg->type != PIE_MSG_LOAD && session->img == NULL)
+                        if (msg->type == PIE_MSG_LOAD)
+                        {
+                                /* If a new image is being reloaded, free
+                                   rgba buffer. */
+                                if (session->rgba)
+                                {
+                                        PIE_TRACE("[%s] Reset RGBA output buffer",
+                                                  session->token);
+                                        free(session->rgba);
+                                        session->rgba = NULL;
+                                }
+                        }
+                        else if (session->img == NULL)
                         {
                                 PIE_LOG("[%s] No image loaded",
                                        session->token);

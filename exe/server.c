@@ -23,6 +23,7 @@
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
 #include "pie_render.h"
+#include "pie_wrkspc_mgr.h"
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -34,13 +35,15 @@
 
 #define _USE_GAMMA_CONV 0
 
-struct pie_server server;
-
 struct config
 {
         char* lib_path;
+        int wrk_cache_size;
 };
+
 static struct config config;
+static struct pie_server server;
+static struct pie_wrkspc_mgr* wrkspc_mgr;
 
 /**
  * Signal handler.
@@ -89,12 +92,16 @@ int main(void)
         int ok;
 
         config.lib_path = "test-images";
+        config.wrk_cache_size = 10;
         server.run = 1;
         server.context_root = "assets";
         server.port = 8080;
         server.command = chan_create();
         server.response = chan_create();
 
+        wrkspc_mgr = pie_wrkspc_mgr_create(config.lib_path,
+                                           config.wrk_cache_size);
+        
         /* interrupt handler thread */
         ok = pthread_create(&thr_int,
                             NULL,
@@ -160,7 +167,8 @@ int main(void)
 cleanup:
         chan_destroy(server.command);
         chan_destroy(server.response);
-
+        pie_wrkspc_mgr_destroy(wrkspc_mgr);
+        
         return 0;
 }
 
@@ -304,7 +312,6 @@ static void* ev_loop(void* a)
  */
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
-        char buf[PIE_PATH_LEN];
         struct timing t;
         struct timing t_l;        
         int len;
@@ -316,45 +323,21 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 
         timing_start(&t_l);
         
-        /* HACK */
         if (msg->img)
         {
-                return PIE_MSG_LOAD_DONE;
+                /* Release earlier workspace */
+                pie_wrkspc_mgr_release(wrkspc_mgr, msg->img);
         }
 
-        assert(msg->img == NULL);
+        msg->img = pie_wrkspc_mgr_acquire(wrkspc_mgr, msg->buf);
 
-        msg->img = malloc(sizeof(struct pie_img_workspace));
-        memset(msg->img, 0, sizeof(struct pie_img_workspace));
-        snprintf(buf, PIE_PATH_LEN, "%s/%s", config.lib_path, msg->buf);
-        timing_start(&t);
-        
-        res = pie_io_load(&msg->img->raw, buf);
-        PIE_DEBUG("[%s] Loaded %s %ldusec",
-                  msg->token,
-                  buf,
-                  timing_dur_usec(&t));
-        if (res)
+        if (msg->img == NULL)
         {
-                PIE_ERR("[%s] Could not open '%s'",
-                        msg->token,
-                        buf);
-                free(msg->img);
                 return PIE_MSG_INVALID;
         }
+        
+        /* Init proxies */
         stride = msg->img->raw.row_stride;
-#if _USE_GAMMA_CONV > 0
-        for (int y = 0; y < msg->img->raw.height; y++)
-        {
-                srgb_to_linearv(msg->img->raw.c_red + y * stride, 
-                                msg->img->raw.width);
-                srgb_to_linearv(msg->img->raw.c_green + y * stride, 
-                                msg->img->raw.width);
-                srgb_to_linearv(msg->img->raw.c_blue + y * stride, 
-                                msg->img->raw.width);
-                                
-        }
-#endif        
         proxy_w = msg->i1;
         proxy_h = msg->i2;
         PIE_DEBUG("[%s] Request proxy [%d, %d] for image [%d, %d]",
@@ -449,9 +432,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         len = (int)(msg->img->proxy.height * msg->img->proxy.row_stride * sizeof(float));
         memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
         memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
-        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);        
+        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);
         
-        strncpy(msg->img->path, buf, PIE_PATH_LEN);
         /* Read from database to get settings */
         pie_img_init_settings(&msg->img->settings,
                               msg->img->proxy.width,

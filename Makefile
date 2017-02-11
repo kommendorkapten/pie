@@ -92,7 +92,7 @@ DIRS      = obj bin
 IO_SRC    = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
 SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
-EXE_SRC   = pie_render.c
+EXE_SRC   = pie_render.c pie_wrkspc_mgr.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
