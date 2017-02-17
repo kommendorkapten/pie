@@ -47,10 +47,10 @@ struct pie_sess
 /**
  * Initialize a session.
  * During initialization the token is generated.
- * @param the session to initialize.
- * @return void.
+ * @param void
+ * @return a new session.
  */
-extern void pie_sess_init(struct pie_sess*);
+extern struct pie_sess* pie_sess_create(struct chan*, struct chan*);
 
 /**
  * Destroy a session.

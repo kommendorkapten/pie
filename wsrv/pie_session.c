@@ -28,8 +28,9 @@ struct pie_sess_mgr
         struct hmap* store;
 };
 
-void pie_sess_init(struct pie_sess* s)
+struct pie_sess* pie_sess_create(struct chan* command, struct chan* response)
 {
+        struct pie_sess* s;
         char buf[64];
         unsigned char sum[20];
 #ifdef _USE_OPEN_SSL
@@ -40,6 +41,7 @@ void pie_sess_init(struct pie_sess* s)
         struct timeval tv;
         unsigned int n;
 
+        s = malloc(sizeof(struct pie_sess));
         gettimeofday(&tv, NULL);
         n = snprintf(buf, 64, "x&y_z%ld%ld", tv.tv_sec, tv.tv_usec);
 #ifdef _USE_OPEN_SSL
@@ -57,7 +59,13 @@ void pie_sess_init(struct pie_sess* s)
                 sprintf(s->token + i * 2, "%02x", sum[i]);
         }
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
+        s->command = command;
+        s->response = response;        
+        s->img = NULL;
         s->rgba = NULL;
+        s->tx_ready = 0;
+
+        return s;
 }
 
 void pie_sess_destroy(struct pie_sess* s)

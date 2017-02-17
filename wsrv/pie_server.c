@@ -95,13 +95,6 @@ static struct hmap* get_request_headers(struct lws*);
 static struct pie_sess* get_session(struct lws*);
 
 /**
- * Init the session with current server related data.
- * @param the session to init.
- * @return void.
- */
-static void srv_init_session(struct pie_sess*);
-
-/**
  * Callback methods.
  * @param The web-sockets instance.
  * @param The reason fro the callback. 
@@ -335,9 +328,9 @@ static int cb_http(struct lws* wsi,
                         /* Create a new */
                         char cookie[128];
                         unsigned char* p = &resp_headers[0];
-                        session = malloc(sizeof(struct pie_sess));
-                        pie_sess_init(session);
-                        srv_init_session(session);
+                        
+                        session = pie_sess_create(server->command,
+                                                  server->response);
                         
                         hn = snprintf(cookie, 
                                       128,
@@ -861,12 +854,3 @@ static struct pie_sess* get_session(struct lws* wsi)
         }
         return session;
 }
-
-static void srv_init_session(struct pie_sess* s)
-{
-        s->command = server->command;
-        s->response = server->response;
-        s->img = NULL;
-        s->tx_ready = 0;
-}
-
