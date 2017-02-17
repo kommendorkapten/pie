@@ -12,10 +12,10 @@
 */
 
 
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <netinet/in.h>
@@ -38,7 +38,7 @@ void encode_rgba(unsigned char* restrict buf,
         memcpy(buf, &h, sizeof(uint32_t));
         buf += sizeof(uint32_t);
         
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
         int rem = img->width % 4;
         int stop = img->width - rem;
         float or[4];
@@ -48,18 +48,19 @@ void encode_rgba(unsigned char* restrict buf,
         int stop = 0;
 #endif
         
-#ifdef _HAS_SSE
+#if _HAS_SSE
         __m128 scalev = _mm_set1_ps(255.0f);
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
         vector float scalev = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
 
         for (int y = 0; y < img->height; y++)
         {
-                
-#ifdef _HAS_SSE
+
+#if _HAS_SIMD
+# if _HAS_SSE
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * img->row_stride + x;
@@ -92,9 +93,9 @@ void encode_rgba(unsigned char* restrict buf,
                         *buf++ = (unsigned char)ob[3];
                         *buf++ = 255;
                 }
-#endif
                 
-#ifdef _HAS_ALTIVEC
+# elif _HAS_ALTIVEC
+                
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * img->row_stride + x;
@@ -127,6 +128,10 @@ void encode_rgba(unsigned char* restrict buf,
                         *buf++ = (unsigned char)ob[3];
                         *buf++ = 255;
                 }
+
+# else
+#  error invalid SIMD mode
+# endif
 #endif
 
                 for (int x = stop; x < img->width; x++)

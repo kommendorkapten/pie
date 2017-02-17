@@ -11,10 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <string.h>
@@ -26,20 +26,20 @@
 
 void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
-#ifdef _HAS_SSE
+#if _HAS_SSE
 	__m128 coeff_red = _mm_set1_ps(LUM_RED);
 	__m128 coeff_green = _mm_set1_ps(LUM_GREEN);
 	__m128 coeff_blue = _mm_set1_ps(LUM_BLUE);
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
         vector float coeff_red = (vector float){LUM_RED, LUM_RED, LUM_RED, LUM_RED};
         vector float coeff_green = (vector float){LUM_GREEN, LUM_GREEN, LUM_GREEN, LUM_GREEN};
         vector float coeff_blue = (vector float){LUM_BLUE, LUM_BLUE, LUM_BLUE, LUM_BLUE};
         vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
 	int rem = bm->width % 4;
 	int stop = bm->width - rem;
 #else
@@ -50,8 +50,8 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 	for (int y = 0; y < bm->height; y++)
 	{
                 
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+#if _HAS_SIMD
+# if _HAS_SSE
                 
 		for (int x = 0; x < stop; x+=4)
 		{
@@ -110,6 +110,8 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[3]]++;
                 }
                 
+# else
+#  error invalid SIMD mode
 # endif
 #endif       
 
@@ -134,14 +136,14 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 
 void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
-#ifdef _HAS_SSE
+#if _HAS_SSE
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
         vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
         float or[4];
         float og[4];
         float ob[4];
@@ -158,8 +160,8 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
         for (int y = 0; y < bm->height; y++)
         {
                 
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+#if _HAS_SIMD
+# if _HAS_SSE
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -220,7 +222,8 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                         hist->c_blue[(unsigned char)ob[2]]++;
                         hist->c_blue[(unsigned char)ob[3]]++;
                 }
-                
+# else                
+#  error invalid SIMD mode
 # endif
 #endif
 

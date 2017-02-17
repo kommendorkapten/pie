@@ -14,7 +14,7 @@
 #include "pie_kernel.h"
 #include "../math/pie_math.h"
 #include <string.h>
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 
@@ -353,8 +353,8 @@ void pie_kernel5x5_apply(float* restrict c,
                 for (int x = 2; x < w - 2; x++)
                 {
 /* SSE Does not appear to be any faster */
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+#if _HAS_SIMD
+# if _HAS_SSE
                         __m128 v1 = _mm_load_ps(&k->v[0]);
                         __m128 v2 = _mm_load_ps(&k->v[4]);
                         __m128 v3 = _mm_load_ps(&k->v[8]);
@@ -450,8 +450,10 @@ void pie_kernel5x5_apply(float* restrict c,
                         /* add k->v[24] */
                         buf[y * s + x] =
                                 f1[0] + k->v[24] * c[(y + 2) * s + x + 2];
-# elif _HAS_ALTIVEC_
-# error ALTIVEC not yet supported 
+# elif _HAS_ALTIVEC
+                        /* TODO implement me */
+# else
+#  error invalid SIMD mode
 # endif
 # else
                         buf[y * s + x] = 

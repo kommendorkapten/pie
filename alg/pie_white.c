@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <math.h>
@@ -51,7 +51,7 @@ void pie_alg_white(float* restrict r,
         for (int y = 0; y < h; y++)
         {
                 
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
                 int rem = w % 4;
                 int stop = w - rem;
                 vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};

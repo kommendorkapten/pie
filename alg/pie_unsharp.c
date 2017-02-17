@@ -15,10 +15,10 @@
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <stdlib.h>
@@ -148,20 +148,20 @@ static void pie_unsharp_chan(float* restrict img,
 {
         float threshold = param->threshold / 255.0f;
 
-#ifdef _HAS_SSE
+#if _HAS_SSE
         __m128 amountv = _mm_set1_ps(param->amount);
         __m128 thresholdv = _mm_set1_ps(threshold);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
         __m128 sign_maskv = _mm_set1_ps(-0.f); 
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
         vector float amountv = (vector float){param->amount, param->amount, param->amount, param->amount};
         vector float thresholdv = (vector float){threshold, threshold, threshold, threshold};
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -170,8 +170,8 @@ static void pie_unsharp_chan(float* restrict img,
         for (int y = 0; y < h; y++)
         {
         
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+#if _HAS_SIMD
+# if _HAS_SSE
         
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -241,6 +241,8 @@ static void pie_unsharp_chan(float* restrict img,
                         vec_st(newv, p, img);
                 }
 
+# else
+#  error invalid SIMD mode
 # endif
 #endif
 

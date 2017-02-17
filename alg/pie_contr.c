@@ -11,10 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <assert.h>
@@ -31,19 +31,19 @@ void pie_alg_contr(float* img,
                    int h,
                    int stride)
 {
-#ifdef _HAS_SSE
+#if _HAS_SSE
         __m128 sv = _mm_set1_ps(0.5f);
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
         vector float sv = (vector float){0.5f, 0.5f, 0.5f, 0.5f};
         vector float av = (vector float){c, c, c, c};
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -56,8 +56,8 @@ void pie_alg_contr(float* img,
         for (int y = 0; y < h; y++)
         {
 
-#ifdef _HAS_SIMD
-# ifdef _HAS_SSE
+#if _HAS_SIMD
+# if _HAS_SSE
                 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -82,7 +82,7 @@ void pie_alg_contr(float* img,
                         _mm_store_ps(img + p, data);
                 }
 
-# else
+# elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -103,7 +103,8 @@ void pie_alg_contr(float* img,
         
                         vec_st(datav, p, img);
                 }
-
+# else
+#  error invalid SIMD mode
 # endif
 #endif
                 

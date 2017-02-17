@@ -11,10 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifdef _HAS_SSE
+#if _HAS_SSE
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
-#ifdef _HAS_ALTIVEC
+#if _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <assert.h>
@@ -56,7 +56,7 @@ void pie_alg_color_temp(float* restrict r,
 
         for (int y = 0; y < h; y++)
         {        
-#ifdef _HAS_SIMD
+#if _HAS_SIMD
 # if _HAS_SSE
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -147,7 +147,7 @@ void pie_alg_color_temp(float* restrict r,
                         vec_st(bv, p, b);                        
                 }
 # else
-# error invalid SIMD mode        
+#  error invalid SIMD mode
 # endif
 #endif
         

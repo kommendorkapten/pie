@@ -11,9 +11,6 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifdef _HAS_ALTIVEC
-# include <altivec.h>
-#endif
 #include <math.h>
 #include <assert.h>
 
