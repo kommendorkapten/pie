@@ -20,6 +20,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#ifdef __sun
+# include <note.h>
+#else
+# define NOTE(X)
+#endif
+
 #define FLAG_FREE     0x0
 #define FLAG_INACTIVE 0x1
 #define FLAG_ACTIVE   0x2
@@ -178,6 +184,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         }
         else
         {
+                NOTE(EMPTY);
                 PIE_TRACE("Cache is full. This is most likely a bug!");
         }
 
