@@ -19,7 +19,6 @@
 #include "../pie_log.h"
 #include "../bm/pie_bm.h"
 #include "../bm/pie_dwn_smpl.h"
-#include "../io/pie_io.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
 #include "pie_render.h"
@@ -241,8 +240,10 @@ static void* ev_loop(void* a)
                         case PIE_MSG_LOAD:
                                 new = cb_msg_load(cmd);
                                 break;
+                        case PIE_MSG_SET_COLOR_TEMP:
+                        case PIE_MSG_SET_TINT:
+                        case PIE_MSG_SET_EXSPOSURE:
                         case PIE_MSG_SET_CONTRAST:
-                        case PIE_MSG_SET_ESPOSURE:
                         case PIE_MSG_SET_HIGHL:
                         case PIE_MSG_SET_SHADOW:
                         case PIE_MSG_SET_WHITE:
@@ -394,13 +395,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 /* Add some sharpening to mitigate any blur created
                    during downsampling. */
                 timing_start(&t);
-                res = pie_unsharp(msg->img->proxy.c_red,
-                                  msg->img->proxy.c_green,
-                                  msg->img->proxy.c_blue,
-                                  &up,
-                                  msg->img->proxy.width,
-                                  msg->img->proxy.height,
-                                  msg->img->proxy.row_stride);
+                res = pie_alg_unsharp(msg->img->proxy.c_red,
+                                      msg->img->proxy.c_green,
+                                      msg->img->proxy.c_blue,
+                                      &up,
+                                      msg->img->proxy.width,
+                                      msg->img->proxy.height,
+                                      msg->img->proxy.row_stride);
                 if (res)
                 {
                         abort();
@@ -469,23 +470,39 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         
         switch (msg->type)
         {
-        case PIE_MSG_SET_CONTRAST:
-                if (msg->f1 < 0.0f || msg->f1 > 2.0f)
+        case PIE_MSG_SET_COLOR_TEMP:
+                if (msg->f1 < -0.3f || msg->f1 > 0.3f)
                 {
-                        PIE_WARN("[%s] invalid contrast: %f.",
+                        PIE_WARN("[%s] invalid color temp: %f.",
                                  msg->token,
                                  msg->f1);
                         status = -1;
                 }
                 else
                 {
-                        msg->img->settings.contrast = msg->f1;
-                        PIE_TRACE("[%s] Set contrast: %f.",
+                        msg->img->settings.color_temp = msg->f1;
+                        PIE_TRACE("[%s] Set color temp: %f.",
                                   msg->token,
-                                  msg->img->settings.contrast);
+                                  msg->img->settings.color_temp);
                 }
                 break;
-        case PIE_MSG_SET_ESPOSURE:
+        case PIE_MSG_SET_TINT:
+                if (msg->f1 < -0.3f || msg->f1 > 0.3f)
+                {
+                        PIE_WARN("[%s] invalid tint: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.tint = msg->f1;
+                        PIE_TRACE("[%s] Set tint: %f.",
+                                  msg->token,
+                                  msg->img->settings.tint);
+                }
+                break;                
+        case PIE_MSG_SET_EXSPOSURE:
                 if (msg->f1 < -5.0f || msg->f1 > 5.0f)
                 {
                         PIE_WARN("[%s] invalid exposure: %f.",
@@ -501,6 +518,22 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                   msg->img->settings.exposure);
                 }
                 break;
+        case PIE_MSG_SET_CONTRAST:
+                if (msg->f1 < 0.0f || msg->f1 > 2.0f)
+                {
+                        PIE_WARN("[%s] invalid contrast: %f.",
+                                 msg->token,
+                                 msg->f1);
+                        status = -1;
+                }
+                else
+                {
+                        msg->img->settings.contrast = msg->f1;
+                        PIE_TRACE("[%s] Set contrast: %f.",
+                                  msg->token,
+                                  msg->img->settings.contrast);
+                }
+                break;                
         case PIE_MSG_SET_HIGHL:
                 if (msg->f1 < -1.0f || msg->f1 > 1.0f)
                 {

@@ -103,6 +103,102 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                           msg->i1,
                           msg->i2);
         }
+        else if (strcmp(t, "COLORT") == 0)
+        {
+                /* COLORT {val} 
+                   val = [-30, 30] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }                        
+
+                char* p;
+                long v = strtol(t, &p, 10);
+                        
+                if (t != p && v >= -30 && v <= 30)
+                {
+                        msg->type = PIE_MSG_SET_COLOR_TEMP;
+                        msg->f1 = (float)v/ 100.f;
+                        PIE_TRACE("[%s] Colortemp: %f", 
+                                  msg->token,
+                                  msg->f1);
+                }
+                else
+                {
+                        PIE_WARN("[%s] Invalid color temp: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+        }
+        else if (strcmp(t, "TINT") == 0)
+        {
+                /* TINT {val} 
+                   val = [-30, 30] */
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }                        
+
+                char* p;
+                long v = strtol(t, &p, 10);
+                        
+                if (t != p && v >= -30 && v <= 30)
+                {
+                        msg->type = PIE_MSG_SET_TINT;
+                        msg->f1 = (float)v/ 100.f;
+                        PIE_TRACE("[%s] Tint: %f",
+                                  msg->token,
+                                  msg->f1);
+                }
+                else
+                {
+                        PIE_WARN("[%s] Invalid tint: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+        }        
+        else if (strcmp(t, "EXPOS") == 0)
+        {
+                /* EXPOS 1.234 
+                   val = [-5.0, 5.0]*/
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+
+                char* p;
+                long v = strtol(t, &p, 10);
+
+                if (t != p && v >= -50 && v <= 50)
+                {
+                        msg->type = PIE_MSG_SET_EXSPOSURE;
+                        msg->f1 = (float)v / 10.0f;
+                        PIE_TRACE("[%s] Exposure: %f", 
+                                  msg->token,
+                                  msg->f1);
+                }
+                else
+                {
+                        PIE_WARN("[%s] Invalid exposure: '%s'\n",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+        }
         else if (strcmp(t, "CONTR") == 0)
         {
                 /* CONTR {val} 
@@ -130,38 +226,6 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 else
                 {
                         PIE_WARN("[%s] Invalid contrast: '%s'\n",
-                                 msg->token,
-                                 data);
-                        return -1;
-                }
-        }
-        else if (strcmp(t, "EXPOS") == 0)
-        {
-                /* EXPOS 1.234 
-                   val = [-5.0, 5.0]*/
-                t = strtok_r(NULL, " ", &lasts);
-                if (t == NULL)
-                {
-                        PIE_WARN("[%s] not a valid command '%s'\n",
-                                 msg->token,
-                                 data);
-                        return -1;
-                }
-
-                char* p;
-                long v = strtol(t, &p, 10);
-
-                if (t != p && v >= -50 && v <= 50)
-                {
-                        msg->type = PIE_MSG_SET_ESPOSURE;
-                        msg->f1 = (float)v / 10.0f;
-                        PIE_TRACE("[%s] Exposure: %f", 
-                                  msg->token,
-                                  msg->f1);
-                }
-                else
-                {
-                        PIE_WARN("[%s] Invalid exposure: '%s'\n",
                                  msg->token,
                                  data);
                         return -1;

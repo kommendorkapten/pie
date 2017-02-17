@@ -22,6 +22,7 @@
 #include "../alg/pie_highl.h"
 #include "../alg/pie_unsharp.h"
 #include "../alg/pie_vibra.h"
+#include "../alg/pie_colort.h"
 #include "../lib/timing.h"
 #include "../pie_log.h"
 
@@ -29,6 +30,8 @@ void pie_img_init_settings(struct pie_img_settings* s, int w, int h)
 {
         int m = w > h ? w : h;
 
+        s->color_temp = 0.0f;
+        s->tint = 0.0f;        
         s->exposure = 0.0f;
         s->contrast = 1.0f;
         s->highlights = 0.0f;
@@ -56,6 +59,18 @@ int pie_img_render(struct bitmap_f32rgb* img,
         (void)buf;
         timing_start(&t1);
 
+        /* C O L O R   T E M P */
+        timing_start(&t2);
+        pie_alg_color_temp(img->c_red,
+                           img->c_green,
+                           img->c_blue,
+                           s->color_temp,
+                           s->tint,
+                           img->width,
+                           img->height,
+                           img->row_stride);
+        PIE_DEBUG("Render color temp:        %8ldusec", timing_dur_usec(&t2));
+        
         /* E X P O S U R E */
         timing_start(&t2);
         pie_alg_expos(img->c_red,
@@ -132,13 +147,13 @@ int pie_img_render(struct bitmap_f32rgb* img,
 
         /* C L A R I T Y */
         timing_start(&t2);        
-        pie_unsharp(img->c_red,
-                    img->c_green,
-                    img->c_blue,
-                    &s->clarity,
-                    img->width,
-                    img->height,
-                    img->row_stride);
+        pie_alg_unsharp(img->c_red,
+                        img->c_green,
+                        img->c_blue,
+                        &s->clarity,
+                        img->width,
+                        img->height,
+                        img->row_stride);
         PIE_DEBUG("Render clarity:    (%.2f) %8ldusec",
                   s->clarity.radius, timing_dur_usec(&t2));
 
@@ -169,13 +184,13 @@ int pie_img_render(struct bitmap_f32rgb* img,
 
         /* S H A R P E N I N G */
         timing_start(&t2);        
-        pie_unsharp(img->c_red,
-                    img->c_green,
-                    img->c_blue,
-                    &s->sharpening,
-                    img->width,
-                    img->height,
-                    img->row_stride);
+        pie_alg_unsharp(img->c_red,
+                        img->c_green,
+                        img->c_blue,
+                        &s->sharpening,
+                        img->width,
+                        img->height,
+                        img->row_stride);
         PIE_DEBUG("Render sharpening: (%.2f) %8ldusec",
                   s->sharpening.radius, timing_dur_usec(&t2));
         

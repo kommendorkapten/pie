@@ -40,13 +40,13 @@
  * @param image row stride.
  * @return 0 on success. Non zero otherwise.
  */
-extern int pie_unsharp(float* restrict,
-                       float* restrict,
-                       float* restrict,
-                       const struct pie_unsharp_param*,
-                       int,
-                       int,
-                       int);
+extern int pie_alg_unsharp(float* restrict,
+                           float* restrict,
+                           float* restrict,
+                           const struct pie_unsharp_param*,
+                           int,
+                           int,
+                           int);
 
 
 #endif /* __PIE_UNSHARP_H__ */

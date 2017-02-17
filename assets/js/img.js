@@ -319,6 +319,58 @@ window.addEventListener("load", function(evt) {
     /*
      * I N P U T   S L I D E R S
      */
+    document.getElementById("sl_colortemp").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_colortemp").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("COLORT " + targ.value);
+        }, 50);
+
+        return true;
+    };
+
+    document.getElementById("sl_tint").oninput = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+        
+        document.getElementById("in_tint").value=targ.value;
+
+        if (targ.wsCall) {
+            clearTimeout(targ.wsCall);
+        }
+        targ.wsCall = setTimeout(function(){
+            wsCmd.pieStartTs = Date.now();
+            wsCmd.send("TINT " + targ.value);
+        }, 50);
+
+        return true;
+    };
+    
     document.getElementById("sl_exposure").oninput = function(evt) {
         var targ;
 
@@ -643,6 +695,34 @@ window.addEventListener("load", function(evt) {
     /*
      * I N P U T   V A L I D A T O R S
      */
+    document.getElementById("in_colortemp").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+
+    document.getElementById("in_tint").onkeydown = function(evt) {
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };    
+    
     document.getElementById("in_exposure").onkeydown = function(evt) {
         /* Only allow 0-9 - */
         /* ASCII 0-9 is 48 to 57 */
@@ -820,6 +900,56 @@ window.addEventListener("load", function(evt) {
     /*
      * M A P   I N P U T   T O   S L I D E R S 
      */
+    document.getElementById("in_colortemp").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 30) {
+            targ.value = 30;
+        } else if (targ.value < -30) {
+            targ.value = -30;
+        }
+
+        document.getElementById("sl_colortemp").value=targ.value;
+        wsCmd.send("COLORT " + targ.value);
+    };
+
+    document.getElementById("in_tint").onchange = function(evt) {
+        var targ;
+
+        if (!wsCmd) {
+            return false;
+        }
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }        
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > 30) {
+            targ.value = 30;
+        } else if (targ.value < -30) {
+            targ.value = -30;
+        }
+
+        document.getElementById("sl_tint").value=targ.value;
+        wsCmd.send("TINT " + targ.value);
+    };    
+
     document.getElementById("in_exposure").onchange = function(evt) {
         var targ;
 

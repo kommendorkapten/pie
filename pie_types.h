@@ -100,6 +100,10 @@ struct pie_unsharp_param
 
 struct pie_img_settings
 {
+       /* [-0.5, 0.5]  def 0 */
+        float color_temp;
+       /* [-0.5, 0.5]  def 0 */
+        float tint;        
         /* [-5, 5]     def 0 */
         float exposure;
         /* [0,2]       def 1 */

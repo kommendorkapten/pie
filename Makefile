@@ -23,7 +23,7 @@ endif
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
   CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
-  CFLAGS += -Wextra -Wall -Wconversion -Wno-sign-conversion -Wstrict-aliasing
+  CFLAGS += -Wextra -Wall -Wstrict-aliasing
 endif
 
 # Configure based on OS/Compiler
@@ -46,7 +46,7 @@ ifeq ($(OS), SunOS)
     endif
   else ifeq ($(CC), gcc)
     ifeq ($(ISA), i386)
-      CFLAGS += -march=nehalem
+      CFLAGS += -march=nehalem -Wconversion -Wno-sign-conversion
     endif
   endif
 else ifeq ($(OS), FreeBSD)
@@ -65,7 +65,7 @@ else ifeq ($(OS), Darwin)
   ifeq ($(ISA), powerpc)
     CFLAGS  += -fast
   else
-    CFLAGS  += -march=native -D_USE_OPEN_SSL
+    CFLAGS  += -march=native -Wconversion -Wno-sign-conversion -D_USE_OPEN_SSL
     LCRYPTO = -lcrypto
     LFLAGS  += -L/usr/local/lib
   endif
@@ -73,11 +73,11 @@ endif
 
 # Configuration based on ISA
 ifeq ($(ISA), i386)
-  CFLAGS += -D_HAS_SIMD -D_HAS_SSE
+  CFLAGS += -D_HAS_SIMD=1 -D_HAS_SSE=1
 else ifeq ($(ISA), powerpc)
-  CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC
+  CFLAGS += -D_HAS_SIMD=1 -D_HAS_ALTIVEC=1
 else ifeq ($(ISA), powerpc64)
-  CFLAGS += -D_HAS_SIMD -D_HAS_ALTIVEC 
+  CFLAGS += -D_HAS_SIMD=1 -D_HAS_ALTIVEC=1
 else ifeq ($(ISA), sparc)
 else
 endif
@@ -96,7 +96,7 @@ EXE_SRC   = pie_render.c pie_wrkspc_mgr.c
 MSG_SRC   = pie_msg.c
 ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
-            pie_unsharp.c pie_vibra.c
+            pie_unsharp.c pie_vibra.c pie_colort.c
 ENC_SRC   = pie_json.c pie_rgba.c
 MTH_SRC   = pie_math.c pie_catmull.c
 BM_SRC    = pie_bm.c pie_dwn_smpl.c

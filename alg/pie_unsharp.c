@@ -42,13 +42,13 @@ static void pie_unsharp_chan(float* restrict,
                              int,
                              int);
 
-int pie_unsharp(float* restrict r,
-                float* restrict g,
-                float* restrict b,
-                const struct pie_unsharp_param* param,
-                int w,
-                int h,
-                int s)
+int pie_alg_unsharp(float* restrict r,
+                    float* restrict g,
+                    float* restrict b,
+                    const struct pie_unsharp_param* param,
+                    int w,
+                    int h,
+                    int s)
 {
         float kernel[MAX_SEP_LEN];
         size_t size;

@@ -39,13 +39,13 @@ int main(int argc, char** argv)
 
         printf("Using radius: %f\n", p.radius);
         
-        ret = pie_unsharp(img.c_red,
-                          img.c_green,
-                          img.c_blue,
-                          &p,
-                          img.width,
-                          img.height,
-                          img.row_stride);
+        ret = pie_alg_unsharp(img.c_red,
+                              img.c_green,
+                              img.c_blue,
+                              &p,
+                              img.width,
+                              img.height,
+                              img.row_stride);
         if (ret)
         {
                 abort();
