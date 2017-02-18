@@ -82,7 +82,7 @@ int main(int argc, char** argv)
         bm_conv_bd(&out, PIE_COLOR_8B,
                    &dwn, PIE_COLOR_32B);
 
-        jpg_u8rgb_write(fout, &out, 95);
+        jpg_u8rgb_write(fout, &out, 85);
 
         bm_free_f32(&img);
         bm_free_f32(&dwn);        

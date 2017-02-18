@@ -11,16 +11,16 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "../wsrv/pie_server.h"
+#include "../editd/pie_editd_ws.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
-#include "../msg/pie_msg.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../bm/pie_bm.h"
 #include "../bm/pie_dwn_smpl.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
+#include "pie_msg.h"
 #include "pie_render.h"
 #include "pie_wrkspc_mgr.h"
 #include <stdio.h>
@@ -41,7 +41,7 @@ struct config
 };
 
 static struct config config;
-static struct pie_server server;
+static struct pie_editd_ws server;
 static struct pie_wrkspc_mgr* wrkspc_mgr;
 
 /**
@@ -135,7 +135,7 @@ int main(void)
         PIE_LOG("Start with config:");
         PIE_LOG("  image library path: %s", config.lib_path);
         
-        if (start_server(&server))
+        if (start_editd_ws(&server))
         {
                 PIE_ERR("Failed");
         }
@@ -182,7 +182,7 @@ static void sig_h(int signum)
 static void* i_handler(void* a)
 {
         struct sigaction sa;
-        struct pie_server* s = (struct pie_server*)a;
+        struct pie_editd_ws* s = (struct pie_editd_ws*)a;
         void* ret = NULL;
 
         /* Set up signal handler */
@@ -205,7 +205,7 @@ static void* i_handler(void* a)
 static void* ev_loop(void* a)
 {
         struct chan_msg msg;
-        struct pie_server* s = (struct pie_server*)a;
+        struct pie_editd_ws* s = (struct pie_editd_ws*)a;
         void* ret = NULL;
 
         PIE_DEBUG("Ready for messages.");

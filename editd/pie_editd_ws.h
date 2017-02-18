@@ -11,15 +11,13 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_SERVER_H__
-#define __PIE_SERVER_H__
-
-#include <signal.h>
+#ifndef __PIE_EDITD_H__
+#define __PIE_EDITD_H__
 
 struct chan;
 struct lws_context;
 
-struct pie_server
+struct pie_editd_ws
 {
         const char* context_root;
         struct lws_context* context;
@@ -30,6 +28,6 @@ struct pie_server
         volatile int run;
 };
 
-extern int start_server(struct pie_server*);
+extern int start_editd_ws(struct pie_editd_ws*);
 
-#endif /* __PIE_SERVER_H__ */
+#endif /* __PIE_EDITD_H__ */

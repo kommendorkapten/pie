@@ -13,6 +13,7 @@
 
 #include "pie_session.h"
 #include "../lib/hmap.h"
+#include "../pie_log.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -106,6 +107,7 @@ struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr* sm, char* token)
         struct timeval tv;
         struct pie_sess* s;
 
+        PIE_TRACE("Session: %s", token);
         s = hmap_get(sm->store, token);
         if (s)
         {
@@ -119,7 +121,8 @@ struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr* sm, char* token)
 void pie_sess_mgr_put(struct pie_sess_mgr* sm, struct pie_sess* s)
 {
         struct timeval tv;        
-        
+
+        PIE_TRACE("Session: %s", s->token);
         gettimeofday(&tv, NULL);
         s->access_ts = tv.tv_sec;
 
@@ -140,11 +143,10 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
 
                 if (s->access_ts < tv.tv_sec - threshold)
                 {
-#if DEBUG > 0
-                        printf("Destroy session [%s]@%p\n", 
-                               (char*)s->token,
-                                elems[i].data);
-#endif      
+                        PIE_DEBUG("Destroy session [%s]@%p\n", 
+                                  (char*)s->token,
+                                  elems[i].data);
+
                         char token[PIE_SESS_TOKEN_LEN];
                         /* sessions are allocated in cb_http,
                            no references should ever be kept to

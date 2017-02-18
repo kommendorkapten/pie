@@ -11,21 +11,20 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_server.h"
-#include "pie_session.h"
+#include "pie_editd_ws.h"
 #include "pie_cmd.h"
+#include "pie_msg.h"
+#include "../http/pie_session.h"
+#include "../http/pie_util.h"
 #include "../pie_log.h"
 #include "../pie_types.h"
-#include "../msg/pie_msg.h"
 #include "../lib/chan.h"
 #include "../lib/hmap.h"
 #include "../lib/timing.h"
 #include "../encoding/pie_json.h"
 #include "../encoding/pie_rgba.h"
 #include <libwebsockets.h>
-#include <string.h>
 
-#define MAX_HEADERS 4096
 #define JSON_HIST_SIZE (10 * 1024)
 
 #ifdef __sun
@@ -68,31 +67,8 @@ struct pie_ctx_cmd
 /* Global root to asset directory */
 static const char* context_root;
 /* Only one server can be executed at a time */
-static struct pie_server* server;
+static struct pie_editd_ws* server;
 static struct pie_sess_mgr* sess_mgr;
-
-/**
- * Return the mime type from the requested URL.
- * @param the request URL.
- * @return the mimetype (e.g image/jpeg) or NULL if unknown.
- */
-static const char* get_mimetype(const char*);
-
-/**
- * Exract request headers from the current request.
- * Limitations: Only a signel value per key can be stored.
- * @param the request
- * @return pointer to a hash map of the headers.
- */
-static struct hmap* get_request_headers(struct lws*);
-
-/**
- * Extract a session from the current request.
- * A session is defined by the cookie pie-session.
- * @param the request
- * @return pointer to the session, or NULL if no session is found.
- */
-static struct pie_sess* get_session(struct lws*);
 
 /**
  * Callback methods.
@@ -139,7 +115,7 @@ static const struct lws_extension exts[] = {
         {NULL, NULL, NULL}
 };
 
-int start_server(struct pie_server* srv)
+int start_editd_ws(struct pie_editd_ws* srv)
 {
         struct lws_protocols protocols[] = {
                 /* HTTP must be first */
@@ -322,7 +298,7 @@ static int cb_http(struct lws* wsi,
                 req_headers = get_request_headers(wsi);
 
                 /* Look for existing session */
-                session = get_session(wsi);
+                session = get_session(sess_mgr, wsi);
                 if (session == NULL)
                 {
                         /* Create a new */
@@ -493,7 +469,7 @@ static int cb_img(struct lws* wsi,
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(wsi)))
+                if ((session = get_session(sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
                 }
@@ -588,7 +564,7 @@ static int cb_hist(struct lws* wsi,
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(wsi)))
+                if ((session = get_session(sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
 
@@ -676,7 +652,7 @@ static int cb_cmd(struct lws* wsi,
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(wsi)))
+                if ((session = get_session(sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
                 }
@@ -749,108 +725,4 @@ static int cb_cmd(struct lws* wsi,
 
 done:
         return ret;
-}
-
-static const char* get_mimetype(const char *path)
-{
-	size_t n = strlen(path);
-
-	if (n < 5)
-        {
-		return NULL;                
-        }
-
-	if (strcmp(&path[n - 4], ".ico") == 0)
-        {
-		return "image/x-icon";
-        }
-	if (strcmp(&path[n - 4], ".png") == 0)
-        {
-		return "image/png";
-        }
-	if (strcmp(&path[n - 5], ".html") == 0) 
-        {
-		return "text/html";
-        }
-	if (strcmp(&path[n - 4], ".css") == 0)
-        {
-		return "text/css";
-        }
-	if (strcmp(&path[n - 4], ".jpg") == 0)
-        {
-		return "text/jpeg";
-        }
-	if (strcmp(&path[n - 3], ".js") == 0)
-        {
-		return "text/javascript";
-        }
-
-	return NULL;
-}
-
-static struct hmap* get_request_headers(struct lws* wsi)
-{
-        char header[256];
-        struct hmap* h = hmap_create(NULL, NULL, 8, 0.7f);
-        char* p;
-        int n = 0;
-
-        while (lws_hdr_copy_fragment(wsi, header, sizeof(header),
-                                     WSI_TOKEN_HTTP_URI_ARGS, n++) > 0) {
-                header[255] = 0;
-                p = strchr(header, '=');
-                if (p == NULL)
-                {
-                        continue;
-                }
-                ptrdiff_t key_len = p - &header[0];
-                size_t val_len = strlen(p + 1);
-                char* key = malloc(key_len + 1);
-                char* val = malloc(val_len + 1);
-
-                memcpy(key, header, key_len);
-                memcpy(val, p + 1, val_len);
-                key[key_len] = 0;
-                val[val_len] = 0;
-
-                PIE_TRACE("URL query parameter: %s", header);
-                PIE_TRACE("Extracted key '%s' with value '%s'",
-                          key, val);
-
-                hmap_set(h, key, val);
-        }
-
-        return h;
-}
-
-static struct pie_sess* get_session(struct lws* wsi)
-{
-        char headers[MAX_HEADERS];
-        struct pie_sess* session = NULL;
-        int n = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_COOKIE);
-        
-        if (n == 0)
-        {
-                PIE_DEBUG("No cookie header found");
-                return NULL;
-        }
-        
-        lws_hdr_copy(wsi,
-                     headers,
-                     MAX_HEADERS,
-                     WSI_TOKEN_HTTP_COOKIE);
-        if (strlen(headers))
-        {
-                char* t = strchr(headers, '=');
-
-                if (t == NULL)
-                {
-                        PIE_DEBUG("Invalid cookie: '%s'", t);
-                        return NULL;
-                }
-                t++;
-                session = pie_sess_mgr_get(sess_mgr,
-                                           t);
-        }
-        return session;
 }

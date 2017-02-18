@@ -14,6 +14,8 @@
 #ifndef __PIE_CMD_H__
 #define __PIE_CMD_H__
 
+#include <stddef.h>
+
 struct pie_msg;
 
 /**

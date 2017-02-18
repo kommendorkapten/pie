@@ -45,8 +45,9 @@ ifeq ($(OS), SunOS)
       CFLAGS += -xarch=sparcvis2
     endif
   else ifeq ($(CC), gcc)
+    CFLAGS += -Wconversion -Wno-sign-conversion
     ifeq ($(ISA), i386)
-      CFLAGS += -march=nehalem -Wconversion -Wno-sign-conversion
+      CFLAGS += -march=nehalem
     endif
   endif
 else ifeq ($(OS), FreeBSD)
@@ -88,43 +89,37 @@ else
   CFLAGS += -DNDEBUG
 endif
 
-DIRS      = obj bin
-IO_SRC    = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c
-SRV_SRC   = pie_server.c pie_session.c pie_cmd.c
-EXE_SRC   = pie_render.c pie_wrkspc_mgr.c
-MSG_SRC   = pie_msg.c
-ALG_SRC   = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
-            pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
-            pie_unsharp.c pie_vibra.c pie_colort.c
-ENC_SRC   = pie_json.c pie_rgba.c
-MTH_SRC   = pie_math.c pie_catmull.c
-BM_SRC    = pie_bm.c pie_dwn_smpl.c
-SOURCES   = pie_cspace.c \
-	    $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(MSG_SRC) $(ENC_SRC) \
-            $(MTH_SRC) $(BM_SRC)
-OBJS      = $(SOURCES:%.c=obj/%.o)
-SRV_OBJS  = $(SRV_SRC:%.c=obj/%.o)
-EXE_OBJS  = $(EXE_SRC:%.c=obj/%.o)
-TEST_BINS = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-            histinfo contr gauss unsharp tojpg catm tapply tdowns
-EXE_BINS  = server
-T_BINS    = $(TEST_BINS:%=bin/%)
-E_BINS    = $(EXE_BINS:%=bin/%)
+DIRS       = obj bin
+IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c
+LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c
+ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
+             pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
+             pie_unsharp.c pie_vibra.c pie_colort.c
+ENC_SRC    = pie_json.c pie_rgba.c
+MTH_SRC    = pie_math.c pie_catmull.c
+BM_SRC     = pie_bm.c pie_dwn_smpl.c
+HTTP_SRC   = pie_session.c pie_util.c
+EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
+             pie_editd.c pie_msg.c
+SOURCES    = pie_cspace.c \
+	     $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
+OBJS       = $(SOURCES:%.c=obj/%.o)
+HTTP_OBJS  = $(HTTP_SRC:%.c=obj/%.o)
+EDITD_OBJS = $(EDITD_SRC:%.c=obj/%.o)
+TEST_BINS  = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
+             histinfo contr gauss unsharp tojpg catm tapply tdowns
+T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg wsrv msg encoding math exe bm
+VPATH = io lib alg encoding math bm http editd
 
 .PHONY: all
-.PHONY: exe
 .PHONY: test
 .PHONY: clean
 .PHONY: lint
 
 ########################################################################
 
-all: $(OBJS) exe test
-
-exe: $(E_BINS)
+all: $(OBJS) test editd
 
 test: $(T_BINS) 
 
@@ -178,11 +173,11 @@ bin/tojpg: testp/tojpg.c $(OBJS)
 bin/catm: testp/catm.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/tapply: testp/tapply.c $(OBJS) $(EXE_OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) $(EXE_OBJS) -o $@ $(LFLAGS)
+bin/tapply: testp/tapply.c $(OBJS) obj/pie_render.o
+	$(CC) $(CFLAGS) $< $(OBJS) obj/pie_render.o -o $@ $(LFLAGS)
 
-bin/tdowns: testp/tdowns.c $(OBJS) $(EXE_OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) $(EXE_OBJS) -o $@ $(LFLAGS)
+bin/tdowns: testp/tdowns.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
-bin/server: exe/server.c $(OBJS) $(SRV_OBJS) $(EXE_OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) $(SRV_OBJS) $(EXE_OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
+bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS)
+	$(CC) $(CFLAGS) $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)

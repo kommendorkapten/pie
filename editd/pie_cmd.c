@@ -12,16 +12,15 @@
 */
 
 #include "../pie_log.h"
-#include "../msg/pie_msg.h"
+#include "pie_msg.h"
 #include <string.h>
 
 #define MAX_CMD 256
 
 int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
 {
-        char buf[MAX_CMD];
         char copy[MAX_CMD];
-        char* lasts = buf;
+        char* lasts;
         char* t;
         
         if (len >= MAX_CMD)
