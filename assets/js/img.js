@@ -43,17 +43,6 @@ var histDataB = {
     }]
 };
 
-var pieStateHack = {
-    "image1": "walk.jpg",
-    "image2": "lena.png",
-    "image3": "lin_small.jpg",
-    "image4": "lin.jpg",
-    "image5": "selfie.jpg",
-    "image6": "tofsmes.jpg",
-    "image7": "siden_pie.png",
-    "image": "b_portrait.jpg"
-};
-
 function getWsUrl(){
     var pcol;
     var u = document.URL;
