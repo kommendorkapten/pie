@@ -32,7 +32,7 @@ time_t timing_dur_sec(const struct timing* t)
 	return now.tv_sec - t->tv.tv_sec;
 }
 
-suseconds_t timing_dur_usec(const struct timing* t)
+time_t timing_dur_usec(const struct timing* t)
 {
 	struct timeval now;
 	int res;
@@ -44,9 +44,9 @@ suseconds_t timing_dur_usec(const struct timing* t)
 		(t->tv.tv_sec * 1000000 + t->tv.tv_usec);
 }
 
-suseconds_t timing_dur_msec(const struct timing* t)
+time_t timing_dur_msec(const struct timing* t)
 {
-	suseconds_t usec = timing_dur_usec(t);
+	time_t usec = timing_dur_usec(t);
 
 	return usec / 1000;
 }

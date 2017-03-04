@@ -12,7 +12,7 @@ int main(int argc, char** argv)
         struct bitmap_u8rgb out;
         struct timing t;
         struct pie_unsharp_param p;
-        suseconds_t dur;
+        time_t dur;
         
         //p.radius = 50.0f;
         p.radius = 1.0f;

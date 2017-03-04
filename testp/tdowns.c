@@ -18,7 +18,7 @@ int main(int argc, char** argv)
         struct timing t;
         char fout[MAX_PATH] = {0};
         char fin[MAX_PATH] = {0};
-        suseconds_t dur;
+        time_t dur;
         int c;        
         int max = 0;
         int ret;

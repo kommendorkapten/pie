@@ -42,7 +42,7 @@ time_t timing_dur_sec(const struct timing*);
  * @param the start time.
  * @return the duration since the start time in micro seconds.
  */
-suseconds_t timing_dur_usec(const struct timing*);
+time_t timing_dur_usec(const struct timing*);
 
 /**
  * Extract the duration from the time to the current time. Returned
@@ -50,6 +50,6 @@ suseconds_t timing_dur_usec(const struct timing*);
  * @param the start time.
  * @return the duration since the start time in milli seconds.
  */
-suseconds_t timing_dur_msec(const struct timing*);
+time_t timing_dur_msec(const struct timing*);
 
 #endif /* __TIMING_H__ */
