@@ -1,0 +1,161 @@
+#!/bin/sh
+
+set -u
+set -e
+
+CFLAGS=""
+CFLAGS_cc=""
+CFLAGS_gcc=""
+CFLAGS_c99=""
+
+configure_i386()
+{
+    cmd=$1
+    
+    printf "Scan for SSE 4.2..."
+    if ${cmd} | grep -q -i sse4\\.2; then
+        printf "found\n"
+        CFLAGS="${CFLAGS} -D_HAS_SSE42=1 -D_HAS_SIMD4=1"
+    else
+        printf "not found\n"
+    fi
+    printf "Scan for AVX......."
+    if ${cmd} | grep -q -i avx; then
+        printf "found\n"
+        CFLAGS="${CFLAGS} -D_HAS_AVX=1 -D_HAS_SIMD8=1"
+    else
+        printf "not found\n"
+    fi
+    printf "Scan for AVX2......"
+    if ${cmd} | grep -q -i avx2; then
+        printf "found\n"
+        CFLAGS="${CFLAGS} -D_HAS_AVX=2"
+    else
+        printf "not found\n"
+    fi
+}
+
+configure_sunos_i386()
+{
+    cmd="isainfo -x"
+    
+    configure_i386 "$cmd"
+
+    if echo ${CFLAGS} | grep -q AVX2; then
+        CFLAGS_c99="${CFLAGS_c99} -xarch=avx2"
+        CFLAGS_cc="${CFLAGS_cc} -xarch=avx2"
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx2"
+    elif echo ${CFLAGS} | grep -q AVX; then
+        CFLAGS_c99="${CFLAGS_c99} -xarch=avx"
+        CFLAGS_cc="${CFLAGS_cc} -xarch=avx"
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx"
+    elif echo ${CFLAGS} | grep -q SSE4; then
+        CFLAGS_c99="${CFLAGS_c99} -xarch=sse4_2"
+        CFLAGS_cc="${CFLAGS_cc} -xarch=sse4_2"
+        CFLAGS_gcc="${CFLAGS_gcc} -msse4.2"
+    fi
+}
+
+configure_sunos_sparc()
+{
+    cmd="isainfo -x"
+    
+    printf "Scan for VIS 2.0..."
+    if ${cmd} | grep -q -i vis2; then
+        printf "found\n"
+        CFLAGS="${CFLAGS} -D_HAS_VIS2=1"
+    else
+        printf "....not found\n"
+    fi
+
+    if echo ${CFLAGS} | grep -q VIS2; then
+        CFLAGS_c99="${CFLAGS_c99} -xarch=sparcvis2"
+        CFLAGS_cc="${CFLAGS_cc} -xarch=sparcvis2"
+        CFLAGS_gcc="${CFLAGS_gcc} -mvis2"
+    fi
+}
+
+configure_bsd_i386()
+{
+    cmd="sysctl -n machdep.cpu.features"
+
+    configure_i386 "$cmd"
+
+    if echo ${CFLAGS} | grep -q AVX2; then
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx2"
+    elif echo ${CFLAGS} | grep -q AVX; then
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx"
+    elif echo ${CFLAGS} | grep -q SSE4; then
+        CFLAGS_gcc="${CFLAGS_gcc} -msse4.2"
+    fi    
+}
+
+configure_bsd_ppc()
+{
+    printf "Scan for Altivec/VMX..."
+    CFLAGS_gcc="${CFLAGS_gcc} -fgcse-sm  -mpowerpc-gpopt"
+
+    if sysctl -n hw.altivec | grep -q 1; then
+        printf "found\n"
+        CFLAGS="${CFLAGS} -D_HAS_ALTIVEC=1 -D_HAS_SIMD4=1"
+        CFLAGS_gcc="${CFLAGS_gcc} -maltivec"
+    else
+        printf "...not found\n"
+    fi
+
+    if sysctl -n hw.model | grep -q 970; then
+        CFLAGS_gcc="${CFLAGS_gcc} -mcpu=970 -mtune=970 -mpowerpc64"
+    fi
+}
+
+#
+# M A I N
+#
+OS=`uname -s`
+echo "Detected Operating system ${OS}"
+ISA=`uname -p`
+echo "Detected ISA              ${ISA}"
+
+case ${OS} in
+    SunOS)
+        case ${ISA} in
+            i386)
+                configure_sunos_i386
+                ;;
+            sparc)
+                configure_sunos_sparc
+                ;;
+            *)
+                echo Unsupported ISA
+                exit 1
+                ;;
+        esac
+        ;;
+    FreeBSD|Darwin)
+        case ${ISA} in
+            i386)
+                configure_bsd_i386
+                ;;
+            powerpc64)
+                configure_bsd_ppc
+                ;;
+            *)
+                echo Unsupported ISA
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        echo Unsupported Operating system
+        exit 1
+        ;;
+esac
+
+TGT=include.${OS}.${ISA}.mk
+:> ${TGT}
+echo "CFLAGS += ${CFLAGS}" >> ${TGT}
+echo "CFLAGS_cc = ${CFLAGS_cc}" >> ${TGT}
+echo "CFLAGS_c99 = ${CFLAGS_c99}" >> ${TGT}
+echo "CFLAGS_gcc = ${CFLAGS_gcc}" >> ${TGT}
+
+

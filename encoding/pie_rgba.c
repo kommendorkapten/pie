@@ -12,7 +12,7 @@
 */
 
 
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -38,7 +38,7 @@ void encode_rgba(unsigned char* restrict buf,
         memcpy(buf, &h, sizeof(uint32_t));
         buf += sizeof(uint32_t);
         
-#if _HAS_SIMD
+#if _HAS_SIMD4
         int rem = img->width % 4;
         int stop = img->width - rem;
         float or[4];
@@ -48,7 +48,7 @@ void encode_rgba(unsigned char* restrict buf,
         int stop = 0;
 #endif
         
-#if _HAS_SSE
+#if _HAS_SSE42
         __m128 scalev = _mm_set1_ps(255.0f);
 #endif
 #if _HAS_ALTIVEC
@@ -59,8 +59,7 @@ void encode_rgba(unsigned char* restrict buf,
         for (int y = 0; y < img->height; y++)
         {
 
-#if _HAS_SIMD
-# if _HAS_SSE
+#if _HAS_SSE42
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * img->row_stride + x;
@@ -94,7 +93,7 @@ void encode_rgba(unsigned char* restrict buf,
                         *buf++ = 255;
                 }
                 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
                 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -129,9 +128,6 @@ void encode_rgba(unsigned char* restrict buf,
                         *buf++ = 255;
                 }
 
-# else
-#  error invalid SIMD mode
-# endif
 #endif
 
                 for (int x = stop; x < img->width; x++)

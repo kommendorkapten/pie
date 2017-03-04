@@ -5,3 +5,4 @@ obj/*
 *.jpg
 *.png
 core
+include.*

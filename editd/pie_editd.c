@@ -32,8 +32,6 @@
 #include <string.h>
 #include <note.h>
 
-#define _USE_GAMMA_CONV 0
-
 struct config
 {
         char* lib_path;

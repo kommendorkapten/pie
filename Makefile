@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE
+CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE -D_POSIX_C_SOURCE=200112L
 LFLAGS  += -lm -lpng -ljpeg
 LSCUT   = -L/usr/local/lib -lscut
 OS      = $(shell uname -s)
@@ -17,7 +17,13 @@ PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
 # Default to c99 on Solaris
 ifeq ($(OS), SunOS)
   CC = c99
-  CFLAGS += -D_POSIX_C_SOURCE=200112L
+endif
+
+ifeq ($(OS), FreeBSD)
+  # Something weird with FreeBSD and math.h, M_PI is not visible unless
+  # _XOPEN_SOURCE is defined. (_POSIX_C_SOURCE is not needed when
+  # _XOPEN_SOURCE but as long as they do not conflict it is not a problem).
+  CFLAGS += -D_XOPEN_SOURCE=600
 endif
 
 # Configure stuff based on compiler
@@ -30,61 +36,32 @@ endif
 ifeq ($(OS), SunOS)
   ifeq ($(CC), cc)
     CFLAGS += -std=c99 -pedantic -v -mt -fast -xalias_level=std
-    ifeq ($(ISA), i386)
-      CFLAGS += -xarch=sse4_2 
-    else ifeq ($(ISA), sparc)
-      CFLAGS += -xarch=sparcvis2
-    endif
   else ifeq ($(CC), c99)
     CFLAGS += -v -mt -fast -xalias_level=std
-    # Architecture specifications here does not really matter as -fast sets
-    # architecture to native.
-    ifeq ($(ISA), i386)
-      CFLAGS += -xarch=sse4_2 
-    else ifeq ($(ISA), sparc)
-      CFLAGS += -xarch=sparcvis2
-    endif
   else ifeq ($(CC), gcc)
     CFLAGS += -Wconversion -Wno-sign-conversion
-    ifeq ($(ISA), i386)
-      CFLAGS += -march=nehalem
-    endif
   endif
 else ifeq ($(OS), FreeBSD)
   # libpng and libjpeg is found in /usr/local/lib when installed via ports
   LFLAGS := -L/usr/local/lib $(LFLAGS) -lpthread
   ifeq ($(CC), gcc)
-    ifeq ($(ISA), powerpc64)
-      # Assume ppc 970
-      CFLAGS += -mcpu=970 -mtune=970 -mpowerpc64 -mpowerpc-gpopt -maltivec
-      CFLAGS += -ffast-math -fgcse-sm 
-    else
-      CFLAGS += mtune=$(ISA) -mcpu=$(ISA)
-    endif
+    CFLAGS += -ffast-math
   endif
 else ifeq ($(OS), Darwin)
   ifeq ($(ISA), powerpc)
     CFLAGS  += -fast
   else
-    CFLAGS  += -march=native -Wconversion -Wno-sign-conversion -D_USE_OPEN_SSL
+    CFLAGS  += -Wconversion -Wno-sign-conversion -D_USE_OPEN_SSL
     LCRYPTO = -lcrypto
     LFLAGS  += -L/usr/local/lib
   endif
 endif
 
-# Configuration based on ISA
-ifeq ($(ISA), i386)
-  CFLAGS += -D_HAS_SIMD=1 -D_HAS_SSE=1
-else ifeq ($(ISA), powerpc)
-  CFLAGS += -D_HAS_SIMD=1 -D_HAS_ALTIVEC=1
-else ifeq ($(ISA), powerpc64)
-  CFLAGS += -D_HAS_SIMD=1 -D_HAS_ALTIVEC=1
-else ifeq ($(ISA), sparc)
-else
-endif
+include include.$(OS).$(ISA).mk
+CFLAGS += $(CFLAGS_$(CC))
 
 ifeq ($(DEBUG), 1)
-  CFLAGS += -g -DDEBUG=2
+  CFLAGS += -g -DDEBUG=1
 else
   CFLAGS += -DNDEBUG
 endif
@@ -101,16 +78,18 @@ BM_SRC     = pie_bm.c pie_dwn_smpl.c
 HTTP_SRC   = pie_session.c pie_util.c
 EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c
+COLLD_SRC  = pie_colld.c pie_coll.c
 SOURCES    = pie_cspace.c \
 	     $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
 OBJS       = $(SOURCES:%.c=obj/%.o)
 HTTP_OBJS  = $(HTTP_SRC:%.c=obj/%.o)
 EDITD_OBJS = $(EDITD_SRC:%.c=obj/%.o)
+COLLD_OBJS = $(COLLD_SRC:%.c=obj/%.o)
 TEST_BINS  = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
              histinfo contr gauss unsharp tojpg catm tapply tdowns
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd
+VPATH = io lib alg encoding math bm http editd collectiond
 
 .PHONY: all
 .PHONY: test
@@ -119,7 +98,7 @@ VPATH = io lib alg encoding math bm http editd
 
 ########################################################################
 
-all: $(OBJS) test editd
+all: $(OBJS) test bin/editd bin/collectiond
 
 test: $(T_BINS) 
 
@@ -181,3 +160,6 @@ bin/tdowns: testp/tdowns.c $(OBJS)
 
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS)
 	$(CC) $(CFLAGS) $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
+
+bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
+	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)

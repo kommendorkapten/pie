@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -31,7 +31,7 @@ void pie_alg_contr(float* img,
                    int h,
                    int stride)
 {
-#if _HAS_SSE
+#if _HAS_SSE42
         __m128 sv = _mm_set1_ps(0.5f);
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
@@ -43,7 +43,7 @@ void pie_alg_contr(float* img,
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD
+#if _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -56,8 +56,7 @@ void pie_alg_contr(float* img,
         for (int y = 0; y < h; y++)
         {
 
-#if _HAS_SIMD
-# if _HAS_SSE
+#if _HAS_SSE42
                 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -82,7 +81,7 @@ void pie_alg_contr(float* img,
                         _mm_store_ps(img + p, data);
                 }
 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -103,9 +102,7 @@ void pie_alg_contr(float* img,
         
                         vec_st(datav, p, img);
                 }
-# else
-#  error invalid SIMD mode
-# endif
+
 #endif
                 
                 for (int x = stop; x < w; x++)

@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -36,7 +36,7 @@ void pie_alg_satur(float* restrict r,
         assert(v >= 0.0f);
         assert(v <= 2.0f);
 
-#if _HAS_SSE
+#if _HAS_SSE42
         __m128 prv = _mm_set1_ps(P_R);
         __m128 pgv = _mm_set1_ps(P_G);
         __m128 pbv = _mm_set1_ps(P_B);
@@ -55,7 +55,7 @@ void pie_alg_satur(float* restrict r,
         vector float three_halfv = (vector float){1.5f, 1.5f, 1.5f, 1.5f};
 #endif
         
-#if _HAS_SIMD
+#if _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -65,8 +65,7 @@ void pie_alg_satur(float* restrict r,
         for (int y = 0; y < h; y++)
         {
                 
-#if _HAS_SIMD        
-# if _HAS_SSE
+#if _HAS_SSE42
                 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -132,7 +131,7 @@ void pie_alg_satur(float* restrict r,
                         _mm_store_ps(b + p, accv);
                 }
 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -207,9 +206,7 @@ void pie_alg_satur(float* restrict r,
                         accv = vec_sel(accv, zerov, cmpv);
                         vec_st(accv, p, b);                        
                 }
-# else                
-#  error invalid SIMD mode
-# endif
+
 #endif
                 
                 for (int x = stop; x < w; x++)

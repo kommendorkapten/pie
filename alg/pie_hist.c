@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -26,7 +26,7 @@
 
 void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
-#if _HAS_SSE
+#if _HAS_SSE42
 	__m128 coeff_red = _mm_set1_ps(LUM_RED);
 	__m128 coeff_green = _mm_set1_ps(LUM_GREEN);
 	__m128 coeff_blue = _mm_set1_ps(LUM_BLUE);
@@ -39,7 +39,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
         vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD
+#if _HAS_SIMD4
 	int rem = bm->width % 4;
 	int stop = bm->width - rem;
 #else
@@ -50,8 +50,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 	for (int y = 0; y < bm->height; y++)
 	{
                 
-#if _HAS_SIMD
-# if _HAS_SSE
+#if _HAS_SSE42
                 
 		for (int x = 0; x < stop; x+=4)
 		{
@@ -81,7 +80,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[3]]++;
 		}
                 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x+=4)
                 {
@@ -110,9 +109,6 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[3]]++;
                 }
                 
-# else
-#  error invalid SIMD mode
-# endif
 #endif       
 
 		for (int x = stop; x < bm->width; x++)
@@ -136,14 +132,14 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 
 void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 {
-#if _HAS_SSE
+#if _HAS_SSE42
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
 #endif
 #if _HAS_ALTIVEC
         vector float coeff_scale = (vector float){255.0f, 255.0f, 255.0f, 255.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD
+#if _HAS_SIMD4
         float or[4];
         float og[4];
         float ob[4];
@@ -160,8 +156,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
         for (int y = 0; y < bm->height; y++)
         {
                 
-#if _HAS_SIMD
-# if _HAS_SSE
+#if _HAS_SSE42
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -192,7 +187,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                         hist->c_blue[(unsigned char)ob[3]]++;
                 }
                 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -222,9 +217,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
                         hist->c_blue[(unsigned char)ob[2]]++;
                         hist->c_blue[(unsigned char)ob[3]]++;
                 }
-# else                
-#  error invalid SIMD mode
-# endif
+
 #endif
 
 		for (int x = stop; x < bm->width; x++)

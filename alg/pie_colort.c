@@ -11,7 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -28,7 +28,7 @@ void pie_alg_color_temp(float* restrict r,
                         int h,
                         int s)
 {
-#if _HAS_SSE
+#if _HAS_SSE42
         __m128 ctv = _mm_set1_ps(colort);
         __m128 tintv = _mm_set1_ps(tint);
         __m128 onev = _mm_set1_ps(1.0f);
@@ -42,7 +42,7 @@ void pie_alg_color_temp(float* restrict r,
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
         vector float onethirdv = (vector float){0.33333f, 0.33333f, 0.33333f, 0.33333f};
 #endif
-#if _HAS_SIMD
+#if _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -56,8 +56,8 @@ void pie_alg_color_temp(float* restrict r,
 
         for (int y = 0; y < h; y++)
         {        
-#if _HAS_SIMD
-# if _HAS_SSE
+
+#if _HAS_SSE42
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * s + x;
@@ -102,7 +102,9 @@ void pie_alg_color_temp(float* restrict r,
 
                         _mm_store_ps(b + p, bv);
                 }
-# elif _HAS_ALTIVEC
+
+#elif _HAS_ALTIVEC
+
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = sizeof(float) * (y * s + x);
@@ -146,9 +148,7 @@ void pie_alg_color_temp(float* restrict r,
         
                         vec_st(bv, p, b);                        
                 }
-# else
-#  error invalid SIMD mode
-# endif
+
 #endif
         
                 for (int x = stop; x < w; x++)

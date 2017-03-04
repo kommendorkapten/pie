@@ -11,11 +11,11 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#define MAX_SEP_LEN 81
+#define MAX_KERNEL_LEN 81
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
-#if _HAS_SSE
+#if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #if _HAS_ALTIVEC
@@ -50,22 +50,22 @@ int pie_alg_unsharp(float* restrict r,
                     int h,
                     int s)
 {
-        float kernel[MAX_SEP_LEN];
+        float kernel[MAX_KERNEL_LEN];
         size_t size;
         float* buf;
         float* blur;
         /* Dimension of kernel should be ceil(6*sigma) */
-        int sep_len = (int)((6.0f * param->radius) + 0.5f);
+        int kernel_len = (int)((6.0f * param->radius) + 0.5f);
 
-        if ((sep_len & 0x1) == 0)
+        if ((kernel_len & 0x1) == 0)
         {
                 /* Always use an odd number for kernel dimension */
-                sep_len++;
+                kernel_len++;
         }
 
-        if (sep_len > MAX_SEP_LEN)
+        if (kernel_len > MAX_KERNEL_LEN)
         {
-                sep_len = MAX_SEP_LEN;
+                kernel_len = MAX_KERNEL_LEN;
         }
 
         size = s * h * sizeof(float);
@@ -81,15 +81,13 @@ int pie_alg_unsharp(float* restrict r,
                 return -1;
         }
         /* Create a separable gauss kernel */
-        pie_kernel_sep_gauss(kernel, sep_len, param->radius * param->radius);
-        /* for (int i = 0; i < sep_len; i++) */
-        /*         printf("%d: %f\n", i, kernel[i]); */
+        pie_kernel_sep_gauss(kernel, kernel_len, param->radius * param->radius);
 
         /* Red channel */
         memcpy(blur, r, size);
         pie_kernel_sep_apply(blur,
                              kernel,
-                             sep_len,
+                             kernel_len,
                              buf,
                              w,
                              h,
@@ -105,7 +103,7 @@ int pie_alg_unsharp(float* restrict r,
         memcpy(blur, g, size);        
         pie_kernel_sep_apply(blur,
                              kernel,
-                             sep_len,
+                             kernel_len,
                              buf,
                              w,
                              h,
@@ -121,7 +119,7 @@ int pie_alg_unsharp(float* restrict r,
         memcpy(blur, b, size);        
         pie_kernel_sep_apply(blur,
                              kernel,
-                             sep_len,
+                             kernel_len,
                              buf,
                              w,
                              h,
@@ -148,7 +146,7 @@ static void pie_unsharp_chan(float* restrict img,
 {
         float threshold = param->threshold / 255.0f;
 
-#if _HAS_SSE
+#if _HAS_SSE42
         __m128 amountv = _mm_set1_ps(param->amount);
         __m128 thresholdv = _mm_set1_ps(threshold);
         __m128 onev = _mm_set1_ps(1.0f);
@@ -161,7 +159,7 @@ static void pie_unsharp_chan(float* restrict img,
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD
+#if _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -170,8 +168,7 @@ static void pie_unsharp_chan(float* restrict img,
         for (int y = 0; y < h; y++)
         {
         
-#if _HAS_SIMD
-# if _HAS_SSE
+#if _HAS_SSE
         
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -207,7 +204,7 @@ static void pie_unsharp_chan(float* restrict img,
                         _mm_store_ps(img + p, newv);                        
                 }
 
-# elif _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -241,9 +238,6 @@ static void pie_unsharp_chan(float* restrict img,
                         vec_st(newv, p, img);
                 }
 
-# else
-#  error invalid SIMD mode
-# endif
 #endif
 
                 for (int x = stop; x < w; x++)
