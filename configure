@@ -92,9 +92,9 @@ configure_bsd_i386()
 
 configure_bsd_ppc()
 {
-    printf "Scan for Altivec/VMX..."
     CFLAGS_gcc="${CFLAGS_gcc} -fgcse-sm  -mpowerpc-gpopt"
 
+    printf "Scan for Altivec/VMX..."
     if sysctl -n hw.altivec | grep -q 1; then
         printf "found\n"
         CFLAGS="${CFLAGS} -D_HAS_ALTIVEC=1 -D_HAS_SIMD4=1"
