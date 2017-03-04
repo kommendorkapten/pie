@@ -15,10 +15,12 @@
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
-#if _HAS_SSE42
-# include <nmmintrin.h> /* sse 4.2 */
-#endif
-#if _HAS_ALTIVEC
+#if _HAS_AVX
+# include <immintrin.h>
+# include "../avx_cmp.h"
+#elif _HAS_SSE42
+# include <nmmintrin.h>
+#elif _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <stdlib.h>
@@ -146,20 +148,28 @@ static void pie_unsharp_chan(float* restrict img,
 {
         float threshold = param->threshold / 255.0f;
 
-#if _HAS_SSE42
+#if _HAS_AVX
+        __m256 amountv = _mm256_set1_ps(param->amount);
+        __m256 thresholdv = _mm256_set1_ps(threshold);
+        __m256 onev = _mm256_set1_ps(1.0f);
+        __m256 zerov = _mm256_set1_ps(0.0f);
+        __m256 sign_maskv = _mm256_set1_ps(-0.f);         
+#elif _HAS_SSE42
         __m128 amountv = _mm_set1_ps(param->amount);
         __m128 thresholdv = _mm_set1_ps(threshold);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
         __m128 sign_maskv = _mm_set1_ps(-0.f); 
-#endif
-#if _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
         vector float amountv = (vector float){param->amount, param->amount, param->amount, param->amount};
         vector float thresholdv = (vector float){threshold, threshold, threshold, threshold};
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD4
+#if _HAS_SIMD8
+	int rem = w % 8;
+	int stop = w - rem;
+#elif _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -167,8 +177,42 @@ static void pie_unsharp_chan(float* restrict img,
 #endif
         for (int y = 0; y < h; y++)
         {
-        
-#if _HAS_SSE
+#if _HAS_AVX
+                for (int x = 0; x < stop; x += 8)
+                {
+                        int p = y * s + x;
+                        __m256 imgv = _mm256_load_ps(img + p);
+                        __m256 blurv = _mm256_load_ps(blur + p);
+                        __m256 maskv;
+                        __m256 newv;
+                        __m256 cmpv;
+                        __m256 deltav;
+
+                        maskv = _mm256_sub_ps(imgv, blurv);
+                        maskv = _mm256_mul_ps(maskv, amountv);
+                        newv = _mm256_add_ps(imgv, maskv);
+
+                        /* Threshold stuff */
+                        deltav = _mm256_sub_ps(imgv, newv);
+                        /* Make sure all values are positive */
+                        _mm256_andnot_ps(sign_maskv, deltav);
+
+                        cmpv = _mm256_cmp_ps(deltav, thresholdv, _CMP_NLT_UQ);
+                        newv = _mm256_blendv_ps(imgv, newv, cmpv);
+                        
+                        /* the ones less than zero will be 0xffffffff */
+                        cmpv = _mm256_cmp_ps(newv, zerov, _CMP_LT_OQ);
+                        /* d = a,b,m. if m == 0 a else b */
+                        newv = _mm256_blendv_ps(newv, zerov, cmpv);
+
+                        /* the ones greater than one will be 0xffffffff */
+                        cmpv = _mm256_cmp_ps(newv, onev, _CMP_NLT_UQ);
+                        newv = _mm256_blendv_ps(newv, onev, cmpv);
+
+                        _mm256_store_ps(img + p, newv);                        
+                }
+                
+#elif _HAS_SSE
         
                 for (int x = 0; x < stop; x += 4)
                 {

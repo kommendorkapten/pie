@@ -11,10 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE42
-# include <nmmintrin.h> /* sse 4.2 */
-#endif
-#if _HAS_ALTIVEC
+#if _HAS_AVX
+# include <immintrin.h>
+# include "../avx_cmp.h"
+#elif _HAS_SSE42
+# include <nmmintrin.h>
+#elif _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <assert.h>
@@ -31,19 +33,26 @@ void pie_alg_contr(float* img,
                    int h,
                    int stride)
 {
-#if _HAS_SSE42
+#if _HAS_AVX
+        __m256 sv = _mm256_set1_ps(0.5f);
+        __m256 av = _mm256_set1_ps(c);
+        __m256 onev = _mm256_set1_ps(1.0f);
+        __m256 zerov = _mm256_set1_ps(0.0f);
+#elif _HAS_SSE42
         __m128 sv = _mm_set1_ps(0.5f);
         __m128 av = _mm_set1_ps(c);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
-#endif
-#if _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
         vector float sv = (vector float){0.5f, 0.5f, 0.5f, 0.5f};
         vector float av = (vector float){c, c, c, c};
         vector float onev = (vector float){1.0f, 1.0f, 1.0f, 1.0f};
         vector float zerov = (vector float){0.0f, 0.0f, 0.0f, 0.0f};
 #endif
-#if _HAS_SIMD4
+#if _HAS_SIMD8
+	int rem = w % 8;
+	int stop = w - rem;
+#elif _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -55,8 +64,31 @@ void pie_alg_contr(float* img,
 
         for (int y = 0; y < h; y++)
         {
+#if _HAS_AVX
+                for (int x = 0; x < stop; x += 8)
+                {
+                        __m256 data;
+                        __m256 cmpv;
+                        int p = y * stride + x;
 
-#if _HAS_SSE42
+                        data = _mm256_load_ps(img + p);
+                        data = _mm256_sub_ps(data, sv);
+                        data = _mm256_mul_ps(data, av);
+                        data = _mm256_add_ps(data, sv);
+
+                        /* the ones less than zero will be 0xffffffff */
+                        cmpv = _mm256_cmp_ps(data, zerov, _CMP_LT_OQ);
+                        /* d = a,b,m. if m == 0 a else b */
+                        data = _mm256_blendv_ps(data, zerov, cmpv);
+
+                        /* the ones greater than one will be 0xffffffff */
+                        cmpv = _mm256_cmp_ps(data, onev, _CMP_NLT_UQ);
+                        data = _mm256_blendv_ps(data, onev, cmpv);
+
+                        _mm256_store_ps(img + p, data);
+                }
+
+#elif _HAS_SSE42
                 
                 for (int x = 0; x < stop; x += 4)
                 {

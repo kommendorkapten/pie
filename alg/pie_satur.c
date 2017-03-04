@@ -11,10 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#if _HAS_SSE42
-# include <nmmintrin.h> /* sse 4.2 */
-#endif
-#if _HAS_ALTIVEC
+#if _HAS_AVX
+# include <immintrin.h>
+# include "../avx_cmp.h"
+#elif _HAS_SSE42
+# include <nmmintrin.h>
+#elif _HAS_ALTIVEC
 # include <altivec.h>
 #endif
 #include <math.h>
@@ -36,15 +38,21 @@ void pie_alg_satur(float* restrict r,
         assert(v >= 0.0f);
         assert(v <= 2.0f);
 
-#if _HAS_SSE42
+#if _HAS_AVX        
+        __m256 prv = _mm256_set1_ps(P_R);
+        __m256 pgv = _mm256_set1_ps(P_G);
+        __m256 pbv = _mm256_set1_ps(P_B);
+        __m256 vv = _mm256_set1_ps(v);
+        __m256 onev = _mm256_set1_ps(1.0f);
+        __m256 zerov = _mm256_set1_ps(0.0f);
+#elif _HAS_SSE42
         __m128 prv = _mm_set1_ps(P_R);
         __m128 pgv = _mm_set1_ps(P_G);
         __m128 pbv = _mm_set1_ps(P_B);
         __m128 vv = _mm_set1_ps(v);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
-#endif
-#if _HAS_ALTIVEC
+#elif _HAS_ALTIVEC
         vector float prv = (vector float){P_R, P_R, P_R, P_R};
         vector float pgv = (vector float){P_G, P_G, P_G, P_G};
         vector float pbv = (vector float){P_B, P_B, P_B, P_B};
@@ -54,8 +62,11 @@ void pie_alg_satur(float* restrict r,
         vector float halfv = (vector float){0.5f, 0.5f, 0.5f, 0.5f};
         vector float three_halfv = (vector float){1.5f, 1.5f, 1.5f, 1.5f};
 #endif
-        
-#if _HAS_SIMD4
+
+#if _HAS_SIMD8
+	int rem = w % 8;
+	int stop = w - rem;
+#elif _HAS_SIMD4
 	int rem = w % 4;
 	int stop = w - rem;
 #else
@@ -64,9 +75,74 @@ void pie_alg_satur(float* restrict r,
 
         for (int y = 0; y < h; y++)
         {
+#if _HAS_AVX
+
+                for (int x = 0; x < stop; x += 8)
+                {
+                        __m256 rv;
+                        __m256 gv;
+                        __m256 bv;
+                        __m256 rsv;
+                        __m256 gsv;
+                        __m256 bsv;
+                        __m256 accv;
+                        __m256 sqv;
+                        __m256 dv;
+                        __m256 cmpv;
+                        int p = y * s + x;
+
+                        rv = _mm256_load_ps(r + p);
+                        gv = _mm256_load_ps(g + p);
+                        bv = _mm256_load_ps(b + p);
+
+                        rsv = _mm256_mul_ps(rv, rv);
+                        gsv = _mm256_mul_ps(gv, gv);
+                        bsv = _mm256_mul_ps(bv, bv);
+                        rsv = _mm256_mul_ps(rsv, prv);
+                        gsv = _mm256_mul_ps(gsv, pgv);
+                        bsv = _mm256_mul_ps(bsv, pbv);
+
+                        accv = _mm256_add_ps(rsv, gsv);
+                        accv = _mm256_add_ps(accv, bsv);
+
+                        sqv = _mm256_sqrt_ps(accv);
+
+                        /* red */
+                        dv = _mm256_sub_ps(rv, sqv);
+                        dv = _mm256_mul_ps(dv, vv);
+                        accv = _mm256_add_ps(sqv, dv);
+                        /* maintain values in range [0,1] */
+                        cmpv = _mm256_cmp_ps(accv, zerov, _CMP_LT_OQ);
+                        accv = _mm256_blendv_ps(accv, zerov, cmpv);
+                        cmpv = _mm256_cmp_ps(accv, onev, _CMP_NLT_UQ);
+                        accv = _mm256_blendv_ps(accv, onev, cmpv);
+                        _mm256_store_ps(r + p, accv);
+
+                        /* green */
+                        dv = _mm256_sub_ps(gv, sqv);
+                        dv = _mm256_mul_ps(dv, vv);
+                        accv = _mm256_add_ps(sqv, dv);
+                        /* maintain value in range [0,1] */
+                        cmpv = _mm256_cmp_ps(accv, zerov, _CMP_LT_OQ);
+                        accv = _mm256_blendv_ps(accv, zerov, cmpv);
+                        cmpv = _mm256_cmp_ps(accv, onev, _CMP_NLT_UQ);
+                        accv = _mm256_blendv_ps(accv, onev, cmpv);
+                        _mm256_store_ps(g + p, accv);
+
+                        /* blue */
+                        dv = _mm256_sub_ps(bv, sqv);
+                        dv = _mm256_mul_ps(dv, vv);
+                        accv = _mm256_add_ps(sqv, dv);
+                        /* maintain value in range [0,1] */
+                        cmpv = _mm256_cmp_ps(accv, zerov, _CMP_LT_OQ);
+                        accv = _mm256_blendv_ps(accv, zerov, cmpv);
+                        cmpv = _mm256_cmp_ps(accv, onev, _CMP_NLT_UQ);
+                        accv = _mm256_blendv_ps(accv, onev, cmpv);
+                        _mm256_store_ps(b + p, accv);
+                }
                 
-#if _HAS_SSE42
-                
+#elif _HAS_SSE42
+
                 for (int x = 0; x < stop; x += 4)
                 {
                         __m128 rv;
