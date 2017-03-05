@@ -37,7 +37,7 @@ ifeq ($(OS), SunOS)
   ifeq ($(CC), cc)
     CFLAGS += -std=c99 -pedantic -v -mt -fast -xalias_level=std
   else ifeq ($(CC), c99)
-    CFLAGS += -v -mt -fast -xalias_level=std
+    CFLAGS += -v -mt -xalias_level=std -fast 
   else ifeq ($(CC), gcc)
     CFLAGS += -Wconversion -Wno-sign-conversion
   endif
@@ -73,7 +73,7 @@ ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c
 ENC_SRC    = pie_json.c pie_rgba.c
-MTH_SRC    = pie_math.c pie_catmull.c
+MTH_SRC    = pie_math.c pie_catmull.c pie_blur.c
 BM_SRC     = pie_bm.c pie_dwn_smpl.c
 HTTP_SRC   = pie_session.c pie_util.c
 EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
@@ -156,6 +156,9 @@ bin/tapply: testp/tapply.c $(OBJS) obj/pie_render.o
 	$(CC) $(CFLAGS) $< $(OBJS) obj/pie_render.o -o $@ $(LFLAGS)
 
 bin/tdowns: testp/tdowns.c $(OBJS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+
+bin/bench_blur: testp/bench_blur.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
 
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS)

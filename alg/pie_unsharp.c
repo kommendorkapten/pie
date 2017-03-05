@@ -11,10 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#define MAX_KERNEL_LEN 81
+#define MAX_KERNEL_LEN 281
+#define USE_BOX_BLUR 1
 
 #include "pie_unsharp.h"
 #include "pie_kernel.h"
+#include "../math/pie_blur.h"
 #if _HAS_AVX
 # include <immintrin.h>
 # include "../avx_cmp.h"
@@ -43,6 +45,28 @@ static void pie_unsharp_chan(float* restrict,
                              int,
                              int,
                              int);
+
+/**
+ * Helper function that dispatches to the most effective
+ * blur operation.
+ * @param the channel to blur.
+ * @param temporary buffer large enough to hold the channel.
+ * @param width of the channel.
+ * @param height of the channel.
+ * @param row stride of the channel.
+ * @param sigma (radius) for the blur.
+ * @param kernel to apply.
+ * @param size of kernel.
+ * @return void.
+ */
+static void pie_uns_blur_chan(float* restrict,
+                              float* restrict,
+                              int,
+                              int,
+                              int,
+                              float,
+                              float* restrict,
+                              int);
 
 int pie_alg_unsharp(float* restrict r,
                     float* restrict g,
@@ -87,13 +111,14 @@ int pie_alg_unsharp(float* restrict r,
 
         /* Red channel */
         memcpy(blur, r, size);
-        pie_kernel_sep_apply(blur,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             w,
-                             h,
-                             s);
+        pie_uns_blur_chan(blur,
+                          buf,
+                          w,
+                          h,
+                          s,
+                          param->radius,
+                          kernel,
+                          kernel_len);
         pie_unsharp_chan(r,
                          blur,
                          param,
@@ -103,13 +128,14 @@ int pie_alg_unsharp(float* restrict r,
         
         /* Green channel */
         memcpy(blur, g, size);        
-        pie_kernel_sep_apply(blur,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             w,
-                             h,
-                             s);
+        pie_uns_blur_chan(blur,
+                          buf,
+                          w,
+                          h,
+                          s,
+                          param->radius,
+                          kernel,
+                          kernel_len);
         pie_unsharp_chan(g,
                          blur,
                          param,
@@ -119,13 +145,14 @@ int pie_alg_unsharp(float* restrict r,
 
         /* Blue channel */        
         memcpy(blur, b, size);        
-        pie_kernel_sep_apply(blur,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             w,
-                             h,
-                             s);
+        pie_uns_blur_chan(blur,
+                          buf,
+                          w,
+                          h,
+                          s,
+                          param->radius,
+                          kernel,
+                          kernel_len);
         pie_unsharp_chan(b,
                          blur,
                          param,
@@ -212,7 +239,7 @@ static void pie_unsharp_chan(float* restrict img,
                         _mm256_store_ps(img + p, newv);                        
                 }
                 
-#elif _HAS_SSE
+#elif _HAS_SSE42
         
                 for (int x = 0; x < stop; x += 4)
                 {
@@ -305,4 +332,47 @@ static void pie_unsharp_chan(float* restrict img,
                         }
                 }
         }        
+}
+
+static void pie_uns_blur_chan(float* restrict chan,
+                              float* restrict buf,
+                              int w,
+                              int h,
+                              int s,
+                              float sigma,
+                              float* restrict kernel,
+                              int kernel_len)
+{
+#if USE_BOX_BLUR
+        /* Determine which method to use */
+# ifdef __sparc
+        /* always use box blur */
+        pie_box_blur6(chan, buf, sigma, w, h, s);        
+# else
+        if (sigma < 4.1f)
+        {
+                /* use kernel convolution */
+                pie_kernel_sep_apply(chan,
+                                     kernel,
+                                     kernel_len,
+                                     buf,
+                                     w,
+                                     h,
+                                     s);
+        }
+        else
+        {
+                /* Use box blur */
+                pie_box_blur6(chan, buf, sigma, w, h, s);
+        }
+# endif
+#else
+        pie_kernel_sep_apply(chan,
+                             kernel,
+                             kernel_len,
+                             buf,
+                             w,
+                             h,
+                             s);
+#endif
 }
