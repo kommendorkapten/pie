@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
         dur = timing_dur_usec(&t);
         printf("Calculate contrast took %luusec\n", dur);
-#if 0
+
         bm_conv_bd(&out, PIE_COLOR_8B,
                    &img, PIE_COLOR_32B);
 
@@ -60,6 +60,6 @@ int main(int argc, char** argv)
 
         bm_free_f32(&img);
         bm_free_u8(&out);
-#endif
+
         return 0;
 }

@@ -74,7 +74,7 @@ static void gauss_boxes(float* boxes, float sigma, int n)
         {
                 wl--;
         }
-        wu = (float)wl + 2.0f;
+        wu = wl + 2;
         
         ideal_m = 12.0f * var;
         ideal_m -= (float)(n * wl * wl);
@@ -86,7 +86,7 @@ static void gauss_boxes(float* boxes, float sigma, int n)
         
         for (int i = 0; i < n; i++)
         {
-                boxes[i] = ( i < m ? wl : wu);
+                boxes[i] = (float)(i < m ? wl : wu);
         }
         
         return;

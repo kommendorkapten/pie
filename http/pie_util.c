@@ -132,8 +132,6 @@ int get_lws_cookie(char* restrict v,
                 }
                 else
                 {
-                        ptrdiff_t tlen = p - t;
-
                         *p++ = 0;
                         if (strcmp(t, cookie) == 0)
                         {

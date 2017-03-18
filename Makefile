@@ -22,7 +22,8 @@ endif
 ifeq ($(OS), FreeBSD)
   # Something weird with FreeBSD and math.h, M_PI is not visible unless
   # _XOPEN_SOURCE is defined. (_POSIX_C_SOURCE is not needed when
-  # _XOPEN_SOURCE but as long as they do not conflict it is not a problem).
+  # _XOPEN_SOURCE but as long as they do not conflict it is not a problem
+  # to define both of them).
   CFLAGS += -D_XOPEN_SOURCE=600
 endif
 
@@ -80,7 +81,7 @@ EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c
 MEDIAD_SRC = mediad.c new_media.c
 COLLD_SRC  = pie_colld.c pie_coll.c
-SOURCES    = pie_cspace.c \
+SOURCES    = pie_cspace.c pie_id.c\
 	     $(IO_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
 # Objects
 OBJS       = $(SOURCES:%.c=obj/%.o)

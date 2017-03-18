@@ -62,7 +62,7 @@ int main(int argc, char** argv)
         }
         printf("Loaded media in %luusec\n", dur);
 
-        size = img.row_stride * img.height * sizeof(float);
+        size = (int)(img.row_stride * img.height * sizeof(float));
         buf = malloc(size);
         tmp = malloc(size);
         printf("Apply Gaussian blur with sigma: %f and kernel size: %d\n",
