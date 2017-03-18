@@ -1,11 +1,11 @@
 CC      = gcc
 CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE -D_POSIX_C_SOURCE=200112L
-LFLAGS  += -lm -lpng -ljpeg
+LFLAGS  += -lm
 LSCUT   = -L/usr/local/lib -lscut
 OS      = $(shell uname -s)
 ISA     = $(shell uname -p)
 DEBUG   = 1
-LCRYPTO = -lmd
+LCRYPTO = -lssl -lcrypto
 
 # -ftree-loop-linear MAY introduce bugs.
 PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
@@ -51,8 +51,7 @@ else ifeq ($(OS), Darwin)
   ifeq ($(ISA), powerpc)
     CFLAGS  += -fast
   else
-    CFLAGS  += -Wconversion -Wno-sign-conversion -D_USE_OPEN_SSL
-    LCRYPTO = -lcrypto
+    CFLAGS  += -Wconversion -Wno-sign-conversion
     LFLAGS  += -L/usr/local/lib
   endif
 endif
@@ -68,7 +67,8 @@ endif
 
 DIRS       = obj bin
 IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c
-LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c
+LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
+	     s_queue_intra.c fswalk.c llist.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c
@@ -78,18 +78,22 @@ BM_SRC     = pie_bm.c pie_dwn_smpl.c
 HTTP_SRC   = pie_session.c pie_util.c
 EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c
+MEDIAD_SRC = mediad.c new_media.c
 COLLD_SRC  = pie_colld.c pie_coll.c
 SOURCES    = pie_cspace.c \
-	     $(IO_SRC) $(LIB_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
+	     $(IO_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
+# Objects
 OBJS       = $(SOURCES:%.c=obj/%.o)
 HTTP_OBJS  = $(HTTP_SRC:%.c=obj/%.o)
 EDITD_OBJS = $(EDITD_SRC:%.c=obj/%.o)
+MEDIAD_OBJS = $(MEDIAD_SRC:%.c=obj/%.o)
 COLLD_OBJS = $(COLLD_SRC:%.c=obj/%.o)
 TEST_BINS  = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
-             histinfo contr gauss unsharp tojpg catm tapply tdowns
+             histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
+             testfwlk qserver qclient
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd collectiond
+VPATH = io lib alg encoding math bm http editd collectiond mediad
 
 .PHONY: all
 .PHONY: test
@@ -98,7 +102,7 @@ VPATH = io lib alg encoding math bm http editd collectiond
 
 ########################################################################
 
-all: $(OBJS) test bin/editd bin/collectiond
+all: $(OBJS) test bin/editd bin/collectiond bin/mediad
 
 test: $(T_BINS) 
 
@@ -114,55 +118,73 @@ clean:
 	rm -rf obj/*.o bin/* $(P_BINS)
 
 bin/pngrw: testp/pngrw.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/pngcreate: testp/pngcreate.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/imgread: testp/imgread.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/jpgcreate: testp/jpgcreate.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/jpgtopng: testp/jpgtopng.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/jpgtopng: testp/jpgtopng.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/linvsgma: testp/linvsgma.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/analin: testp/analin.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/histinfo: testp/histinfo.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/histinfo: testp/histinfo.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/contr: testp/contr.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/contr: testp/contr.c obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/pie_contr.o obj/pie_bm.o obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/gauss: testp/gauss.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/gauss: testp/gauss.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/unsharp: testp/unsharp.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/unsharp: testp/unsharp.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/tojpg: testp/tojpg.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/tojpg: testp/tojpg.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/catm: testp/catm.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/tapply: testp/tapply.c $(OBJS) obj/pie_render.o
-	$(CC) $(CFLAGS) $< $(OBJS) obj/pie_render.o -o $@ $(LFLAGS)
+bin/tapply: testp/tapply.c $(OBJS) obj/pie_render.o obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/tdowns: testp/tdowns.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+bin/tdowns: testp/tdowns.c $(OBJS) obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/bench_blur: testp/bench_blur.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS)
+	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS)
-	$(CC) $(CFLAGS) $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
+bin/test_id: testp/test_id.c obj/pie_id.o
+	$(CC) $(CFLAGS) $< obj/pie_id.o -o $@ $(LFLAGS)
+
+bin/testfwlk: testp/testfwlk.c obj/llist.o obj/fswalk.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LCRYPTO)
+
+bin/qserver: testp/qserver.c obj/s_queue.o obj/s_queue_intra.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+
+bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+
+bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
+	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
+
+bin/ingestd: ingestd/ingestd.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO)
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
 	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)

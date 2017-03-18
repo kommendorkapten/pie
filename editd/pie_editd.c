@@ -11,6 +11,14 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <stdio.h>
+#include <errno.h>
+#include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
+#include <assert.h>
+#include <string.h>
+#include <note.h>
 #include "../editd/pie_editd_ws.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
@@ -23,14 +31,6 @@
 #include "pie_msg.h"
 #include "pie_render.h"
 #include "pie_wrkspc_mgr.h"
-#include <stdio.h>
-#include <errno.h>
-#include <pthread.h>
-#include <signal.h>
-#include <unistd.h>
-#include <assert.h>
-#include <string.h>
-#include <note.h>
 
 struct config
 {

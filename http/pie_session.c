@@ -11,18 +11,14 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_session.h"
-#include "../lib/hmap.h"
-#include "../pie_log.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef _USE_OPEN_SSL
-# include <openssl/sha.h>
-#else
-# include <sha1.h>
-#endif
+#include <openssl/sha.h>
 #include <sys/time.h>
+#include "pie_session.h"
+#include "../lib/hmap.h"
+#include "../pie_log.h"
 
 struct pie_sess_mgr
 {
@@ -34,26 +30,17 @@ struct pie_sess* pie_sess_create(struct chan* command, struct chan* response)
         struct pie_sess* s;
         char buf[64];
         unsigned char sum[20];
-#ifdef _USE_OPEN_SSL
         SHA_CTX ctx;
-#else
-        SHA1_CTX ctx;
-#endif
         struct timeval tv;
         unsigned int n;
 
         s = malloc(sizeof(struct pie_sess));
         gettimeofday(&tv, NULL);
         n = snprintf(buf, 64, "x&y_z%ld%ld", tv.tv_sec, tv.tv_usec);
-#ifdef _USE_OPEN_SSL
         SHA1_Init(&ctx);
         SHA1_Update(&ctx, (void*)buf, n);
         SHA1_Final(sum, &ctx);
-#else
-        SHA1Init(&ctx);
-        SHA1Update(&ctx, (unsigned char*)buf, n);
-        SHA1Final(sum, &ctx);
-#endif
+
         /* hex encode */
         for (int i = 0; i < 20; i++)
         {

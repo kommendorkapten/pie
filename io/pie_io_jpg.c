@@ -18,6 +18,9 @@
 #include <jpeglib.h>
 #include <setjmp.h>
 
+
+#define ONE_OVER_255 0.003921569f
+
 /*
   TODO fix scan lines
   TODO fix support for b/w
@@ -45,10 +48,11 @@ static void pie_jpg_error_exit(j_common_ptr cinfo)
 int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
 {
         struct jpeg_decompress_struct cinfo;
-        FILE* fp;
-        JSAMPLE* row;
-        int y;
         struct pie_jpg_error_mgr jerr;
+        FILE* fp;
+        JSAMPLE** rows;
+        int y;
+        int num_rows = 1;
 
         fp = fopen(path, "rb");
         if (fp == NULL)
@@ -93,26 +97,39 @@ int jpg_f32_read(struct bitmap_f32rgb* bm, const char* path)
         bm->height = (int)cinfo.output_height;
         bm_alloc_f32(bm);
         y = 0;
-        row = malloc(sizeof(JSAMPLE) * 
-                     cinfo.output_width * 
-                     cinfo.output_components);
+
+        rows = malloc(sizeof(JSAMPLE*) * num_rows);
+        for (int i = 0; i < num_rows; i++)
+        {
+                rows[i] = malloc(sizeof(JSAMPLE) *
+                                 cinfo.output_width * 
+                                 cinfo.output_components);
+        }
 
         while (cinfo.output_scanline < cinfo.output_height) 
         {
-                int jpos = 0;
-                /* Read one line at a time */
-                jpeg_read_scanlines(&cinfo, &row, 1);
-
-                for (int i = 0; i < (int)cinfo.output_width; i++)
-                {
-                        bm->c_red[y + i] = row[jpos++] / 255.0f;
-                        bm->c_green[y + i] = row[jpos++] / 255.0f;
-                        bm->c_blue[y + i] = row[jpos++] / 255.0f;
-                }
+                int read_rows;
+                int jpos;
                 
-                y += bm->row_stride;
+                read_rows = jpeg_read_scanlines(&cinfo, rows, num_rows);
+                for (int r = 0; r < read_rows; r++)
+                {
+                        jpos = 0;
+                        /* Possibly add threading to speed up */
+                        for (int i = 0; i < (int)cinfo.output_width; i++)
+                        {
+                                bm->c_red[y + i] = rows[r][jpos++] / 255.0f;
+                                bm->c_green[y + i] = rows[r][jpos++] / 255.0f;
+                                bm->c_blue[y + i] = rows[r][jpos++] / 255.0f;
+                        }
+                        y += bm->row_stride;
+                }
         }
-        free(row);
+        for (int i = 0; i < num_rows; i++)
+        {
+                free(rows[i]);
+        }
+        free(rows);
 
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);

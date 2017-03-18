@@ -58,6 +58,7 @@ extern int chan_select(struct chan**, unsigned int, struct chan_msg*, int);
  * Write a message onto a channel.
  * When writing a message, the data referenced by the message is *not* copied.
  * It is up to the client to defined the ownership of any referenced data.
+ * If channel is full, this call blocks until the channel is drained.
  * @param the channel.
  * @param the message to write.
  * @return 0 if successful.

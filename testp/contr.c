@@ -12,7 +12,7 @@ int main(int argc, char** argv)
         struct bitmap_u8rgb out;
         struct timing t;
         time_t dur;
-        float amount = 1.0f;
+        float amount = 1.5f;
 
         if (argc != 2)
         {
@@ -49,13 +49,17 @@ int main(int argc, char** argv)
 
         dur = timing_dur_usec(&t);
         printf("Calculate contrast took %luusec\n", dur);
-
+#if 0
         bm_conv_bd(&out, PIE_COLOR_8B,
                    &img, PIE_COLOR_32B);
 
+        timing_start(&t);
         png_u8rgb_write("out.png", &out);
+        dur = timing_dur_usec(&t);
+        printf("Wrote output in %luusec\n", dur);
 
         bm_free_f32(&img);
         bm_free_u8(&out);
+#endif
         return 0;
 }

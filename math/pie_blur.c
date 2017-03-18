@@ -119,8 +119,8 @@ static void pie_box_blur_h4(float* restrict tgt,
     
         for (int i = 0; i < h; i++)
         {
-                int ti = i * s; // int, start of row
-                int li = ti;  // int, start of row
+                int ti = i * s; /* int, start of row */
+                int li = ti;  /* int, start of row */
                 int ri = ti + radius;
                 
                 float fv = src[ti];

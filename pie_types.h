@@ -18,6 +18,7 @@
 
 #define PIE_HIST_RES 256
 #define PIE_PATH_LEN 256
+#define PIE_EPOCH 1483228800L /* 20170101T00:00:00Z */
 
 enum pie_color_type
 {
