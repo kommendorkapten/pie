@@ -185,7 +185,7 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
 
-bin/ingestd: ingestd/ingestd.c
+bin/ingestd: ingestd/ingestd.c obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
 
 bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS)
