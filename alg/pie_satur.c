@@ -21,6 +21,7 @@
 #endif
 #include <math.h>
 #include <assert.h>
+#include "pie_satur.h"
 
 #define P_R  0.299f
 #define P_G  0.587f

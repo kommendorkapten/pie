@@ -18,6 +18,7 @@
 # include <altivec.h>
 #endif
 #include <assert.h>
+#include "pie_colort.h"
 
 void pie_alg_color_temp(float* restrict r,
                         float* restrict g,

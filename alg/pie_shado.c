@@ -11,9 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <assert.h>
 #include "../math/pie_catmull.h"
 #include "pie_curve.h"
-#include <assert.h>
+#include "pie_shado.h"
 
 #define SEGMENT_LEN 150
 #define CURVE_LEN_M 6

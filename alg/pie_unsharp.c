@@ -14,9 +14,6 @@
 #define MAX_KERNEL_LEN 281
 #define USE_BOX_BLUR 1
 
-#include "pie_unsharp.h"
-#include "pie_kernel.h"
-#include "../math/pie_blur.h"
 #if _HAS_AVX
 # include <immintrin.h>
 # include "../avx_cmp.h"
@@ -28,6 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "pie_unsharp.h"
+#include "pie_kernel.h"
+#include "../math/pie_blur.h"
 
 /**
  * Apply unsharp mask to a single channel.

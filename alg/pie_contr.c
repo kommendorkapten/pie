@@ -20,6 +20,7 @@
 # include <altivec.h>
 #endif
 #include <assert.h>
+#include "pie_contr.h"
 
 /* 
  * c is amount of contrast int [0, 2]

@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "../math/pie_point.h"
 #include "pie_curve.h"
+#include "../math/pie_point.h"
 #include "../pie_log.h"
 
 int pie_alg_curve_get(float* out,

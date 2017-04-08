@@ -16,6 +16,7 @@
 #endif
 #include <math.h>
 #include <assert.h>
+#include "pie_white.h"
 
 #define ACTION 0.142f
 

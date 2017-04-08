@@ -11,12 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_kernel.h"
-#include "../math/pie_math.h"
 #include <string.h>
 #if _HAS_SSE42
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
+#include "pie_kernel.h"
+#include "../math/pie_math.h"
 
 void pie_kernel3x3_apply(float* restrict c,
                          struct pie_kernel3x3* k,

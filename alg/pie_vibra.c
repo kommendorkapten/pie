@@ -12,6 +12,7 @@
 */
 
 #include <assert.h>
+#include "pie_vibra.h"
 
 void pie_alg_vibra(float* restrict r,
                    float* restrict g,
