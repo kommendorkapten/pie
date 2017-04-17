@@ -6,3 +6,4 @@ obj/*
 *.png
 core
 include.*
+dm/init.sql
