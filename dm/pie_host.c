@@ -172,7 +172,7 @@ cleanup:
 }
 
 int
-pie_host_find(sqlite3 * db, struct pie_host * this)
+pie_host_find_name(sqlite3 * db, struct pie_host * this)
 {
 	char           *q = "SELECT hst_id,hst_fqdn FROM pie_host WHERE hst_name = ?";
 	sqlite3_stmt   *pstmt;

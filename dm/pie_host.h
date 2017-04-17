@@ -14,7 +14,7 @@ extern void     pie_host_free(struct pie_host * this);
 extern void     pie_host_release(struct pie_host * this);
 extern int      pie_host_create(sqlite3 * db, struct pie_host * this);
 extern int      pie_host_read(sqlite3 * db, struct pie_host * this);
-extern int      pie_host_find(sqlite3 * db, struct pie_host * this);
+extern int      pie_host_find_name(sqlite3 * db, struct pie_host * this);
 extern int      pie_host_update(sqlite3 * db, struct pie_host * this);
 extern int      pie_host_delete(sqlite3 * db, struct pie_host * this);
 
