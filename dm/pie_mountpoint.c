@@ -74,6 +74,7 @@ cleanup:
 	}
 	return ret;
 }
+
 int 
 pie_mountpoint_read(sqlite3 * db, struct pie_mountpoint * this)
 {
@@ -131,6 +132,67 @@ cleanup:
 	}
 	return ret;
 }
+
+int pie_mountpoint_find_host(sqlite3 * db, struct pie_mountpoint ** this, int hst_id, size_t len)
+{
+	char*          q = "SELECT mnt_stg_id, mnt_path FROM pie_mountpoint WHERE mnt_hst_id = ?";
+	sqlite3_stmt   *pstmt;
+	int             ret;
+	int             retf;
+	const unsigned char *c;
+	int             br;
+
+	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_bind_int(pstmt, 1, hst_id);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+
+        for (size_t i = 0; i < len; i++)
+        {
+                ret = sqlite3_step(pstmt);
+                if (ret == SQLITE_DONE)
+                {
+                        this[i] = NULL;
+                        break;
+                }
+                if (ret != SQLITE_ROW)
+                {
+                        this[i] = NULL;
+                        ret = -1;
+                        goto cleanup;
+                }
+                this[i] = pie_mountpoint_alloc();
+                this[i]->mnt_hst_id = hst_id;
+                this[i]->mnt_stg_id = (int) sqlite3_column_int(pstmt, 0);
+                /* Force reading text into memory, and ge the length */
+                /* of the string (null terminator not included). */
+                /* Allocate memory and copy string to destination, */
+                /* and set the null terminator., */
+                c = sqlite3_column_text(pstmt, 1);
+                br = sqlite3_column_bytes(pstmt, 1);
+                this[i]->mnt_path = malloc(br + 1);
+                memcpy(this[i]->mnt_path, c, br);
+                this[i]->mnt_path[br] = '\0';
+        }
+        
+	ret = 0;
+cleanup:
+	retf = sqlite3_finalize(pstmt);
+	if (retf != SQLITE_OK)
+	{
+		ret = -1;
+	}
+	return ret;        
+}
+
 int 
 pie_mountpoint_update(sqlite3 * db, struct pie_mountpoint * this)
 {
