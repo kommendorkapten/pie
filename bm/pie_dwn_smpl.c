@@ -14,6 +14,7 @@
 #include "../pie_log.h"
 #include "../math/pie_math.h"
 #include "pie_bm.h"
+#include "pie_dwn_smpl.h"
 
 #define MAX_RADIUS 11
 

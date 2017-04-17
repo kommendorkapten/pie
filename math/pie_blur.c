@@ -16,6 +16,7 @@
 
 #include <math.h>
 #include <string.h>
+#include "pie_blur.h"
 
 /**
  * @param storage to put n boxes in.

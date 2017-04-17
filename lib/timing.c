@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "timing.h"
 #include <assert.h>
+#include "timing.h"
 
 void timing_start(struct timing* t)
 {

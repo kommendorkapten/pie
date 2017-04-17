@@ -11,6 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <libwebsockets.h>
 #include "pie_editd_ws.h"
 #include "pie_cmd.h"
 #include "pie_msg.h"
@@ -23,7 +24,6 @@
 #include "../lib/timing.h"
 #include "../encoding/pie_json.h"
 #include "../encoding/pie_rgba.h"
-#include <libwebsockets.h>
 
 #define JSON_HIST_SIZE (10 * 1024)
 

@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "pie_math.h"
 
 float pie_gauss(float dx, float var)
 {
