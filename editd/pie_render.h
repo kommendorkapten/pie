@@ -14,7 +14,7 @@
 #ifndef __PIE_RENDER_H__
 #define __PIE_RENDER_H__
 
-struct bitmap_f32rgb;
+struct pie_bitmap_f32rgb;
 struct pie_img_settings;
 
 /**
@@ -33,7 +33,7 @@ extern void pie_img_init_settings(struct pie_img_settings*, int, int);
  * @param settings to apply.
  * @return 0 on success.
  */
-extern int pie_img_render(struct bitmap_f32rgb*,
+extern int pie_img_render(struct pie_bitmap_f32rgb*,
                           float*,
                           const struct pie_img_settings*);
 

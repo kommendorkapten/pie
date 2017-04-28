@@ -7,13 +7,13 @@
 int main(void)
 {
         char* f = "out.png";
-        struct bitmap_u8rgb src;
-        struct bitmap_f32rgb dst;
+        struct pie_bitmap_u8rgb src;
+        struct pie_bitmap_f32rgb dst;
         
         src.height = 10;
         src.width = 10;
         src.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_u8(&src);
+        pie_bm_alloc_u8(&src);
 
         for (int y = 0; y < src.height; y++)
         {
@@ -74,8 +74,8 @@ int main(void)
 
         printf("Success\n");
 
-        bm_free_u8(&src);
-        bm_free_f32(&dst);
+        pie_bm_free_u8(&src);
+        pie_bm_free_f32(&dst);
 
         return 0;
 }

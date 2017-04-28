@@ -31,7 +31,7 @@ struct bitmap_f32rgb;
  * @return void
  */
 extern void encode_rgba(unsigned char* restrict,
-                        const struct bitmap_f32rgb* restrict,
+                        const struct pie_bitmap_f32rgb* restrict,
                         enum pie_image_type);
 
 #endif /* __PIE_RGBA_H__ */

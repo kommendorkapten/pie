@@ -20,7 +20,7 @@ static int pix(int value, int max)
 
 int main ()
 {
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_u8rgb out;
         int ret;
 
         /* Create an image. */
@@ -29,19 +29,19 @@ int main ()
         out.height = 120;
         out.color_type = PIE_COLOR_TYPE_RGB;
 
-        bm_alloc_u8(&out);
+        pie_bm_alloc_u8(&out);
 
         for (int y = 0; y < out.height; y++)
         {
                 for (int x = 0; x < out.width; x++)
                 {
-                        struct pixel_u8rgb pixel;
+                        struct pie_pixel_u8rgb pixel;
 
                         pixel.red = (uint8_t)pix(x, out.width);
                         pixel.green = (uint8_t)pix(y, out.height);
                         pixel.blue = 0;
 
-                        pixel_u8rgb_set(&out, x, y, &pixel);
+                        pie_pixel_u8rgb_set(&out, x, y, &pixel);
                 }
         }
 
@@ -51,7 +51,7 @@ int main ()
         {
                 printf("Failed: %d\n", ret);
         }
-        bm_free_u8(&out);
+        pie_bm_free_u8(&out);
 
         return 0;
 }

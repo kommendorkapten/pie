@@ -122,15 +122,15 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                           evict,
                           path);
                 
-                bm_free_f32(&img->raw);
+                pie_bm_free_f32(&img->raw);
                 /* make sure that proxies are allocated */
                 if (img->proxy.c_red)
                 {
-                        bm_free_f32(&img->proxy);
+                        pie_bm_free_f32(&img->proxy);
                 }
                 if (img->proxy_out.c_red)
                 {
-                        bm_free_f32(&img->proxy_out);
+                        pie_bm_free_f32(&img->proxy_out);
                 }
                 free(img);
                 img = NULL;
@@ -217,15 +217,15 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
                         PIE_TRACE("%s", mgr->cache[i].img->path);
                         
                         img = mgr->cache[i].img;
-                        bm_free_f32(&img->raw);
+                        pie_bm_free_f32(&img->raw);
                         /* make sure that proxies are allocated */
                         if (img->proxy.c_red)
                         {
-                                bm_free_f32(&img->proxy);
+                                pie_bm_free_f32(&img->proxy);
                         }
                         if (img->proxy_out.c_red)
                         {
-                                bm_free_f32(&img->proxy_out);
+                                pie_bm_free_f32(&img->proxy_out);
                         }
                         free(img);
                 }

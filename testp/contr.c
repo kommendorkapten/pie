@@ -8,8 +8,8 @@
 int main(int argc, char** argv)
 {
         int ret;
-        struct bitmap_f32rgb img;
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_f32rgb img;
+        struct pie_bitmap_u8rgb out;
         struct timing t;
         time_t dur;
         float amount = 1.5f;
@@ -50,16 +50,16 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Calculate contrast took %luusec\n", dur);
 
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &img, PIE_COLOR_32B);
 
         timing_start(&t);
         png_u8rgb_write("out.png", &out);
         dur = timing_dur_usec(&t);
         printf("Wrote output in %luusec\n", dur);
 
-        bm_free_f32(&img);
-        bm_free_u8(&out);
+        pie_bm_free_f32(&img);
+        pie_bm_free_u8(&out);
 
         return 0;
 }

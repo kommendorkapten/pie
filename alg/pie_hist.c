@@ -24,7 +24,7 @@
 #define LUM_GREEN 0.7152f
 #define LUM_BLUE  0.0722f
 
-void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
+void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 {
 #if _HAS_SSE42
 	__m128 coeff_red = _mm_set1_ps(LUM_RED);
@@ -130,7 +130,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
 	}
 }
 
-void pie_alg_hist_rgb(struct pie_histogram* hist, struct bitmap_f32rgb* bm)
+void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 {
 #if _HAS_SSE42
 	__m128 coeff_scale = _mm_set1_ps(255.0f);

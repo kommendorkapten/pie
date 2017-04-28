@@ -12,9 +12,9 @@
 
 int main(int argc, char** argv)
 {
-        struct bitmap_f32rgb img;
-        struct bitmap_f32rgb dwn;        
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_f32rgb img;
+        struct pie_bitmap_f32rgb dwn;        
+        struct pie_bitmap_u8rgb out;
         struct timing t;
         char fout[MAX_PATH] = {0};
         char fin[MAX_PATH] = {0};
@@ -79,13 +79,13 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Downsample took %luusec\n", dur);
 
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &dwn, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &dwn, PIE_COLOR_32B);
 
         jpg_u8rgb_write(fout, &out, 85);
 
-        bm_free_f32(&img);
-        bm_free_f32(&dwn);        
-        bm_free_u8(&out);
+        pie_bm_free_f32(&img);
+        pie_bm_free_f32(&dwn);        
+        pie_bm_free_u8(&out);
         return 0;
 }

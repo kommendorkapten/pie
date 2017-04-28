@@ -23,8 +23,8 @@ amd64: use gauss if sigma is <= 5. VERIFY!!!!
 int main(int argc, char** argv)
 {
         int ret;
-        struct bitmap_f32rgb img;
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_f32rgb img;
+        struct pie_bitmap_u8rgb out;
         struct timing t;
         time_t dur;
         float kernel[KERNEL_LEN];
@@ -137,11 +137,11 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Executed kernel took %8luusec\n", dur);
 
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &img, PIE_COLOR_32B);
         png_u8rgb_write("gauss.png", &out);
-        bm_free_u8(&out);
-        bm_free_f32(&img);
+        pie_bm_free_u8(&out);
+        pie_bm_free_f32(&img);
         ret = pie_io_load(&img, argv[1]);
 
         /* BOX Blur 6 */
@@ -208,12 +208,12 @@ int main(int argc, char** argv)
         
         dur = timing_dur_usec(&t);
         printf("Box blur 6 took      %8luusec\n", dur);
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &img, PIE_COLOR_32B);
         png_u8rgb_write("box.png", &out);
-        bm_free_u8(&out);
+        pie_bm_free_u8(&out);
         
         free(buf);
-        bm_free_f32(&img);
+        pie_bm_free_f32(&img);
         return 0;
 }

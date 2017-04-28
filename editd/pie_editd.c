@@ -413,7 +413,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 msg->img->proxy.width = proxy_w;
                 msg->img->proxy.height = proxy_h;
                 msg->img->proxy.color_type = PIE_COLOR_TYPE_RGB;
-                bm_alloc_f32(&msg->img->proxy);
+                pie_bm_alloc_f32(&msg->img->proxy);
                 /* Copy raw to proxy */
                 len = (int)(proxy_h * stride * sizeof(float));
                 memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
@@ -425,7 +425,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         msg->img->proxy_out.width = msg->img->proxy.width;
         msg->img->proxy_out.height = msg->img->proxy.height;
         msg->img->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
-        bm_alloc_f32(&msg->img->proxy_out);
+        pie_bm_alloc_f32(&msg->img->proxy_out);
 
         /* Copy proxy to proxy out */
         len = (int)(msg->img->proxy.height * msg->img->proxy.row_stride * sizeof(float));
@@ -697,8 +697,8 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         if (status == 0)
         {
                 struct timing t1;
-                struct bitmap_f32rgb* org = &msg->img->proxy;
-                struct bitmap_f32rgb* new = &msg->img->proxy_out;
+                struct pie_bitmap_f32rgb* org = &msg->img->proxy;
+                struct pie_bitmap_f32rgb* new = &msg->img->proxy_out;
                 size_t len = org->height * org->row_stride * sizeof(float);
                 int r_ok;
                 

@@ -30,6 +30,6 @@
  * @param the path to open.
  * @return 0 on success.
  */
-extern int pie_io_load(struct bitmap_f32rgb*, const char*);
+extern int pie_io_load(struct pie_bitmap_f32rgb*, const char*);
 
 #endif /* __PIE_IO_H__ */

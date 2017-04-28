@@ -24,7 +24,7 @@
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int png_f32_read(struct bitmap_f32rgb*, const char*);
+extern int png_f32_read(struct pie_bitmap_f32rgb*, const char*);
 
 /**
  * Writes an 8bit RGB bitmap to a PNG file.
@@ -32,6 +32,6 @@ extern int png_f32_read(struct bitmap_f32rgb*, const char*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int png_u8rgb_write(const char*, struct bitmap_u8rgb*);
+extern int png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
 
 #endif /* __PIE_IO_PNG_H__ */

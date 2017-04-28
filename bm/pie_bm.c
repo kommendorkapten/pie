@@ -1,39 +1,39 @@
 /*
-* Copyright (C) 2016 Fredrik Skogman, skogman - at - gmail.com.
-* This file is part of pie project
-*
-* The contents of this file are subject to the terms of the Common
-* Development and Distribution License (the "License"). You may not use this
-* file except in compliance with the License. You can obtain a copy of the
-* License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
-* When distributing the software, include this License Header Notice in each
-* file and include the License file at http://opensource.org/licenses/CDDL-1.0.
-*/
+ * Copyright (C) 2016 Fredrik Skogman, skogman - at - gmail.com.
+ * This file is part of pie project
+ *
+ * The contents of this file are subject to the terms of the Common
+ * Development and Distribution License (the "License"). You may not use this
+ * file except in compliance with the License. You can obtain a copy of the
+ * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
+ * specific language governing permissions and limitations under the License. 
+ * When distributing the software, include this License Header Notice in each
+ * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
+ */
 
 #include "pie_bm.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-static void bm_conv_u8_u16(struct bitmap_u8rgb*, 
-                           const struct bitmap_u16rgb*);
-static void bm_conv_u8_f32(struct bitmap_u8rgb*, 
-                           const struct bitmap_f32rgb*);
-static void bm_conv_u16_u8(struct bitmap_u16rgb*, 
-                           const struct bitmap_u8rgb*);
-static void bm_conv_u16_f32(struct bitmap_u16rgb*, 
-                            const struct bitmap_f32rgb*);
-static void bm_conv_f32_u16(struct bitmap_f32rgb*, 
-                            const struct bitmap_u16rgb*);
-static void bm_conv_f32_u8(struct bitmap_f32rgb*, 
-                           const struct bitmap_u8rgb*);
+static void pie_bm_conv_u8_u16(struct pie_bitmap_u8rgb*,
+                               const struct pie_bitmap_u16rgb*);
+static void pie_bm_conv_u8_f32(struct pie_bitmap_u8rgb*,
+                               const struct pie_bitmap_f32rgb*);
+static void pie_bm_conv_u16_u8(struct pie_bitmap_u16rgb*,
+                               const struct pie_bitmap_u8rgb*);
+static void pie_bm_conv_u16_f32(struct pie_bitmap_u16rgb*,
+                                const struct pie_bitmap_f32rgb*);
+static void pie_bm_conv_f32_u16(struct pie_bitmap_f32rgb*,
+                                const struct pie_bitmap_u16rgb*);
+static void pie_bm_conv_f32_u8(struct pie_bitmap_f32rgb*,
+                               const struct pie_bitmap_u8rgb*);
 
 /*
  * TODO: Verify all malloc calls.
  */
 
-int bm_alloc_u8(struct bitmap_u8rgb* bm)
+int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
 {
         int rem = bm->width % 4;
         size_t s;
@@ -63,7 +63,7 @@ int bm_alloc_u8(struct bitmap_u8rgb* bm)
         return 0;
 }
 
-int bm_alloc_u16(struct bitmap_u16rgb* bm)
+int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
 {
         int rem = bm->width % 4;
         size_t s;
@@ -93,7 +93,7 @@ int bm_alloc_u16(struct bitmap_u16rgb* bm)
         return 0;
 }
 
-int bm_alloc_f32(struct bitmap_f32rgb* bm)
+int pie_bm_alloc_f32(struct pie_bitmap_f32rgb* bm)
 {
         int rem = bm->width % 4;
         size_t s;
@@ -123,13 +123,13 @@ int bm_alloc_f32(struct bitmap_f32rgb* bm)
         return 0;
 }
 
-void bm_free_u8(struct bitmap_u8rgb* bm)
+void pie_bm_free_u8(struct pie_bitmap_u8rgb* bm)
 {
         assert(bm);
         assert(bm->c_red);
 
         free(bm->c_red);
-        
+
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
                 assert(bm->c_green);
@@ -144,13 +144,13 @@ void bm_free_u8(struct bitmap_u8rgb* bm)
         bm->c_blue = NULL;
 }
 
-void bm_free_u16(struct bitmap_u16rgb* bm)
+void pie_bm_free_u16(struct pie_bitmap_u16rgb* bm)
 {
         assert(bm);
         assert(bm->c_red);
 
         free(bm->c_red);
-        
+
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
                 assert(bm->c_green);
@@ -165,13 +165,13 @@ void bm_free_u16(struct bitmap_u16rgb* bm)
         bm->c_blue = NULL;
 }
 
-void bm_free_f32(struct bitmap_f32rgb* bm)
+void pie_bm_free_f32(struct pie_bitmap_f32rgb* bm)
 {
         assert(bm);
         assert(bm->c_red);
 
         free(bm->c_red);
-        
+
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
                 assert(bm->c_green);
@@ -186,10 +186,10 @@ void bm_free_f32(struct bitmap_f32rgb* bm)
         bm->c_blue = NULL;
 }
 
-void pixel_u8rgb_get(struct pixel_u8rgb* p, 
-                     const struct bitmap_u8rgb* bm,
-                     int x,
-                     int y)
+void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb* p,
+                         const struct pie_bitmap_u8rgb* bm,
+                         int x,
+                         int y)
 {
         int offset = bm->row_stride * y + x;
 
@@ -198,10 +198,10 @@ void pixel_u8rgb_get(struct pixel_u8rgb* p,
         p->blue = bm->c_blue[offset];
 }
 
-void pixel_u8rgb_set(struct bitmap_u8rgb* bm,
-                     int x,
-                     int y,
-                     struct pixel_u8rgb* p)
+void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb* bm,
+                         int x,
+                         int y,
+                         struct pie_pixel_u8rgb* p)
 {
         int offset = bm->row_stride * y + x;
 
@@ -210,21 +210,21 @@ void pixel_u8rgb_set(struct bitmap_u8rgb* bm,
         bm->c_blue[offset] = p->blue;
 }
 
-int bm_conv_bd(void* restrict dst,
-               enum pie_color_bit_depth dst_bd,
-               void* restrict src,
-               enum pie_color_bit_depth src_bd)
+int pie_bm_conv_bd(void* restrict dst,
+                   enum pie_color_bit_depth dst_bd,
+                   void* restrict src,
+                   enum pie_color_bit_depth src_bd)
 {
         int ret = -1;
-        
+
         if (dst_bd == src_bd)
         {
-                struct bitmap_u8rgb* u8_src;
-                struct bitmap_u8rgb* u8_dst;
-                struct bitmap_u16rgb* u16_src;
-                struct bitmap_u16rgb* u16_dst;
-                struct bitmap_f32rgb* f32_src;
-                struct bitmap_f32rgb* f32_dst;
+                struct pie_bitmap_u8rgb* u8_src;
+                struct pie_bitmap_u8rgb* u8_dst;
+                struct pie_bitmap_u16rgb* u16_src;
+                struct pie_bitmap_u16rgb* u16_dst;
+                struct pie_bitmap_f32rgb* f32_src;
+                struct pie_bitmap_f32rgb* f32_dst;
                 size_t len;
 
                 /* Create a copy */
@@ -236,7 +236,7 @@ int bm_conv_bd(void* restrict dst,
                         u8_dst->width = u8_src->width;
                         u8_dst->height = u8_src->height;
                         u8_dst->color_type = u8_src->color_type;
-                        bm_alloc_u8(u8_dst);
+                        pie_bm_alloc_u8(u8_dst);
                         len = u8_src->row_stride * u8_src->height * sizeof(uint8_t);
                         memcpy(u8_dst->c_red, u8_src->c_red, len);
                         if (u8_src->color_type == PIE_COLOR_TYPE_RGB)
@@ -251,7 +251,7 @@ int bm_conv_bd(void* restrict dst,
                         u16_dst->width = u16_src->width;
                         u16_dst->height = u16_src->height;
                         u16_dst->color_type = u16_src->color_type;
-                        bm_alloc_u16(u16_dst);
+                        pie_bm_alloc_u16(u16_dst);
                         len = u16_src->row_stride * u16_src->height * sizeof(uint16_t);
                         memcpy(u16_dst->c_red, u16_src->c_red, len);
                         if (u16_src->color_type == PIE_COLOR_TYPE_RGB)
@@ -266,7 +266,7 @@ int bm_conv_bd(void* restrict dst,
                         f32_dst->width = f32_src->width;
                         f32_dst->height = f32_src->height;
                         f32_dst->color_type = f32_src->color_type;
-                        bm_alloc_f32(f32_dst);
+                        pie_bm_alloc_f32(f32_dst);
                         len = f32_src->row_stride * f32_src->height * sizeof(float);
                         memcpy(f32_dst->c_red, f32_src->c_red, len);
                         if (f32_src->color_type == PIE_COLOR_TYPE_RGB)
@@ -284,13 +284,13 @@ int bm_conv_bd(void* restrict dst,
                 switch (src_bd)
                 {
                 case PIE_COLOR_16B:
-                        bm_conv_u8_u16((struct bitmap_u8rgb*)dst,
-                                       (struct bitmap_u16rgb*)src);
+                        pie_bm_conv_u8_u16((struct pie_bitmap_u8rgb*)dst,
+                                           (struct pie_bitmap_u16rgb*)src);
                         ret = 0;
                         break;
                 case PIE_COLOR_32B:
-                        bm_conv_u8_f32((struct bitmap_u8rgb*)dst,
-                                       (struct bitmap_f32rgb*)src);
+                        pie_bm_conv_u8_f32((struct pie_bitmap_u8rgb*)dst,
+                                           (struct pie_bitmap_f32rgb*)src);
                         ret = 0;
                         break;
                 default:
@@ -302,49 +302,49 @@ int bm_conv_bd(void* restrict dst,
                 switch (src_bd)
                 {
                 case PIE_COLOR_8B:
-                        bm_conv_u16_u8((struct bitmap_u16rgb*)dst,
-                                       (struct bitmap_u8rgb*)src);
+                        pie_bm_conv_u16_u8((struct pie_bitmap_u16rgb*)dst,
+                                           (struct pie_bitmap_u8rgb*)src);
                         ret = 0;
                         break;
                 case PIE_COLOR_32B:
-                        bm_conv_u16_f32((struct bitmap_u16rgb*)dst,
-                                        (struct bitmap_f32rgb*)src);
+                        pie_bm_conv_u16_f32((struct pie_bitmap_u16rgb*)dst,
+                                            (struct pie_bitmap_f32rgb*)src);
                         ret = 0;
                         break;
                 default:
                         return -1;
-                }                
+                }
         }
         else if (dst_bd == PIE_COLOR_32B)
         {
                 switch (src_bd)
                 {
                 case PIE_COLOR_8B:
-                        bm_conv_f32_u8((struct bitmap_f32rgb*)dst,
-                                       (struct bitmap_u8rgb*)src);
+                        pie_bm_conv_f32_u8((struct pie_bitmap_f32rgb*)dst,
+                                           (struct pie_bitmap_u8rgb*)src);
                         ret = 0;
                         break;
                 case PIE_COLOR_16B:
-                        bm_conv_f32_u16((struct bitmap_f32rgb*)dst,
-                                        (struct bitmap_u16rgb*)src);
+                        pie_bm_conv_f32_u16((struct pie_bitmap_f32rgb*)dst,
+                                            (struct pie_bitmap_u16rgb*)src);
                         ret = 0;
                         break;
                 default:
                         return -1;
-                }                
+                }
         }
 
         return ret;
 }
 
-static void bm_conv_u8_u16(struct bitmap_u8rgb* dst,
-                           const struct bitmap_u16rgb* src)
+static void pie_bm_conv_u8_u16(struct pie_bitmap_u8rgb* dst,
+                               const struct pie_bitmap_u16rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_u8(dst);
+        pie_bm_alloc_u8(dst);
 
         for (int y = 0; y < src->height; y++)
         {
@@ -362,21 +362,21 @@ static void bm_conv_u8_u16(struct bitmap_u8rgb* dst,
         }
 }
 
-static void bm_conv_u8_f32(struct bitmap_u8rgb* dst, 
-                           const struct bitmap_f32rgb* src)
+static void pie_bm_conv_u8_f32(struct pie_bitmap_u8rgb* dst,
+                               const struct pie_bitmap_f32rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_u8(dst);
+        pie_bm_alloc_u8(dst);
 
         for (int y = 0; y < src->height; y++)
         {
                 for (int x = 0; x < src->width; x++)
                 {
                         int o = y * src->row_stride + x;
-                  
+
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 255.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {
@@ -387,21 +387,21 @@ static void bm_conv_u8_f32(struct bitmap_u8rgb* dst,
         }
 }
 
-static void bm_conv_u16_u8(struct bitmap_u16rgb* dst, 
-                           const struct bitmap_u8rgb* src)
+static void pie_bm_conv_u16_u8(struct pie_bitmap_u16rgb* dst,
+                               const struct pie_bitmap_u8rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_u16(dst);
+        pie_bm_alloc_u16(dst);
 
         for (int y = 0; y < src->height; y++)
         {
                 for (int x = 0; x < src->width; x++)
                 {
                         int o = y * src->row_stride + x;
-                  
+
                         dst->c_red[o] = (uint16_t) ((src->c_red[o] / 255.0f) * 65535.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {
@@ -409,24 +409,24 @@ static void bm_conv_u16_u8(struct bitmap_u16rgb* dst,
                                 dst->c_blue[o] = (uint16_t) ((src->c_blue[o] / 255.0f) * 65535.0f);
                         }
                 }
-        }        
+        }
 }
 
-static void bm_conv_u16_f32(struct bitmap_u16rgb* dst, 
-                            const struct bitmap_f32rgb* src)
+static void pie_bm_conv_u16_f32(struct pie_bitmap_u16rgb* dst,
+                                const struct pie_bitmap_f32rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_u16(dst);
+        pie_bm_alloc_u16(dst);
 
         for (int y = 0; y < src->height; y++)
         {
                 for (int x = 0; x < src->width; x++)
                 {
                         int o = y * src->row_stride + x;
-                  
+
                         dst->c_red[o] = (uint8_t) (src->c_red[o] * 65535.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {
@@ -437,21 +437,21 @@ static void bm_conv_u16_f32(struct bitmap_u16rgb* dst,
         }
 }
 
-static void bm_conv_f32_u8(struct bitmap_f32rgb* dst, 
-                           const struct bitmap_u8rgb* src)
+static void pie_bm_conv_f32_u8(struct pie_bitmap_f32rgb* dst,
+                               const struct pie_bitmap_u8rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_f32(dst);
+        pie_bm_alloc_f32(dst);
 
         for (int y = 0; y < src->height; y++)
         {
                 for (int x = 0; x < src->width; x++)
                 {
                         int o = y * src->row_stride + x;
-                  
+
                         dst->c_red[o] = src->c_red[o] / 255.0f;
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {
@@ -462,21 +462,21 @@ static void bm_conv_f32_u8(struct bitmap_f32rgb* dst,
         }
 }
 
-static void bm_conv_f32_u16(struct bitmap_f32rgb* dst,
-                            const struct bitmap_u16rgb* src)
+static void pie_bm_conv_f32_u16(struct pie_bitmap_f32rgb* dst,
+                                const struct pie_bitmap_u16rgb* src)
 {
         dst->width = src->width;
         dst->height = src->height;
         dst->color_type = src->color_type;
 
-        bm_alloc_f32(dst);
+        pie_bm_alloc_f32(dst);
 
         for (int y = 0; y < src->height; y++)
         {
                 for (int x = 0; x < src->width; x++)
                 {
                         int o = y * src->row_stride + x;
-                  
+
                         dst->c_red[o] = src->c_red[o] / 65535.0f;
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {

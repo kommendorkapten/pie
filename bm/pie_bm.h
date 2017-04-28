@@ -25,7 +25,7 @@
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int bm_alloc_u8(struct bitmap_u8rgb*);
+int pie_bm_alloc_u8(struct pie_bitmap_u8rgb*);
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -36,7 +36,7 @@ int bm_alloc_u8(struct bitmap_u8rgb*);
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int bm_alloc_u16(struct bitmap_u16rgb*);
+int pie_bm_alloc_u16(struct pie_bitmap_u16rgb*);
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -47,7 +47,7 @@ int bm_alloc_u16(struct bitmap_u16rgb*);
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int bm_alloc_f32(struct bitmap_f32rgb*);
+int pie_bm_alloc_f32(struct pie_bitmap_f32rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -55,7 +55,7 @@ int bm_alloc_f32(struct bitmap_f32rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void bm_free_u8(struct bitmap_u8rgb*);
+void pie_bm_free_u8(struct pie_bitmap_u8rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -63,7 +63,7 @@ void bm_free_u8(struct bitmap_u8rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void bm_free_u16(struct bitmap_u16rgb*);
+void pie_bm_free_u16(struct pie_bitmap_u16rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -71,7 +71,7 @@ void bm_free_u16(struct bitmap_u16rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void bm_free_f32(struct bitmap_f32rgb*);
+void pie_bm_free_f32(struct pie_bitmap_f32rgb*);
 
 /**
  * Get a pixel from a bitmap.
@@ -81,10 +81,10 @@ void bm_free_f32(struct bitmap_f32rgb*);
  * @param the y coordinate (row).
  * @return void
  */
-void pixel_u8rgb_get(struct pixel_u8rgb*,
-                     const struct bitmap_u8rgb*, 
-                     int, 
-                     int);
+void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
+                         const struct pie_bitmap_u8rgb*, 
+                         int, 
+                         int);
 
 /**
  * Set a pixel int the bitmap.
@@ -94,14 +94,14 @@ void pixel_u8rgb_get(struct pixel_u8rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pixel_u8rgb_set(struct bitmap_u8rgb*, 
-                     int, 
-                     int,
-                     struct pixel_u8rgb*);
+void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*, 
+                         int, 
+                         int,
+                         struct pie_pixel_u8rgb*);
 
 /**
  * Convert a bitmap from a specific bitdepth.
- * The destination must point to a bitmap_XXXrgb struct.
+ * The destination must point to a pie_bitmap_XXXrgb struct.
  * The destination bitmamp must *NOT* contain any allocated channels,
  * as they will not be freed. Calling with allocated channels will result
  * in a memory leak as they will be overwrittern.
@@ -110,8 +110,8 @@ void pixel_u8rgb_set(struct bitmap_u8rgb*,
  * @param the source bitmap.
  * @param the source bit dept.
  */
-int bm_conv_bd(void* restrict, 
-               enum pie_color_bit_depth,
-               void* restrict, 
-               enum pie_color_bit_depth);
+int pie_bm_conv_bd(void* restrict, 
+                   enum pie_color_bit_depth,
+                   void* restrict, 
+                   enum pie_color_bit_depth);
 #endif /* __PIE_BM_H__ */

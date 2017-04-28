@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
         /* int scale; */
         int ret;
-        struct bitmap_f32rgb img;
+        struct pie_bitmap_f32rgb img;
         float gamma = 0.454550f;
         
         if (argc != 2)
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
                 }
         }
 
-        bm_free_f32(&img);
+        pie_bm_free_f32(&img);
 
         return 0;
 }

@@ -27,7 +27,7 @@
   TODO support 16b
  */
 
-int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
+int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 {
         unsigned char header[8];
         FILE* fp = fopen(path, "rb");
@@ -132,7 +132,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         }
 
         png_read_image(pngp, rows);
-        bm_alloc_f32(bm);
+        pie_bm_alloc_f32(bm);
 
         /* Copy data to bitmap */
         for (int y = 0; y < bm->height; y++)
@@ -162,7 +162,7 @@ int png_f32_read(struct bitmap_f32rgb* bm, const char* path)
         return 0;
 }
 
-int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
+int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;
@@ -220,9 +220,9 @@ int png_u8rgb_write(const char* path, struct bitmap_u8rgb* bitmap)
                 rows[y] = row;
                 for (int x = 0; x < bitmap->width; ++x)
                 {
-                        struct pixel_u8rgb p;
+                        struct pie_pixel_u8rgb p;
 
-                        pixel_u8rgb_get(&p, bitmap, x, y);
+                        pie_pixel_u8rgb_get(&p, bitmap, x, y);
                         *row++ = p.red;
                         *row++ = p.green;
                         *row++ = p.blue;

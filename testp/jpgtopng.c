@@ -9,8 +9,8 @@ int main(int argc, char** argv)
 {
         char* in;
         char* out;
-        struct bitmap_f32rgb bmf;
-        struct bitmap_u8rgb bmu;
+        struct pie_bitmap_f32rgb bmf;
+        struct pie_bitmap_u8rgb bmu;
         struct timing t;
 
         if (argc != 3)
@@ -31,8 +31,8 @@ int main(int argc, char** argv)
         printf("Read %s in %luusec\n", in, timing_dur_usec(&t));
 
         timing_start(&t);
-        if (bm_conv_bd(&bmu, PIE_COLOR_8B,
-                       &bmf, PIE_COLOR_32B))
+        if (pie_bm_conv_bd(&bmu, PIE_COLOR_8B,
+                           &bmf, PIE_COLOR_32B))
         {
                 printf("1.5");
         }
@@ -46,8 +46,8 @@ int main(int argc, char** argv)
         }
         printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));        
 
-        bm_free_u8(&bmu);
-        bm_free_f32(&bmf);
+        pie_bm_free_u8(&bmu);
+        pie_bm_free_f32(&bmf);
 
         return 0;
 }

@@ -24,7 +24,7 @@
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int jpg_f32_read(struct bitmap_f32rgb*, const char*);
+extern int jpg_f32_read(struct pie_bitmap_f32rgb*, const char*);
 
 /**
  * Writes an 8bit RGB bitmap to a JPEG file.
@@ -33,6 +33,6 @@ extern int jpg_f32_read(struct bitmap_f32rgb*, const char*);
  * @param the quality of the output file, in [0,100].
  * @return 0 on success, non-zero otherwise.
  */
-extern int jpg_u8rgb_write(const char*, struct bitmap_u8rgb*, int);
+extern int jpg_u8rgb_write(const char*, struct pie_bitmap_u8rgb*, int);
 
 #endif /* __PIE_IO_JPG_H__ */

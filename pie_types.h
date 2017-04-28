@@ -35,28 +35,28 @@ enum pie_color_bit_depth
         PIE_COLOR_32B = 32  /* single precision 32 bit float */
 };
 
-struct pixel_u8rgb
+struct pie_pixel_u8rgb
 {
         uint8_t red;
         uint8_t green;
         uint8_t blue;
 };
 
-struct pixel_u16rgb
+struct pie_pixel_u16rgb
 {
         uint16_t red;
         uint16_t green;
         uint16_t blue;
 };
 
-struct pixel_f32rgb
+struct pie_pixel_f32rgb
 {
         float red;
         float green;
         float blue;
 };
 
-struct bitmap_u8rgb
+struct pie_bitmap_u8rgb
 {
         uint8_t* c_red;
         uint8_t* c_green;
@@ -68,7 +68,7 @@ struct bitmap_u8rgb
         int row_stride;
 };
 
-struct bitmap_u16rgb
+struct pie_bitmap_u16rgb
 {
         uint16_t* c_red;
         uint16_t* c_green;
@@ -80,7 +80,7 @@ struct bitmap_u16rgb
         int row_stride;
 };
 
-struct bitmap_f32rgb
+struct pie_bitmap_f32rgb
 {
         float* c_red;
         float* c_green;
@@ -143,11 +143,11 @@ struct pie_img_workspace
         struct pie_histogram hist;
         struct pie_img_settings settings;
         /* Unmodified full resolution image */
-        struct bitmap_f32rgb raw;
+        struct pie_bitmap_f32rgb raw;
         /* Downsampled unmodified proxy image */
-        struct bitmap_f32rgb proxy;
+        struct pie_bitmap_f32rgb proxy;
         /* Downsampled and rendered proxy image */
-        struct bitmap_f32rgb proxy_out;
+        struct pie_bitmap_f32rgb proxy_out;
 };
 
 #endif /* __PIE_TYPES_H__ */

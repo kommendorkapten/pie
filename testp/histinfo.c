@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
         int ret;
         struct pie_histogram h;
-        struct bitmap_f32rgb img;
+        struct pie_bitmap_f32rgb img;
         struct timing t;
         unsigned long dur;
         int count = 0;
@@ -46,6 +46,6 @@ int main(int argc, char** argv)
                 printf("Counted %u pixels, expected is %u\n", 
                        count, img.width * img.height);
         }
-        bm_free_f32(&img);
+        pie_bm_free_f32(&img);
         return 0;
 }

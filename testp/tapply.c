@@ -10,8 +10,8 @@
 
 int main(int argc, char** argv)
 {
-        struct bitmap_f32rgb img;
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_f32rgb img;
+        struct pie_bitmap_u8rgb out;
         struct timing t;
         struct pie_img_settings settings;
         struct pie_histogram hist;
@@ -44,8 +44,8 @@ int main(int argc, char** argv)
         pie_img_render(&img, buf, &settings);
         
         timing_start(&t);
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &img, PIE_COLOR_32B);
         dur = timing_dur_usec(&t);
         printf("Converted media to 8bit in %luusec\n", dur);
 
@@ -70,8 +70,8 @@ int main(int argc, char** argv)
         printf("Created RGB hist in %luusec\n", dur);        
         
         free(buf);
-        bm_free_f32(&img);
-        bm_free_u8(&out);
+        pie_bm_free_f32(&img);
+        pie_bm_free_u8(&out);
 
         return 0;
 }

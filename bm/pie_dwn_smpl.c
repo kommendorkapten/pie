@@ -27,8 +27,8 @@ static float gauss_avg(const float* restrict img,
                        int s,
                        int r);
 
-int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
-                 const struct bitmap_f32rgb* restrict src,
+int pie_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
+                 const struct pie_bitmap_f32rgb* restrict src,
                  int max_w,
                  int max_h)
 {
@@ -83,7 +83,7 @@ int pie_dwn_smpl(struct bitmap_f32rgb* restrict dst,
         dst->width = new_w;
         dst->height = new_h;
         dst->color_type = src->color_type;
-        status = bm_alloc_f32(dst);
+        status = pie_bm_alloc_f32(dst);
         if (status)
         {
                 return -1;

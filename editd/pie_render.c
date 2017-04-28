@@ -49,7 +49,7 @@ void pie_img_init_settings(struct pie_img_settings* s, int w, int h)
         s->rotate = 0.0f;
 }
 
-int pie_img_render(struct bitmap_f32rgb* img,
+int pie_img_render(struct pie_bitmap_f32rgb* img,
                    float* buf,
                    const struct pie_img_settings* s)
 {

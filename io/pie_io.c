@@ -51,7 +51,7 @@ static struct pie_magic fmts[PIE_FT_COUNT] = {
 static enum pie_file_type pie_get_magic(unsigned char magic[PIE_MAGIC_MAX],
                                         ssize_t len);
 
-int pie_io_load(struct bitmap_f32rgb* bm, const char* path)
+int pie_io_load(struct pie_bitmap_f32rgb* bm, const char* path)
 {
         /* Read the magic bytes */
         unsigned char magic[PIE_MAGIC_MAX];

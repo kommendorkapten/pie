@@ -5,8 +5,8 @@
 
 int main(int argc, char** argv)
 {
-        int ret;
-        struct bitmap_f32rgb bm;
+        struct pie_bitmap_f32rgb bm;
+        int ret;        
 
         if (argc != 2)
         {
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         printf("stride:    %d\n", bm.row_stride);
         printf("channels:  %d\n", (int)bm.color_type);
         printf("bit depth: %d\n", (int)bm.bit_depth);
-        bm_free_f32(&bm);
+        pie_bm_free_f32(&bm);
         
         return ret;
 }

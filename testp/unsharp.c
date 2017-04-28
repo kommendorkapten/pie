@@ -8,8 +8,8 @@
 int main(int argc, char** argv)
 {
         int ret;
-        struct bitmap_f32rgb img;
-        struct bitmap_u8rgb out;
+        struct pie_bitmap_f32rgb img;
+        struct pie_bitmap_u8rgb out;
         struct timing t;
         struct pie_unsharp_param p;
         time_t dur;
@@ -54,13 +54,13 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Executed unsharp mask took %luusec\n", dur);
 
-        bm_conv_bd(&out, PIE_COLOR_8B,
-                   &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_COLOR_8B,
+                       &img, PIE_COLOR_32B);
 
         jpg_u8rgb_write("out.jpg", &out, 95);
 
-        bm_free_f32(&img);
-        bm_free_u8(&out);
+        pie_bm_free_f32(&img);
+        pie_bm_free_u8(&out);
         
         return 0;
 }
