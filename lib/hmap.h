@@ -17,14 +17,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef uint32_t (*hmap_hash)(void*);
+typedef uint32_t (*hmap_hash)(const void*);
 /**
  * Compare method to determine equality.
  * @param the item found in the hash map.
  * @param the item searched ford.
  * @return 0 if items are equal, non zero otherwise.
  */
-typedef int (*hmap_cmp)(void*, void*);
+typedef int (*hmap_cmp)(const void*, const void*);
 
 struct hmap;
 
@@ -84,7 +84,7 @@ void hmap_set(struct hmap*, void* key, void* data);
  * @param the key to search for.
  * @return the value associated with the key, or NULL if key is not present.
  */
-void* hmap_get(const struct hmap*, void*);
+void* hmap_get(const struct hmap*, const void*);
 
 /**
  * Delete a key from the hash table.
@@ -92,7 +92,7 @@ void* hmap_get(const struct hmap*, void*);
  * @param the key to delete.
  * @return void.
  */
-void hmap_del(struct hmap*, void*);
+void hmap_del(struct hmap*, const void*);
 
 /**
  * Get the number of stored items in the hash table.

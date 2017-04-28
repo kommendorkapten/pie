@@ -42,10 +42,10 @@ struct hmap_node
         int flags;
 };
 
-static uint32_t hmap_default_hash(void* key)
+static uint32_t hmap_default_hash(const void* key)
 {
         /* Jenkin's one at a time hash */
-        char* k = (char*) key;
+        const char* k = (const char*) key;
         uint32_t hash = 0;
 #ifdef __EXTENSIONS__ 
         /* strnlen(3C) became availible SUSv4/Posix 2008 */
@@ -73,7 +73,7 @@ static uint32_t hmap_default_hash(void* key)
         return hash;
 }
 
-static int hmap_default_cmp(void* a, void* b)
+static int hmap_default_cmp(const void* a, const void* b)
 {
         int r;
 
@@ -86,7 +86,7 @@ static int hmap_default_cmp(void* a, void* b)
                 return 1;
         }
         
-        r = strncmp((char*)a, (char*)b, MAX_KEY_LEN);
+        r = strncmp((const char*)a, (const char*)b, MAX_KEY_LEN);
 
         return r;
 }
@@ -197,7 +197,7 @@ void hmap_set(struct hmap* h, void* key, void* data)
         }
 }
 
-void* hmap_get(const struct hmap* h, void* key)
+void* hmap_get(const struct hmap* h, const void* key)
 {
         uint32_t k = h->hfn(key);
         size_t spos = k % h->cap;
@@ -236,7 +236,7 @@ void* hmap_get(const struct hmap* h, void* key)
         return NULL;
 }
 
-void hmap_del(struct hmap* h, void* key)
+void hmap_del(struct hmap* h, const void* key)
 {
         uint32_t k = h->hfn(key);
         size_t spos = k % h->cap;
