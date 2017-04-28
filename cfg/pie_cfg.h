@@ -62,6 +62,13 @@ extern int pie_cfg_load(const char*);
 extern void pie_cfg_close(void);
 
 /**
+ * Get a value from the config file.
+ * @param key to get value for.
+ * @return null terminated string with value, or NULL if none found.
+ */
+extern const char* pie_cfg_get(const char*);
+
+/**
  * Get a host entry from a host id.
  * If current host is to be resolved, the unqualified hostname is use to
  * find an entry in the pie_host table.
@@ -93,4 +100,5 @@ extern struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int);
 extern void pie_cfg_free_hoststg(struct pie_stg_mnt_arr*);
 
 #define PIE_CFG_GET_STORAGE(arr_ptr, stg_id) ((stg_id) >= (arr_ptr)->len ? NULL : (arr_ptr)->arr[(stg_id)])
+
 #endif /* __PIE_CFG_H__ */

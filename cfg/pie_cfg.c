@@ -18,24 +18,27 @@
 #include <sqlite3.h>
 #include <assert.h>
 #include "pie_cfg.h"
+#include "../lib/hmap.h"
 #include "../lib/strutil.h"
 #include "../pie_log.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_mountpoint.h"
 
 #define MAX_LINE 256
+#define DB_PATH "db:path"
 
 static struct 
 {
-        char* dbpath;
         sqlite3* db;
+        struct hmap* cfg_map;
         
 } pie_cfg;
 
 int pie_cfg_load(const char* p)
 {
-        FILE* f;
         char line[MAX_LINE];
+        const char* db_path;
+        FILE* f;
         
         f = fopen(p, "r");
         if (f == NULL)
@@ -44,6 +47,8 @@ int pie_cfg_load(const char* p)
                 return -1;
         }
 
+        pie_cfg.cfg_map = hmap_create(NULL, NULL, 32, 0.7f);
+        
         while (fgets(line, MAX_LINE, f))
         {
                 char* d;
@@ -71,27 +76,26 @@ int pie_cfg_load(const char* p)
                 }
                 *d++ = '\0';
                 strlstrip(d);
-                
-                /* This is the lamest thing ever, but good enough for now */
-                if (strcmp("db:path", line) == 0)
-                {
-                        pie_cfg.dbpath = malloc(strlen(d) + 1);
-                        strcpy(pie_cfg.dbpath, d);
-                }
+
+                char* key = malloc(strlen(line) + 1);
+                char* val = malloc(strlen(d) + 1);
+
+                strcpy(key, line);
+                strcpy(val, d);
+                hmap_set(pie_cfg.cfg_map, key, val);
         }
 
         fclose(f);
-
-        if (pie_cfg.dbpath == NULL)
+        db_path = pie_cfg_get(DB_PATH);
+        if (db_path == NULL)
         {
                 PIE_ERR("No database defined in %s", p);
                 return -1;
         }
         
-        if (sqlite3_open(pie_cfg.dbpath, &pie_cfg.db))
+        if (sqlite3_open(db_path, &pie_cfg.db))
         {
-                PIE_ERR("Could not open database at %s", pie_cfg.dbpath);
-                pie_cfg.dbpath = NULL;
+                PIE_ERR("Could not open database at %s", db_path);
                 return -1;
         }
 
@@ -100,16 +104,35 @@ int pie_cfg_load(const char* p)
 
 void pie_cfg_close(void)
 {
-        if (pie_cfg.dbpath)
+        if (pie_cfg.cfg_map)
         {
-                free(pie_cfg.dbpath);
-                pie_cfg.dbpath = NULL;
+                size_t len;
+                struct hmap_entry* e = hmap_iter(pie_cfg.cfg_map, &len);
+
+                for (size_t i = 0; i < len; i++)
+                {
+                        free(e[i].key);
+                        free(e[i].data);
+                }
+                free(e);
+                hmap_destroy(pie_cfg.cfg_map);
+                pie_cfg.cfg_map = NULL;
         }
         if (pie_cfg.db)
         {
                 sqlite3_close(pie_cfg.db);
                 pie_cfg.db = NULL;
         }
+}
+
+const char* pie_cfg_get(const char* key)
+{
+        if (pie_cfg.cfg_map == NULL)
+        {
+                return NULL;
+        }
+        
+        return hmap_get(pie_cfg.cfg_map, DB_PATH);
 }
 
 struct pie_host* pie_cfg_get_host(int host)
@@ -216,7 +239,6 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
                         fail = 1;
                         break;
                 }
-                PIE_LOG("i=%d, stg_id=%d", i, stg_id);
 
                 ret->arr[stg_id] = malloc(sizeof(struct pie_stg_mnt));
                 ret->arr[stg_id]->stg.stg_id = stg_id;

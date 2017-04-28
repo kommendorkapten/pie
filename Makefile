@@ -107,7 +107,7 @@ VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm
 
 ########################################################################
 
-all: $(OBJS) test bin/editd bin/collectiond bin/mediad
+all: $(OBJS) test bin/editd bin/collectiond bin/mediad bin/ingestd
 
 test: $(T_BINS) 
 
@@ -185,10 +185,10 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
 
-bin/ingestd: ingestd/ingestd.c obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+bin/ingestd: ingestd/ingestd.c obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3
 
-bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS)
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
