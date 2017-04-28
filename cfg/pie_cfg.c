@@ -132,7 +132,7 @@ const char* pie_cfg_get(const char* key)
                 return NULL;
         }
         
-        return hmap_get(pie_cfg.cfg_map, DB_PATH);
+        return hmap_get(pie_cfg.cfg_map, key);
 }
 
 struct pie_host* pie_cfg_get_host(int host)
