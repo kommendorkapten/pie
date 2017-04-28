@@ -16,6 +16,9 @@
 
 #include "../pie_types.h"
 
+#define Q_INCOMING_MEDIA "/tmp/pie_new_media.sock"
+#define Q_UPDATE_META    "/tmp/pie_update_meta.sock"
+
 struct pie_mq_new_media
 {
         char path[PIE_PATH_LEN];
