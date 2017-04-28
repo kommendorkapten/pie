@@ -37,7 +37,10 @@ int main(int argc, char** argv)
                         abort();
                 }
                 ok = ENGINE_ctrl_cmd_string(dyn, "SO_PATH", "/lib/openssl/engines/64/libpk11.so", 0);
+                if (!ok) printf("Failed to init\n");
                 ok = ENGINE_ctrl_cmd_string(dyn, "LOAD", NULL, 0);
+                if (!ok) printf("Failed to init\n");
+                
                 if (!ENGINE_init(dyn))
                 {
                         printf("Failed to init\n");
@@ -75,7 +78,7 @@ void cb_fun(const char* p)
         char buf[BUF_LEN];
         int fd = open(p, O_RDONLY);
         ssize_t br;
-        int size = 0;
+        ssize_t size = 0;
         unsigned char sum[EVP_MAX_MD_SIZE];
         unsigned int md_len;
 
@@ -99,7 +102,7 @@ void cb_fun(const char* p)
         EVP_DigestFinal_ex(mdctx, sum, &md_len);
         EVP_MD_CTX_destroy(mdctx);
         
-        printf("%s %d\n", p, size);
+        printf("%s %ld\n", p, size);
         
         for (unsigned int i = 0; i < md_len; i++)
         {
