@@ -7,3 +7,4 @@ obj/*
 core
 include.*
 dm/init.sql
+playground/*
