@@ -27,11 +27,10 @@
 #define MAX_LINE 256
 #define DB_PATH "db:path"
 
-static struct 
+static struct
 {
         sqlite3* db;
         struct hmap* cfg_map;
-        
 } pie_cfg;
 
 int pie_cfg_load(const char* p)
@@ -39,7 +38,7 @@ int pie_cfg_load(const char* p)
         char line[MAX_LINE];
         const char* db_path;
         FILE* f;
-        
+
         f = fopen(p, "r");
         if (f == NULL)
         {
@@ -48,14 +47,14 @@ int pie_cfg_load(const char* p)
         }
 
         pie_cfg.cfg_map = hmap_create(NULL, NULL, 32, 0.7f);
-        
+
         while (fgets(line, MAX_LINE, f))
         {
                 char* d;
-                
+
                 strrstrip(line);
                 strlstrip(line);
-                
+
                 if (line[0] == '#')
                 {
                         /* Ignore comments */
@@ -67,7 +66,7 @@ int pie_cfg_load(const char* p)
                         /* Empty line */
                         continue;
                 }
-                
+
                 d = strchr(line, ' ');
                 if (d == NULL)
                 {
@@ -92,7 +91,7 @@ int pie_cfg_load(const char* p)
                 PIE_ERR("No database defined in %s", p);
                 return -1;
         }
-        
+
         if (sqlite3_open(db_path, &pie_cfg.db))
         {
                 PIE_ERR("Could not open database at %s", db_path);
@@ -131,18 +130,37 @@ const char* pie_cfg_get(const char* key)
         {
                 return NULL;
         }
-        
+
         return (const char*)hmap_get(pie_cfg.cfg_map, key);
+}
+
+int pie_cfg_get_long(const char* key, long* l)
+{
+        const char* v = hmap_get(pie_cfg.cfg_map, key);
+        char* endptr;
+        int ret = 1;
+
+        if (v != NULL)
+        {
+                *l = strtol(v, &endptr, 10);
+
+                if (v != endptr)
+                {
+                        ret = 0;
+                }
+        }
+
+        return ret;
 }
 
 struct pie_host* pie_cfg_get_host(int host)
 {
-        struct pie_host* h;        
+        struct pie_host* h;
 
         if (host < 0)
         {
                 char hostname[128];
-                
+
                 if (gethostname(hostname, 128))
                 {
                         PIE_WARN("Could not get hostname");
@@ -170,7 +188,7 @@ struct pie_host* pie_cfg_get_host(int host)
                         PIE_ERR("Error communicating with database");
                 }
         }
-        
+
         return h;
 }
 
@@ -206,7 +224,7 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
         struct pie_stg_mnt_arr* ret;
         struct pie_mountpoint* mnt[cnt];
         int fail;
-        
+
         /* Fetch all mount points for host */
         fail = pie_mountpoint_find_host(pie_cfg.db, mnt, host, cnt);
         if (fail)
@@ -223,7 +241,7 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
         for (int i = 0; i < cnt; i++)
         {
                 int stg_id;
-                
+
                 if (mnt[i] == NULL)
                 {
                         /* mnt is NULL terminated if less than cnt

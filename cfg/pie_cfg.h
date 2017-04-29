@@ -69,6 +69,15 @@ extern void pie_cfg_close(void);
 extern const char* pie_cfg_get(const char*);
 
 /**
+ * Read a value from the config file and interpret it like an integer.
+ * @param key to get value from.
+ * @param pointer where to read data into.
+ * @return 0 if the value existed and could be interpreted as an integer,
+ *         non zero otherwise.
+ */
+extern int pie_cfg_get_long(const char*, long*);
+
+/**
  * Get a host entry from a host id.
  * If current host is to be resolved, the unqualified hostname is use to
  * find an entry in the pie_host table.
