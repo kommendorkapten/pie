@@ -11,21 +11,21 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_MQ_MSG_H__
-#define __PIE_MQ_MSG_H__
+#ifndef __INGESTD_CFG_H__
+#define __INGESTD_CFG_H__
 
-#include "../pie_types.h"
+struct pie_host;
+struct pie_stg_mnt_arr;
+struct q_producer;
 
-#define Q_INCOMING_MEDIA "/tmp/pie_new_media.sock"
-#define Q_UPDATE_META    "/tmp/pie_update_meta.sock"
-#define PIE_MAX_DIGEST 64 /* large enough for SHA-512 */
-
-struct pie_mq_new_media
+struct ingestd_cfg
 {
-        char path[PIE_PATH_LEN];
-        unsigned char digest[PIE_MAX_DIGEST];
-        int stg_id;
-        int digest_len;
+        struct pie_host* host;
+        struct pie_stg_mnt_arr* storages;
+        struct q_producer* queue;
+        int* stg_mnt_len;
 };
 
-#endif /* __PIE_MQ_MSG_H__ */
+extern struct ingestd_cfg id_cfg;
+
+#endif /* __INGESTD_CFG_H__ */

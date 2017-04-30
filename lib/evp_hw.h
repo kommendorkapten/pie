@@ -1,6 +1,5 @@
 /*
 * Copyright (C) 2017 Fredrik Skogman, skogman - at - gmail.com.
-* This file is part of pie project
 *
 * The contents of this file are subject to the terms of the Common
 * Development and Distribution License (the "License"). You may not use this
@@ -11,16 +10,9 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __MEDIAD_CFG_H__
-#define __MEDIAD_CFG_H__
+#ifndef __EVP_HW_H__
+#define __EVP_HW_H__
 
-struct mediad_cfg
-{
-        struct pie_host* host;
-        struct pie_stg_mnt_arr* storages;
-        struct q_consumer** queues;
-};
+extern int evp_enable_hw(int);
 
-extern struct mediad_cfg md_cfg;
-
-#endif /* __MEDIAD_CFG_H__ */
+#endif /* __EVP_HW_H__ */

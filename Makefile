@@ -36,9 +36,9 @@ endif
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
   ifeq ($(CC), cc)
-    CFLAGS += -std=c99 -pedantic -v -mt -fast -xalias_level=std
+    CFLAGS += -std=c99 -pedantic -v -errwarn -mt -fast -xalias_level=std
   else ifeq ($(CC), c99)
-    CFLAGS += -v -mt -xalias_level=std -fast 
+    CFLAGS += -v -errwarn -mt -xalias_level=std -fast 
   else ifeq ($(CC), gcc)
     CFLAGS += -Wconversion -Wno-sign-conversion
   endif
@@ -69,7 +69,7 @@ endif
 DIRS       = obj bin
 IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
-	     s_queue_intra.c fswalk.c llist.c strutil.c
+	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c
@@ -80,6 +80,7 @@ HTTP_SRC   = pie_session.c pie_util.c
 EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c
 MEDIAD_SRC = mediad.c new_media.c
+INGEST_SRC = ingestd.c file_proc.c
 COLLD_SRC  = pie_colld.c pie_coll.c
 CFG_SRC    = pie_cfg.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c
@@ -90,6 +91,7 @@ OBJS        = $(SOURCES:%.c=obj/%.o)
 HTTP_OBJS   = $(HTTP_SRC:%.c=obj/%.o)
 EDITD_OBJS  = $(EDITD_SRC:%.c=obj/%.o)
 MEDIAD_OBJS = $(MEDIAD_SRC:%.c=obj/%.o)
+INGEST_OBJS = $(INGEST_SRC:%.c=obj/%.o)
 COLLD_OBJS  = $(COLLD_SRC:%.c=obj/%.o)
 CFG_OBJS    = $(CFG_SRC:%.c=obj/%.o)
 DM_OBJS     = $(DM_SRC:%.c=obj/%.o)
@@ -98,7 +100,7 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               testfwlk qserver qclient
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm
+VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd
 
 .PHONY: all
 .PHONY: test
@@ -185,10 +187,10 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
 
-bin/ingestd: ingestd/ingestd.c obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3
+bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o

@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -17,12 +17,12 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
-#include <openssl/engine.h>
 #include "mediad_cfg.h"
 #include "new_media.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../lib/s_queue.h"
+#include "../lib/evp_hw.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
@@ -55,7 +55,6 @@ static void* process_upd(void*);
 static void close_queues(void);
 
 struct mediad_cfg md_cfg;
-int evp_hw;
 
 int main(void)
 {
@@ -63,52 +62,11 @@ int main(void)
         struct sigaction sa;
         sigset_t b_sigset;
         sigset_t o_sigset;
+        int evp_hw = 1;
         int ret = -1;
         int ok;
 
-#if __sun && __sparc
-        evp_hw = 1;
-        if (evp_hw)
-        {
-                ENGINE* dyn;
-
-                PIE_LOG("Activate HW SSL EVP provider");
-
-                ENGINE_load_openssl();
-                ENGINE_load_dynamic();
-                ENGINE_load_cryptodev();
-                ENGINE_load_builtin_engines();
-                OpenSSL_add_all_algorithms();
-
-                dyn = ENGINE_by_id("dynamic");
-                if (dyn == NULL)
-                {
-                        PIE_WARN("No Dynamic EVP engine found");
-                }
-                else
-                {
-                        ok = ENGINE_ctrl_cmd_string(dyn,
-                                                    "SO_PATH",
-                                                    "/lib/openssl/engines/64/libpk11.so",
-                                                    0);
-                        if (!ok) goto evp_done;
-                        ok = ENGINE_ctrl_cmd_string(dyn,
-                                                    "LOAD",
-                                                    NULL,
-                                                    0);
-                        if (!ok) goto evp_done;
-                        ok = ENGINE_init(dyn);
-                        if (!ok) goto evp_done;
-                        ok = ENGINE_set_default(dyn, ENGINE_METHOD_ALL & ~ENGINE_METHOD_RAND);
-
-                evp_done:
-                        if (!ok)
-                        {
-                                PIE_WARN("Failed to initialize EVP HW provider");
-                        }
-                }
-        }
-#endif
+        evp_enable_hw(evp_hw);
 
         if (pie_cfg_load(PIE_CFG_PATH))
         {
@@ -129,7 +87,6 @@ int main(void)
         }
 
         PIE_LOG("Using %d workers", num_workers);
-        md_cfg.num_workers = num_workers;
         md_cfg.host = pie_cfg_get_host(-1);
         if (md_cfg.host == NULL)
         {
@@ -203,7 +160,7 @@ int main(void)
                 goto cleanup;
         }
 
-        if (nm_start_workers(md_cfg.num_workers))
+        if (pie_nm_start_workers(num_workers))
         {
                 goto cleanup;
         }
@@ -229,7 +186,7 @@ int main(void)
         {
                 pthread_join(thr[i], NULL);
         }
-        nm_stop_workers();
+        pie_nm_stop_workers();
 cleanup:
         if (md_cfg.queues)
         {
@@ -266,7 +223,7 @@ static void* process_inc(void* arg)
                              (char*)&msg,
                              sizeof(struct pie_mq_new_media))) > 0)
         {
-                if (nm_add_job(&msg))
+                if (pie_nm_add_job(&msg))
                 {
                         PIE_WARN("Could not add new media '%s'",
                                  msg.path);

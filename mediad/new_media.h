@@ -16,8 +16,8 @@
 
 struct pie_mq_new_media;
 
-extern int nm_start_workers(int);
-extern int nm_add_job(const struct pie_mq_new_media*);
-extern void nm_stop_workers(void);
+extern int pie_nm_start_workers(int);
+extern int pie_nm_add_job(const struct pie_mq_new_media*);
+extern void pie_nm_stop_workers(void);
 
 #endif /* __NEW_MEDIA_H__ */
