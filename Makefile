@@ -69,7 +69,7 @@ endif
 DIRS       = obj bin
 IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c
 LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
-	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c
+	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_kernel.c pie_curve.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c
@@ -187,7 +187,7 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
 
-bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o
+bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
 
 bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o

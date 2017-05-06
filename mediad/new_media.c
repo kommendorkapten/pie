@@ -167,6 +167,16 @@ static void* worker(void* arg)
                 hex[new->digest_len * 2 + 1] = '\0';
                 PIE_LOG("sha1sum: [%s] %s", path, hex);
 
+                fd = open(path, O_RDONLY);
+                if (fd < 0)
+                {
+                        perror("open");
+                }
+                else
+                {
+                        close(fd);
+                }
+
                 free_msg(new);
         }
 

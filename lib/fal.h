@@ -1,6 +1,5 @@
 /*
 * Copyright (C) 2017 Fredrik Skogman, skogman - at - gmail.com.
-* This file is part of pie project
 *
 * The contents of this file are subject to the terms of the Common
 * Development and Distribution License (the "License"). You may not use this
@@ -11,31 +10,25 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __INGESTD_CFG_H__
-#define __INGESTD_CFG_H__
+#ifndef __FAL_H__
+#define __FAL_H__
 
-enum ingest_mode
-{
-        MODE_COPY_INTO,
-        MODE_COPY_TREE,
-        MODE_COPY_COUNT
-};
+#include <sys/types.h>
 
-struct pie_host;
-struct pie_stg_mnt_arr;
-struct q_producer;
+/**
+ * Create a new directory tree in an existing one.
+ * @param path to an existing directory.
+ * @param new directory path to create
+ * @return 0 on success, -1 otherwise.
+ */
+extern int fal_mkdir_tree(const char*, const char*);
 
-struct ingestd_cfg
-{
-        struct pie_host* host;
-        struct pie_stg_mnt_arr* storages;
-        struct q_producer* queue;
-        const struct pie_stg_mnt* dst_stg;
-        char* src_path;
-        char* dst_path; /* Relative dst storage mount point */
-        enum ingest_mode cp_mode;
-};
+/**
+ * Copy data from a file descriptor to another.
+ * @param the destination file descriptor.
+ * @param the source file descriptor.
+ * @return the number of bytes copied, or negative if an error occured.
+ */
+extern ssize_t fal_copy_fd(int, int);
 
-extern struct ingestd_cfg id_cfg;
-
-#endif /* __INGESTD_CFG_H__ */
+#endif /* __FAL_H__ */

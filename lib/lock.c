@@ -13,7 +13,6 @@ struct lock
         uint32_t l;
 #else
         pthread_mutex_t l;
-
 #endif
 };
 
@@ -25,7 +24,7 @@ struct lock* lk_create(void)
         l->l = 0;
 #else
         pthread_mutex_init(&l->l, NULL);
-#endif        
+#endif
 
         return l;
 }
@@ -36,7 +35,7 @@ int lk_lock(struct lock* l)
         for (;;)
         {
                 int r = atomic_cas_32(&l->l, 0, 1);
-                
+
                 if (r == 0)
                 {
                         break;
@@ -45,7 +44,7 @@ int lk_lock(struct lock* l)
         return 0;
 #else
         return pthread_mutex_lock(&l->l);
-#endif        
+#endif
 }
 
 void lk_unlock(struct lock* l)
@@ -54,7 +53,7 @@ void lk_unlock(struct lock* l)
         l->l = 0;
 #else
 	pthread_mutex_unlock(&l->l);
-#endif        
+#endif
 }
 
 void lk_destroy(struct lock* l)

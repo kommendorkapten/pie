@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "file_proc.h"
 #include "ingestd_cfg.h"
 #include "../pie_types.h"
@@ -27,17 +28,60 @@
 #include "../dm/pie_storage.h"
 
 static void cb_fun(const char*);
+static const struct pie_stg_mnt* stg_from_path(const char*);
 
 struct ingestd_cfg id_cfg;
 
 int main(int argc, char** argv)
 {
-	char path[PIE_PATH_LEN];
+        size_t len;
         int ok;
         int status = -1;
         long evp_hw;
         long lval;
         int num_workers = 4;
+        int c;
+
+        id_cfg.cp_mode = MODE_COPY_INTO;
+        while ((c = getopt(argc, argv, "s:d:t")) != -1)
+        {
+                switch (c)
+                {
+                case 's':
+                        id_cfg.src_path = optarg;
+                        break;
+                case 'd':
+                        id_cfg.dst_path = optarg;
+                        break;
+                case 't':
+                        id_cfg.cp_mode = MODE_COPY_TREE;
+                        break;
+                }
+        }
+
+        if (id_cfg.src_path == NULL)
+        {
+                PIE_ERR("No source provided");
+                return 1;
+        }
+        if (id_cfg.dst_path == NULL)
+        {
+                PIE_ERR("No destination provided");
+                return 1;
+        }
+
+        /* Remove trailing slash */
+        len = strlen(id_cfg.src_path);
+        if (id_cfg.src_path[len - 1] == '/')
+        {
+                id_cfg.src_path[len - 1] = '\0';
+        }
+        len = strlen(id_cfg.dst_path);
+        if (id_cfg.dst_path[len - 1] != '/')
+        {
+                PIE_ERR("Destination must end with a '/'");
+                return 1;
+        }
 
         if (pie_cfg_load(PIE_CFG_PATH))
         {
@@ -96,36 +140,22 @@ int main(int argc, char** argv)
                 goto cleanup;
         }
 
-        id_cfg.stg_mnt_len = malloc(sizeof(int) * id_cfg.storages->len);
-        for (int i = 0; i < id_cfg.storages->len; i++)
+        /* Verify target is a valid storage */
+        id_cfg.dst_stg = stg_from_path(id_cfg.dst_path);
+        if (id_cfg.dst_stg == NULL)
         {
-                if (id_cfg.storages->arr[i])
-                {
-                        PIE_DEBUG("Storage %d at %s",
-                                  id_cfg.storages->arr[i]->stg.stg_id,
-                                  id_cfg.storages->arr[i]->mnt_path);
-                        id_cfg.stg_mnt_len[i] = (int)strlen(id_cfg.storages->arr[i]->mnt_path);
-                }
+                PIE_ERR("%s is not a configured storage", id_cfg.dst_path);
+                goto cleanup;
         }
+        /* Remove dest stg's mount point from dst_path */
+        size_t offset = strlen(id_cfg.dst_stg->mnt_path);
+        len = strlen(id_cfg.dst_path) - offset;
+        memmove(id_cfg.dst_path,
+                id_cfg.dst_path + offset,
+                len);
+        id_cfg.dst_path[len] = '\0';
 
-        if (argc > 1)
-        {
-                size_t len;
-                strncpy(path, argv[1], PIE_PATH_LEN);
-
-                /* Remove trailing slash */
-                len = strlen(path);
-                if (path[len - 1] == '/')
-                {
-                        path[len - 1] = '\0';
-                }
-        }
-        else
-        {
-                strcpy(path, ".");
-        }
-
-        walk_dir(path, &cb_fun);
+        walk_dir(id_cfg.src_path, &cb_fun);
         status = 0;
 
         /* Stop and wait for workers */
@@ -146,53 +176,45 @@ cleanup:
                 pie_cfg_free_hoststg(id_cfg.storages);
                 id_cfg.storages = NULL;
         }
-        if (id_cfg.stg_mnt_len)
-        {
-                free(id_cfg.stg_mnt_len);
-                id_cfg.stg_mnt_len = NULL;
-        }
         pie_cfg_close();
 
 	return status;
 }
-
-
 
 static void cb_fun(const char* path)
 {
         pie_fp_add_job(path);
 }
 
-#if 0
-static void cb_fun(const char* path)
+const struct pie_stg_mnt* stg_from_path(const char* p)
 {
-        struct pie_mq_new_media msg;
-        struct pie_stg_mnt* stg;
-        const char* p;
-        ssize_t bw;
+        struct pie_stg_mnt* stg = NULL;
 
-        stg = stg_from_path(path);
-        if (stg == NULL)
+        for (int i = 0; i < id_cfg.storages->len; i++)
         {
-                PIE_WARN("Non storage mounted path: '%s'", path);
-                return;
-        }
-        p = path + id_cfg.offset[stg->stg.stg_id];
-        /* p starts with '/' */
-        if (p[1] == '.')
-        {
-                /* hidden file */
-                return;
+                char* pos;
+
+                stg = id_cfg.storages->arr[i];
+
+                if (stg == NULL)
+                {
+                        continue;
+                }
+
+                pos = strstr(p, stg->mnt_path);
+                if (pos == NULL || pos != p)
+                {
+                        continue;
+                }
+
+                /* make sure the next pos in p is a '/' */
+                if (*(p + strlen(stg->mnt_path)) != '/')
+                {
+                        continue;
+                }
+
+                break;
         }
 
-        sprintf(msg.path, "%s", p);
-        msg.storage = htonl(stg->stg.stg_id);
-        bw = id_cfg.queue->send(id_cfg.queue->this, (char*)&msg, sizeof(msg));
-        if (bw != sizeof(msg))
-        {
-                perror("queue->send");
-                PIE_WARN("Could not send messsage to queue");
-                abort();
-        }
+        return stg;
 }
-#endif
