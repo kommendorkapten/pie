@@ -34,12 +34,21 @@
 #define BUF_LEN (1<<14) /* 16kB */
 
 static void* worker(void*);
-static ssize_t copy(int, int);
+int pie_fp_process_file(struct pie_mq_new_media*, char*);
+/**
+ * Calculate a message digest from the provided file descriptor.
+ * @param sum to store digest in. Must be able to at least keep
+ *        EVP_MAX_MD_SIZE bytes.
+ * @param file descriptor.
+ * @return the size of the digest in bytes, zero on error.
+ */
+unsigned int pie_fp_digest(unsigned char[], int);
 
 static pthread_t* workers;
 static int num_workers;
 static struct chan* chan;
 static pthread_mutex_t fs_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t cp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int pie_fp_start_workers(int w)
 {
@@ -123,30 +132,14 @@ void pie_fp_stop_workers(void)
 
 static void* worker(void* arg)
 {
-        char buf[BUF_LEN];
-        char hex[2 * EVP_MAX_MD_SIZE + 1];
-        unsigned char sum[EVP_MAX_MD_SIZE];
-        struct pie_mq_new_media new_mmsg;
         struct chan* chan = (struct chan*)arg;
-        EVP_MD_CTX* mdctx;
-        const EVP_MD* md = EVP_sha1();
-        ENGINE* impl = NULL;
-        size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
-
-        mdctx = EVP_MD_CTX_create();
 
         for (;;)
         {
+                struct pie_mq_new_media new_mmsg;
                 struct chan_msg chan_msg;
-                struct timing t;
                 char* path;
-                ssize_t len;
-                ssize_t nb;
-                unsigned int md_len;
                 int ok;
-                int src_fd;
-                int tgt_fd;
-                mode_t mode = 0644;
 
                 ok = chan_read(chan, &chan_msg, -1);
                 if (ok)
@@ -162,124 +155,15 @@ static void* worker(void* arg)
                 }
                 /* path is the absolute path for src file on local disk */
                 path = chan_msg.data;
-                PIE_LOG("Open %s", path);
-                src_fd = open(path, O_RDONLY);
-                if (src_fd < 0)
+
+                if (pie_fp_process_file(&new_mmsg, path))
                 {
-                        perror("open");
-                        PIE_WARN("Could not open '%s'", path);
-                        free(chan_msg.data);
-                        continue;
-                }
-
-                timing_start(&t);
-                EVP_DigestInit_ex(mdctx, md, impl);
-                while ((nb = read(src_fd, buf, BUF_LEN)) > 0)
-                {
-                        EVP_DigestUpdate(mdctx, buf, nb);
-                }
-
-                EVP_DigestFinal_ex(mdctx, sum, &md_len);
-                EVP_MD_CTX_destroy(mdctx);
-                PIE_TRACE("Digest in %dms", timing_dur_msec(&t));
-
-                /* hex encode */
-                for (unsigned int i = 0; i < md_len; i++)
-                {
-                        sprintf(hex + i * 2, "%02x", sum[i]);
-                }
-                hex[md_len * 2 + 1] = '\0';
-                /* Compare in database for duplicate based on digest */
-
-                /* strip id_cfg.src_path from path */
-                PIE_TRACE("Source path: %s", path);
-                len = strlen(path) - src_pth_off;
-                memmove(path, path + src_pth_off, len);
-                path[len] = '\0';
-                PIE_TRACE("Stripped path: %s", path);
-
-                if (id_cfg.cp_mode == MODE_COPY_INTO)
-                {
-                        /* remove preceding dirs */
-                        char *p = strrchr(path, '/');
-
-                        if (p != NULL)
-                        {
-                                len = strlen(p + 1);
-                                memmove(path, p + 1, len);
-                                path[len] = '\0';
-                        }
-                }
-
-                /* Create new media message */
-                snprintf(new_mmsg.path,
-                         PIE_PATH_LEN,
-                         "%s%s",
-                         id_cfg.dst_path, path);
-                new_mmsg.path[PIE_PATH_LEN - 1] = '\0';
-                memcpy(new_mmsg.digest, sum, md_len);
-                new_mmsg.stg_id = htonl(id_cfg.dst_stg->stg.stg_id);
-                new_mmsg.digest_len = htonl(md_len);
-                PIE_DEBUG("New media message path: %s", new_mmsg.path);
-
-                /* ensure directory */
-                char *dir = strrchr(path, '/');
-                if (dir)
-                {
-                        /* remove filename from path */
-                        *dir = '\0';
-                        snprintf(buf,
-                                 BUF_LEN,
-                                 "%s%s",
-                                 id_cfg.dst_path,
-                                 path);
-                }
-                else
-                {
-                        snprintf(buf,
-                                 BUF_LEN,
-                                 "%s",
-                                 id_cfg.dst_path);
-                }
-                pthread_mutex_lock(&fs_lock);
-                PIE_TRACE("Create dir: %s", buf);
-                fal_mkdir_tree(id_cfg.dst_stg->mnt_path,
-                               buf);
-                pthread_mutex_unlock(&fs_lock);
-
-                /* Copy file to target destination */
-                snprintf(buf,
-                         BUF_LEN,
-                         "%s%s",
-                         id_cfg.dst_stg->mnt_path,
-                         new_mmsg.path);
-                PIE_LOG("Copy file to: %s", buf);
-
-                tgt_fd = open(buf, O_WRONLY | O_CREAT | O_EXCL, mode);
-                if (tgt_fd < 0)
-                {
-                        perror("open:tgt_fd");
+                        PIE_ERR("pie_fp_process_file");
                         abort();
                 }
-                /* Reset src fd */
-                lseek(src_fd, 0L, SEEK_SET);
-                timing_start(&t);
-                len = fal_copy_fd(tgt_fd, src_fd);
-                time_t ms = timing_dur_msec(&t);
-
-                if (len < 1)
-                {
-                        perror("fal_copy_fd");
-                        abort();
-                }
-                close(tgt_fd);
-                close(src_fd);
-                PIE_LOG("Copied %ld bytes in %ldms (%0.2fMB/s)",
-                        len,
-                        ms,
-                        (((float)len) / (1024.0f * 1024.0f) * 1000.0) / (float)ms);
 
                 /* Notify mediad on new media */
+                ssize_t nb;
                 nb = id_cfg.queue->send(id_cfg.queue->this,
                                         (char*)&new_mmsg,
                                         sizeof(new_mmsg));
@@ -294,4 +178,152 @@ static void* worker(void* arg)
         }
 
         return NULL;
+}
+
+int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
+{
+        char tmp_path[PIE_PATH_LEN];
+        char hex[2 * EVP_MAX_MD_SIZE + 1];
+        unsigned char sum[EVP_MAX_MD_SIZE];
+        size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
+        struct timing t;
+        ssize_t len;
+        unsigned int md_len;
+        int src_fd;
+        int tgt_fd;
+        int ok;
+        mode_t mode = 0644;
+
+        PIE_LOG("Open %s", path);
+        src_fd = open(path, O_RDONLY);
+        if (src_fd < 0)
+        {
+                perror("open");
+                PIE_WARN("Could not open '%s'", path);
+                return 1;
+        }
+
+        timing_start(&t);
+        md_len = pie_fp_digest(sum, src_fd);
+        PIE_DEBUG("Digest in %dms", timing_dur_msec(&t));
+
+        /* hex encode */
+        for (unsigned int i = 0; i < md_len; i++)
+        {
+                sprintf(hex + i * 2, "%02x", sum[i]);
+        }
+        hex[md_len * 2 + 1] = '\0';
+        /* Compare in database for duplicate based on digest */
+
+        /* strip id_cfg.src_path from path */
+        PIE_TRACE("Source path: %s", path);
+        len = strlen(path) - src_pth_off;
+        memmove(path, path + src_pth_off, len);
+        path[len] = '\0';
+        PIE_TRACE("Stripped path: %s", path);
+
+        if (id_cfg.cp_mode == MODE_COPY_INTO)
+        {
+                /* remove preceding dirs */
+                char *p = strrchr(path, '/');
+
+                if (p != NULL)
+                {
+                        len = strlen(p + 1);
+                        memmove(path, p + 1, len);
+                        path[len] = '\0';
+                }
+        }
+
+        /* Create new media message */
+        snprintf(new_mmsg->path,
+                 PIE_PATH_LEN,
+                 "%s%s",
+                 id_cfg.dst_path, path);
+        new_mmsg->path[PIE_PATH_LEN - 1] = '\0';
+        memcpy(new_mmsg->digest, sum, md_len);
+        new_mmsg->stg_id = htonl(id_cfg.dst_stg->stg.stg_id);
+        new_mmsg->digest_len = htonl(md_len);
+        PIE_DEBUG("New media message path: %s", new_mmsg->path);
+
+        /* ensure directory */
+        char *dir = strrchr(path, '/');
+        if (dir)
+        {
+                /* remove filename from path */
+                *dir = '\0';
+                snprintf(tmp_path,
+                         PIE_PATH_LEN,
+                         "%s%s",
+                         id_cfg.dst_path,
+                         path);
+        }
+        else
+        {
+                snprintf(tmp_path,
+                         PIE_PATH_LEN,
+                         "%s",
+                         id_cfg.dst_path);
+        }
+        pthread_mutex_lock(&fs_lock);
+        PIE_TRACE("Create dir: %s", tmp_path);
+        fal_mkdir_tree(id_cfg.dst_stg->mnt_path,
+                       tmp_path);
+        pthread_mutex_unlock(&fs_lock);
+
+        /* Copy file to target destination */
+        snprintf(tmp_path,
+                 PIE_PATH_LEN,
+                 "%s%s",
+                 id_cfg.dst_stg->mnt_path,
+                 new_mmsg->path);
+        tgt_fd = open(tmp_path, O_WRONLY | O_CREAT | O_EXCL, mode);
+        if (tgt_fd < 0)
+        {
+                perror("open:tgt_fd");
+                abort();
+        }
+        /* Reset src fd */
+        lseek(src_fd, 0L, SEEK_SET);
+        pthread_mutex_lock(&cp_lock);
+        PIE_LOG("Copy file to: %s", tmp_path);
+        timing_start(&t);
+        len = fal_copy_fd(tgt_fd, src_fd);
+        time_t ms = timing_dur_msec(&t);
+        PIE_LOG("Copied %ld bytes in %ldms (%0.2fMB/s)",
+                len,
+                ms,
+                (((float)len) / (1024.0f * 1024.0f) * 1000.0) / (float)ms);
+        pthread_mutex_unlock(&cp_lock);
+
+        if (len < 1)
+        {
+                perror("fal_copy_fd");
+                abort();
+        }
+        close(tgt_fd);
+        close(src_fd);
+
+        return 0;
+}
+
+unsigned int pie_fp_digest(unsigned char sum[], int fd)
+{
+        char buf[BUF_LEN];
+        EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
+        const EVP_MD* md = EVP_sha1();
+        ENGINE* impl = NULL;
+        ssize_t nb;
+        unsigned int md_len;
+
+        EVP_DigestInit_ex(mdctx, md, impl);
+        while ((nb = read(fd, buf, BUF_LEN)) > 0)
+        {
+                EVP_DigestUpdate(mdctx, buf, nb);
+        }
+
+        EVP_DigestFinal_ex(mdctx, sum, &md_len);
+        EVP_MD_CTX_destroy(mdctx);
+
+        return md_len;
 }
