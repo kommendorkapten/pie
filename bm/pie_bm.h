@@ -105,10 +105,12 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
  * The destination bitmamp must *NOT* contain any allocated channels,
  * as they will not be freed. Calling with allocated channels will result
  * in a memory leak as they will be overwrittern.
+ * If invalid parameters are present, target bitmap is not modified.
  * @param the target bitmap (uninitialized).
  * @param the target bit depth.
  * @param the source bitmap.
  * @param the source bit dept.
+ * @return 0 on success.
  */
 int pie_bm_conv_bd(void* restrict, 
                    enum pie_color_bit_depth,

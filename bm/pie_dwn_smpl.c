@@ -27,10 +27,10 @@ static float gauss_avg(const float* restrict img,
                        int s,
                        int r);
 
-int pie_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
-                 const struct pie_bitmap_f32rgb* restrict src,
-                 int max_w,
-                 int max_h)
+int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
+                    const struct pie_bitmap_f32rgb* restrict src,
+                    int max_w,
+                    int max_h)
 {
         float blur[MAX_RADIUS * MAX_RADIUS];
         float ratio;

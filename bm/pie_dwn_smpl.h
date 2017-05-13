@@ -30,9 +30,9 @@
  * @param maximum new height in pixels, -1 if dont' care.
  * @return 0 on success. Non zero otherwise.
  */
-int pie_dwn_smpl(struct pie_bitmap_f32rgb* restrict,
-                 const struct pie_bitmap_f32rgb* restrict,
-                 int,
-                 int);
+int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict,
+                    const struct pie_bitmap_f32rgb* restrict,
+                    int,
+                    int);
 
 #endif /* __PIE_DWN_SMPL_H__ */

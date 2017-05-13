@@ -71,7 +71,7 @@ int main(int argc, char** argv)
         
         timing_start(&t);
 
-        if (pie_dwn_smpl(&dwn, &img, max, max))
+        if (pie_bm_dwn_smpl(&dwn, &img, max, max))
         {
                 abort();
         }
