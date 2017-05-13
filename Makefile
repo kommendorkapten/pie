@@ -157,7 +157,7 @@ bin/gauss: testp/gauss.c $(OBJS) obj/timing.o
 bin/unsharp: testp/unsharp.c $(OBJS) obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
-bin/tojpg: testp/tojpg.c $(OBJS) obj/timing.o
+bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o  obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
 bin/catm: testp/catm.c $(OBJS)
