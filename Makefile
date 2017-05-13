@@ -190,8 +190,8 @@ bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
 	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)

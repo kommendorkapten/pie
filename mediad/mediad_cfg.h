@@ -14,11 +14,15 @@
 #ifndef __MEDIAD_CFG_H__
 #define __MEDIAD_CFG_H__
 
+struct pie_host;
+struct pie_stg_mnt_arr;
+
 struct mediad_cfg
 {
         struct pie_host* host;
         struct pie_stg_mnt_arr* storages;
-        struct q_consumer** queues;
+        int max_proxy;
+        int max_thumb;
 };
 
 extern struct mediad_cfg md_cfg;

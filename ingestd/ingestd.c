@@ -31,6 +31,7 @@ static void cb_fun(const char*);
 static const struct pie_stg_mnt* stg_from_path(const char*);
 
 struct ingestd_cfg id_cfg;
+static unsigned int num_files;
 
 int main(int argc, char** argv)
 {
@@ -160,6 +161,7 @@ int main(int argc, char** argv)
 
         /* Stop and wait for workers */
         pie_fp_stop_workers();
+        PIE_LOG("Processed %d files", num_files);        
 cleanup:
         if (id_cfg.queue)
         {
@@ -184,6 +186,7 @@ cleanup:
 static void cb_fun(const char* path)
 {
         pie_fp_add_job(path);
+        num_files++;
 }
 
 const struct pie_stg_mnt* stg_from_path(const char* p)

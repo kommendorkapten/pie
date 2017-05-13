@@ -42,7 +42,7 @@ int pie_fp_process_file(struct pie_mq_new_media*, char*);
  * @param file descriptor.
  * @return the size of the digest in bytes, zero on error.
  */
-unsigned int pie_fp_digest(unsigned char[], int);
+unsigned int pie_fp_mdigest(unsigned char[], int);
 
 static pthread_t* workers;
 static int num_workers;
@@ -158,8 +158,9 @@ static void* worker(void* arg)
 
                 if (pie_fp_process_file(&new_mmsg, path))
                 {
-                        PIE_ERR("pie_fp_process_file");
-                        abort();
+                        PIE_WARN("Processing of %s failed", path);
+                        free(chan_msg.data);
+                        continue;
                 }
 
                 /* Notify mediad on new media */
@@ -194,7 +195,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         int ok;
         mode_t mode = 0644;
 
-        PIE_LOG("Open %s", path);
+        PIE_LOG("Process %s", path);
         src_fd = open(path, O_RDONLY);
         if (src_fd < 0)
         {
@@ -204,7 +205,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         }
 
         timing_start(&t);
-        md_len = pie_fp_digest(sum, src_fd);
+        md_len = pie_fp_mdigest(sum, src_fd);
         PIE_DEBUG("Digest in %dms", timing_dur_msec(&t));
 
         /* hex encode */
@@ -225,6 +226,10 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         if (id_cfg.cp_mode == MODE_COPY_INTO)
         {
                 /* remove preceding dirs */
+                /* this is basically a simple (and destructive) 
+                   implementation of basename(3C), as basename(3C) is not 
+                   required to be reentrant in POSIX.1-2001 
+                   (IEEE 1003.1-2001 or SUSv3) */
                 char *p = strrchr(path, '/');
 
                 if (p != NULL)
@@ -246,7 +251,10 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         new_mmsg->digest_len = htonl(md_len);
         PIE_DEBUG("New media message path: %s", new_mmsg->path);
 
-        /* ensure directory */
+        /* Make sure the target directory exists. */
+        /* this is basically a simple (and destructive) implementation 
+           of dirname(3C), as dirname(3C) is not required to be reentrant 
+           in POSIX.1-2001 (IEEE 1003.1-2001 or SUSv3) */
         char *dir = strrchr(path, '/');
         if (dir)
         {
@@ -280,9 +288,11 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         tgt_fd = open(tmp_path, O_WRONLY | O_CREAT | O_EXCL, mode);
         if (tgt_fd < 0)
         {
-                perror("open:tgt_fd");
-                abort();
+                PIE_WARN("File %s already exists", tmp_path);
+                close(src_fd);
+                return 1;
         }
+        
         /* Reset src fd */
         lseek(src_fd, 0L, SEEK_SET);
         pthread_mutex_lock(&cp_lock);
@@ -307,7 +317,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         return 0;
 }
 
-unsigned int pie_fp_digest(unsigned char sum[], int fd)
+unsigned int pie_fp_mdigest(unsigned char sum[], int fd)
 {
         char buf[BUF_LEN];
         EVP_MD_CTX* mdctx = EVP_MD_CTX_create();

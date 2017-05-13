@@ -27,4 +27,13 @@ void strlstrip(char*);
  */
 void strrstrip(char*);
 
+/**
+ * Return the file extension (the part after .) of a string.
+ * The returned data is a pointer into the original string.
+ * If the filename ends with a . the empty string is returned.
+ * @param string
+ * @return a pointer to the extension or NULL if no extension was found.
+ */
+const char* get_extension(const char*);
+
 #endif /* __STRUTIL_H__ */

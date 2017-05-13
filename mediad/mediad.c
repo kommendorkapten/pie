@@ -52,7 +52,6 @@ static void* process_inc(void*);
  * @return NULL if successfull.
  */
 static void* process_upd(void*);
-static void close_queues(void);
 
 struct mediad_cfg md_cfg;
 
@@ -60,6 +59,8 @@ int main(void)
 {
         pthread_t thr[NUM_QUEUES];
         struct sigaction sa;
+        struct q_consumer* q_incoming;
+        struct q_consumer* q_update;
         sigset_t b_sigset;
         sigset_t o_sigset;
         int evp_hw = 1;
@@ -85,8 +86,29 @@ int main(void)
         {
                 num_workers = (int)lval;
         }
-
         PIE_LOG("Using %d workers", num_workers);
+
+        if (pie_cfg_get_long("image:thumbnail:size", &lval))
+        {
+                PIE_LOG("Config image:thumbnail:size not found in config");
+                lval = 256;
+        }
+        else
+        {
+                md_cfg.max_thumb = (int)lval;
+        }
+        PIE_LOG("Maximum thumbnail size: %d", md_cfg.max_thumb);
+        if (pie_cfg_get_long("image:proxy:size", &lval))
+        {
+                PIE_LOG("Config image:proxy:size not found in config");
+                lval = 1024;
+        }
+        else
+        {
+                md_cfg.max_proxy = (int)lval;
+        }
+        PIE_LOG("Maximum proxy size: %d", md_cfg.max_proxy);
+        
         md_cfg.host = pie_cfg_get_host(-1);
         if (md_cfg.host == NULL)
         {
@@ -103,35 +125,35 @@ int main(void)
         {
                 if (md_cfg.storages->arr[i])
                 {
-                        PIE_DEBUG("Storage %d at %s",
-                                  md_cfg.storages->arr[i]->stg.stg_id,
-                                  md_cfg.storages->arr[i]->mnt_path);
+                        PIE_LOG("Storage %d at %s",
+                                md_cfg.storages->arr[i]->stg.stg_id,
+                                md_cfg.storages->arr[i]->mnt_path);
                 }
         }
-
-        md_cfg.queues = malloc((NUM_QUEUES + 1) * sizeof(struct q_consumer*));
-        memset(md_cfg.queues, 0, (NUM_QUEUES + 1) * sizeof(struct q_consumer*));
 
         /* Init queues */
-        for (int i = 0; i < NUM_QUEUES; i++)
+        q_incoming = q_new_consumer(QUEUE_INTRA_HOST);
+        if (q_incoming == NULL)
         {
-                md_cfg.queues[i] = q_new_consumer(QUEUE_INTRA_HOST);
-                if (md_cfg.queues[i] == NULL)
-                {
-                        PIE_ERR("Can not create queue consumer");
-                        goto cleanup;
-                }
+                PIE_ERR("Can not create queue consumer");
+                goto cleanup;
         }
-        md_cfg.queues[NUM_QUEUES] = NULL;
-        ok = md_cfg.queues[Q_INC]->init(md_cfg.queues[Q_INC]->this,
-                                        Q_INCOMING_MEDIA);
+        q_update = q_new_consumer(QUEUE_INTRA_HOST);
+        if (q_incoming == NULL)
+        {
+                PIE_ERR("Can not create queue consumer");
+                goto cleanup;
+        }        
+
+        ok = q_incoming->init(q_incoming->this,
+                              Q_INCOMING_MEDIA);
         if (ok)
         {
                 PIE_ERR("Could not init queue '%s'", Q_INCOMING_MEDIA);
                 goto cleanup;
         }
-        ok = md_cfg.queues[Q_UPD]->init(md_cfg.queues[Q_UPD]->this,
-                                        Q_UPDATE_META);
+        ok = q_update->init(q_update->this,
+                            Q_UPDATE_META);
         if (ok)
         {
                 PIE_ERR("Could not init queue '%s'", Q_UPDATE_META);
@@ -144,7 +166,7 @@ int main(void)
         ok = pthread_create(&thr[Q_INC],
                             NULL,
                             &process_inc,
-                            md_cfg.queues[Q_INC]);
+                            q_incoming);
         if (ok)
         {
                 PIE_ERR("Could not create incoming media thread");
@@ -153,7 +175,7 @@ int main(void)
         ok = pthread_create(&thr[Q_UPD],
                             NULL,
                             &process_upd,
-                            md_cfg.queues[Q_UPD]);
+                            q_update);
         if (ok)
         {
                 PIE_ERR("Could not create update meta data thread");
@@ -178,7 +200,12 @@ int main(void)
         PIE_LOG("All set, wait for termination");
         pause();
 
-        close_queues();
+        q_incoming->close(q_incoming->this);
+        q_update->close(q_update->this);        
+        q_del_consumer(q_incoming);
+        q_del_consumer(q_update);      
+        q_incoming = NULL;
+        q_update = NULL;        
         ret = 0;
 
         /* join threads */
@@ -188,11 +215,17 @@ int main(void)
         }
         pie_nm_stop_workers();
 cleanup:
-        if (md_cfg.queues)
+        if (q_incoming)
         {
-                close_queues();
-                free(md_cfg.queues);
-                md_cfg.queues = NULL;
+                q_incoming->close(q_incoming->this);
+                q_del_consumer(q_incoming);
+                q_incoming = NULL;
+        }
+        if (q_update)
+        {
+                q_update->close(q_update->this);
+                q_del_consumer(q_update);
+                q_update = NULL;
         }
 
         if (md_cfg.host)
@@ -258,20 +291,4 @@ static void* process_upd(void* arg)
 static void sig_h(int signum)
 {
         PIE_LOG("Got signal %d", signum);
-}
-
-static void close_queues(void)
-{
-        struct q_consumer** qp = md_cfg.queues;
-        struct q_consumer* q = *qp;
-
-        while (q != NULL)
-        {
-                q->close(q->this);
-                q_del_consumer(q);
-
-                *qp = NULL;
-                qp++;
-                q = *qp;
-        }
 }

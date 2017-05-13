@@ -52,3 +52,10 @@ void strrstrip(char* s)
         }
         *last = '\0';
 }
+
+const char* get_extension(const char* p)
+{
+        const char* r = strrchr(p, '.');
+
+        return r;
+}

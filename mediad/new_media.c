@@ -24,13 +24,25 @@
 #include "../pie_log.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../lib/chan.h"
+#include "../lib/timing.h"
+#include "../lib/strutil.h"
 #include "../cfg/pie_cfg.h"
-
-#define BUF_LEN (1<<14) /* 16kB */
+#include "../bm/pie_bm.h"
+#include "../bm/pie_dwn_smpl.h"
+#include "../io/pie_io.h"
+#include "../io/pie_io_jpg.h"
 
 static void* worker(void*);
 static struct pie_mq_new_media* alloc_msg(void);
 static void free_msg(struct pie_mq_new_media*);
+/**
+ * Write a downsampled version to disk.
+ * @param the bitmap to downsample.
+ * @param maximum size (in both w and h).
+ * @param complete path to write file to.
+ * @return 0 on success.
+ */
+static int write_dwn_smpl(struct pie_bitmap_f32rgb*, int, const char*);
 
 static pthread_t* workers;
 static int num_workers;
@@ -114,19 +126,41 @@ void pie_nm_stop_workers(void)
 
 static void* worker(void* arg)
 {
-        char buf[BUF_LEN];
-        char path[PIE_PATH_LEN];
-        char hex[2 * PIE_MAX_DIGEST + 1];
         struct chan* chan = (struct chan*)arg;
+        struct pie_stg_mnt* proxy_stg = NULL;
+        struct pie_stg_mnt* thumb_stg = NULL;
 
+        for (int i = 0; i < md_cfg.storages->len; i++)
+        {
+                if (md_cfg.storages->arr[i])
+                {
+                        struct pie_stg_mnt* stg;
+
+                        stg = md_cfg.storages->arr[i];
+                        switch(stg->stg.stg_type)
+                        {
+                        case PIE_STG_THUMB:
+                                thumb_stg = stg;
+                                break;
+                        case PIE_STG_PROXY:
+                                proxy_stg = stg;
+                                break;
+                        }
+                }
+        }
+        
         for (;;)
         {
+                char src_path[PIE_PATH_LEN];
+                char tgt_path[PIE_PATH_LEN];
+                char hex[2 * PIE_MAX_DIGEST + 1];
+                struct pie_bitmap_f32rgb bm_src;
                 struct chan_msg chan_msg;
+                struct timing t;
                 struct pie_mq_new_media* new;
                 struct pie_stg_mnt* stg;
                 ssize_t br;
                 int ok;
-                int fd;
 
                 ok = chan_read(chan, &chan_msg, -1);
                 if (ok)
@@ -149,34 +183,56 @@ static void* worker(void* arg)
                 if (stg == NULL)
                 {
                         PIE_WARN("Unknown storage: %d\n", new->stg_id);
-                        free_msg(new);
-                        continue;
+                        goto next_msg;
                 }
 
-                snprintf(path, PIE_PATH_LEN, "%s%s", stg->mnt_path, new->path);
-                PIE_LOG("Storage: %d", new->stg_id);
-                PIE_LOG("New media: %s", new->path);
-                PIE_LOG("Digest len: %d", new->digest_len);
-
-
-                /* hex encode */
+                snprintf(src_path,
+                         PIE_PATH_LEN,
+                         "%s%s",
+                         stg->mnt_path,
+                         new->path);
+                /* hex encode digest */
                 for (unsigned int i = 0; i < new->digest_len; i++)
                 {
                         sprintf(hex + i * 2, "%02x", new->digest[i]);
                 }
                 hex[new->digest_len * 2 + 1] = '\0';
-                PIE_LOG("sha1sum: [%s] %s", path, hex);
+                PIE_LOG("New media: [%s] %s", hex, src_path);                
 
-                fd = open(path, O_RDONLY);
-                if (fd < 0)
+                timing_start(&t);                
+                ok = pie_io_load(&bm_src, src_path);
+                PIE_DEBUG("Loaded %s in %ldms", src_path, timing_dur_msec(&t));
+                if (ok)
                 {
-                        perror("open");
+                        PIE_ERR("Could not load %s", src_path);
+                        goto next_msg;
                 }
-                else
+                
+                snprintf(tgt_path,
+                         PIE_PATH_LEN,
+                         "%s/%s.jpg",
+                         thumb_stg->mnt_path,
+                         hex);
+                PIE_DEBUG("Thumb: %s", tgt_path);
+                if (write_dwn_smpl(&bm_src, md_cfg.max_thumb, tgt_path))
                 {
-                        close(fd);
+                        pie_bm_free_f32(&bm_src);
+                        goto next_msg;                        
                 }
-
+                snprintf(tgt_path,
+                         PIE_PATH_LEN,
+                         "%s/%s.jpg",
+                         proxy_stg->mnt_path,
+                         hex);
+                PIE_DEBUG("Proxy: %s", tgt_path);
+                if (write_dwn_smpl(&bm_src, md_cfg.max_proxy, tgt_path))
+                {
+                        pie_bm_free_f32(&bm_src);
+                        goto next_msg;                        
+                }
+          
+                pie_bm_free_f32(&bm_src);
+        next_msg:
                 free_msg(new);
         }
 
@@ -191,4 +247,52 @@ static struct pie_mq_new_media* alloc_msg(void)
 static void free_msg(struct pie_mq_new_media* m)
 {
         free(m);
+}
+
+static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
+{
+        struct pie_bitmap_f32rgb bm_dwn;
+        struct pie_bitmap_u8rgb bm_out;
+        struct timing t;
+        int ok;
+
+        timing_start(&t);
+        if (pie_bm_dwn_smpl(&bm_dwn,
+                            src,
+                            max,
+                            max))
+        {
+                PIE_ERR("Failed to downsample");
+                return -1;
+        }
+        PIE_DEBUG("Downsampeld tp %dpx in %ldms",
+                  max,
+                  timing_dur_msec(&t));
+        
+        timing_start(&t);
+        if (pie_bm_conv_bd(&bm_out,
+                           PIE_COLOR_8B,
+                           &bm_dwn,
+                           PIE_COLOR_32B))
+        {
+                PIE_ERR("Could not convert to 8b");
+                pie_bm_free_f32(&bm_dwn);                        
+                return -1;
+        }
+        PIE_DEBUG("Converted to 8b in %ldms", timing_dur_msec(&t));
+
+        timing_start(&t);
+        ok = jpg_u8rgb_write(p, &bm_out, 90);
+        PIE_DEBUG("Wrote %s in %ldms", p, timing_dur_msec(&t));
+        if (ok)
+        {
+                PIE_ERR("Could not write output '%s', code %d",
+                        p,
+                        ok);
+        }
+                
+        pie_bm_free_u8(&bm_out);
+        pie_bm_free_f32(&bm_dwn);
+
+        return ok;
 }

@@ -104,11 +104,11 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
                 radius++;
         }
         sigma = step;
-        PIE_DEBUG("Matrix size %d, sigma: %f", radius, sigma);
         if (radius > MAX_RADIUS)
         {
                 radius = MAX_RADIUS;
         }
+        PIE_DEBUG("Matrix size %d, sigma: %f", radius, sigma);
 
         /* Create Gaussion blur matrix */
         pie_gauss_matrix(&blur[0], radius, sigma * sigma);
