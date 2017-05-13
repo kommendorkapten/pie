@@ -12,6 +12,7 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb bmf;
         struct pie_bitmap_u8rgb bmu;
         struct timing t;
+        int ok;
 
         if (argc != 3)
         {
@@ -23,9 +24,9 @@ int main(int argc, char** argv)
         out = argv[2];
 
         timing_start(&t);
-        if (pie_io_load(&bmf, in))
+        if (ok = pie_io_load(&bmf, in), ok)
         {
-                printf("1\n");
+                printf("%d\n", ok);
                 return -1;
         }
         printf("Read %s in %luusec\n", in, timing_dur_usec(&t));
