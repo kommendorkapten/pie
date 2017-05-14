@@ -83,7 +83,7 @@ MEDIAD_SRC = mediad.c new_media.c
 INGEST_SRC = ingestd.c file_proc.c
 COLLD_SRC  = pie_colld.c pie_coll.c
 CFG_SRC    = pie_cfg.c
-DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c
+DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c pie_collection_member.c
 SOURCES    = pie_cspace.c pie_id.c\
 	     $(IO_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
 # Objects
@@ -190,7 +190,7 @@ bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o obj/pie_id.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o

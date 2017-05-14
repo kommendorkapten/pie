@@ -20,21 +20,41 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <signal.h>
 #include "mediad_cfg.h"
 #include "../pie_log.h"
+#include "../pie_id.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
 #include "../lib/strutil.h"
 #include "../cfg/pie_cfg.h"
+#include "../dm/pie_host.h"
+#include "../dm/pie_collection.h"
+#include "../dm/pie_collection_member.h"
 #include "../bm/pie_bm.h"
 #include "../bm/pie_dwn_smpl.h"
 #include "../io/pie_io.h"
 #include "../io/pie_io_jpg.h"
 
+struct nm_worker
+{
+        struct chan* chan;
+        unsigned char me;
+};
+
 static void* worker(void*);
 static struct pie_mq_new_media* alloc_msg(void);
 static void free_msg(struct pie_mq_new_media*);
+/**
+ * Get or create a pie_collection in the database.
+ * @param path of collection.
+ * @return pointer to a collection. If a database error occurs, NULL is
+ *         returned.
+ */
+static struct pie_collection* get_or_create_coll(const char*);
+
 /**
  * Write a downsampled version to disk.
  * @param the bitmap to downsample.
@@ -67,10 +87,13 @@ int pie_nm_start_workers(int w)
 
         for (i = 0; i < num_workers; i++)
         {
+                struct nm_worker* wrk = malloc(sizeof(struct nm_worker));
+                wrk->chan = chan;
+                wrk->me = (unsigned char)(i + 1);
                 if (pthread_create(workers + i,
                                    NULL,
                                    &worker,
-                                   (void*)chan))
+                                   (void*)wrk))
                 {
                         break;
                 }
@@ -126,7 +149,7 @@ void pie_nm_stop_workers(void)
 
 static void* worker(void* arg)
 {
-        struct chan* chan = (struct chan*)arg;
+        struct nm_worker* me = (struct nm_worker*)arg;
         struct pie_stg_mnt* proxy_stg = NULL;
         struct pie_stg_mnt* thumb_stg = NULL;
 
@@ -148,7 +171,9 @@ static void* worker(void* arg)
                         }
                 }
         }
-        
+
+        PIE_LOG("[%d]Worker ready", me->me);
+
         for (;;)
         {
                 char src_path[PIE_PATH_LEN];
@@ -161,8 +186,9 @@ static void* worker(void* arg)
                 struct pie_stg_mnt* stg;
                 ssize_t br;
                 int ok;
+                pie_id mob_id;
 
-                ok = chan_read(chan, &chan_msg, -1);
+                ok = chan_read(me->chan, &chan_msg, -1);
                 if (ok)
                 {
                         if (ok == EAGAIN)
@@ -182,7 +208,9 @@ static void* worker(void* arg)
 
                 if (stg == NULL)
                 {
-                        PIE_WARN("Unknown storage: %d\n", new->stg_id);
+                        PIE_WARN("[%d]Unknown storage: %d\n",
+                                 me->me,
+                                 new->stg_id);
                         goto next_msg;
                 }
 
@@ -197,44 +225,104 @@ static void* worker(void* arg)
                         sprintf(hex + i * 2, "%02x", new->digest[i]);
                 }
                 hex[new->digest_len * 2 + 1] = '\0';
-                PIE_LOG("New media: [%s] %s", hex, src_path);                
 
-                timing_start(&t);                
+                timing_start(&t);
                 ok = pie_io_load(&bm_src, src_path);
-                PIE_DEBUG("Loaded %s in %ldms", src_path, timing_dur_msec(&t));
+                PIE_DEBUG("[%d]Loaded %s in %ldms",
+                          me->me,
+                          src_path,
+                          timing_dur_msec(&t));
                 if (ok)
                 {
-                        PIE_ERR("Could not load %s", src_path);
+                        PIE_ERR("[%d]Could not load %s", me->me, src_path);
                         goto next_msg;
                 }
-                
+                /* Create new ID */
+                mob_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
+                                       me->me,
+                                       PIE_TYPE_MOB);
+                PIE_LOG("[%d]New media: [%016lx] %s", me->me, mob_id, src_path);
+
+                /* Write thumbnail */
                 snprintf(tgt_path,
                          PIE_PATH_LEN,
-                         "%s/%s.jpg",
+                         "%s/%016lx.jpg",
                          thumb_stg->mnt_path,
-                         hex);
-                PIE_DEBUG("Thumb: %s", tgt_path);
+                         mob_id);
+                PIE_DEBUG("[%d]Thumb: %s", me->me, tgt_path);
                 if (write_dwn_smpl(&bm_src, md_cfg.max_thumb, tgt_path))
                 {
                         pie_bm_free_f32(&bm_src);
-                        goto next_msg;                        
+                        goto next_msg;
                 }
+
+                /* Write proxy image */
                 snprintf(tgt_path,
                          PIE_PATH_LEN,
-                         "%s/%s.jpg",
+                         "%s/%016lx.jpg",
                          proxy_stg->mnt_path,
-                         hex);
-                PIE_DEBUG("Proxy: %s", tgt_path);
+                         mob_id);
+                PIE_DEBUG("[%d]Proxy: %s", me->me, tgt_path);
                 if (write_dwn_smpl(&bm_src, md_cfg.max_proxy, tgt_path))
                 {
                         pie_bm_free_f32(&bm_src);
-                        goto next_msg;                        
+                        goto next_msg;
                 }
-          
+
+                /* Update target collection */
+                strcpy(tgt_path, new->path);
+                char* p = strrchr(tgt_path, '/');
+                if (p)
+                {
+                        struct pie_collection* coll;
+                        struct pie_collection_member coll_memb;
+
+                        /* Trim filename */
+                        if ((p - tgt_path) == 0L)
+                        {
+                                /* only one slash (the first is present) */
+                                p++;
+                        }
+                        *p = '\0';
+
+                        coll = get_or_create_coll(tgt_path);
+                        if (coll == NULL)
+                        {
+                                abort();
+                        }
+                        PIE_LOG("[%d]Target collection for %016lx is '%s', %d",
+                                me->me,
+                                mob_id,
+                                coll->col_path,
+                                coll->col_id);
+
+                        coll_memb.cmb_col_id =coll->col_id;
+                        coll_memb.cmb_mob_id = mob_id;
+
+                        if (pie_collection_member_create(pie_cfg_get_db(),
+                                                         &coll_memb))
+                        {
+                                abort();
+                        }
+
+                        pie_collection_free(coll);
+                }
+                else
+                {
+                        /* new->path has been overwritten, the preceding slash
+                           is gone, take us down. */
+                        PIE_ERR("[%d]Inconsistent state, new->path has been altered", me->me);
+                        PIE_ERR("[%d]Value of new->path '%s'", me->me, new->path);
+                        kill(getpid(), SIGINT);
+                }
+
                 pie_bm_free_f32(&bm_src);
         next_msg:
                 free_msg(new);
         }
+
+        PIE_LOG("[%d]Worker done", me->me);
+        free(me);
 
         return NULL;
 }
@@ -268,7 +356,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
         PIE_DEBUG("Downsampeld tp %dpx in %ldms",
                   max,
                   timing_dur_msec(&t));
-        
+
         timing_start(&t);
         if (pie_bm_conv_bd(&bm_out,
                            PIE_COLOR_8B,
@@ -276,7 +364,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
                            PIE_COLOR_32B))
         {
                 PIE_ERR("Could not convert to 8b");
-                pie_bm_free_f32(&bm_dwn);                        
+                pie_bm_free_f32(&bm_dwn);
                 return -1;
         }
         PIE_DEBUG("Converted to 8b in %ldms", timing_dur_msec(&t));
@@ -290,9 +378,43 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
                         p,
                         ok);
         }
-                
+
         pie_bm_free_u8(&bm_out);
         pie_bm_free_f32(&bm_dwn);
 
         return ok;
+}
+
+static struct pie_collection* get_or_create_coll(const char* p)
+{
+        struct pie_collection* coll;
+
+        /* Avoid RAW and similar race conditions */
+        pthread_mutex_lock(&md_cfg.db_lock);
+
+        coll = pie_collection_find_path(pie_cfg_get_db(), p);
+
+        if (coll == NULL)
+        {
+                /* Create */
+                coll = pie_collection_alloc();
+                coll->col_id = 0;
+                coll->col_path = strdup(p);
+                /* Use defaults for now */
+                coll->col_usr_id = 0;
+                coll->col_grp_id = 0;
+                coll->col_acl = 0755;
+
+                PIE_DEBUG("Creating collection@'%s'", p);
+                int ok = pie_collection_create(pie_cfg_get_db(), coll);
+                if (ok)
+                {
+                        PIE_ERR("pie_collection_create failed with code %d", ok);
+                        pie_collection_free(coll);
+                        coll = NULL;
+                }
+        }
+        pthread_mutex_unlock(&md_cfg.db_lock);
+
+        return coll;
 }

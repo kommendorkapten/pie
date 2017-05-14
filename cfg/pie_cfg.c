@@ -124,6 +124,11 @@ void pie_cfg_close(void)
         }
 }
 
+sqlite3* pie_cfg_get_db(void)
+{
+        return pie_cfg.db;
+}
+
 const char* pie_cfg_get(const char* key)
 {
         if (pie_cfg.cfg_map == NULL)

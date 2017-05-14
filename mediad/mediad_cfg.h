@@ -14,6 +14,8 @@
 #ifndef __MEDIAD_CFG_H__
 #define __MEDIAD_CFG_H__
 
+#include <pthread.h>
+
 struct pie_host;
 struct pie_stg_mnt_arr;
 
@@ -23,6 +25,7 @@ struct mediad_cfg
         struct pie_stg_mnt_arr* storages;
         int max_proxy;
         int max_thumb;
+        pthread_mutex_t db_lock;
 };
 
 extern struct mediad_cfg md_cfg;

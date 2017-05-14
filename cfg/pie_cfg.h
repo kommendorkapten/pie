@@ -14,12 +14,13 @@
 #ifndef __PIE_CFG_H__
 #define __PIE_CFG_H__
 
+#include <sqlite3.h>
 #include "../pie_types.h"
 #include "../dm/pie_storage.h"
 #define PIE_CFG_PATH "/etc/pie.conf"
 
 /*
- * A static config interface. 
+ * A static config interface.
  * Sources for config are main config file (default is /etc/pie.conf),
  * and the main database.
  */
@@ -60,6 +61,13 @@ extern int pie_cfg_load(const char*);
  * @return void
  */
 extern void pie_cfg_close(void);
+
+/**
+ * Return a handle to the database;
+ * @param void
+ * @return Pointer to a database handle, or NULL if none available.
+ */
+extern sqlite3* pie_cfg_get_db(void);
 
 /**
  * Get a value from the config file.

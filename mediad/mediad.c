@@ -108,7 +108,7 @@ int main(void)
                 md_cfg.max_proxy = (int)lval;
         }
         PIE_LOG("Maximum proxy size: %d", md_cfg.max_proxy);
-        
+
         md_cfg.host = pie_cfg_get_host(-1);
         if (md_cfg.host == NULL)
         {
@@ -143,7 +143,7 @@ int main(void)
         {
                 PIE_ERR("Can not create queue consumer");
                 goto cleanup;
-        }        
+        }
 
         ok = q_incoming->init(q_incoming->this,
                               Q_INCOMING_MEDIA);
@@ -157,6 +157,14 @@ int main(void)
         if (ok)
         {
                 PIE_ERR("Could not init queue '%s'", Q_UPDATE_META);
+                goto cleanup;
+        }
+
+        /* Init db w-lock */
+        if (pthread_mutex_init(&md_cfg.db_lock, NULL))
+        {
+                perror("pthread_mutex_init");
+                PIE_ERR("Could not init db w-lock");
                 goto cleanup;
         }
 
@@ -197,15 +205,15 @@ int main(void)
                 PIE_ERR("Could not set signal handler");
                 goto cleanup;
         }
-        PIE_LOG("All set, wait for termination");
+        PIE_LOG("All set, wait for incoming messages");
         pause();
 
         q_incoming->close(q_incoming->this);
-        q_update->close(q_update->this);        
+        q_update->close(q_update->this);
         q_del_consumer(q_incoming);
-        q_del_consumer(q_update);      
+        q_del_consumer(q_update);
         q_incoming = NULL;
-        q_update = NULL;        
+        q_update = NULL;
         ret = 0;
 
         /* join threads */
