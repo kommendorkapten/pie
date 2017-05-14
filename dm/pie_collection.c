@@ -4,6 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include "pie_collection.h"
+#include "../lib/llist.h"
+
 struct pie_collection *
 pie_collection_alloc(void)
 {
@@ -12,14 +14,14 @@ pie_collection_alloc(void)
 	this->col_path = NULL;
 	return this;
 }
-void 
+void
 pie_collection_free(struct pie_collection * this)
 {
 	assert(this);
 	pie_collection_release(this);
 	free(this);
 }
-void 
+void
 pie_collection_release(struct pie_collection * this)
 {
 	assert(this);
@@ -29,7 +31,7 @@ pie_collection_release(struct pie_collection * this)
 		this->col_path = NULL;
 	}
 }
-int 
+int
 pie_collection_create(sqlite3 * db, struct pie_collection * this)
 {
 	char           *q = "INSERT INTO pie_collection (col_id,col_path,col_usr_id,col_grp_id,col_acl) VALUES (?,?,?,?,?)";
@@ -233,6 +235,66 @@ cleanup:
 	sqlite3_finalize(pstmt);
 
 	return retc;
+}
+
+struct llist* pie_collection_find_all(sqlite3 * db)
+{
+        struct llist* retl = llist_create();
+	char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
+	sqlite3_stmt   *pstmt;
+	int             ret;
+	int             retf;
+	const unsigned char *c;
+	int             br;
+
+	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+	if (ret != SQLITE_OK)
+	{
+		retl = NULL;
+		goto cleanup;
+	}
+
+        for (;;)
+        {
+                struct pie_collection* coll;
+                ret = sqlite3_step(pstmt);
+
+                if (ret == SQLITE_DONE)
+                {
+                        break;
+                }
+                if (ret != SQLITE_ROW)
+                {
+                        struct lnode* l = llist_head(retl);
+
+                        while (l)
+                        {
+                                pie_collection_free((struct pie_collection*)l->data);
+                                l = l->next;
+                        }
+                        llist_destroy(retl);
+                        retl = NULL;
+                        break;
+                }
+
+                coll = pie_collection_alloc();
+                coll->col_id = sqlite3_column_int(pstmt, 0);
+                c = sqlite3_column_text(pstmt, 1);
+                br = sqlite3_column_bytes(pstmt, 1);
+                coll->col_path = malloc(br + 1);
+                memcpy(coll->col_path, c, br);
+                coll->col_path[br] = '\0';
+                coll->col_usr_id = (int) sqlite3_column_int(pstmt, 2);
+                coll->col_grp_id = (int) sqlite3_column_int(pstmt, 3);
+                coll->col_acl = (int) sqlite3_column_int(pstmt, 4);
+
+                llist_pushb(retl, coll);
+        }
+
+cleanup:
+	sqlite3_finalize(pstmt);
+
+        return retl;
 }
 
 int 

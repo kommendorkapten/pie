@@ -205,6 +205,7 @@ int main(void)
                 PIE_ERR("Could not set signal handler");
                 goto cleanup;
         }
+
         PIE_LOG("All set, wait for incoming messages");
         pause();
 
