@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -27,22 +27,22 @@ struct timing
  * @param the timing struct to initialize.
  * @return void.
  */
-void timing_start(struct timing*);
+extern void timing_start(struct timing*);
 
 /**
  * Extract the duration from the time to the current time. Returned
  * value is truncated.
  * @param the start time.
- * @return the duration since the start time in seconds. 
+ * @return the duration since the start time in seconds.
  */
-time_t timing_dur_sec(const struct timing*);
+extern time_t timing_dur_sec(const struct timing*);
 
 /**
  * Extract the duration from the time to the current time.
  * @param the start time.
  * @return the duration since the start time in micro seconds.
  */
-time_t timing_dur_usec(const struct timing*);
+extern time_t timing_dur_usec(const struct timing*);
 
 /**
  * Extract the duration from the time to the current time. Returned
@@ -50,6 +50,13 @@ time_t timing_dur_usec(const struct timing*);
  * @param the start time.
  * @return the duration since the start time in milli seconds.
  */
-time_t timing_dur_msec(const struct timing*);
+extern time_t timing_dur_msec(const struct timing*);
+
+/**
+ * Return the current epoch time in milli seconds.
+ * @param void
+ * @return epoch time in milli seconds.
+ */
+extern time_t timing_current_millis(void);
 
 #endif /* __TIMING_H__ */
