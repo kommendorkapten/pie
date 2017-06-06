@@ -1,11 +1,11 @@
-/* Automatically generated at Sun May 14 14:46:11 2017 */
+/* Automatically generated at Tue Jun  6 08:24:38 2017 */
 /* Do not edit - things may break. */
-#ifndef __13160_PIE_COLLECTION_MEMBER_H__
-#define __13160_PIE_COLLECTION_MEMBER_H__
+#ifndef __28062_PIE_COLLECTION_MEMBER_H__
+#define __28062_PIE_COLLECTION_MEMBER_H__
 #include <sqlite3.h>
 struct pie_collection_member
 {
-	int             cmb_col_id;
+	long            cmb_col_id;
 	long            cmb_mob_id;
 };
 extern struct pie_collection_member *pie_collection_member_alloc(void);
@@ -16,4 +16,4 @@ extern int      pie_collection_member_read(sqlite3 * db, struct pie_collection_m
 extern int      pie_collection_member_update(sqlite3 * db, struct pie_collection_member * this);
 extern int      pie_collection_member_delete(sqlite3 * db, struct pie_collection_member * this);
 
-#endif				/* __13160_PIE_COLLECTION_MEMBER_H__ */
+#endif				/* __28062_PIE_COLLECTION_MEMBER_H__ */

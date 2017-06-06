@@ -1,4 +1,4 @@
-/* Automatically generated at Sun May 14 09:07:18 2017 */
+/* Automatically generated at Tue Jun  6 08:24:33 2017 */
 /* Do not edit - things may break. */
 #include <stdlib.h>
 #include <string.h>
@@ -80,7 +80,7 @@ pie_collection_create(sqlite3 * db, struct pie_collection * this)
 	}
 	else
 	{
-		ret = sqlite3_bind_int(pstmt, 1, (int) this->col_id);
+		ret = sqlite3_bind_int64(pstmt, 1, this->col_id);
 		if (ret != SQLITE_OK)
 		{
 			ret = -1;
@@ -121,7 +121,7 @@ pie_collection_create(sqlite3 * db, struct pie_collection * this)
 	{
 		/* Extract last generated key. */
 		/* I repeat, this is *NOT* thread safe. */
-		this->col_id = (int) sqlite3_last_insert_rowid(db);
+		this->col_id = (long) sqlite3_last_insert_rowid(db);
 	}
 	ret = 0;
 cleanup:
@@ -149,7 +149,7 @@ pie_collection_read(sqlite3 * db, struct pie_collection * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -191,68 +191,68 @@ cleanup:
 struct pie_collection* 
 pie_collection_find_path(sqlite3 * db, const char * path)
 {
-	char           *q = "SELECT col_id,col_usr_id,col_grp_id,col_acl FROM pie_collection WHERE col_path = ?";
+	char	      *q = "SELECT col_id,col_usr_id,col_grp_id,col_acl FROM pie_collection WHERE col_path = ?";
         struct pie_collection* retc;
-	sqlite3_stmt   *pstmt;
-	int             ret;
-	int             retf;
-	const unsigned char *c;
-	int             br;
+        sqlite3_stmt   *pstmt;
+        int	       ret;
+        int	       retf;
+        const unsigned char *c;
+        int	       br;
 
-	assert(path);
-	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
-	if (ret != SQLITE_OK)
-	{
-		retc = NULL;
-		goto cleanup;
-	}
-	ret = sqlite3_bind_text(pstmt, 1, path, -1, SQLITE_STATIC);
-	if (ret != SQLITE_OK)
-	{
-		retc = NULL;
-		goto cleanup;
-	}
-	ret = sqlite3_step(pstmt);
-	if (ret == SQLITE_DONE)
-	{
-		retc = NULL;
-		goto cleanup;
-	}
-	if (ret != SQLITE_ROW)
-	{
-		retc = NULL;
-		goto cleanup;
-	}
+        assert(path);
+        ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+        if (ret != SQLITE_OK)
+        {
+                retc = NULL;
+                goto cleanup;
+        }
+        ret = sqlite3_bind_text(pstmt, 1, path, -1, SQLITE_STATIC);
+        if (ret != SQLITE_OK)
+        {
+                retc = NULL;
+                goto cleanup;
+        }
+        ret = sqlite3_step(pstmt);
+        if (ret == SQLITE_DONE)
+        {
+                retc = NULL;
+                goto cleanup;
+        }
+        if (ret != SQLITE_ROW)
+        {
+                retc = NULL;
+                goto cleanup;
+        }
 
         retc = pie_collection_alloc();
 
         retc->col_id = sqlite3_column_int(pstmt, 0);
         retc->col_path = strdup(path);
-	retc->col_usr_id = (int) sqlite3_column_int(pstmt, 1);
-	retc->col_grp_id = (int) sqlite3_column_int(pstmt, 2);
-	retc->col_acl = (int) sqlite3_column_int(pstmt, 3);
+        retc->col_usr_id = (int) sqlite3_column_int(pstmt, 1);
+        retc->col_grp_id = (int) sqlite3_column_int(pstmt, 2);
+        retc->col_acl = (int) sqlite3_column_int(pstmt, 3);
 cleanup:
-	sqlite3_finalize(pstmt);
+        sqlite3_finalize(pstmt);
 
-	return retc;
+        return retc;
 }
 
 struct llist* pie_collection_find_all(sqlite3 * db)
 {
-        struct llist* retl = llist_create();
-	char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
-	sqlite3_stmt   *pstmt;
-	int             ret;
-	int             retf;
-	const unsigned char *c;
-	int             br;
+       struct llist* retl = llist_create();
+       char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
+       sqlite3_stmt   *pstmt;
+       int             ret;
+       int             retf;
+       const unsigned char *c;
+       int             br;
 
-	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
-	if (ret != SQLITE_OK)
-	{
-		retl = NULL;
-		goto cleanup;
-	}
+       ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+       if (ret != SQLITE_OK)
+       {
+               retl = NULL;
+               goto cleanup;
+       }
 
         for (;;)
         {
@@ -269,7 +269,7 @@ struct llist* pie_collection_find_all(sqlite3 * db)
 
                         while (l)
                         {
-                                pie_collection_free((struct pie_collection*)l->data);
+                                pie_collection_free((struct pie_collection*)l->
                                 l = l->next;
                         }
                         llist_destroy(retl);
@@ -278,7 +278,7 @@ struct llist* pie_collection_find_all(sqlite3 * db)
                 }
 
                 coll = pie_collection_alloc();
-                coll->col_id = sqlite3_column_int(pstmt, 0);
+                coll->col_id = sqlite3_column_int64(pstmt, 0);
                 c = sqlite3_column_text(pstmt, 1);
                 br = sqlite3_column_bytes(pstmt, 1);
                 coll->col_path = malloc(br + 1);
@@ -292,7 +292,7 @@ struct llist* pie_collection_find_all(sqlite3 * db)
         }
 
 cleanup:
-	sqlite3_finalize(pstmt);
+       sqlite3_finalize(pstmt);
 
         return retl;
 }
@@ -336,7 +336,7 @@ pie_collection_update(sqlite3 * db, struct pie_collection * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 5, (int) this->col_id);
+	ret = sqlite3_bind_int64(pstmt, 5, this->col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -372,7 +372,7 @@ pie_collection_delete(sqlite3 * db, struct pie_collection * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;

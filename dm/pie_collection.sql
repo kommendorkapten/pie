@@ -1,5 +1,5 @@
 CREATE TABLE pie_collection(
-       col_id INTEGER NOT NULL,
+       col_id BIGINT NOT NULL,
        col_path VARCHAR(255) NOT NULL,
        col_usr_id INTEGER NOT NULL,
        col_grp_id INTEGER NOT NULL,

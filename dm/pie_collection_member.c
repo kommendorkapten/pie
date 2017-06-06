@@ -1,4 +1,4 @@
-/* Automatically generated at Sun May 14 14:46:11 2017 */
+/* Automatically generated at Tue Jun  6 08:24:38 2017 */
 /* Do not edit - things may break. */
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +38,7 @@ pie_collection_member_create(sqlite3 * db, struct pie_collection_member * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->cmb_col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->cmb_col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -80,7 +80,7 @@ pie_collection_member_read(sqlite3 * db, struct pie_collection_member * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->cmb_col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->cmb_col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -127,7 +127,7 @@ pie_collection_member_update(sqlite3 * db, struct pie_collection_member * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->cmb_col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->cmb_col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -169,7 +169,7 @@ pie_collection_member_delete(sqlite3 * db, struct pie_collection_member * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int(pstmt, 1, (int) this->cmb_col_id);
+	ret = sqlite3_bind_int64(pstmt, 1, this->cmb_col_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
