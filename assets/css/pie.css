@@ -14,6 +14,10 @@ canvas {
     display: flex;
 }
 
+.container-collection {
+    margin: 0 auto;
+}
+
 .fixed-edit-pane {
     text-align: center;
     width:      280px;
@@ -21,6 +25,33 @@ canvas {
 
 .flex-item {
     flex-grow: 1;
+}
+
+.float-l-item {
+    float: left;
+}
+
+.float-r-item {
+    float: right;
+}
+
+.collection-content {
+    background-color: #c8c8c8;
+    height: 500px;
+    overflow-y: scroll;
+}
+
+.header-40px {
+    width: 100%;
+    height: 40px;
+    border:1px solid #000000;    
+}
+
+.footer-collection {
+    width: 100%;
+    height: 150px;
+    clear: both;
+    border:1px solid #000000;    
 }
 
 table {
