@@ -17,6 +17,8 @@
 #include "../pie_types.h"
 #include <stdlib.h>
 
+struct pie_exif_data;
+
 /**
  * Encode a histogram to JSON.
  * A maximum sized histogram encodes to ~5Kib.
@@ -29,5 +31,7 @@
 extern int pie_json_enc_hist(char*, size_t, const struct pie_histogram*);
 
 extern int pie_json_enc_settings(char*, size_t, const struct pie_img_settings*);
+
+extern int pie_json_enc_exif(char*, size_t, const struct pie_exif_data*);
 
 #endif /* __PIE_JSON_H__ */

@@ -11,9 +11,10 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <stdio.h>
 #include "pie_json.h"
 #include "../pie_types.h"
-#include <stdio.h>
+#include "../dm/pie_exif_data.h"
 
 /*
 Encode to following structure (without newlines)
@@ -50,5 +51,14 @@ int pie_json_enc_hist(char* buf, size_t len, const struct pie_histogram* h)
         }
         bw += snprintf(buf + bw, len - bw, "]}");
 
+        return bw;
+}
+
+extern int pie_json_enc_exif(char* buf,
+                             size_t len,
+                             const struct pie_exif_data* ped)
+{
+        int bw = 0;
+        
         return bw;
 }
