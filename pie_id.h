@@ -18,9 +18,11 @@
 
 enum pie_obj_type
 {
-        PIE_TYPE_INVALID = 0x0,
-        PIE_TYPE_MOB = 0x1,
-        PIE_TYPE_MIN = 0x2
+        PIE_ID_TYPE_INVALID = 0x0,
+        PIE_ID_TYPE_MOB = 0x1,
+        PIE_ID_TYPE_MIN = 0x2,
+        PIE_ID_TYPE_COLL = 0x3,
+        PIE_ID_TYPE_PRESET = 0x4
 };
 
 typedef int64_t pie_id;
