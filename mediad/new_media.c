@@ -33,8 +33,12 @@
 #include "../dm/pie_host.h"
 #include "../dm/pie_collection.h"
 #include "../dm/pie_collection_member.h"
+#include "../dm/pie_exif_data.h"
+#include "../dm/pie_min.h"
+#include "../dm/pie_mob.h"
 #include "../bm/pie_bm.h"
 #include "../bm/pie_dwn_smpl.h"
+#include "../exif/pie_exif.h"
 #include "../io/pie_io.h"
 #include "../io/pie_io_jpg.h"
 
@@ -50,10 +54,11 @@ static void free_msg(struct pie_mq_new_media*);
 /**
  * Get or create a pie_collection in the database.
  * @param path of collection.
+ * @param collection id to use if no collection exists.
  * @return pointer to a collection. If a database error occurs, NULL is
  *         returned.
  */
-static struct pie_collection* get_or_create_coll(const char*);
+static struct pie_collection* get_or_create_coll(const char*, long);
 
 /**
  * Write a downsampled version to disk.
@@ -179,14 +184,19 @@ static void* worker(void* arg)
                 char src_path[PIE_PATH_LEN];
                 char tgt_path[PIE_PATH_LEN];
                 char hex[2 * PIE_MAX_DIGEST + 1];
+                struct pie_exif_data ped;
                 struct pie_bitmap_f32rgb bm_src;
+                struct pie_mob mob;
+                struct pie_min min;
                 struct chan_msg chan_msg;
                 struct timing t;
                 struct pie_mq_new_media* new;
                 struct pie_stg_mnt* stg;
+                char* p;
                 ssize_t br;
                 int ok;
                 pie_id mob_id;
+                time_t now_ms;
 
                 ok = chan_read(me->chan, &chan_msg, -1);
                 if (ok)
@@ -200,6 +210,7 @@ static void* worker(void* arg)
                                 break;
                         }
                 }
+                now_ms = timing_current_millis();
                 new = chan_msg.data;
                 new->stg_id = ntohl(new->stg_id);
                 new->digest_len = ntohl(new->digest_len);
@@ -240,9 +251,91 @@ static void* worker(void* arg)
                 /* Create new ID */
                 mob_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
                                        me->me,
-                                       PIE_TYPE_MOB);
+                                       PIE_ID_TYPE_MOB);
                 PIE_LOG("[%d]New media: [%016lx] %s", me->me, mob_id, src_path);
 
+                /* Create MOB & MIN */
+                p = strrchr(new->path, '/');
+                if (p)
+                {
+                        p++;
+                }
+                else
+                {
+                        p = new->path;
+                }
+
+                /* Create MOB but do not persist it, we need data from
+                   EXIF for capture time */
+                mob.mob_id = mob_id;
+                mob.mob_parent_mob_id = 0;
+                mob.mob_name = strdup(p);
+                mob.mob_capture_ts_millis = now_ms;
+                mob.mob_added_ts_millis = now_ms;
+                mob.mob_format = 0;
+                mob.mob_color = 0;
+                mob.mob_rating = 0;
+
+                /* Create MIN */
+                min.min_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
+                                           me->me,
+                                           PIE_ID_TYPE_MIN);
+                min.min_added_ts_millis = now_ms;
+                min.min_mob_id = mob_id;
+                min.min_stg_id = new->stg_id;
+                min.min_path = strdup(new->path);
+                ok = pie_min_create(pie_cfg_get_db(), &min);
+                if (ok)
+                {
+                        PIE_ERR("[%d]Could not create min row for mob %ld",
+                                me->me,
+                                mob_id);
+                }
+                
+                /* Extract EXIF data and store in meta_data */
+                timing_start(&t);                
+                ok = pie_exif_load(&ped, src_path);
+                PIE_DEBUG("[%d]Extracted EXIF for %s in %ldms",
+                          me->me,
+                          src_path,
+                          timing_dur_msec(&t));                
+                if (ok)
+                {
+                        PIE_ERR("[%d]Could not extract EXIF data from %s",
+                                me->me, src_path);
+                }
+                else
+                {
+                        if (ped.ped_date_time)
+                        {
+                                mob.mob_capture_ts_millis = pie_exif_date_to_millis(
+                                        ped.ped_date_time,
+                                        ped.ped_sub_sec_time);
+                        }
+
+                        ped.ped_mob_id = mob_id;
+                        ok = pie_exif_data_create(pie_cfg_get_db(), &ped);
+                        if (ok)
+                        {
+                                PIE_ERR("[%d]Could not create pie exif data row for mob %ld",
+                                        me->me,
+                                        mob_id);
+                        }
+                        pie_exif_data_release(&ped);
+                }
+                
+                /* Perist MOB */
+                ok = pie_mob_create(pie_cfg_get_db(), &mob);
+                if (ok)
+                {
+                        PIE_ERR("[%d]Could not create mob row for mob %ld",
+                                me->me,
+                                mob_id);
+                }
+                
+                /* Create default pie_adjust and store */
+                
+                /* TODO move this to processd */
                 /* Write thumbnail */
                 snprintf(tgt_path,
                          PIE_PATH_LEN,
@@ -271,11 +364,14 @@ static void* worker(void* arg)
 
                 /* Update target collection */
                 strcpy(tgt_path, new->path);
-                char* p = strrchr(tgt_path, '/');
+                p = strrchr(tgt_path, '/');
                 if (p)
                 {
                         struct pie_collection* coll;
                         struct pie_collection_member coll_memb;
+                        pie_id coll_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
+                                                       me->me,
+                                                       PIE_ID_TYPE_COLL);
 
                         /* Trim filename */
                         if ((p - tgt_path) == 0L)
@@ -285,18 +381,19 @@ static void* worker(void* arg)
                         }
                         *p = '\0';
 
-                        coll = get_or_create_coll(tgt_path);
+                        coll = get_or_create_coll(tgt_path,
+                                                  coll_id);
                         if (coll == NULL)
                         {
                                 abort();
                         }
-                        PIE_LOG("[%d]Target collection for %016lx is '%s', %d",
+                        PIE_LOG("[%d]Target collection for %016lx is '%s', %ld",
                                 me->me,
                                 mob_id,
                                 coll->col_path,
                                 coll->col_id);
 
-                        coll_memb.cmb_col_id =coll->col_id;
+                        coll_memb.cmb_col_id = coll->col_id;
                         coll_memb.cmb_mob_id = mob_id;
 
                         if (pie_collection_member_create(pie_cfg_get_db(),
@@ -316,6 +413,8 @@ static void* worker(void* arg)
                         kill(getpid(), SIGINT);
                 }
 
+                pie_mob_release(&mob);
+                pie_min_release(&min);
                 pie_bm_free_f32(&bm_src);
         next_msg:
                 free_msg(new);
@@ -353,7 +452,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
                 PIE_ERR("Failed to downsample");
                 return -1;
         }
-        PIE_DEBUG("Downsampeld tp %dpx in %ldms",
+        PIE_DEBUG("Downsampled tp %dpx in %ldms",
                   max,
                   timing_dur_msec(&t));
 
@@ -385,7 +484,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
         return ok;
 }
 
-static struct pie_collection* get_or_create_coll(const char* p)
+static struct pie_collection* get_or_create_coll(const char* p, long coll_id)
 {
         struct pie_collection* coll;
 
@@ -398,7 +497,7 @@ static struct pie_collection* get_or_create_coll(const char* p)
         {
                 /* Create */
                 coll = pie_collection_alloc();
-                coll->col_id = 0;
+                coll->col_id = coll_id;
                 coll->col_path = strdup(p);
                 /* Use defaults for now */
                 coll->col_usr_id = 0;
