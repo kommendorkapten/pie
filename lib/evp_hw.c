@@ -17,6 +17,7 @@ int evp_enable_hw(int enable)
 {
         int status = 1;
 
+        (void)enable;
 #if __sun && __sparc
         int ok = 0;
 

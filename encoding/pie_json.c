@@ -58,6 +58,9 @@ extern int pie_json_enc_exif(char* buf,
                              size_t len,
                              const struct pie_exif_data* ped)
 {
+        (void)buf;
+        (void)len;
+        (void)ped;
         int bw = 0;
         
         return bw;

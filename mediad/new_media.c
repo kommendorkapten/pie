@@ -193,7 +193,6 @@ static void* worker(void* arg)
                 struct pie_mq_new_media* new;
                 struct pie_stg_mnt* stg;
                 char* p;
-                ssize_t br;
                 int ok;
                 pie_id mob_id;
                 time_t now_ms;
@@ -231,7 +230,7 @@ static void* worker(void* arg)
                          stg->mnt_path,
                          new->path);
                 /* hex encode digest */
-                for (unsigned int i = 0; i < new->digest_len; i++)
+                for (int i = 0; i < new->digest_len; i++)
                 {
                         sprintf(hex + i * 2, "%02x", new->digest[i]);
                 }

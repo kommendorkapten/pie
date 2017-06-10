@@ -59,8 +59,8 @@ int main(void)
 {
         pthread_t thr[NUM_QUEUES];
         struct sigaction sa;
-        struct q_consumer* q_incoming;
-        struct q_consumer* q_update;
+        struct q_consumer* q_incoming = NULL;
+        struct q_consumer* q_update = NULL;
         sigset_t b_sigset;
         sigset_t o_sigset;
         int evp_hw = 1;

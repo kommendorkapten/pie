@@ -195,9 +195,6 @@ pie_collection_find_path(sqlite3 * db, const char * path)
         struct pie_collection* retc;
         sqlite3_stmt   *pstmt;
         int	       ret;
-        int	       retf;
-        const unsigned char *c;
-        int	       br;
 
         assert(path);
         ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
@@ -243,7 +240,6 @@ struct llist* pie_collection_find_all(sqlite3 * db)
        char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
        sqlite3_stmt   *pstmt;
        int             ret;
-       int             retf;
        const unsigned char *c;
        int             br;
 
@@ -292,7 +288,7 @@ struct llist* pie_collection_find_all(sqlite3 * db)
         }
 
 cleanup:
-       sqlite3_finalize(pstmt);
+        sqlite3_finalize(pstmt);
 
         return retl;
 }

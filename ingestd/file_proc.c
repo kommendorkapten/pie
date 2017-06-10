@@ -97,7 +97,7 @@ int pie_fp_add_job(const char* p)
         msg.len = strlen(p) + 1;
         if (msg.len > PIE_PATH_LEN)
         {
-                PIE_ERR("Path is to long (%d>%d)", msg.len, PIE_PATH_LEN);
+                PIE_ERR("Path is to long (%ld>%d)", msg.len, PIE_PATH_LEN);
                 return -1;
         }
         msg.data = strdup(p);
@@ -192,7 +192,6 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         unsigned int md_len;
         int src_fd;
         int tgt_fd;
-        int ok;
         mode_t mode = 0644;
 
         PIE_LOG("Process %s", path);
@@ -206,7 +205,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
 
         timing_start(&t);
         md_len = pie_fp_mdigest(sum, src_fd);
-        PIE_DEBUG("Digest in %dms", timing_dur_msec(&t));
+        PIE_DEBUG("Digest in %ldms", timing_dur_msec(&t));
 
         /* hex encode */
         for (unsigned int i = 0; i < md_len; i++)
