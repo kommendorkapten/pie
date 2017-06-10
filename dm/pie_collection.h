@@ -19,7 +19,7 @@ extern void     pie_collection_free(struct pie_collection * this);
 extern void     pie_collection_release(struct pie_collection * this);
 extern int      pie_collection_create(sqlite3 * db, struct pie_collection * this);
 extern int      pie_collection_read(sqlite3 * db, struct pie_collection * this);
-extern struct pie_collection* pie_collection_find_path(sqlite3 * db, const char
+extern struct pie_collection* pie_collection_find_path(sqlite3 * db, const char * path);
 extern struct llist* pie_collection_find_all(sqlite3 * db);
 extern int      pie_collection_update(sqlite3 * db, struct pie_collection * this);
 extern int      pie_collection_delete(sqlite3 * db, struct pie_collection * this);

@@ -226,7 +226,7 @@ pie_collection_find_path(sqlite3 * db, const char * path)
 
         retc = pie_collection_alloc();
 
-        retc->col_id = sqlite3_column_int(pstmt, 0);
+        retc->col_id = sqlite3_column_int64(pstmt, 0);
         retc->col_path = strdup(path);
         retc->col_usr_id = (int) sqlite3_column_int(pstmt, 1);
         retc->col_grp_id = (int) sqlite3_column_int(pstmt, 2);
@@ -269,7 +269,7 @@ struct llist* pie_collection_find_all(sqlite3 * db)
 
                         while (l)
                         {
-                                pie_collection_free((struct pie_collection*)l->
+                                pie_collection_free((struct pie_collection*)l->data);
                                 l = l->next;
                         }
                         llist_destroy(retl);

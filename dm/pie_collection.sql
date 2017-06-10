@@ -6,4 +6,5 @@ CREATE TABLE pie_collection(
        col_acl INTEGER NOT NULL,
        PRIMARY KEY(col_id),
        CONSTRAINT uc_col_path UNIQUE(col_path));
+       
 CREATE INDEX ic_col_path on pie_collection(col_path);
