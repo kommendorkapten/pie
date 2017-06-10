@@ -36,7 +36,7 @@ int main(void)
                 if ((br = q->send(q->this, buf, strlen(buf) + 1)) < 0)
                 {
                         perror("send");
-                        return -1;
+                        break;
                 }
                 
                 sleep(1);
