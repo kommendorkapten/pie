@@ -22,6 +22,7 @@
 
 struct pie_mq_new_media
 {
+        /* path starts with / and is relative to the storage's mount point */
         char path[PIE_PATH_LEN];
         unsigned char digest[PIE_MAX_DIGEST];
         int stg_id;
