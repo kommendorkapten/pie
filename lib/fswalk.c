@@ -16,8 +16,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
 #ifdef __NON_POSIX__

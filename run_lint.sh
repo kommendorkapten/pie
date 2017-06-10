@@ -28,17 +28,17 @@ lint -D_HAS_SSE -D_HAS_SIMD ${l_p} ${bm}
 math=`find math -name '*.c'` 
 lint ${l_p} ${math}
 
-testp=`find testp -name '*.c'`
-for i in ${testp}; do
-    echo $i
-    lint ${l_p} ${i}
-done
+# testp=`find testp -name '*.c'`
+# for i in ${testp}; do
+#     echo $i
+#     lint ${l_p} ${i}
+# done
 
-exe=`find exe -name '*.c'`
-for i in ${exe}; do
-    echo $i
-    lint ${l_p} ${i}
-done
+# exe=`find exe -name '*.c'`
+# for i in ${exe}; do
+#     echo $i
+#     lint ${l_p} ${i}
+# done
 
-base="pie_cspace.c"
+base="pie_cspace.c pie_id.c"
 lint ${l_p} -errhdr=no%/usr/include ${base}
