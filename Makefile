@@ -83,7 +83,8 @@ MEDIAD_SRC = mediad.c new_media.c
 INGEST_SRC = ingestd.c file_proc.c
 COLLD_SRC  = pie_colld.c pie_coll.c
 CFG_SRC    = pie_cfg.c
-DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c pie_collection_member.c
+EXIF_SRC   = pie_exif.c
+DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c pie_collection_member.c pie_exif_data.c pie_mob.c
 SOURCES    = pie_cspace.c pie_id.c\
 	     $(IO_SRC) $(ALG_SRC) $(ENC_SRC) $(MTH_SRC) $(BM_SRC)
 # Objects
@@ -97,10 +98,10 @@ CFG_OBJS    = $(CFG_SRC:%.c=obj/%.o)
 DM_OBJS     = $(DM_SRC:%.c=obj/%.o)
 TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
-              testfwlk qserver qclient
+              testfwlk qserver qclient test_exif_meta
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd
+VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd exif
 
 .PHONY: all
 .PHONY: test
@@ -169,6 +170,9 @@ bin/tapply: testp/tapply.c $(OBJS) obj/pie_render.o obj/timing.o
 bin/tdowns: testp/tdowns.c $(OBJS) obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
 
+bin/test_exif_meta: testp/test_exif_meta.c obj/pie_exif.o obj/pie_exif_data.o obj/pie_cfg.o obj/hmap.o obj/strutil.o obj/pie_storage.o obj/pie_host.o obj/pie_mountpoint.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lexif -lsqlite3
+
 bin/bench_blur: testp/bench_blur.c $(OBJS)
 	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LFLAGS) -lpng -ljpeg
 
@@ -190,8 +194,8 @@ bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o obj/pie_id.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng
+bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o obj/pie_mob.o obj/pie_min.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng -lexif
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
 	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
