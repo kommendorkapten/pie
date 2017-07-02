@@ -4,6 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include "pie_mob.h"
+#include "../lib/llist.h"
+
 struct pie_mob *
 pie_mob_alloc(void)
 {
@@ -337,4 +339,80 @@ cleanup:
 		ret = -1;
 	}
 	return ret;
+}
+
+struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
+{
+        struct llist* retl = llist_create();
+        char* q = "SELECT mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating FROM pie_collection_member INNER JOIN pie_mob ON pie_collection_member.cmb_mob_id = pie_mob.mob_id WHERE cmb_col_id=?";
+        sqlite3_stmt* pstmt;
+        int ret;
+
+        ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+        
+        if (ret != SQLITE_OK)
+        {
+                retl = NULL;
+                goto cleanup;
+        }
+
+        ret = sqlite3_bind_int64(pstmt, 1, coll);        
+        if (ret != SQLITE_OK)
+        {
+                ret = NULL;
+                goto cleanup;
+        }
+
+        for (;;)
+        {
+                struct pie_mob* mob;
+                const unsigned char* c;
+                int br;
+
+                ret = sqlite3_step(pstmt);
+
+                if (ret == SQLITE_DONE)
+                {
+                        break;
+                }
+                if (ret != SQLITE_ROW)
+                {
+                        struct lnode* l = llist_head(retl);
+
+                        while (l)
+                        {
+                                pie_mob_free((struct pie_mob*)l->data);
+                                l = l->next;
+                        }
+                        llist_destroy(retl);
+                        retl = NULL;
+                        break;
+                }
+
+                mob = pie_mob_alloc();
+                mob->mob_id = sqlite3_column_int64(pstmt, 0);
+                mob->mob_parent_mob_id = sqlite3_column_int64(pstmt, 1);
+                /* Force reading text into memory, and ge the length */
+                /* of the string (null terminator not included). */
+                /* Allocate memory and copy string to destination, */
+                /* and set the null terminator., */
+                c = sqlite3_column_text(pstmt, 2);
+                br = sqlite3_column_bytes(pstmt, 2);
+                mob->mob_name = malloc(br + 1);
+                memcpy(mob->mob_name, c, br);
+                mob->mob_name[br] = '\0';
+                mob->mob_capture_ts_millis = sqlite3_column_int64(pstmt, 3);
+                mob->mob_added_ts_millis = sqlite3_column_int64(pstmt, 4);
+                mob->mob_format = (short) sqlite3_column_int(pstmt, 5);
+                mob->mob_color = (char) sqlite3_column_int(pstmt, 6);
+                mob->mob_rating = (char) sqlite3_column_int(pstmt, 7);
+
+                llist_pushb(retl, mob);
+        }
+
+cleanup:
+        sqlite3_finalize(pstmt);
+
+        return retl;
+
 }

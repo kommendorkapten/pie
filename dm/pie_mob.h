@@ -3,6 +3,9 @@
 #ifndef __27782_PIE_MOB_H__
 #define __27782_PIE_MOB_H__
 #include <sqlite3.h>
+#include "../pie_id.h"
+
+struct llist;
 
 enum pie_mob_rating
 {
@@ -44,5 +47,5 @@ extern int      pie_mob_create(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_read(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_update(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_delete(sqlite3 * db, struct pie_mob * this);
-
+extern struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll);
 #endif				/* __27782_PIE_MOB_H__ */
