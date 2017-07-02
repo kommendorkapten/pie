@@ -1,132 +1,76 @@
-<!DOCTYPE html>
-<head>
-<meta charset="utf-8">
-<script>
-function get_appropriate_ws_url()
-{
-	var pcol;
-	var u = document.URL;
+<html>
+  <head>
+    <meta charset="utf-8"> 
+    <script type="text/javascript" charset="utf-8" src="js/chart.bundle.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/coll.js"></script>
+    <link rel="stylesheet" href="css/pie.css">
+  </head>
+  <body>
+    <div class="container-collection">
 
-	/*
-	 * We open the websocket encrypted if this page came on an
-	 * https:// url itself, otherwise unencrypted
-	 */
+      <div class="header-40px">
+        hej header
+      </div>
+      
+      <!-- left pane -->
+      <div class="float-l-item">
+        <div class="fixed-edit-pane">
+          <div class="center">
+            <div class="edit-meta">
+              <div style="margin-left:5px; margin-right:5px;">
+                <canvas id="hist_canvas" width="265" height="150" 
+                        style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
+                </canvas>
+              </div>
+              <table id="meta_data_tbl" class="edit-meta-text">
+                <tr>
+                  <td>ISO 6400</td>
+                  <td>600 mm</td>
+                  <td style="text-align: right;">f/5.6</td>
+                  <td style="text-align: right;">1/650 sec</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
-	if (u.substring(0, 5) == "https") {
-		pcol = "wss://";
-		u = u.substr(8);
-	} else {
-		pcol = "ws://";
-		if (u.substring(0, 4) == "http")
-			u = u.substr(7);
-	}
+      <!-- collection view -->
+      <div class="float-l-item">
+        <div id="grid-collection-pane" class="collection-content">
+          <table id="coll-grid-table" class="grid-view-table">
+          </table>
+        </div>
+      </div>
+          
+      <!-- rigth pane -->
+      <div class="float-r-item">
+        <div class="fixed-edit-pane">
+          <div class="center" >
+            <div class="edit-meta">
+              <div style="margin-left:5px; margin-right:5px;">
+                <canvas id="hist_canvas" width="265" height="150" 
+                        style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
+                </canvas>
+              </div>
+              <table id="meta_data_tbl" class="edit-meta-text">
+                <tr>
+                  <td>ISO 6400</td>
+                  <td>600 mm</td>
+                  <td style="text-align: right;">f/5.6</td>
+                  <td style="text-align: right;">1/650 sec</td>
+                </tr>
+              </table>
+            </div>          
+          </div>
+        </div>
+      </div>
 
-	u = u.split('/');
-
-	/* + "/xxx" bit is for IE10 workaround */
-
-	return pcol + u[0] + "/xxx";
-}
-window.addEventListener("load", function(evt) {
-    var output = document.getElementById("output");
-    var input = document.getElementById("input");
-    var ws;
-    var print = function(message) {
-        var d = document.createElement("div");
-        d.innerHTML = message;
-        output.appendChild(d);
-    };
-    document.getElementById("open").onclick = function(evt) {
-        if (ws) {
-            return false;
-        }
-        ws = new WebSocket(get_appropriate_ws_url(),"pie-cmd");
-        ws.binaryType = "arraybuffer";
-        ws.onopen = function(evt) {
-            print("OPEN");
-        }
-        ws.onclose = function(evt) {
-            print("CLOSE");
-            ws = null;
-        }
-        ws.onmessage = function(evt) {
-            var now = Date.now()
-            var dur = now - ws.pieStartTs;
-            ws.pieStartTs = now;
-            console.log(evt);
-            console.log("RT in " + dur + "ms");
-            if (typeof evt.data === "string") {
-                print("RESPONSE: " + evt.data);
-            } else {
-                print("RESPONSE: Binary");
-                var z = new Uint8Array(evt.data);
-                console.log(typeof z);
-                console.log(z.length);
-            }
-
-        }
-        ws.onerror = function(evt) {
-            print("ERROR: " + evt.data);
-        }
-        return false;
-    };
-    document.getElementById("send").onclick = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        print("SEND: " + input.value);
-        ws.pieStartTs = Date.now();
-        ws.send(input.value);
-        return false;
-    };
-    document.getElementById("close").onclick = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        ws.close();
-        return false;
-    };
-    document.getElementById("range1").oninput = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        var targ;
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            tart = evt.srcElement;
-        }
-
-        ws.send(targ.value);
-
-        return true;
-    };
-    document.getElementById("range1").onchange = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        console.log("on change done");
-        return true;
-    };
-});
-</script>
-</head>
-<body>
-<table>
-<tr><td valign="top" width="50%">
-<p>Click "Open" to create a connection to the server, 
-"Send" to send a message to the server and "Close" to close the connection. 
-You can change the message and send multiple times.
-<p>
-<form>
-<button id="open">Open</button>
-<button id="close">Close</button>
-<p><input id="input" type="text" value="Hello world!">
-<button id="send">Send</button>
-</form>
-</td><td valign="top" width="50%">
-<div id="output"></div>
-</td></tr></table>
-<input type="range" id="range1" value="50"/>
-</body>
+      <!-- footer -->
+      <div class="footer-collection">
+        hej footer
+      </div>
+      
+    </div>
+  </body>
 </html>
