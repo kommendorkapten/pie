@@ -18,6 +18,8 @@
 #include <stdlib.h>
 
 struct pie_exif_data;
+struct llist;
+struct pie_mob;
 
 /**
  * Encode a histogram to JSON.
@@ -28,10 +30,16 @@ struct pie_exif_data;
  * @return the number of bytes written (excluding the null byte; if 
  *         it was written).
  */
-extern int pie_json_enc_hist(char*, size_t, const struct pie_histogram*);
+extern size_t pie_json_enc_hist(char*, size_t, const struct pie_histogram*);
 
-extern int pie_json_enc_settings(char*, size_t, const struct pie_img_settings*);
+extern size_t pie_json_enc_settings(char*, size_t, const struct pie_img_settings*);
 
-extern int pie_json_enc_exif(char*, size_t, const struct pie_exif_data*);
+extern size_t pie_json_enc_exif(char*, size_t, const struct pie_exif_data*);
+
+extern size_t pie_json_enc_collection_list(char*, size_t, struct llist*);
+
+extern size_t pie_json_enc_mob(char*, size_t, struct pie_mob*);
+
+extern size_t pie_json_enc_mob_list(char*, size_t, struct llist*);
 
 #endif /* __PIE_JSON_H__ */
