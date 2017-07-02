@@ -27,6 +27,7 @@
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
 
+static void print_usage(void);
 static void cb_fun(const char*);
 static const struct pie_stg_mnt* stg_from_path(const char*);
 
@@ -60,14 +61,9 @@ int main(int argc, char** argv)
                 }
         }
 
-        if (id_cfg.src_path == NULL)
+        if (id_cfg.src_path == NULL || id_cfg.dst_path == NULL)
         {
-                PIE_ERR("No source provided");
-                return 1;
-        }
-        if (id_cfg.dst_path == NULL)
-        {
-                PIE_ERR("No destination provided");
+                print_usage();
                 return 1;
         }
 
@@ -220,4 +216,10 @@ const struct pie_stg_mnt* stg_from_path(const char* p)
         }
 
         return stg;
+}
+
+static void print_usage(void)
+{
+        printf("usage ingestd -s src_path -d target_path -t\n");
+        printf("-t preserves drectory structure\n");
 }

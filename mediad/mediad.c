@@ -71,7 +71,7 @@ int main(void)
 
         if (pie_cfg_load(PIE_CFG_PATH))
         {
-                PIE_ERR("Failed to read conf\n");
+                PIE_ERR("Failed to read conf");
                 goto cleanup;
         }
 
