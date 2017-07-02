@@ -81,7 +81,7 @@ EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c
 MEDIAD_SRC = mediad.c new_media.c
 INGEST_SRC = ingestd.c file_proc.c
-COLLD_SRC  = pie_colld.c pie_coll.c
+COLLD_SRC  = pie_colld.c pie_coll_handler.c
 CFG_SRC    = pie_cfg.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c pie_collection_member.c pie_exif_data.c pie_mob.c
@@ -197,5 +197,5 @@ bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/l
 bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o obj/pie_mob.o obj/pie_min.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng -lexif
 
-bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o
-	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/hmap.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS)
+bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS)
+	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
