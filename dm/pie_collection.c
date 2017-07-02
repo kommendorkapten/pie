@@ -236,19 +236,19 @@ cleanup:
 
 struct llist* pie_collection_find_all(sqlite3 * db)
 {
-       struct llist* retl = llist_create();
-       char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
-       sqlite3_stmt   *pstmt;
-       int             ret;
-       const unsigned char *c;
-       int             br;
+        struct llist* retl = llist_create();
+        char           *q = "SELECT col_id,col_path,col_usr_id,col_grp_id,col_acl FROM pie_collection";
+        sqlite3_stmt   *pstmt;
+        int             ret;
+        const unsigned char *c;
+        int             br;
 
-       ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
-       if (ret != SQLITE_OK)
-       {
-               retl = NULL;
-               goto cleanup;
-       }
+        ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+        if (ret != SQLITE_OK)
+        {
+                retl = NULL;
+                goto cleanup;
+        }
 
         for (;;)
         {
