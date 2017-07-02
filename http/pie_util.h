@@ -56,3 +56,20 @@ extern int get_lws_cookie(char* restrict,
                           struct lws*,
                           const char* restrict,
                           size_t);
+
+/**
+ * Write data to lws request object.
+ * Status code will be set to 200, no extra headers
+ * will be added (except content type).
+ * @param lws request object.
+ * @param content type.
+ * @param data to write.
+ * @param number of bytes to write.
+ * @param content type.
+ */
+extern ssize_t pie_http_lws_write(struct lws*,
+                                  unsigned char* restrict,
+                                  size_t,
+                                  const char* restrict);
+
+         

@@ -11,12 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <libwebsockets.h>
+#include <string.h>
 #include "pie_util.h"
 #include "pie_session.h"
 #include "../pie_log.h"
 #include "../lib/hmap.h"
-#include <libwebsockets.h>
-#include <string.h>
 
 const char* get_mimetype(const char *path)
 {
@@ -162,4 +162,69 @@ struct pie_sess* get_session(struct pie_sess_mgr* sess_mgr, struct lws* wsi)
         }
 
         return session;
+}
+
+ssize_t pie_http_lws_write(struct lws* wsi,
+                           unsigned char* restrict buf,
+                           size_t content_len,
+                           const char* restrict content_type)
+{
+        unsigned char resp_headers[256];
+        unsigned char* hp = &resp_headers[0];
+        size_t wlen;
+        int bw;
+
+        if (lws_add_http_header_status(wsi,
+                                       HTTP_STATUS_OK,
+                                       &hp,
+                                       resp_headers + 256))
+        {
+                PIE_ERR("Can not write status");
+                return -1;
+        }
+        
+        if (lws_add_http_header_by_token(wsi,
+                                         WSI_TOKEN_HTTP_CONTENT_TYPE,
+                                         (unsigned char*)content_type,
+                                         (int)strlen(content_type),
+                                         &hp,
+                                         resp_headers + 256))
+        {
+                PIE_ERR("Can not write content type");
+                return -1;
+        }
+        
+        if (lws_add_http_header_content_length(wsi,
+                                               content_len,
+                                               &hp,
+                                               resp_headers + 256))
+        {
+                PIE_ERR("Can not write content len");
+                return -1;
+        }
+        
+        if (lws_finalize_http_header(wsi, &hp, resp_headers + 256))
+        {
+                PIE_ERR("Can not finalize headers");
+                return -1;
+        }
+
+        wlen = hp - resp_headers;
+        bw = lws_write(wsi, resp_headers, wlen, LWS_WRITE_HTTP_HEADERS);
+        if (bw < (int)wlen)
+        {
+                PIE_ERR("lws_write error");
+                return -1;
+        }
+        bw = lws_write(wsi,
+                       buf,
+                       content_len,
+                       LWS_WRITE_HTTP);
+        if (bw < (int)content_len)
+        {
+                PIE_ERR("lws_write error");
+                return -1;
+        }
+
+        return (ssize_t)bw;
 }
