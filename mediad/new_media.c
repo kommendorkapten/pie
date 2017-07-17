@@ -251,7 +251,7 @@ static void* worker(void* arg)
                 mob_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
                                        me->me,
                                        PIE_ID_TYPE_MOB);
-                PIE_LOG("[%d]New media: [%016lx] %s", me->me, mob_id, src_path);
+                PIE_LOG("[%d]New media: [%ld] %s", me->me, mob_id, src_path);
 
                 /* Create MOB & MIN */
                 p = strrchr(new->path, '/');
@@ -338,7 +338,7 @@ static void* worker(void* arg)
                 /* Write thumbnail */
                 snprintf(tgt_path,
                          PIE_PATH_LEN,
-                         "%s/%016lx.jpg",
+                         "%s/%ld.jpg",
                          thumb_stg->mnt_path,
                          mob_id);
                 PIE_DEBUG("[%d]Thumb: %s", me->me, tgt_path);
@@ -351,7 +351,7 @@ static void* worker(void* arg)
                 /* Write proxy image */
                 snprintf(tgt_path,
                          PIE_PATH_LEN,
-                         "%s/%016lx.jpg",
+                         "%s/%ld.jpg",
                          proxy_stg->mnt_path,
                          mob_id);
                 PIE_DEBUG("[%d]Proxy: %s", me->me, tgt_path);
@@ -386,7 +386,7 @@ static void* worker(void* arg)
                         {
                                 abort();
                         }
-                        PIE_LOG("[%d]Target collection for %016lx is '%s', %ld",
+                        PIE_LOG("[%d]Target collection for %ld is '%s', %ld",
                                 me->me,
                                 mob_id,
                                 coll->col_path,
