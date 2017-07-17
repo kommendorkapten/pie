@@ -261,6 +261,7 @@ static int cb_http(struct lws* wsi,
                         {
                                 if (!isdigit(*p++))
                                 {
+                                        PIE_WARN("Invalid collection: '%s'", id);
                                         lws_return_http_status(wsi,
                                                                HTTP_STATUS_BAD_REQUEST,
                                                                NULL);
@@ -272,6 +273,7 @@ static int cb_http(struct lws* wsi,
                         coll_id = strtol(id, &p, 10);
                         if (id == p)
                         {
+                                PIE_WARN("Invalid collection: '%s'", id);
                                 lws_return_http_status(wsi,
                                                        HTTP_STATUS_BAD_REQUEST,
                                                        NULL);
