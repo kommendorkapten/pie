@@ -56,7 +56,7 @@ size_t pie_coll_h_collection(char* buf, size_t len, sqlite3* db, pie_id c)
         {
                 return 0;
         }
-        bw = pie_json_enc_mob_list(buf, len, ml);
+        bw = pie_json_enc_collection(buf, len, c, ml);
 
         n = llist_head(ml);
         while(n)

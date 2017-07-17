@@ -15,6 +15,7 @@
 #define __PIE_JSON_H__
 
 #include "../pie_types.h"
+#include "../pie_id.h"
 #include <stdlib.h>
 
 struct pie_exif_data;
@@ -36,10 +37,10 @@ extern size_t pie_json_enc_settings(char*, size_t, const struct pie_img_settings
 
 extern size_t pie_json_enc_exif(char*, size_t, const struct pie_exif_data*);
 
+extern size_t pie_json_enc_collection(char*, size_t, pie_id, struct llist*);
+
 extern size_t pie_json_enc_collection_list(char*, size_t, struct llist*);
 
 extern size_t pie_json_enc_mob(char*, size_t, struct pie_mob*);
-
-extern size_t pie_json_enc_mob_list(char*, size_t, struct llist*);
 
 #endif /* __PIE_JSON_H__ */

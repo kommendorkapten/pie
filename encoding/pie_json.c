@@ -70,6 +70,45 @@ size_t pie_json_enc_exif(char* buf,
         return bw;
 }
 
+size_t pie_json_enc_collection(char* buf,
+                               size_t len,
+                               pie_id id,
+                               struct llist* ml)
+{
+        struct lnode* n = llist_head(ml);
+        size_t bw = 0;
+        int first = 1;
+
+        bw += snprintf(buf + bw, len - bw, "{");
+        bw += snprintf(buf + bw, len - bw, "\"id\": \"%ld\",", id);
+        bw += snprintf(buf + bw, len - bw, "\"assets\":[");
+        while (n)
+        {
+                struct pie_mob* m = n->data;
+
+                if (!first)
+                {
+                        bw += snprintf(buf + bw, len - bw, ",");
+                }
+                else
+                {
+                        first = 0;
+                }
+
+                bw += snprintf(buf + bw,
+                               len - bw,
+                               "{\"id\": \"%ld\",\"mob\":",
+                               m->mob_id);
+                bw += pie_json_enc_mob(buf + bw, len - bw, m);
+                bw += snprintf(buf + bw, len - bw, "}");
+                n = n->next;
+        }
+        bw += snprintf(buf + bw, len - bw, "]");
+        bw += snprintf(buf + bw, len - bw, "}");
+
+        return bw;        
+}
+
 size_t pie_json_enc_collection_list(char* buf,
                                     size_t len,
                                     struct llist* cl)
@@ -112,8 +151,8 @@ size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
                       "{\"id\":\"%ld\"," \
                       "\"parent_id\":\"%ld\"," \
                       "\"name\":\"%s\"," \
-                      "\"capture_ts_ms\":\"%ld\"," \
-                      "\"added_ts_ms\":\"%ld\"," \
+                      "\"capture_ts_ms\":%ld,"  \
+                      "\"added_ts_ms\":%ld," \
                       "\"format\":\"%d\"," \
                       "\"color\":\"%d\"," \
                       "\"rating\":\"%d\"}",
@@ -125,35 +164,6 @@ size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
                       mob->mob_format,
                       mob->mob_color,
                       mob->mob_rating);
-
-        return bw;
-}
-
-size_t pie_json_enc_mob_list(char* buf, size_t len, struct llist* ml)
-{
-        struct lnode* n = llist_head(ml);
-        size_t bw = 0;
-        int first = 1;
-
-        bw += snprintf(buf + bw, len - bw, "[");
-
-        while (n)
-        {
-                struct pie_mob* m = n->data;
-
-                if (!first)
-                {
-                        bw += snprintf(buf + bw, len - bw, ",");
-                }
-                else
-                {
-                        first = 0;
-                }
-                bw += pie_json_enc_mob(buf + bw, len - bw, m);
-                n = n->next;
-        }
-
-        bw += snprintf(buf + bw, len - bw, "]");
 
         return bw;
 }
