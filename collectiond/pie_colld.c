@@ -13,7 +13,6 @@
 
 #include <signal.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <libwebsockets.h>
 #include "pie_coll_handler.h"
 #include "../cfg/pie_cfg.h"
@@ -22,7 +21,10 @@
 #include "../http/pie_util.h"
 
 #define ROUTE_COLLECTION "/collection/"
-#define RESP_LEN (1 << 12) /* 4k */
+#define ROUTE_EXIF "/exif/"
+#define ROUTE_THUMB "/thumb/"
+#define ROUTE_PROXY "/proxy/"
+#define RESP_LEN (1 << 14) /* 16k */
 
 struct config
 {
@@ -32,11 +34,6 @@ struct config
         struct lws_context* context;
         int port;
 };
-
-/* struct config2 */
-/* { */
-        
-/* }; */
 
 enum pie_protocols
 {
@@ -55,15 +52,15 @@ static void sig_h(int);
 /**
  * Callback methods.
  * @param The web-sockets instance.
- * @param The reason fro the callback. 
+ * @param The reason for the callback.
  *        See libwebsockets/enum lws_callback_reasons for alternatives.
  * @param The per session context data.
  * @param Incoming data for this request. (Path for HTTP, data for WS etc).
  * @param Length of data for request.
  * @return 0 on sucess, negative otherwise.
  */
-static int cb_http(struct lws* wsi, 
-                   enum lws_callback_reasons reason, 
+static int cb_http(struct lws* wsi,
+                   enum lws_callback_reasons reason,
                    void* user,
                    void* in,
                    size_t len);
@@ -83,6 +80,7 @@ static const struct lws_extension exts[] = {
         },
         {NULL, NULL, NULL}
 };
+char gresp[RESP_LEN];
 
 int main(void)
 {
@@ -107,7 +105,7 @@ int main(void)
                 PIE_ERR("Failed to read conf");
                 return 1;
         }
-        
+
         cfg.lib_path= "test-images";
         cfg.context_root = "assets";
         cfg.thumbs_root = "thumbs";
@@ -165,8 +163,8 @@ int main(void)
         }
 
         PIE_LOG("Shutdown server.");
-        lws_context_destroy(cfg.context);        
-        
+        lws_context_destroy(cfg.context);
+
         return 0;
 }
 
@@ -178,24 +176,27 @@ static void sig_h(int signum)
         }
 }
 
-static int cb_http(struct lws* wsi, 
-                   enum lws_callback_reasons reason, 
+static int cb_http(struct lws* wsi,
+                   enum lws_callback_reasons reason,
                    void* user,
                    void* in,
                    size_t len)
 {
-        char url[256];
         unsigned char resp_headers[256];
+        struct pie_coll_h_resp resp;
         struct hmap* req_headers = NULL;
-        const char* mimetype;
         const char* p;
-        /*struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;*/
         int hn = 0;
-        int n;
-        int ret;
+        int ret = 0;
+
+        resp.wbuf = &gresp[0];
+        resp.wbuf_len = RESP_LEN;
+        resp.http_sc = 400;
+        resp.content_type = NULL;
+        resp.content_len = 0;
 
         (void)user;
-        
+
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
@@ -203,100 +204,55 @@ static int cb_http(struct lws* wsi,
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
+                PIE_DEBUG("GET '%s'", (char*)in);
                 try_keepalive = 1;
                 req_headers = get_request_headers(wsi);
 
-		if (len < 1)
+                if (len < 1)
                 {
-			lws_return_http_status(wsi,
+                        lws_return_http_status(wsi,
                                                HTTP_STATUS_BAD_REQUEST,
                                                NULL);
                         PIE_DEBUG("Bad request, inpupt len %lu", len);
-			goto keepalive;
-		}
+                        goto keepalive;
+                }
 
                 if (strcmp(in, ROUTE_COLLECTION) == 0)
                 {
-                        char resp[RESP_LEN];
-                        char* content_type = "application/json; charset=UTF-8";
-                        size_t bw;
+                        ret = pie_coll_h_collections(&resp,
+                                                     in,
+                                                     pie_cfg_get_db());
 
-                        bw = pie_coll_h_collections(resp,
-                                                    RESP_LEN,
-                                                    pie_cfg_get_db());
-                        if (pie_http_lws_write(wsi,
-                                               (unsigned char*) resp,
-                                               bw,
-                                               content_type) < 0)
-                        {
-                                PIE_ERR("FAILED TO WRITE");
-                                goto bailout;
-                        }
-                        goto keepalive;
+                        goto writebody;
                 }
 
                 /* route is /collection/\d+$ */
                 p = strstr(in, ROUTE_COLLECTION);
                 if (p == in)
                 {
-                        char resp[RESP_LEN];
-                        char* content_type = "application/json; charset=UTF-8";
-                        char* id;
-                        char* p;
-                        size_t bw;
-                        pie_id coll_id;
+                        ret = pie_coll_h_collection(&resp,
+                                                    in,
+                                                    pie_cfg_get_db());
 
-                        PIE_LOG("GET '%s'", (char*)in);
-                        id = strchr(((char*)in) + 1, '/');
-                        if (id == NULL)
-                        {
-                                PIE_ERR("Slash dissapeared from requested URL: '%s'", (char*)in);
-                                goto bailout;
-                        }
-                        /* Advance pointer to frist char after '/' */
-                        id++;
-                        p = id;
-
-                        while (*p)
-                        {
-                                if (!isdigit(*p++))
-                                {
-                                        PIE_WARN("Invalid collection: '%s'", id);
-                                        lws_return_http_status(wsi,
-                                                               HTTP_STATUS_BAD_REQUEST,
-                                                               NULL);
-                                        goto bailout;
-                                }
-                        }
-                        /* The error check here is actualy not needed,
-                           but better to be safe than sorry. */
-                        coll_id = strtol(id, &p, 10);
-                        if (id == p)
-                        {
-                                PIE_WARN("Invalid collection: '%s'", id);
-                                lws_return_http_status(wsi,
-                                                       HTTP_STATUS_BAD_REQUEST,
-                                                       NULL);
-                                goto bailout;
-                        }
-
-                        bw = pie_coll_h_collection(resp,
-                                                   RESP_LEN,
-                                                   pie_cfg_get_db(),
-                                                   coll_id);
-                        if (pie_http_lws_write(wsi,
-                                               (unsigned char*)resp,
-                                               bw,
-                                               content_type) < 0)
-                        {
-                                PIE_ERR("Failed to write");
-                                goto bailout;
-                        }
-
-                        lws_callback_on_writable(wsi);
+                        goto writebody;
                 }
-                else
+
+                /* /exif/\d+$ */
+                p = strstr(in, ROUTE_EXIF);
+                if (p == in)
                 {
+                        ret = pie_coll_h_exif(&resp,
+                                              in,
+                                              pie_cfg_get_db());
+
+                        goto writebody;
+                }
+
+                {
+                        char url[256];
+                        const char* mimetype;
+                        int n;
+
                         /* Serve static file */
                         strcpy(url, cfg.context_root);
 
@@ -306,16 +262,16 @@ static int cb_http(struct lws* wsi,
                                 /* File provided */
                                 strncat(url, in, sizeof(url) - strlen(url) - 1);
                         }
-                        else 
+                        else
                         {
                                 /* Get index.html */
                                 strcat(url, "/index.html");
                         }
                         url[sizeof(url) - 1] = 0;
-                
+
                         mimetype = get_mimetype(url);
                         PIE_LOG("GET %s", url);
-                
+
                         if (!mimetype)
                         {
                                 lws_return_http_status(wsi,
@@ -333,7 +289,7 @@ static int cb_http(struct lws* wsi,
                                                 hn);
                         if (n == 0)
                         {
-                                /* File is beeing served, but we can not 
+                                /* File is beeing served, but we can not
                                    check for transaction completion yet */
                                 try_keepalive = 0;
                         }
@@ -343,7 +299,6 @@ static int cb_http(struct lws* wsi,
                                 goto bailout;
                         }
                 }
-                
 
                 break;
         case LWS_CALLBACK_CLOSED_HTTP:
@@ -351,29 +306,55 @@ static int cb_http(struct lws* wsi,
                 goto bailout;
         case LWS_CALLBACK_HTTP_WRITEABLE:
                 try_keepalive = 1;
-                PIE_LOG("Book");
                 lws_callback_on_writable(wsi);
-                break;
+                goto keepalive;
         default:
-                break;
+                goto keepalive;
         }
-        
+
+writebody:
+        if (ret || resp.http_sc > 399)
+        {
+                goto bailout;
+        }
+
+        if (pie_http_lws_write(wsi,
+                               (unsigned char*)resp.wbuf,
+                               resp.content_len,
+                               resp.content_type) < 0)
+        {
+                PIE_ERR("Failed to write");
+                goto bailout;
+        }
+
 /* HTTP/1.1 or 2.0, default is to keepalive */
 keepalive:
-        ret = 0;
-
         if (try_keepalive)
         {
-                PIE_DEBUG("Check for completion");
+                PIE_TRACE("Check for completion");
                 if (lws_http_transaction_completed(wsi))
                 {
                         PIE_WARN("Failed to keep connection open");
                         goto bailout;
                 }
-        }        
+        }
         goto cleanup;
+
 bailout:
+        if (resp.http_sc > 399)
+        {
+                lws_return_http_status(wsi,
+                                       resp.http_sc,
+                                       NULL);
+        }
+        else
+        {
+                lws_return_http_status(wsi,
+                                       HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                                       NULL);
+        }
         ret = -1;
+
 cleanup:
         if (req_headers)
         {
@@ -385,10 +366,10 @@ cleanup:
                         free(it[i].key);
                         free(it[i].data);
                 }
-                
+
                 free(it);
                 hmap_destroy(req_headers);
         }
-        
+
 	return ret;
 }

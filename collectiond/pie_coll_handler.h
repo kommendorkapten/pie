@@ -17,25 +17,54 @@
 #include <sqlite3.h>
 #include "../pie_id.h"
 
+struct pie_coll_h_resp
+{
+        /* Out: Buffer to write data to */
+        char*  wbuf;
+        /* Out: Content type of data written to buffer */
+        const char* content_type;
+        /* In: size of wbuf */
+        size_t wbuf_len;
+        /* Out: Number of bytes (excluding and NULL terminators) writtern */
+        size_t content_len;
+        /* Out: HTTP status code */
+        int    http_sc;
+};
+
 /**
  * Read all collections from the provided database.
  * Encode the collections to a JSON list in the provided buffer.
- * @param buffer to hold JSON encoded collection list.
- * @param size of buffer.
+ * @param response struct.
+ * @param request URL.
  * @param database to read collections from.
- * @return number of bytes written, excluding any NULL terminator.
+ * @return 0 on sucess.
  */
-extern size_t pie_coll_h_collections(char*, size_t, sqlite3*);
+extern int pie_coll_h_collections(struct pie_coll_h_resp*,
+                                  const char*,
+                                  sqlite3*);
 
 /**
  * Read a single collection from the provided database.
  * JSON encode the collection.
- * @param buffer to hold JSON encoded collection.
- * @param size of buffer.
- * @param database to read collection from.
- * @param the collection to read.
- * @return number of bytes written, excluding any NULL terminator.
+ * @param response struct.
+ * @param request URL.
+ * @param database to read collections from.
+ * @return 0 on success.
  */
-extern size_t pie_coll_h_collection(char*, size_t, sqlite3*, pie_id);
-                                    
+extern int pie_coll_h_collection(struct pie_coll_h_resp*,
+                                 const char*,
+                                 sqlite3*);
+
+/**
+ * Read a exif data for an asset.
+ * JSON encode the collection.
+ * @param response struct.
+ * @param request URL.
+ * @param database to read exif data from.
+ * @return 0 on success.
+ */
+extern int pie_coll_h_exif(struct pie_coll_h_resp*,
+                           const char*,
+                           sqlite3*);
+
 #endif /* __PIE_COLL_HANDLER_H__ */
