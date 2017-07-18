@@ -41,7 +41,6 @@ int main(int argc, char** argv)
         int status = -1;
         long evp_hw;
         long lval;
-        int num_workers = 4;
         int c;
 
         id_cfg.cp_mode = MODE_COPY_INTO;
@@ -109,19 +108,6 @@ int main(int argc, char** argv)
                 goto cleanup;
         }
 
-        /* W O R K E R S */
-        if (pie_cfg_get_long("global:workers", &lval))
-        {
-                PIE_LOG("Config global:workers not found in config");
-        }
-        else
-        {
-                num_workers = (int)lval;
-        }
-        pie_fp_start_workers(num_workers);
-
-        PIE_LOG("Using %d workers", num_workers);
-
         /* Q U E U E S */
         id_cfg.queue = q_new_producer(QUEUE_INTRA_HOST);
         if (id_cfg.queue == NULL)
@@ -155,9 +141,7 @@ int main(int argc, char** argv)
         walk_dir(id_cfg.src_path, &cb_fun);
         status = 0;
 
-        /* Stop and wait for workers */
-        pie_fp_stop_workers();
-        PIE_LOG("Processed %d files", num_files);        
+        PIE_LOG("Processed %d files", num_files);
 cleanup:
         if (id_cfg.queue)
         {
@@ -181,7 +165,10 @@ cleanup:
 
 static void cb_fun(const char* path)
 {
-        pie_fp_add_job(path);
+        if (pie_fp_add_file(path))
+        {
+                PIE_WARN("Processing of %s failed", path);
+        }
         num_files++;
 }
 

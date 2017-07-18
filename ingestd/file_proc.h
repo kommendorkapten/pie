@@ -14,8 +14,6 @@
 #ifndef __FILE_PROC_H__
 #define __FILE_PROC_H__
 
-extern int pie_fp_start_workers(int);
-extern int pie_fp_add_job(const char*);
-extern void pie_fp_stop_workers(void);
+extern int pie_fp_add_file(const char*);
 
 #endif /* __FILE_PROC_H__ */

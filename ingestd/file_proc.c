@@ -14,7 +14,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <netinet/in.h>
 #include <openssl/evp.h>
 #include <assert.h>
@@ -22,7 +21,6 @@
 #include "ingestd_cfg.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
-#include "../lib/chan.h"
 #include "../lib/s_queue.h"
 #include "../lib/fal.h"
 #include "../lib/timing.h"
@@ -34,7 +32,8 @@
 #define BUF_LEN (1<<14) /* 16kB */
 
 static void* worker(void*);
-int pie_fp_process_file(struct pie_mq_new_media*, char*);
+int pie_fp_process_file(struct pie_mq_new_media*, const char*);
+
 /**
  * Calculate a message digest from the provided file descriptor.
  * @param sum to store digest in. Must be able to at least keep
@@ -44,146 +43,36 @@ int pie_fp_process_file(struct pie_mq_new_media*, char*);
  */
 unsigned int pie_fp_mdigest(unsigned char[], int);
 
-static pthread_t* workers;
-static int num_workers;
-static struct chan* chan;
-static pthread_mutex_t fs_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t cp_lock = PTHREAD_MUTEX_INITIALIZER;
-
-int pie_fp_start_workers(int w)
+int pie_fp_add_file(const char* p)
 {
-        int i;
+        struct pie_mq_new_media new_mmsg;
+        int ok;
 
-        assert(workers == NULL);
-        assert(chan == NULL);
-
-        chan = chan_create();
-
-        if (chan == NULL)
+        /* path is the absolute path for src file on local disk */
+        if (pie_fp_process_file(&new_mmsg, p))
         {
-                return -1;
+                return 1;
         }
 
-        num_workers = w;
-        workers = malloc(sizeof(pthread_t) * num_workers);
-
-        for (i = 0; i < num_workers; i++)
+        /* Notify mediad on new media */
+        ssize_t nb;
+        nb = id_cfg.queue->send(id_cfg.queue->this,
+                                (char*)&new_mmsg,
+                                sizeof(new_mmsg));
+        if (nb != sizeof(new_mmsg))
         {
-                if (pthread_create(workers + i,
-                                   NULL,
-                                   &worker,
-                                   (void*)chan))
-                {
-                        PIE_WARN("pthread_create failed");
-                        break;
-                }
-        }
-        if (i == 0)
-        {
-                return -1;
-        }
-        num_workers = i;
-
-        PIE_LOG("%d workers created", num_workers);
-
-        return 0;
-}
-
-int pie_fp_add_job(const char* p)
-{
-        struct chan_msg msg;
-
-        assert(chan);
-        msg.len = strlen(p) + 1;
-        if (msg.len > PIE_PATH_LEN)
-        {
-                PIE_ERR("Path is to long (%ld>%d)", msg.len, PIE_PATH_LEN);
-                return -1;
-        }
-        msg.data = strdup(p);
-
-        if(chan_write(chan, &msg))
-        {
-                return -1;
+                perror("queue->send");
+                PIE_ERR("Could not send messsage to queue");
+                abort();
         }
 
         return 0;
 }
 
-void pie_fp_stop_workers(void)
-{
-        if (chan == NULL)
-        {
-                return;
-        }
-
-        chan_close(chan);
-
-        for (int i = 0; i < num_workers; i++)
-        {
-                pthread_join(workers[i], NULL);
-        }
-        free(workers);
-
-        chan_destroy(chan);
-        chan = NULL;
-        workers = NULL;
-}
-
-static void* worker(void* arg)
-{
-        struct chan* chan = (struct chan*)arg;
-
-        for (;;)
-        {
-                struct pie_mq_new_media new_mmsg;
-                struct chan_msg chan_msg;
-                char* path;
-                int ok;
-
-                ok = chan_read(chan, &chan_msg, -1);
-                if (ok)
-                {
-                        if (ok == EAGAIN)
-                        {
-                                continue;
-                        }
-                        else
-                        {
-                                break;
-                        }
-                }
-                /* path is the absolute path for src file on local disk */
-                path = chan_msg.data;
-
-                if (pie_fp_process_file(&new_mmsg, path))
-                {
-                        PIE_WARN("Processing of %s failed", path);
-                        free(chan_msg.data);
-                        continue;
-                }
-
-                /* Notify mediad on new media */
-                ssize_t nb;
-                nb = id_cfg.queue->send(id_cfg.queue->this,
-                                        (char*)&new_mmsg,
-                                        sizeof(new_mmsg));
-                if (nb != sizeof(new_mmsg))
-                {
-                        perror("queue->send");
-                        PIE_ERR("Could not send messsage to queue");
-                        abort();
-                }
-
-                free(chan_msg.data);
-        }
-
-        return NULL;
-}
-
-int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
+int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
 {
         char tmp_path[PIE_PATH_LEN];
+        char rel_path[PIE_PATH_LEN]; /* relative stg mountpoint */
         char hex[2 * EVP_MAX_MD_SIZE + 1];
         unsigned char sum[EVP_MAX_MD_SIZE];
         size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
@@ -218,24 +107,24 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         /* strip id_cfg.src_path from path */
         PIE_TRACE("Source path: %s", path);
         len = strlen(path) - src_pth_off;
-        memmove(path, path + src_pth_off, len);
-        path[len] = '\0';
-        PIE_TRACE("Stripped path: %s", path);
+        memcpy(rel_path, path + src_pth_off, len);
+        rel_path[len] = '\0';
+        PIE_TRACE("Stripped path: %s", rel_path);
 
         if (id_cfg.cp_mode == MODE_COPY_INTO)
         {
                 /* remove preceding dirs */
-                /* this is basically a simple (and destructive) 
-                   implementation of basename(3C), as basename(3C) is not 
-                   required to be reentrant in POSIX.1-2001 
+                /* this is basically a simple (and destructive)
+                   implementation of basename(3C), as basename(3C) is not
+                   required to be reentrant in POSIX.1-2001
                    (IEEE 1003.1-2001 or SUSv3) */
-                char *p = strrchr(path, '/');
+                char *p = strrchr(rel_path, '/');
 
                 if (p != NULL)
                 {
                         len = strlen(p + 1);
-                        memmove(path, p + 1, len);
-                        path[len] = '\0';
+                        memmove(rel_path, p + 1, len);
+                        rel_path[len] = '\0';
                 }
         }
 
@@ -243,7 +132,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         snprintf(new_mmsg->path,
                  PIE_PATH_LEN,
                  "%s%s",
-                 id_cfg.dst_path, path);
+                 id_cfg.dst_path, rel_path);
         new_mmsg->path[PIE_PATH_LEN - 1] = '\0';
         memcpy(new_mmsg->digest, sum, md_len);
         new_mmsg->stg_id = htonl(id_cfg.dst_stg->stg.stg_id);
@@ -251,10 +140,10 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
         PIE_DEBUG("New media message path: %s", new_mmsg->path);
 
         /* Make sure the target directory exists. */
-        /* this is basically a simple (and destructive) implementation 
-           of dirname(3C), as dirname(3C) is not required to be reentrant 
+        /* this is basically a simple (and destructive) implementation
+           of dirname(3C), as dirname(3C) is not required to be reentrant
            in POSIX.1-2001 (IEEE 1003.1-2001 or SUSv3) */
-        char *dir = strrchr(path, '/');
+        char *dir = strrchr(rel_path, '/');
         if (dir)
         {
                 /* remove filename from path */
@@ -263,7 +152,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
                          PIE_PATH_LEN,
                          "%s%s",
                          id_cfg.dst_path,
-                         path);
+                         rel_path);
         }
         else
         {
@@ -272,11 +161,9 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
                          "%s",
                          id_cfg.dst_path);
         }
-        pthread_mutex_lock(&fs_lock);
         PIE_TRACE("Create dir: %s", tmp_path);
         fal_mkdir_tree(id_cfg.dst_stg->mnt_path,
                        tmp_path);
-        pthread_mutex_unlock(&fs_lock);
 
         /* Copy file to target destination */
         snprintf(tmp_path,
@@ -291,10 +178,9 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
                 close(src_fd);
                 return 1;
         }
-        
+
         /* Reset src fd */
         lseek(src_fd, 0L, SEEK_SET);
-        pthread_mutex_lock(&cp_lock);
         PIE_LOG("Copy file to: %s", tmp_path);
         timing_start(&t);
         len = fal_copy_fd(tgt_fd, src_fd);
@@ -303,7 +189,6 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, char* path)
                 len,
                 ms,
                 (((float)len) / (1024.0f * 1024.0f) * 1000.0) / (float)ms);
-        pthread_mutex_unlock(&cp_lock);
 
         if (len < 1)
         {
