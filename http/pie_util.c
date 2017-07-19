@@ -20,39 +20,39 @@
 
 const char* get_mimetype(const char *path)
 {
-	size_t n = strlen(path);
+        size_t n = strlen(path);
 
-	if (n < 5)
+        if (n < 5)
         {
-		return NULL;                
-        }
-
-	if (strcmp(&path[n - 4], ".ico") == 0)
-        {
-		return "image/x-icon";
-        }
-	if (strcmp(&path[n - 4], ".png") == 0)
-        {
-		return "image/png";
-        }
-	if (strcmp(&path[n - 5], ".html") == 0) 
-        {
-		return "text/html";
-        }
-	if (strcmp(&path[n - 4], ".css") == 0)
-        {
-		return "text/css";
-        }
-	if (strcmp(&path[n - 4], ".jpg") == 0)
-        {
-		return "text/jpeg";
-        }
-	if (strcmp(&path[n - 3], ".js") == 0)
-        {
-		return "text/javascript";
+                return NULL;
         }
 
-	return NULL;
+        if (strcmp(&path[n - 4], ".ico") == 0)
+        {
+                return "image/x-icon";
+        }
+        if (strcmp(&path[n - 4], ".png") == 0)
+        {
+                return "image/png";
+        }
+        if (strcmp(&path[n - 5], ".html") == 0)
+        {
+                return "text/html";
+        }
+        if (strcmp(&path[n - 4], ".css") == 0)
+        {
+                return "text/css";
+        }
+        if (strcmp(&path[n - 4], ".jpg") == 0)
+        {
+                return "image/jpeg";
+        }
+        if (strcmp(&path[n - 3], ".js") == 0)
+        {
+                return "text/javascript";
+        }
+
+        return NULL;
 }
 
 struct hmap* get_request_headers(struct lws* wsi)
@@ -100,13 +100,13 @@ int get_lws_cookie(char* restrict v,
         char* lasts;
         int n = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_COOKIE);
         int found = -1;
-        
+
         if (n == 0)
         {
                 PIE_DEBUG("No cookie header found");
                 return found;
         }
-        
+
         lws_hdr_copy(wsi,
                      buf,
                      MAX_HEADERS,
@@ -182,7 +182,7 @@ ssize_t pie_http_lws_write(struct lws* wsi,
                 PIE_ERR("Can not write status");
                 return -1;
         }
-        
+
         if (lws_add_http_header_by_token(wsi,
                                          WSI_TOKEN_HTTP_CONTENT_TYPE,
                                          (unsigned char*)content_type,
@@ -193,7 +193,7 @@ ssize_t pie_http_lws_write(struct lws* wsi,
                 PIE_ERR("Can not write content type");
                 return -1;
         }
-        
+
         if (lws_add_http_header_content_length(wsi,
                                                content_len,
                                                &hp,
@@ -202,7 +202,7 @@ ssize_t pie_http_lws_write(struct lws* wsi,
                 PIE_ERR("Can not write content len");
                 return -1;
         }
-        
+
         if (lws_finalize_http_header(wsi, &hp, resp_headers + 256))
         {
                 PIE_ERR("Can not finalize headers");
