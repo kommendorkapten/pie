@@ -19,6 +19,8 @@
 #include "../pie_log.h"
 #include "../lib/hmap.h"
 #include "../http/pie_util.h"
+#include "../dm/pie_host.h"
+#include "../dm/pie_storage.h"
 
 #define ROUTE_COLLECTION "/collection/"
 #define ROUTE_EXIF "/exif/"
@@ -28,9 +30,12 @@
 
 struct config
 {
-        const char* lib_path;
+        struct pie_stg_mnt* thumb_stg;
+        struct pie_stg_mnt* proxy_stg;
+        struct pie_stg_mnt* online_stg;
+        struct pie_stg_mnt_arr* storages;
+        struct pie_host* host;
         const char* context_root;
-        const char* thumbs_root;
         struct lws_context* context;
         int port;
 };
@@ -106,10 +111,42 @@ int main(void)
                 return 1;
         }
 
-        cfg.lib_path= "test-images";
-        cfg.context_root = "assets";
-        cfg.thumbs_root = "thumbs";
+        cfg.host = pie_cfg_get_host(-1);
+        if (cfg.host == NULL)
+        {
+                PIE_ERR("Could not load current host");
+                return 1;
+        }
+        cfg.storages = pie_cfg_get_hoststg(cfg.host->hst_id);
+        if (cfg.storages == NULL)
+        {
+                PIE_ERR("Could not resolve mount point for storage");
+                return 1;
+        }
+        for (int i = 0; i < cfg.storages->len; i++)
+        {
+                if (cfg.storages->arr[i])
+                {
+                        PIE_LOG("Storage %d at %s",
+                                cfg.storages->arr[i]->stg.stg_id,
+                                cfg.storages->arr[i]->mnt_path);
+
+                        switch(cfg.storages->arr[i]->stg.stg_type)
+                        {
+                        case PIE_STG_ONLINE:
+                                cfg.online_stg = cfg.storages->arr[i];
+                                break;
+                        case PIE_STG_THUMB:
+                                cfg.thumb_stg = cfg.storages->arr[i];
+                                break;
+                        case PIE_STG_PROXY:
+                                cfg.proxy_stg = cfg.storages->arr[i];
+                                break;
+                        }
+                }
+        }
         cfg.port = 8081;
+        cfg.context_root = "assets";
 
         sa.sa_handler = &sig_h;
         sa.sa_flags = 0;
@@ -165,6 +202,9 @@ int main(void)
         PIE_LOG("Shutdown server.");
         lws_context_destroy(cfg.context);
 
+        pie_host_free(cfg.host);
+        pie_cfg_free_hoststg(cfg.storages);
+
         return 0;
 }
 
@@ -185,9 +225,17 @@ static int cb_http(struct lws* wsi,
         unsigned char resp_headers[256];
         struct pie_coll_h_resp resp;
         struct hmap* req_headers = NULL;
+        const char* req_url = in;
         const char* p;
+        char file_url[256];
+        const char* mimetype;
         int hn = 0;
         int ret = 0;
+        /* Set to true if callback should attempt to keep the connection
+           open. */
+        int try_keepalive = 0;
+
+        (void)user;
 
         resp.wbuf = &gresp[0];
         resp.wbuf_len = RESP_LEN;
@@ -195,16 +243,12 @@ static int cb_http(struct lws* wsi,
         resp.content_type = NULL;
         resp.content_len = 0;
 
-        (void)user;
-
-        /* Set to true if callback should attempt to keep the connection
-           open. */
-        int try_keepalive = 0;
+        file_url[0] = '\0';
 
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
-                PIE_DEBUG("GET '%s'", (char*)in);
+                PIE_DEBUG("GET '%s'", req_url);
                 try_keepalive = 1;
                 req_headers = get_request_headers(wsi);
 
@@ -217,90 +261,103 @@ static int cb_http(struct lws* wsi,
                         goto keepalive;
                 }
 
-                if (strcmp(in, ROUTE_COLLECTION) == 0)
+                if (strcmp(req_url, ROUTE_COLLECTION) == 0)
                 {
                         ret = pie_coll_h_collections(&resp,
-                                                     in,
+                                                     req_url,
                                                      pie_cfg_get_db());
 
                         goto writebody;
                 }
 
                 /* route is /collection/\d+$ */
-                p = strstr(in, ROUTE_COLLECTION);
-                if (p == in)
+                p = strstr(req_url, ROUTE_COLLECTION);
+                if (p == req_url)
                 {
                         ret = pie_coll_h_collection(&resp,
-                                                    in,
+                                                    req_url,
                                                     pie_cfg_get_db());
 
                         goto writebody;
                 }
 
                 /* /exif/\d+$ */
-                p = strstr(in, ROUTE_EXIF);
-                if (p == in)
+                p = strstr(req_url, ROUTE_EXIF);
+                if (p == req_url)
                 {
                         ret = pie_coll_h_exif(&resp,
-                                              in,
+                                              req_url,
                                               pie_cfg_get_db());
 
                         goto writebody;
                 }
 
+                /* /thumb/.* */
+                p = strstr(req_url, ROUTE_THUMB);
+                if (p == req_url)
                 {
-                        char url[256];
-                        const char* mimetype;
-                        int n;
-
-                        /* Serve static file */
-                        strcpy(url, cfg.context_root);
-
-                        /* Get the URL */
-                        if (strcmp(in, "/"))
-                        {
-                                /* File provided */
-                                strncat(url, in, sizeof(url) - strlen(url) - 1);
-                        }
-                        else
-                        {
-                                /* Get index.html */
-                                strcat(url, "/index.html");
-                        }
-                        url[sizeof(url) - 1] = 0;
-
-                        mimetype = get_mimetype(url);
-                        PIE_LOG("GET %s", url);
-
-                        if (!mimetype)
-                        {
-                                lws_return_http_status(wsi,
-                                                       HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
-                                                       NULL);
-                                PIE_DEBUG("Bad mime type: %s", mimetype);
-                                goto keepalive;
-                        }
-
-                        /* Serve file async */
-                        n = lws_serve_http_file(wsi,
-                                                url,
-                                                mimetype,
-                                                (char*)resp_headers,
-                                                hn);
-                        if (n == 0)
-                        {
-                                /* File is beeing served, but we can not
-                                   check for transaction completion yet */
-                                try_keepalive = 0;
-                        }
-                        if (n < 0)
-                        {
-                                PIE_WARN("Fail to send file '%s'", url);
-                                goto bailout;
-                        }
+                        snprintf(file_url, sizeof(file_url),
+                                 "%s%s",
+                                 cfg.thumb_stg->mnt_path,
+                                 req_url + 6);
                 }
 
-                break;
+                /* /proxy/.* */
+                p = strstr(req_url, ROUTE_PROXY);
+                if (p == req_url)
+                {
+                        snprintf(file_url, sizeof(file_url),
+                                 "%s%s",
+                                 cfg.proxy_stg->mnt_path,
+                                 req_url + 6);
+                }
+
+                /* Catch all static file */
+                if (file_url[0] == '\0')
+                {
+                        if (strcmp(req_url, "/") == 0)
+                        {
+                                req_url = "/index.html";
+                        }
+
+                        snprintf(file_url, sizeof(file_url),
+                                 "%s%s",
+                                 cfg.context_root,
+                                 req_url);
+                }
+
+                file_url[sizeof(file_url) - 1] = 0;
+                PIE_LOG("Serve static file '%s'", file_url);
+
+                mimetype = get_mimetype(file_url);
+                if (!mimetype)
+                {
+                        lws_return_http_status(wsi,
+                                               HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
+                                               NULL);
+                        PIE_DEBUG("Bad mime type: %s", mimetype);
+                        goto keepalive;
+                }
+
+                /* Serve file async */
+                int n = lws_serve_http_file(wsi,
+                                            file_url,
+                                            mimetype,
+                                            (char*)resp_headers,
+                                            hn);
+                if (n == 0)
+                {
+                        /* File is beeing served, but we can not
+                           check for transaction completion yet */
+                        try_keepalive = 0;
+                }
+                if (n < 0)
+                {
+                        PIE_WARN("Fail to send file '%s'", file_url);
+                }
+
+                goto keepalive;
+
         case LWS_CALLBACK_CLOSED_HTTP:
                 PIE_LOG("Timeout, closing.");
                 goto bailout;
