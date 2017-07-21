@@ -23,6 +23,14 @@ canvas {
     width:      280px;
 }
 
+.fixed-collection-list-pane {
+    text-align: left;
+    width:      280px;
+    font-family: Arial, Verdana, sans-serif;
+    color:	 #a9a9a9;
+    font-size:	 12px;    
+}
+
 .flex-item {
     flex-grow: 1;
 }
@@ -215,4 +223,19 @@ td.grid-view-table-td {
 
 td.grid-view-table-td:hover {
     background-color: #c8c8c8;
+}
+
+.collapsibleList li{
+    list-style-image : url('../img/button.png');
+    cursor           : auto;
+}
+
+li.collapsibleListOpen{
+    list-style-image : url('../img/button-open.png');
+    cursor           : pointer;
+}
+
+li.collapsibleListClosed{
+    list-style-image : url('../img/button-closed.png');
+    cursor           : pointer;
 }

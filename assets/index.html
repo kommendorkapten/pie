@@ -1,8 +1,12 @@
 <html>
   <head>
     <meta charset="utf-8"> 
-    <script type="text/javascript" charset="utf-8" src="js/chart.bundle.js"></script>
-    <script type="text/javascript" charset="utf-8" src="js/coll.js"></script>
+    <script type="text/javascript" charset="utf-8"
+            src="js/chart.bundle.js"></script> 
+    <script type="text/javascript" charset="utf-8"
+            src="js/coll.js"></script>
+    <script type="text/javascript" charset="utf-8"
+            src="js/CollapsibleLists.js"></script>
     <link rel="stylesheet" href="css/pie.css">
   </head>
   <body>
@@ -14,23 +18,29 @@
       
       <!-- left pane -->
       <div class="float-l-item">
-        <div class="fixed-edit-pane">
+        <div class="fixed-collection-list-pane">
           <div class="center">
-            <div class="edit-meta">
-              <div style="margin-left:5px; margin-right:5px;">
-                <canvas id="hist_canvas" width="265" height="150" 
-                        style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
-                </canvas>
-              </div>
-              <table id="meta_data_tbl" class="edit-meta-text">
-                <tr>
-                  <td>ISO 6400</td>
-                  <td>600 mm</td>
-                  <td style="text-align: right;">f/5.6</td>
-                  <td style="text-align: right;">1/650 sec</td>
-                </tr>
-              </table>
-            </div>
+            <ul id="collection-list" class="collapsibleList">
+              <li>
+                Directory root
+                <ul>
+                  <li>
+                    Collection 1
+                  </li>
+                  <li>
+                    Collection 2
+                    <ul>
+                      <li>
+                        Collection 2-1
+                      </li>
+                      <li>
+                        Collection 2-2                        
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function loadTable(id) {
+function loadTable(collectionId) {
     var xmlhttp = new XMLHttpRequest();
     var w = window.innerWidth;
     var h = window.innerHeight;
@@ -38,8 +38,6 @@ function loadTable(id) {
         thumb_size = 256;
     }
         
-    console.log(h);
-
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
            if (xmlhttp.status == 200) {
@@ -53,10 +51,10 @@ function loadTable(id) {
                var closed = false;
                
                innerHtml += newRow
-               for (i of coll.items) {
+               for (i of coll.assets) {
                    innerHtml += newCell;
                    innerHtml += div;
-                   innerHtml += "<img width=\"" + thumb_size + "\" src=\"" + i.url + "\">";
+                   innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
                    innerHtml += "</div></td>";
                    closed = false;
                    
@@ -78,20 +76,99 @@ function loadTable(id) {
                collGrid.style.height = h - heightModifier;
            }
            else if (xmlhttp.status == 400) {
-               console.log('There was an error 400');
+               console.log("There was an error 400");
            }
            else {
-               console.log('something else other than 200 was returned');
+               console.log("something else other than 200 was returned");
            }
         }
     };
 
-    xmlhttp.open("GET", "collection/" + 123, true);
-    xmlhttp.send();
+    xmlhttp.open("GET", "collection/" + collectionId, true);
+    xmlhttp.send();        
 }   
 
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
-    console.log("hey " + id);
-    loadTable(id);
+    var xmlhttp = new XMLHttpRequest();
+    // Get all collections and draw them.
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (xmlhttp.status == 200) {
+                var coll_tree = {};
+                var coll = JSON.parse(xmlhttp.responseText);
+
+                // Build the tree structure of all collections
+                coll.sort(function(a,b) {
+                    return a.path.localeCompare(b.path);
+                });
+
+                if (coll[0].path != "/") {
+                    alert("This is not right");
+                }
+                coll_tree["path"] = "/";
+                coll_tree["id"] = coll[0].id;
+                coll_tree["children"] = {};
+
+                for (i of coll) {
+                    if (i.path == "/") {
+                        continue;
+                    }
+                    
+                    var comps = i.path.split("/");
+                    var root = coll_tree;
+                    for (c of comps) {
+                        if (c.length == 0) {
+                            continue;
+                        }
+
+                        if (!(c in root.children)) {
+                            var child = {
+                                "children": {},
+                                "path": c,
+                            };
+                            root["children"][c] = child;
+                        }
+                        
+                        root = root["children"][c];
+                    }
+
+                    root["id"] = i.id;
+                }
+
+                console.log(coll_tree);
+                // Create the HTML for it by doing a depth first
+                // traversal.
+                var stack = new Array();
+
+                stack.push(coll_tree);
+
+                while (stack.length > 0) {
+                    var node = stack.pop();
+
+                    console.log("Expand: " + node.path);
+
+                    var childs = Object.keys(node.children);
+                    for (i = childs.length - 1; i >= 0; i--) {
+                        stack.push(node.children[childs[i]]);
+                    }
+                }
+            } else {
+                console.log("Error");
+                console.log(xmlhttp);
+            }
+        }
+    };
+
+    xmlhttp.open("GET", "collection/", true);
+    xmlhttp.send();
+    
+    // Load collection if present
+    if (id) {
+        console.log("Get collection: " + id);
+        loadTable(id);
+   }
+    
+    CollapsibleLists.apply();
 });
