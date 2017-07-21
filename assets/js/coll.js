@@ -27,8 +27,8 @@ function loadTable(collectionId) {
     var cellPadding = 4;
     var basePadding = 15;
     var heightModifier = 150 + 40 + 20;
-    
-    columns = Math.floor(img_x / 256 + 0.3);    
+
+    columns = Math.floor(img_x / 256 + 0.3);
     if (navigator.appVersion.indexOf("Mac")!=-1) {
         cellPadding = 6;
         basePadding = 20;
@@ -37,7 +37,7 @@ function loadTable(collectionId) {
     if (thumb_size > 256) {
         thumb_size = 256;
     }
-        
+
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
            if (xmlhttp.status == 200) {
@@ -49,7 +49,7 @@ function loadTable(collectionId) {
                var div = "<div class=\"grid-view-table-cell\">";
                var count = 1;
                var closed = false;
-               
+
                innerHtml += newRow
                for (i of coll.assets) {
                    innerHtml += newCell;
@@ -57,7 +57,7 @@ function loadTable(collectionId) {
                    innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
                    innerHtml += "</div></td>";
                    closed = false;
-                   
+
                    if (count % columns == 0) {
                        innerHtml += "</tr>";
                        innerHtml += newRow;
@@ -85,8 +85,8 @@ function loadTable(collectionId) {
     };
 
     xmlhttp.open("GET", "collection/" + collectionId, true);
-    xmlhttp.send();        
-}   
+    xmlhttp.send();
+}
 
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
@@ -115,7 +115,7 @@ window.addEventListener("load", function(evt) {
                     if (i.path == "/") {
                         continue;
                     }
-                    
+
                     var comps = i.path.split("/");
                     var root = coll_tree;
                     for (c of comps) {
@@ -130,7 +130,7 @@ window.addEventListener("load", function(evt) {
                             };
                             root["children"][c] = child;
                         }
-                        
+
                         root = root["children"][c];
                     }
 
@@ -141,19 +141,42 @@ window.addEventListener("load", function(evt) {
                 // Create the HTML for it by doing a depth first
                 // traversal.
                 var stack = new Array();
+                var innerHtml = "";
 
                 stack.push(coll_tree);
-
                 while (stack.length > 0) {
                     var node = stack.pop();
 
-                    console.log("Expand: " + node.path);
+                    if ("closeLi" in node) {
+                        innerHtml += "</li>";
+                        continue;
+                    }
+                    if ("closeUl" in node) {
+                        innerHtml += "</ul>";
+                        continue;
+                    }
+
+                    innerHtml += "<li>" + node.path;
+                    stack.push({
+                        "closeLi": true,
+                    });
 
                     var childs = Object.keys(node.children);
-                    for (i = childs.length - 1; i >= 0; i--) {
-                        stack.push(node.children[childs[i]]);
+                    if (childs.length > 0) {
+                        innerHtml += "<ul>";
+                        stack.push({
+                            "closeUl": true,
+                        });
+                        for (i = childs.length - 1; i >= 0; i--) {
+                            stack.push(node.children[childs[i]]);
+                        }
                     }
                 }
+
+                var collUl = document.getElementById("coll-list");
+                collUl.innerHTML = innerHtml;
+                // Initialize the list
+                CollapsibleLists.apply();
             } else {
                 console.log("Error");
                 console.log(xmlhttp);
@@ -163,12 +186,10 @@ window.addEventListener("load", function(evt) {
 
     xmlhttp.open("GET", "collection/", true);
     xmlhttp.send();
-    
+
     // Load collection if present
     if (id) {
         console.log("Get collection: " + id);
         loadTable(id);
    }
-    
-    CollapsibleLists.apply();
 });
