@@ -10,7 +10,7 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function loadTable(collectionId) {
+function loadCollection(collectionId) {
     var xmlhttp = new XMLHttpRequest();
     var w = window.innerWidth;
     var h = window.innerHeight;
@@ -107,7 +107,7 @@ window.addEventListener("load", function(evt) {
                 if (coll[0].path != "/") {
                     alert("This is not right");
                 }
-                coll_tree["path"] = "/";
+                coll_tree["path"] = "Collection root";
                 coll_tree["id"] = coll[0].id;
                 coll_tree["children"] = {};
 
@@ -156,7 +156,14 @@ window.addEventListener("load", function(evt) {
                         continue;
                     }
 
-                    innerHtml += "<li>" + node.path;
+                    innerHtml += "<li>";
+
+                    if ("id" in node) {
+                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\">" + node.path + "</a>";
+                    } else {
+                        innerHtml += node.path;
+                    }
+
                     stack.push({
                         "closeLi": true,
                     });
@@ -190,6 +197,6 @@ window.addEventListener("load", function(evt) {
     // Load collection if present
     if (id) {
         console.log("Get collection: " + id);
-        loadTable(id);
+        loadCollection(id);
    }
 });
