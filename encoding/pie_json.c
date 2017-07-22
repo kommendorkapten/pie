@@ -73,14 +73,14 @@ size_t pie_json_enc_exif(char* buf,
         bw += snprintf(buf + bw, len - bw, "\"make\":\"%s\",", ped->ped_make);
         bw += snprintf(buf + bw, len - bw, "\"model\":\"%s\",", ped->ped_model);
         bw += snprintf(buf + bw, len - bw, "\"exposure_time\":\"%s\",", ped->ped_exposure_time);
-        bw += snprintf(buf + bw, len - bw, "\"sub_sec_time\":\"%d\",", ped->ped_sub_sec_time);
-        bw += snprintf(buf + bw, len - bw, "\"x\":\"%d\",", ped->ped_x_dim);
-        bw += snprintf(buf + bw, len - bw, "\"y\":\"%d\",", ped->ped_y_dim);
-        bw += snprintf(buf + bw, len - bw, "\"iso\":\"%d\",", ped->ped_iso);
+        bw += snprintf(buf + bw, len - bw, "\"sub_sec_time\":%d,", ped->ped_sub_sec_time);
+        bw += snprintf(buf + bw, len - bw, "\"x\":%d,", ped->ped_x_dim);
+        bw += snprintf(buf + bw, len - bw, "\"y\":%d,", ped->ped_y_dim);
+        bw += snprintf(buf + bw, len - bw, "\"iso\":%d,", ped->ped_iso);
         bw += snprintf(buf + bw, len - bw, "\"gamma\":\"%d\",", ped->ped_gamma);
         bw += snprintf(buf + bw, len - bw, "\"white_point\":\"%d\",", ped->ped_white_point);
         bw += snprintf(buf + bw, len - bw, "\"orientation\":\"%d\",", ped->ped_orientation);
-        bw += snprintf(buf + bw, len - bw, "\"focal_len\":\"%d\",", ped->ped_focal_len);
+        bw += snprintf(buf + bw, len - bw, "\"focal_len\":%d,", ped->ped_focal_len);
         bw += snprintf(buf + bw, len - bw, "\"fnumber\":\"%d\",", ped->ped_fnumber);
         bw += snprintf(buf + bw, len - bw, "\"exposure_bias\":\"%d\",", ped->ped_exposure_bias);
         bw += snprintf(buf + bw, len - bw, "\"white_balance\":\"%d\",", ped->ped_white_balance);
@@ -90,6 +90,22 @@ size_t pie_json_enc_exif(char* buf,
         bw += snprintf(buf + bw, len - bw, "\"exposure_mode\":\"%d\",", ped->ped_exposure_mode);
         bw += snprintf(buf + bw, len - bw, "\"color_space\":\"%d\"}", ped->ped_color_space);
 
+        /* Remove any control characters */
+        for (int i = 0; i < bw; i++)
+        {
+                switch (buf[i])
+                {
+                case '\b':
+                case '\f':
+                case '\n':
+                case '\r':
+                case '\t':
+                case '\\':
+                        buf[i] = ' ';
+                        break;
+                }
+        }
+        
         return bw;
 }
 
