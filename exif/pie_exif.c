@@ -18,24 +18,39 @@
 #include <libexif/exif-tag.h>
 #include <libexif/exif-data.h>
 #include "../dm/pie_exif_data.h"
+#include "../pie_log.h"
 #include "pie_exif.h"
 
 #define EXIF_TIME_FORMAT_E "YYYY:MM:DD HH:MM:SS"
 #define EXIF_TIME_FORMAT "%Y:%m:%d %T"
 
 static ExifEntry* get_entry(ExifData*, ExifIfd, ExifTag);
-#if __BYTE_ORDER__ == 4321
+
 static int16_t swap_int16(int16_t v);
 static int32_t swap_int32(int32_t v);
+/**
+ * Load an integer of unknown size (max 4 bytes).
+ */
+static int load_exif_int(const ExifEntry*, int);
+static int16_t load_exif_int16(const unsigned char*, int);
+static int32_t load_exif_int32(const unsigned char*, int);
+
+#ifdef __BYTE_ORDER__
+# if __BYTE_ORDER__ == 4321
+static int this_endian = EXIF_BYTE_ORDER_MOTOROLA;
+# else
+static int this_endian = EXIF_BYTE_ORDER_INTEL;
+# endif
+#else
+#  error __BYTE_ORDER__ not defined
 #endif
-static int16_t load_exif_int16(const unsigned char*);
-static int32_t load_exif_int32(const unsigned char*);
 
 int pie_exif_load(struct pie_exif_data* ped, const char* path)
 {
         char buf[256];
         ExifData* ed;
         ExifEntry* entry;
+        int swap;
         int ret = 1;
 
         buf[255] = '\0';
@@ -47,6 +62,14 @@ int pie_exif_load(struct pie_exif_data* ped, const char* path)
         if (ed == NULL)
         {
                 return ret;
+        }
+        if (this_endian == exif_data_get_byte_order(ed))
+        {
+                swap = 0;
+        }
+        else
+        {
+                swap = 1;
         }
 
         if ((entry = get_entry(ed, EXIF_IFD_0, EXIF_TAG_ARTIST)))
@@ -71,7 +94,7 @@ int pie_exif_load(struct pie_exif_data* ped, const char* path)
         }
         if ((entry = get_entry(ed, EXIF_IFD_0, EXIF_TAG_ORIENTATION)))
         {
-                ped->ped_orientation = load_exif_int16(entry->data);
+                ped->ped_orientation = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_0, EXIF_TAG_DATE_TIME)))
         {
@@ -91,80 +114,85 @@ int pie_exif_load(struct pie_exif_data* ped, const char* path)
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_PIXEL_X_DIMENSION)))
         {
-                ped->ped_x_dim = (int32_t)load_exif_int16(entry->data);
+                ped->ped_x_dim = load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_PIXEL_Y_DIMENSION)))
         {
-                ped->ped_y_dim = (int32_t)load_exif_int16(entry->data);
+                ped->ped_y_dim = load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_FOCAL_LENGTH)))
         {
-                float num = (float)load_exif_int32(entry->data);
-                float den = (float)load_exif_int32(entry->data + 4);
+                float num = (float)load_exif_int32(entry->data, 0);
+                float den = (float)load_exif_int32(entry->data + 4, 0);
 
                 ped->ped_focal_len = (short)(num / den);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_FNUMBER)))
         {
-                float num = (float)load_exif_int32(entry->data);
-                float den = (float)load_exif_int32(entry->data + 4);
+                float num = (float)load_exif_int32(entry->data, 0);
+                float den = (float)load_exif_int32(entry->data + 4, 0);
 
                 ped->ped_fnumber = (short)(num * 10.0f / den);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_EXPOSURE_TIME)))
         {
-                int num = (int)load_exif_int32(entry->data);
-                int den = (int)load_exif_int32(entry->data + 4);
+                int num = (int)load_exif_int32(entry->data, 0);
+                int den = (int)load_exif_int32(entry->data + 4, 0);
+
+                if (num > 100 && den > 1000) {
+                        den = den / num;
+                        num = 1;
+                }
 
                 snprintf(buf, 255, "%d/%d", num, den);
                 ped->ped_exposure_time = strdup(buf);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_ISO_SPEED_RATINGS)))
         {
-                ped->ped_iso = (int)load_exif_int16(entry->data);
+                ped->ped_iso = load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_EXPOSURE_BIAS_VALUE)))
         {
-                float num = (float)load_exif_int32(entry->data);
-                float den = (float)load_exif_int32(entry->data + 4);
+                float num = (float)load_exif_int32(entry->data, 0);
+                float den = (float)load_exif_int32(entry->data + 4, 0);
 
                 ped->ped_exposure_bias = (short)(num * 100.0f / den);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_WHITE_BALANCE)))
         {
-                ped->ped_white_balance = load_exif_int16(entry->data);
+                ped->ped_white_balance = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_EXPOSURE_PROGRAM)))
         {
-                ped->ped_exposure_prog = load_exif_int16(entry->data);
+                ped->ped_exposure_prog = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_METERING_MODE)))
         {
-                ped->ped_metering_mode = load_exif_int16(entry->data);
+                ped->ped_metering_mode = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_FLASH)))
         {
-                ped->ped_flash = load_exif_int16(entry->data);
+                ped->ped_flash = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_EXPOSURE_MODE)))
         {
-                ped->ped_exposure_mode = load_exif_int16(entry->data);
+                ped->ped_exposure_mode = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_COLOR_SPACE)))
         {
-                ped->ped_color_space = load_exif_int16(entry->data);
+                ped->ped_color_space = (short)load_exif_int(entry, swap);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_GAMMA)))
         {
-                float num = (float)load_exif_int32(entry->data);
-                float den = (float)load_exif_int32(entry->data + 4);
+                float num = (float)load_exif_int32(entry->data, 0);
+                float den = (float)load_exif_int32(entry->data + 4, 0);
 
                 ped->ped_gamma = (int)(num / den);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_WHITE_POINT)))
         {
-                float num = (float)load_exif_int32(entry->data);
-                float den = (float)load_exif_int32(entry->data + 4);
+                float num = (float)load_exif_int32(entry->data, 0);
+                float den = (float)load_exif_int32(entry->data + 4, 0);
 
                 ped->ped_white_point = (int)(num / den);
         }
@@ -184,7 +212,7 @@ time_t pie_exif_date_to_millis(const char* date, int sub_sec)
         {
                 /* auto detect daylight savings */
                 tm.tm_isdst = -1;
-                ret = mktime(&tm) * 1000 + sub_sec * 10;                
+                ret = mktime(&tm) * 1000 + sub_sec * 10;
         }
 
         return ret;
@@ -193,7 +221,7 @@ time_t pie_exif_date_to_millis(const char* date, int sub_sec)
 static ExifEntry* get_entry(ExifData* ed, ExifIfd id, ExifTag tag)
 {
         ExifEntry *entry;
-        
+
         (void)id;
         entry = exif_data_get_entry(ed, tag);
         /*exif_content_get_entry(d->ifd[ifd],tag);*/
@@ -201,7 +229,6 @@ static ExifEntry* get_entry(ExifData* ed, ExifIfd id, ExifTag tag)
         return entry;
 }
 
-#if __BYTE_ORDER__ == 4321
 static int16_t swap_int16(int16_t v)
 {
         return (int16_t)((0xff00 & v) >> 8 |
@@ -216,38 +243,51 @@ static int32_t swap_int32(int32_t v)
                          (0x0000ff00 & v) << 8 |
                          (0x000000ff & v) << 24);
 }
-#endif
 
-static int16_t load_exif_int16(const unsigned char* d)
+static int16_t load_exif_int16(const unsigned char* d, int swap)
 {
         int16_t v;
 
         memcpy(&v, d, sizeof(v));
 
-#ifdef __BYTE_ORDER__
-# if __BYTE_ORDER__ == 4321
-        return swap_int16(v);
-# else
+        if (swap)
+        {
+                v = swap_int16(v);
+        }
+
         return v;
-# endif
-#else
-#  error __BYTE_ORDER__ not defined
-#endif
 }
 
-static int32_t load_exif_int32(const unsigned char* d)
+static int32_t load_exif_int32(const unsigned char* d, int swap)
 {
         int32_t v;
 
         memcpy(&v, d, sizeof(v));
 
-#ifdef __BYTE_ORDER__
-# if __BYTE_ORDER__ == 4321
-        return swap_int32(v);
-# else
+        if (swap)
+        {
+                v = swap_int32(v);
+        }
+
         return v;
-# endif
-#else
-#  error __BYTE_ORDER__ not defined
-#endif
+}
+
+static int load_exif_int(const ExifEntry* entry, int swap)
+{
+        int ret;
+
+        switch (entry->format)
+        {
+        case EXIF_FORMAT_SHORT:
+                ret = (int)load_exif_int16(entry->data, swap);
+                break;
+        case EXIF_FORMAT_LONG:
+                ret = (int)load_exif_int32(entry->data, swap);
+                break;
+        default:
+                PIE_ERR("Unexpected EXIF format: %d", entry->format);
+                abort();
+        }
+
+        return ret;
 }
