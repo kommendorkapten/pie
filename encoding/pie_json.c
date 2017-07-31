@@ -193,8 +193,8 @@ size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
                       "\"capture_ts_ms\":%ld,"  \
                       "\"added_ts_ms\":%ld," \
                       "\"format\":\"%d\"," \
-                      "\"color\":\"%d\"," \
-                      "\"rating\":\"%d\"}",
+                      "\"color\":%d," \
+                      "\"rating\":%d}",
                       mob->mob_id,
                       mob->mob_parent_mob_id,
                       mob->mob_name,
