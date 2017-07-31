@@ -28,7 +28,17 @@ canvas {
     width:      280px;
     font-family: Arial, Verdana, sans-serif;
     color:	 #a9a9a9;
-    font-size:	 12px;    
+    font-size:	 12px;
+}
+
+.fixed-collection-list-pane a:link {
+    color:	     #a9a9a9;
+    text-decoration: none;
+}
+
+.fixed-collection-list-pane a:visited {
+    color:	     #a9a9a9;    
+    text-decoration: none;
 }
 
 .flex-item {
@@ -93,6 +103,14 @@ table {
     color:	      #a9a9a9;
     font-size:	      10px;
     text-align:       right;
+}
+
+.meta-data-table {
+    text-shadow: 1px 1px #000000;    
+}
+
+.text-bright {
+    color: #c9c9c9;
 }
 
 input[type=range] {
@@ -221,6 +239,10 @@ td.grid-view-table-td {
     background-color: #686868;    
 }
 
+td.grid-view-table-td-active {
+    background-color: #a8a8a8;    
+}
+
 td.grid-view-table-td:hover {
     background-color: #c8c8c8;
 }
@@ -238,4 +260,71 @@ li.collapsibleListOpen{
 li.collapsibleListClosed{
     list-style-image : url('../img/button-closed.png');
     cursor           : pointer;
+}
+
+/* The Modal (background) */
+.coll-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 50px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); 
+    background-color: rgba(0,0,0,0.9);
+}
+
+/* Modal Content (image) */
+.coll-modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    /*max-width: 1440px;*/
+    max-width: 90%;
+}
+
+/* Add Animation */
+.coll-modal-content {
+    -webkit-animation-name: zoom;
+    -webkit-animation-duration: 0.6s;
+    animation-name: zoom;
+    animation-duration: 0.6s;
+}
+
+@-webkit-keyframes zoom {
+    from {-webkit-transform:scale(0)} 
+    to {-webkit-transform:scale(1)}
+}
+
+@keyframes zoom {
+    from {transform:scale(0)} 
+    to {transform:scale(1)}
+}
+
+/* The Close Button */
+.coll-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.coll-modal-close:hover,
+.coll-modal-close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px){
+    .coll-modal-content {
+        width: 100%;
+    }
 }

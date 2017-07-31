@@ -12,6 +12,12 @@
   <body>
     <div class="container-collection">
 
+      <!-- view single image modal -->
+      <div id="view-modal" class="coll-modal">
+        <span id="view-modal-close" class="coll-modal-close">&times;</span>
+        <img class="coll-modal-content" id="single-image-view">
+      </div>
+      
       <div class="header-40px">
         hej header
       </div>
@@ -44,12 +50,102 @@
                         style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
                 </canvas>
               </div>
-              <table id="meta_data_tbl" class="edit-meta-text">
+              <table id="meta_data_tbl_top" class="edit-meta-text meta-data-table">
                 <tr>
-                  <td>ISO 6400</td>
-                  <td>600 mm</td>
-                  <td style="text-align: right;">f/5.6</td>
-                  <td style="text-align: right;">1/650 sec</td>
+                  <td></td>
+                  <td></td>
+                  <td style="text-align: right;"></td>
+                  <td style="text-align: right;"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_1" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Filename</td>
+                  <td class="text-bright">abc.jpg</td>
+                </tr>
+                <tr>
+                  <td>Collection</td>
+                  <td class="text-bright">test_exif7</td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_2" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Copyright</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Artist</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_3" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>                
+                  <td>Rating</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Color</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_4" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Capture time</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_5" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Dimension</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Exposure</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Focal len</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>ISO Speed Rating</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Flash</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Make</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Model</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Lens</td>
+                  <td class="text-bright"></td>
                 </tr>
               </table>
             </div>          

@@ -1,3 +1,7 @@
+var mobCache = {};
+var exifCache = {};
+var selectedMobId = "";
+
 function getParameterByName(name, url) {
     if (!url) {
       url = window.location.href;
@@ -24,7 +28,7 @@ function loadCollection(collectionId) {
     // header is 40px
     var columns = 3;
     var img_x = w - 2 * 282 - 15;
-    var cellPadding = 4;
+    var cellPadding = 5;
     var basePadding = 15;
     var heightModifier = 150 + 40 + 20;
 
@@ -41,17 +45,19 @@ function loadCollection(collectionId) {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
            if (xmlhttp.status == 200) {
-               //               document.getElementById("myDiv").innerHTML = xmlhttp.responseText;
                var coll = JSON.parse(xmlhttp.responseText);
                var innerHtml = "";
                var newRow = "<tr>";
-               var newCell = "<td class=\"grid-view-table-td\">";
                var div = "<div class=\"grid-view-table-cell\">";
                var count = 1;
                var closed = false;
 
                innerHtml += newRow
                for (i of coll.assets) {
+                   mobCache[i.id] = i.mob;
+                   
+                   var newCell = "<td class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
+
                    innerHtml += newCell;
                    innerHtml += div;
                    innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
@@ -86,6 +92,120 @@ function loadCollection(collectionId) {
 
     xmlhttp.open("GET", "collection/" + collectionId, true);
     xmlhttp.send();
+}
+
+function selectMob(id, cell) {
+    // Clear selected item
+    var collTable = document.getElementById("coll-grid-table");
+
+    for (row of collTable.rows) {
+        for (column of row.cells) {
+            column.className = "grid-view-table-td";
+        }
+    }
+    // Mark new element
+    cell.className += " grid-view-table-td-active";
+
+    loadExif(id);
+    selectedMobId = id;
+}
+
+function loadExif(id) {
+
+
+    if (id in exifCache) {
+        renderExif(exifCache[id]);
+        return;
+    }
+    
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (xmlhttp.status == 200) {
+                var exif = JSON.parse(xmlhttp.responseText);
+
+                exifCache[exif.id] = exif;
+                renderExif(exif);
+            }
+        }
+    };
+    
+    xmlhttp.open("GET", "exif/" + id, true);
+    xmlhttp.send();
+}
+
+function mobColorString(color) {
+    switch (color) {
+    case 1:
+        return "Red";
+    case 2:
+        return "Green";
+    case 3:
+        return "Blue";
+    case 4:
+        return "Yellow";
+    case 5:
+        return "Black";
+    }
+
+    return "";
+}
+
+function renderExif(exif) {
+    var table = document.getElementById("meta_data_tbl_top");
+    var mob = mobCache[exif.id];
+
+    table.rows[0].cells[0].innerHTML = "ISO " + exif.iso;
+    table.rows[0].cells[1].innerHTML = exif.focal_len + " mm";
+    table.rows[0].cells[2].innerHTML = "f/" + (exif.fnumber / 10);
+    table.rows[0].cells[3].innerHTML = exif.exposure_time + " sec";
+
+    table = document.getElementById("meta_data_tbl_1");
+    table.rows[0].cells[1].innerHTML = mob.name;
+    table.rows[1].cells[1].innerHTML = "collection";
+
+    table = document.getElementById("meta_data_tbl_2");
+    table.rows[0].cells[1].innerHTML = exif.copyright;
+    table.rows[1].cells[1].innerHTML = exif.artist;
+
+    table = document.getElementById("meta_data_tbl_3");
+    table.rows[0].cells[1].innerHTML = mob.rating + "/5";
+    table.rows[1].cells[1].innerHTML = mobColorString(mob.color);
+    
+    table = document.getElementById("meta_data_tbl_4");
+    table.rows[0].cells[1].innerHTML = exif.date;
+
+    table = document.getElementById("meta_data_tbl_5");
+    table.rows[0].cells[1].innerHTML = exif.x + " x " + exif.y;
+    table.rows[1].cells[1].innerHTML = exif.exposure_time + " sec at f/" + (exif.fnumber / 10);
+    table.rows[2].cells[1].innerHTML = exif.focal_len + " mm";
+    table.rows[3].cells[1].innerHTML = exif.iso;
+    if (exif.flash & 0x1) {
+        table.rows[4].cells[1].innerHTML = "Fired";
+    } else {
+        table.rows[4].cells[1].innerHTML = "Did not fire";
+    }
+    table.rows[5].cells[1].innerHTML = exif.make;
+    table.rows[6].cells[1].innerHTML = exif.model;
+    table.rows[7].cells[1].innerHTML = exif.lens;
+}
+
+function viewSingleMob(mobId) {
+    if (!mobId || mobId == "") {
+        console.log("None selected");
+        return;
+    }
+    
+    var modal = document.getElementById("view-modal");
+    var modalImg = document.getElementById("single-image-view");
+    var span = document.getElementById("view-modal-close");
+    
+    modal.style.display = "block";
+    modalImg.src = "/proxy/" + mobId + ".jpg";
+
+    span.onclick = function() { 
+        modal.style.display = "none";
+    }
 }
 
 window.addEventListener("load", function(evt) {
@@ -200,3 +320,48 @@ window.addEventListener("load", function(evt) {
         loadCollection(id);
    }
 });
+
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+
+    console.log(evt.keyCode);
+    switch (evt.keyCode) {
+    case 27:
+        console.log("esc");
+        break;
+    case 37:
+        console.log("nav left");
+        break;
+    case 38:
+        console.log("nav up");
+        break;
+    case 39:
+        console.log("nav right");
+        break;
+    case 40:
+        console.log("nav down");
+        break;        
+    case 48:
+    case 49:
+    case 50:
+    case 51:
+    case 52:
+    case 53:
+        var rate = evt.keyCode - 48;
+        console.log("rate " + rate);
+        break;
+    case 69:
+        viewSingleMob(selectedMobId);
+        break;
+    case 68:
+        console.log("Develop view");
+        break;
+    case 71:
+        console.log("Grid view");
+        break;
+    case 90:
+        console.log("zoom");
+        break;
+    }
+
+};
