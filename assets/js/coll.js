@@ -1,6 +1,11 @@
 var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
+var selectedCollection = {};
+var NAV_LEFT = 37;
+var NAV_UP = 38;
+var NAV_RIGHT = 39;
+var NAV_DOWN = 40;
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -80,6 +85,10 @@ function loadCollection(collectionId) {
                collTable.innerHTML = innerHtml;
                var collGrid = document.getElementById("grid-collection-pane");
                collGrid.style.height = h - heightModifier;
+
+               /* Save selected collection last after any sorting has been
+                  applied */
+               selectedCollection = coll;
            }
            else if (xmlhttp.status == 400) {
                console.log("There was an error 400");
@@ -108,6 +117,68 @@ function selectMob(id, cell) {
 
     loadExif(id);
     selectedMobId = id;
+}
+
+function navigateMob(direction) {
+    if (!selectedMobId || selectedMobId == "") {
+        console.log("No mob selected");
+        return;
+    }
+
+    if (!("assets" in selectedCollection)) {
+        return;
+    }
+
+    var currMob = -1;
+    for (i = 0; i < selectedCollection.assets.length; i++) {
+        if (selectedMobId == selectedCollection.assets[i].id) {
+            currMob = i;
+            break;
+        }
+    }
+
+    if (currMob < 0) {
+        /* selected mob not fount */
+        console.log("navigateMob: selected mob not found");
+        return;
+    }
+
+    var newMob = currMob;
+    var collTable = document.getElementById("coll-grid-table");
+    var numCols = collTable.rows[0].cells.length;
+
+    switch(direction) {
+    case NAV_LEFT:
+        newMob -= 1;
+        break;
+    case NAV_UP:
+        newMob -= numCols;
+        break;
+    case NAV_RIGHT:
+        newMob += 1;
+        break;
+    case NAV_DOWN:
+        newMob += numCols;
+        break;
+    }
+
+    newMob = Math.min(selectedCollection.assets.length - 1, newMob);
+    newMob = Math.max(0, newMob);
+    var mobId = selectedCollection.assets[newMob].id;
+    
+    if (currMob == newMob) {
+        return;
+    }
+
+    /* Get the new cell to and select it */
+    var y = 0;
+    while (newMob >= numCols) {
+        y++;
+        newMob -= numCols;
+    }
+
+    var newCell = collTable.rows[y].cells[newMob];
+    selectMob(mobId, newCell);
 }
 
 function loadExif(id) {
@@ -198,14 +269,9 @@ function viewSingleMob(mobId) {
     
     var modal = document.getElementById("view-modal");
     var modalImg = document.getElementById("single-image-view");
-    var span = document.getElementById("view-modal-close");
     
     modal.style.display = "block";
     modalImg.src = "/proxy/" + mobId + ".jpg";
-
-    span.onclick = function() { 
-        modal.style.display = "none";
-    }
 }
 
 window.addEventListener("load", function(evt) {
@@ -328,19 +394,16 @@ document.onkeydown = function(evt) {
     switch (evt.keyCode) {
     case 27:
         console.log("esc");
+        alert("escape clicked yo!");
         break;
+        /* nav */
     case 37:
-        console.log("nav left");
-        break;
     case 38:
-        console.log("nav up");
-        break;
     case 39:
-        console.log("nav right");
-        break;
     case 40:
-        console.log("nav down");
+        navigateMob(evt.keyCode);
         break;        
+        /* rating */
     case 48:
     case 49:
     case 50:
@@ -357,7 +420,8 @@ document.onkeydown = function(evt) {
         console.log("Develop view");
         break;
     case 71:
-        console.log("Grid view");
+        var modal = document.getElementById("view-modal");
+        modal.style.display = "none";
         break;
     case 90:
         console.log("zoom");
