@@ -179,11 +179,10 @@ function navigateMob(direction) {
 
     var newCell = collTable.rows[y].cells[newMob];
     selectMob(mobId, newCell);
+    updateSingleView(mobId);
 }
 
 function loadExif(id) {
-
-
     if (id in exifCache) {
         renderExif(exifCache[id]);
         return;
@@ -272,6 +271,21 @@ function viewSingleMob(mobId) {
     
     modal.style.display = "block";
     modalImg.src = "/proxy/" + mobId + ".jpg";
+}
+
+function updateSingleView(mobId) {
+    var modal = document.getElementById("view-modal");
+    var modalImg = document.getElementById("single-image-view");
+    
+    if (modal.style.display == "none") {
+        return;
+    }
+    modalImg.src = "/proxy/" + mobId + ".jpg";    
+}
+
+function closeSingleView() {
+    var modal = document.getElementById("view-modal");
+    modal.style.display = "none";    
 }
 
 window.addEventListener("load", function(evt) {
@@ -413,15 +427,14 @@ document.onkeydown = function(evt) {
         var rate = evt.keyCode - 48;
         console.log("rate " + rate);
         break;
-    case 69:
-        viewSingleMob(selectedMobId);
-        break;
-    case 68:
+    case 68: /* d */
         console.log("Develop view");
         break;
-    case 71:
-        var modal = document.getElementById("view-modal");
-        modal.style.display = "none";
+    case 69: /* e */
+        viewSingleMob(selectedMobId);
+        break;
+    case 71: /* g */
+        closeSingleView();
         break;
     case 90:
         console.log("zoom");
