@@ -60,7 +60,6 @@ function loadCollection(collectionId) {
                innerHtml += newRow
                for (i of coll.assets) {
                    mobCache[i.id] = i.mob;
-                   
                    var newCell = "<td class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
 
                    innerHtml += newCell;
@@ -165,7 +164,7 @@ function navigateMob(direction) {
     newMob = Math.min(selectedCollection.assets.length - 1, newMob);
     newMob = Math.max(0, newMob);
     var mobId = selectedCollection.assets[newMob].id;
-    
+
     if (currMob == newMob) {
         return;
     }
@@ -187,7 +186,7 @@ function loadExif(id) {
         renderExif(exifCache[id]);
         return;
     }
-    
+
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
@@ -199,7 +198,7 @@ function loadExif(id) {
             }
         }
     };
-    
+
     xmlhttp.open("GET", "exif/" + id, true);
     xmlhttp.send();
 }
@@ -241,7 +240,7 @@ function renderExif(exif) {
     table = document.getElementById("meta_data_tbl_3");
     table.rows[0].cells[1].innerHTML = mob.rating + "/5";
     table.rows[1].cells[1].innerHTML = mobColorString(mob.color);
-    
+
     table = document.getElementById("meta_data_tbl_4");
     table.rows[0].cells[1].innerHTML = exif.date;
 
@@ -262,21 +261,20 @@ function renderExif(exif) {
 
 function viewSingleMob(mobId) {
     var modal = document.getElementById("view-modal");
-    
+
     if (!mobId || mobId == "") {
         console.log("None selected");
         return;
     }
 
     /* Enable modal view */
-    modal.style.display = "block";    
+    modal.style.display = "block";
     /* Render image */
     updateSingleView(mobId);
 }
 
 function updateSingleView(mobId) {
     var modal = document.getElementById("view-modal");
-    
     if (modal.style.display == "none") {
         return;
     }
@@ -306,12 +304,12 @@ function updateSingleView(mobId) {
         context.drawImage(this, offsetX, 0, newX, newY);
     };
 
-    image.src = "/proxy/" + mobId + ".jpg";    
+    image.src = "/proxy/" + mobId + ".jpg";
 }
 
 function closeSingleView() {
     var modal = document.getElementById("view-modal");
-    modal.style.display = "none";    
+    modal.style.display = "none";
 }
 
 window.addEventListener("load", function(evt) {
@@ -442,7 +440,7 @@ document.onkeydown = function(evt) {
     case 39:
     case 40:
         navigateMob(evt.keyCode);
-        break;        
+        break;
         /* rating */
     case 48:
     case 49:
