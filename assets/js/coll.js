@@ -261,26 +261,52 @@ function renderExif(exif) {
 }
 
 function viewSingleMob(mobId) {
+    var modal = document.getElementById("view-modal");
+    
     if (!mobId || mobId == "") {
         console.log("None selected");
         return;
     }
-    
-    var modal = document.getElementById("view-modal");
-    var modalImg = document.getElementById("single-image-view");
-    
-    modal.style.display = "block";
-    modalImg.src = "/proxy/" + mobId + ".jpg";
+
+    /* Enable modal view */
+    modal.style.display = "block";    
+    /* Render image */
+    updateSingleView(mobId);
 }
 
 function updateSingleView(mobId) {
     var modal = document.getElementById("view-modal");
-    var modalImg = document.getElementById("single-image-view");
     
     if (modal.style.display == "none") {
         return;
     }
-    modalImg.src = "/proxy/" + mobId + ".jpg";    
+
+    var image = new Image();
+    image.onload = function() {
+        var canvas = document.getElementById("single-image-view");
+        var scale = 1.0;
+
+        if (this.width > canvas.scrollWidth) {
+            scale = canvas.scrollWidth / this.width;
+        }
+
+        if (this.height * scale > (window.innerHeight - 100)) {
+            scale = (innerHeight - 100)/ this.height;
+        }
+
+        canvas.width = canvas.scrollWidth;
+        canvas.height = Math.ceil(this.height * scale);
+        var newX = Math.ceil(this.width * scale);
+        var newY = Math.ceil(this.height * scale);
+        var context = canvas.getContext('2d');
+
+        // This may cause problem with down sampling, if so, perform it in
+        // steps to trigger "larger" down sampling matrix.
+        var offsetX = (canvas.width - newX) / 2;
+        context.drawImage(this, offsetX, 0, newX, newY);
+    };
+
+    image.src = "/proxy/" + mobId + ".jpg";    
 }
 
 function closeSingleView() {
