@@ -6,6 +6,48 @@ var NAV_LEFT = 37;
 var NAV_UP = 38;
 var NAV_RIGHT = 39;
 var NAV_DOWN = 40;
+var histChart;
+var histYMax = 255;
+var histDataL = {
+    borderColor: "rgba(200, 200, 200, 0.5)",
+    backgroundColor: "rgba(200, 200, 200, 0.7)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataR = {
+    borderColor: "rgba(255, 0, 0, 0.5)",
+    backgroundColor: "rgba(255, 0, 0, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataG = {
+    borderColor: "rgba(0, 255, 0, 0.5)",
+    backgroundColor: "rgba(0, 255, 0, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
+var histDataB = {
+    borderColor: "rgba(0, 0, 255, 0.5)",
+    backgroundColor: "rgba(0, 0, 255, 0.4)",
+    pointRadius: 0,
+    lineTension: 0,
+    data: [{
+        x: 0,
+        y: 0
+    }]
+};
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -114,6 +156,10 @@ function selectMob(id, cell) {
     // Mark new element
     cell.className += " grid-view-table-td-active";
 
+    // Get the img element
+    var imgElem = cell.childNodes[0].childNodes[0];
+
+    calculateHistogram(imgElem);
     loadExif(id);
     selectedMobId = id;
 }
@@ -312,11 +358,149 @@ function closeSingleView() {
     modal.style.display = "none";
 }
 
+/*
+ * Create an offscreen canvas and draw the image. Extract the pixel
+ * data and calculate lum, r, g, b histograms.
+ */
+function calculateHistogram(img) {
+    var canvas = document.createElement('canvas');
+    var pl = [];
+    var pr = [];
+    var pg = [];
+    var pb = [];
+    var histLum = [];
+    var histRed = [];
+    var histGreen = [];
+    var histBlue = [];    
+    var imgData = null;
+    var pixels = null;
+    var max = 0;
+
+    /* Reset histograms */
+    for (i = 0; i < 256; i++) {
+        histLum[i] = 0;
+        histRed[i] = 0;
+        histGreen[i] = 0;
+        histBlue[i] = 0;
+    }
+    
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+    imgData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+    pixels = imgData.data;
+    
+    for(i = 0; i < pixels.length; i += 4) {
+        var red = pixels[i];
+        var green = pixels[i+1];
+        var blue = pixels[i+2];
+        // Omit alpha
+
+        var lum = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+
+        histLum[Math.floor(lum)] += 1;
+        histRed[red] += 1;
+        histGreen[green] += 1;
+        histBlue[blue] += 1;
+    }
+
+    /* Normalize */
+    for (c of histLum) {
+        if (c > max) {
+            max = c;
+        }
+    }
+    for (c of histRed) {
+        if (c > max) {
+            max = c;
+        }
+    }
+    for (c of histGreen) {
+        if (c > max) {
+            max = c;
+        }
+    }
+    for (c of histBlue) {
+        if (c > max) {
+            max = c;
+        }
+    }
+    
+    for (i = 0; i < histLum.length; i++) {
+        var nl = (histLum[i] / max) * histYMax;
+        var nr = (histRed[i] / max) * histYMax;
+        var ng = (histGreen[i] / max) * histYMax;
+        var nb = (histBlue[i] / max) * histYMax;
+
+        pl[i] = {
+            x: i,
+            y: nl
+        };
+        pr[i] = {
+            x: i,
+            y: nr
+        };
+        pg[i] = {
+            x: i,
+            y: ng
+        };
+        pb[i] = {
+            x: i,
+            y: nb
+        };
+    }
+
+    histDataL.data = pl;
+    histDataR.data = pr;
+    histDataG.data = pg;
+    histDataB.data = pb;
+    histChart.update();    
+}
+
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
     var xmlhttp = new XMLHttpRequest();
-    // Get all collections and draw them.
 
+    /* Prepare histogram */
+    var histCanvas = document.getElementById("hist_canvas").getContext("2d");
+    histChart = new Chart(histCanvas, {
+    type: 'line',
+        data: {
+            datasets: [
+                histDataL,
+                histDataR,
+                histDataG,
+                histDataB
+            ]
+        },
+        options: {
+            legend: {
+                display: false
+            },
+            responsive: false,
+            scales: {
+                xAxes: [{
+                    type: 'linear',
+                    position: 'bottom',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: 255
+                    }
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: histYMax
+                    }
+                }]
+            }
+        }
+    });    
+
+    // Fetch all collections and draw them.
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
             if (xmlhttp.status == 200) {
@@ -364,7 +548,7 @@ window.addEventListener("load", function(evt) {
                 console.log(coll_tree);
                 // Create the HTML for it by doing a depth first
                 // traversal.
-                var stack = new Array();
+                var stack = [];
                 var innerHtml = "";
 
                 stack.push(coll_tree);
