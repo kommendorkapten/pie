@@ -65,29 +65,19 @@ function loadCollection(collectionId) {
     var xmlhttp = new XMLHttpRequest();
     var w = window.innerWidth;
     var h = window.innerHeight;
-    // pane: 280px width (282 with borders)
+    // pane: 232px
     // margin 10px r, 10px l
-    // max thumb size is 256
-    // min number of columns is3
+    // thumb size is 212px
+    // min number of columns is 3
     // border spacing is 3
     // scroll window is 15px
     // footer is 150px
     // header is 40px
     var columns = 3;
-    var img_x = w - 2 * 282 - 15;
-    var cellPadding = 5;
-    var basePadding = 15;
-    var heightModifier = 150 + 40 + 20;
+    var img_x = w - 15 - 2 * 238;
+    var thumb_size = 212;
 
-    columns = Math.floor(img_x / 256 + 0.3);
-    if (navigator.appVersion.indexOf("Mac")!=-1) {
-        cellPadding = 6;
-        basePadding = 20;
-    }
-    thumb_size = Math.floor(img_x / columns - basePadding - columns * cellPadding);
-    if (thumb_size > 256) {
-        thumb_size = 256;
-    }
+    columns = Math.floor(img_x / (thumb_size + 28));
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
@@ -106,7 +96,21 @@ function loadCollection(collectionId) {
 
                    innerHtml += newCell;
                    innerHtml += div;
-                   innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+
+                   switch(i.mob.orientation) {
+                   case 3: /* image is rotated 180 cw */
+                       innerHtml += "<img class=\"rotate180\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+                       break;
+                   case 6:/* image is rotated 270 cw */
+                       innerHtml += "<img class=\"rotate90\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+                       break;
+                   case 8: /* image is rotated 90 cw */
+                       innerHtml += "<img class=\"rotate270\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+                       break;
+                   default:
+                       innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+                   }
+                   
                    innerHtml += "</div></td>";
                    closed = false;
 
@@ -124,8 +128,6 @@ function loadCollection(collectionId) {
 
                var collTable = document.getElementById("coll-grid-table");
                collTable.innerHTML = innerHtml;
-               var collGrid = document.getElementById("grid-collection-pane");
-               collGrid.style.height = h - heightModifier;
 
                /* Save selected collection last after any sorting has been
                   applied */
@@ -612,7 +614,7 @@ window.addEventListener("load", function(evt) {
 document.onkeydown = function(evt) {
     evt = evt || window.event;
 
-    console.log(evt.keyCode);
+    console.log("Captured key code: " + evt.keyCode);
     switch (evt.keyCode) {
     case 27:
         console.log("esc");
