@@ -1,5 +1,6 @@
 /* Automatically generated at Mon Jun  5 19:57:21 2017 */
 /* Do not edit - things may break. */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -31,10 +32,11 @@ pie_mob_release(struct pie_mob * this)
 		this->mob_name = NULL;
 	}
 }
+
 int 
 pie_mob_create(sqlite3 * db, struct pie_mob * this)
 {
-	char           *q = "INSERT INTO pie_mob (mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating) VALUES (?,?,?,?,?,?,?,?)";
+	char           *q = "INSERT INTO pie_mob (mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation) VALUES (?,?,?,?,?,?,?,?,?)";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -43,7 +45,7 @@ pie_mob_create(sqlite3 * db, struct pie_mob * this)
 	/* Check if a key is expected to be generated or not */
 	if (this->mob_id == 0)
 	{
-		q = "INSERT INTO pie_mob (mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating) VALUES (?,?,?,?,?,?,?)";
+		q = "INSERT INTO pie_mob (mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation) VALUES (?,?,?,?,?,?,?,?)";
 	}
 	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
 	if (ret != SQLITE_OK)
@@ -90,6 +92,12 @@ pie_mob_create(sqlite3 * db, struct pie_mob * this)
 			goto cleanup;
 		}
 		ret = sqlite3_bind_int(pstmt, 7, (int) this->mob_rating);
+		if (ret != SQLITE_OK)
+		{
+			ret = -1;
+			goto cleanup;
+		}
+		ret = sqlite3_bind_int(pstmt, 8, (int) this->mob_orientation);
 		if (ret != SQLITE_OK)
 		{
 			ret = -1;
@@ -146,6 +154,12 @@ pie_mob_create(sqlite3 * db, struct pie_mob * this)
 			ret = -1;
 			goto cleanup;
 		}
+		ret = sqlite3_bind_int(pstmt, 9, (int) this->mob_orientation);
+		if (ret != SQLITE_OK)
+		{
+			ret = -1;
+			goto cleanup;
+		}
 	}
 	ret = sqlite3_step(pstmt);
 	if (ret != SQLITE_DONE)
@@ -168,10 +182,11 @@ cleanup:
 	}
 	return ret;
 }
+
 int 
 pie_mob_read(sqlite3 * db, struct pie_mob * this)
 {
-	char           *q = "SELECT mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating FROM pie_mob WHERE mob_id = ?";
+	char           *q = "SELECT mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation FROM pie_mob WHERE mob_id = ?";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -217,6 +232,7 @@ pie_mob_read(sqlite3 * db, struct pie_mob * this)
 	this->mob_format = (short) sqlite3_column_int(pstmt, 4);
 	this->mob_color = (char) sqlite3_column_int(pstmt, 5);
 	this->mob_rating = (char) sqlite3_column_int(pstmt, 6);
+	this->mob_orientation = (char) sqlite3_column_int(pstmt, 7);        
 	ret = 0;
 cleanup:
 	retf = sqlite3_finalize(pstmt);
@@ -229,7 +245,7 @@ cleanup:
 int 
 pie_mob_update(sqlite3 * db, struct pie_mob * this)
 {
-	char           *q = "UPDATE pie_mob SET mob_parent_mob_id = ?,mob_name = ?,mob_capture_ts_millis = ?,mob_added_ts_millis = ?,mob_format = ?,mob_color = ?,mob_rating = ? WHERE mob_id = ?";
+	char           *q = "UPDATE pie_mob SET mob_parent_mob_id = ?,mob_name = ?,mob_capture_ts_millis = ?,mob_added_ts_millis = ?,mob_format = ?,mob_color = ?,mob_rating = ?,mob_orientation = ? WHERE mob_id = ?";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -283,7 +299,13 @@ pie_mob_update(sqlite3 * db, struct pie_mob * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int64(pstmt, 8, this->mob_id);
+	ret = sqlite3_bind_int(pstmt, 8, (int) this->mob_orientation);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_bind_int64(pstmt, 9, this->mob_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -344,7 +366,7 @@ cleanup:
 struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
 {
         struct llist* retl = llist_create();
-        char* q = "SELECT mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating FROM pie_collection_member INNER JOIN pie_mob ON pie_collection_member.cmb_mob_id = pie_mob.mob_id WHERE cmb_col_id=?";
+        char* q = "SELECT mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation FROM pie_collection_member INNER JOIN pie_mob ON pie_collection_member.cmb_mob_id = pie_mob.mob_id WHERE cmb_col_id=?";
         sqlite3_stmt* pstmt;
         int ret;
 
@@ -406,6 +428,7 @@ struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
                 mob->mob_format = (short) sqlite3_column_int(pstmt, 5);
                 mob->mob_color = (char) sqlite3_column_int(pstmt, 6);
                 mob->mob_rating = (char) sqlite3_column_int(pstmt, 7);
+                mob->mob_orientation = (char) sqlite3_column_int(pstmt, 8);
 
                 llist_pushb(retl, mob);
         }
@@ -415,4 +438,17 @@ cleanup:
 
         return retl;
 
+}
+
+void pie_mob_print(const struct pie_mob* mob)
+{
+	printf("mob_id: %ld\n", mob->mob_id);
+	printf("mob_parent_mob id: %ld\n", mob->mob_parent_mob_id);
+	printf("mob_name '%s'\n", mob->mob_name);
+	printf("mob_capture_ts_millis: %ld\n", mob->mob_capture_ts_millis);
+	printf("mob_added_ts_millis: %ld\n", mob->mob_added_ts_millis);
+	printf("mob_format: %d\n", mob->mob_format);
+	printf("mob_color: %d\n", mob->mob_color);
+	printf("mob_rating: %d\n", mob->mob_rating);
+        printf("mob_orientation: %d\n", mob->mob_orientation);
 }

@@ -274,6 +274,7 @@ static void* worker(void* arg)
                 mob.mob_format = 0;
                 mob.mob_color = 0;
                 mob.mob_rating = 0;
+                mob.mob_orientation = 1;
 
                 /* Create MIN */
                 min.min_id = pie_id_create((unsigned char)md_cfg.host->hst_id,
@@ -311,7 +312,12 @@ static void* worker(void* arg)
                                         ped.ped_date_time,
                                         ped.ped_sub_sec_time);
                         }
-
+                        /* Grab orientation from exif */
+                        if (ped.ped_orientation)
+                        {
+                                mob.mob_orientation = (char)ped.ped_orientation;
+                        }
+                        
                         ped.ped_mob_id = mob_id;
                         ok = pie_exif_data_create(pie_cfg_get_db(), &ped);
                         if (ok)

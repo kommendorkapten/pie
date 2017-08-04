@@ -7,6 +7,7 @@ CREATE TABLE pie_mob (
        mob_format SMALLINT,
        mob_color TINYINT,
        mob_rating TINYINT,
+       mob_orientation TINYINT,
        PRIMARY KEY(mob_id)
 );
 

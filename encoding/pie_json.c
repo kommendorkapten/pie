@@ -194,7 +194,8 @@ size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
                       "\"added_ts_ms\":%ld," \
                       "\"format\":\"%d\"," \
                       "\"color\":%d," \
-                      "\"rating\":%d}",
+                      "\"rating\":%d," \
+                      "\"orientation\":%d}",
                       mob->mob_id,
                       mob->mob_parent_mob_id,
                       mob->mob_name,
@@ -202,7 +203,8 @@ size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
                       mob->mob_added_ts_millis,
                       mob->mob_format,
                       mob->mob_color,
-                      mob->mob_rating);
+                      mob->mob_rating,
+                      mob->mob_orientation);
 
         return bw;
 }

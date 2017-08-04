@@ -39,6 +39,7 @@ struct pie_mob
 	short           mob_format;
 	char            mob_color;
 	char            mob_rating;
+        char            mob_orientation;
 };
 extern struct pie_mob *pie_mob_alloc(void);
 extern void     pie_mob_free(struct pie_mob * this);
@@ -48,4 +49,5 @@ extern int      pie_mob_read(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_update(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_delete(sqlite3 * db, struct pie_mob * this);
 extern struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll);
+extern void     pie_mob_print(const struct pie_mob* mob);
 #endif				/* __27782_PIE_MOB_H__ */
