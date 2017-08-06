@@ -20,6 +20,22 @@ struct hmap;
 struct pie_sess;
 struct pie_sess_mgr;
 
+enum pie_http_verb
+{
+        PIE_HTTP_VERB_UNKNOWN,
+        PIE_HTTP_VERB_GET,
+        PIE_HTTP_VERB_PUT,
+        PIE_HTTP_VERB_POST,
+        PIE_HTTP_VERB_DELETE
+};
+
+struct pie_http_post_data
+{
+        char* data;
+        size_t p;
+        size_t cap;
+};
+
 /**
  * Return the mime type from the requested URL.
  * @param the request URL.
@@ -72,4 +88,35 @@ extern ssize_t pie_http_lws_write(struct lws*,
                                   size_t,
                                   const char* restrict);
 
-         
+/**
+ * Get the HTTP verb in the current transcation.
+ * @param lws request object.
+ * @return the HTTP verb.
+ */
+extern enum pie_http_verb pie_http_verb_get(struct lws*);
+
+/**
+ * Get a string representation of a HTTP verb.
+ * @param http verb.
+ * @return human readable representation of the HTTP verb.
+ */
+extern const char* pie_http_verb_string(enum pie_http_verb);
+
+/**
+ * Init post data struct.
+ * @param post data struct.
+ * @param initial capacity.
+ * @return 0 on success.
+ */
+extern int pie_http_post_data_init(struct pie_http_post_data*, size_t);
+
+/**
+ * Add data.
+ * @param post data struct.
+ * @param data.
+ * @param bytes to add.
+ * @return 0 on success.
+ */
+extern int pie_http_post_data_add(struct pie_http_post_data*,
+                                  const void*,
+                                  size_t);

@@ -11,6 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <stdlib.h>
 #include <libwebsockets.h>
 #include <string.h>
 #include "pie_util.h"
@@ -227,4 +228,90 @@ ssize_t pie_http_lws_write(struct lws* wsi,
         }
 
         return (ssize_t)bw;
+}
+
+enum pie_http_verb pie_http_verb_get(struct lws* lws)
+{
+        enum pie_http_verb v = PIE_HTTP_VERB_UNKNOWN;
+
+        if (lws_hdr_total_length(lws, WSI_TOKEN_GET_URI))
+        {
+                v = PIE_HTTP_VERB_GET;
+        }
+        else if (lws_hdr_total_length(lws, WSI_TOKEN_PUT_URI))
+        {
+                v = PIE_HTTP_VERB_PUT;
+        }
+        else if (lws_hdr_total_length(lws, WSI_TOKEN_POST_URI))
+        {
+                v = PIE_HTTP_VERB_POST;
+        }
+        else if (lws_hdr_total_length(lws, WSI_TOKEN_DELETE_URI))
+        {
+                v = PIE_HTTP_VERB_DELETE;
+        }
+
+        return v;
+}
+
+const char* pie_http_verb_string(enum pie_http_verb v)
+{
+        char* ret = "UNKNOWN";
+
+        switch(v)
+        {
+        case PIE_HTTP_VERB_GET:
+                ret = "GET";
+                break;
+        case PIE_HTTP_VERB_PUT:
+                ret = "PUT";
+                break;
+        case PIE_HTTP_VERB_POST:
+                ret = "POST";
+                break;
+        case PIE_HTTP_VERB_DELETE:
+                ret = "DELETE";
+                break;
+        }
+
+        return ret;
+}
+
+int pie_http_post_data_init(struct pie_http_post_data* p, size_t len)
+{
+        p->data = malloc(len);
+
+        if (p->data == NULL)
+        {
+                return 1;
+        }
+
+        p->p = 0;
+        p->cap = len;
+
+        return 0;
+}
+
+int pie_http_post_data_add(struct pie_http_post_data* p,
+                           const void* s,
+                           size_t len)
+{
+        if (p->p + len > p->cap)
+        {
+                size_t cap = p->cap * 2;
+                char* new = realloc(p->data, cap);
+
+                if (new == NULL)
+                {
+                        return 1;
+                }
+
+                p->data = new;
+                p->cap = cap;
+        }
+
+        memcpy(p->data + p->p, s, len);
+        p->p += len;
+
+        return 0;
 }
