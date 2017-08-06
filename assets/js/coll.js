@@ -459,6 +459,39 @@ function calculateHistogram(img) {
     histChart.update();    
 }
 
+function rateMob(mobId, rate) {
+    if (!mobId || mobId == "") {
+        console.log("No mob selected");
+        return
+    }
+
+    var mob = mobCache[mobId];
+
+    mob.rating = rate;
+    updateMob(mob);
+}
+
+function updateMob(mob) {
+    var xmlhttp = new XMLHttpRequest();
+    var jsonString = JSON.stringify(mob);
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (xmlhttp.status == 200) {
+                var newMob = JSON.parse(xmlhttp.responseText);                
+                mobCache[newMob.id] = newMob;
+
+                /* Make new data visible */
+                loadExif(newMob.id);
+            }
+        }
+    };
+    
+    xmlhttp.open("PUT", "mob/" + mob.id, true);
+    xmlhttp.setRequestHeader('Content-Type', 'application/json');    
+    xmlhttp.send(jsonString);    
+}
+
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
     var xmlhttp = new XMLHttpRequest();
@@ -635,7 +668,7 @@ document.onkeydown = function(evt) {
     case 52:
     case 53:
         var rate = evt.keyCode - 48;
-        console.log("rate " + rate);
+        rateMob(selectedMobId, rate);
         break;
     case 68: /* d */
         console.log("Develop view");

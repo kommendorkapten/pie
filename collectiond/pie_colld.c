@@ -24,9 +24,13 @@
 
 #define ROUTE_COLLECTION "/collection/"
 #define ROUTE_EXIF "/exif/"
+#define ROUTE_MOB "/mob/"
 #define ROUTE_THUMB "/thumb/"
 #define ROUTE_PROXY "/proxy/"
+#define ROUTE_FULL_SIZE "/fullsize/"
+
 #define RESP_LEN (1 << 14) /* 16k */
+#define MAX_URL 256
 
 struct config
 {
@@ -48,8 +52,9 @@ enum pie_protocols
 
 struct pie_ctx_http
 {
-        char post_data[256];
-        lws_filefd_type fd;
+        char url[MAX_URL];
+        struct pie_http_post_data post_data;
+        enum pie_http_verb verb;
 };
 
 static void sig_h(int);
@@ -223,23 +228,23 @@ static int cb_http(struct lws* wsi,
                    size_t len)
 {
         unsigned char resp_headers[256];
+        char file_url[256];
         struct pie_coll_h_resp resp;
         struct hmap* req_headers = NULL;
         const char* req_url = in;
         const char* p;
-        char file_url[256];
+        struct pie_ctx_http* ctx = user;
         const char* mimetype;
         int hn = 0;
         int ret = 0;
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
-
-        (void)user;
+        enum pie_http_verb verb;
 
         resp.wbuf = &gresp[0];
         resp.wbuf_len = RESP_LEN;
-        resp.http_sc = 400;
+        resp.http_sc = HTTP_STATUS_BAD_REQUEST;
         resp.content_type = NULL;
         resp.content_len = 0;
 
@@ -248,9 +253,40 @@ static int cb_http(struct lws* wsi,
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
-                PIE_DEBUG("GET '%s'", req_url);
+                verb = pie_http_verb_get(wsi);
+                PIE_DEBUG("%s [%p] '%s'",
+                          pie_http_verb_string(verb),
+                          user,
+                          req_url);
                 try_keepalive = 1;
                 req_headers = get_request_headers(wsi);
+
+                /* Deal with PUT/POST */
+                /* First set up cb to slurp the data. When all data is slurped
+                   reslove the url and route accordingly in BODY_COMPLETION
+                   phase. Not efficient but easier to implement. */
+                if (verb == PIE_HTTP_VERB_PUT || verb == PIE_HTTP_VERB_POST)
+                {
+                        if (pie_http_post_data_init(&ctx->post_data,
+                                                    2048))
+                        {
+                                PIE_ERR("Could not init post data");
+                                resp.http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                                goto bailout;
+                        }
+                        if ((len + 1) > MAX_URL)
+                        {
+                                PIE_ERR("To large URL");
+                                resp.http_sc = HTTP_STATUS_REQ_URI_TOO_LONG;
+                                goto bailout;
+                        }
+                        ctx->verb = verb;
+                        memcpy(ctx->url, in, len);
+                        ctx->url[len] = '\0';
+
+                        ret = 0;
+                        goto cleanup;
+                }
 
                 if (len < 1)
                 {
@@ -288,6 +324,17 @@ static int cb_http(struct lws* wsi,
                         ret = pie_coll_h_exif(&resp,
                                               req_url,
                                               pie_cfg_get_db());
+
+                        goto writebody;
+                }
+
+                /* /mob/\d+$ */
+                p = strstr(req_url, ROUTE_MOB);
+                if (p == req_url)
+                {
+                        ret = pie_coll_h_mob(&resp,
+                                             req_url,
+                                             pie_cfg_get_db());
 
                         goto writebody;
                 }
@@ -357,7 +404,55 @@ static int cb_http(struct lws* wsi,
                 }
 
                 goto keepalive;
+        case LWS_CALLBACK_HTTP_BODY:
+                PIE_TRACE("BODY [%p] '%s' %lu", user, req_url, len);
+                if (pie_http_post_data_add(&ctx->post_data, in, len))
+                {
+                        PIE_ERR("Failed to add post data");
+                        resp.http_sc = 500;
+                        goto bailout;
+                }
 
+                ret = 0;
+                goto cleanup;
+        case LWS_CALLBACK_HTTP_BODY_COMPLETION:
+                PIE_DEBUG("BODY_COMPLETION %s %s [%p] %lu bytes",
+                          pie_http_verb_string(ctx->verb),
+                          ctx->url,
+                          user,
+                          ctx->post_data.p);
+
+                /* Route request */
+
+                resp.http_sc = 405;
+                /* /exif/\d+$ */
+                p = strstr(ctx->url, ROUTE_EXIF);
+                if (p == &ctx->url[0])
+                {
+                        ret = pie_coll_h_exif_put(&resp,
+                                                  ctx->url,
+                                                  &ctx->post_data,
+                                                  pie_cfg_get_db());
+                }
+
+                /* /mob/\d+$ */
+                p = strstr(ctx->url, ROUTE_MOB);
+                if (p == &ctx->url[0])
+                {
+                        ret = pie_coll_h_mob_put(&resp,
+                                                 ctx->url,
+                                                 &ctx->post_data,
+                                                 pie_cfg_get_db());
+                }
+
+                if (ctx->post_data.data)
+                {
+                        free(ctx->post_data.data);
+                        ctx->post_data.data = NULL;
+                }
+
+                try_keepalive = 1;
+                goto writebody;
         case LWS_CALLBACK_CLOSED_HTTP:
                 PIE_LOG("Timeout, closing.");
                 goto bailout;

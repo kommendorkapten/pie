@@ -101,7 +101,7 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               testfwlk qserver qclient test_exif_meta
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd exif
+VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd exif jsmn
 
 .PHONY: all
 .PHONY: test
@@ -188,7 +188,7 @@ bin/qserver: testp/qserver.c obj/s_queue.o obj/s_queue_intra.o
 bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
 
-bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o
+bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
@@ -197,5 +197,5 @@ bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/l
 bin/mediad: $(MEDIAD_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/hmap.o obj/evp_hw.o obj/pie_bm.o obj/pie_io.o obj/pie_io_jpg.o obj/pie_io_png.o obj/timing.o obj/pie_dwn_smpl.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o obj/pie_mob.o obj/pie_min.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng -lexif
 
-bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS)
-	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
+bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
+	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/jsmn.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
