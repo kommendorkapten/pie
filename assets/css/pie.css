@@ -219,7 +219,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .collection-content {
     background-color: #c8c8c8;
-    height: 500px;
+    height: 80%;
     overflow-y: scroll;
 }
 
