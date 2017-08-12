@@ -392,16 +392,24 @@ function updateSingleView(mobId) {
 
         switch (mob.orientation) {
         case 1: /* 0 */
-            ctx.transform(scale, 0, 0, scale, offsetX, 0);
+            ctx.transform(scale, 0,
+                          0, scale,
+                          offsetX, 0);
             break;
         case 3: /* 180 */
-            ctx.transform(-scale, 0, 0, -scale, offsetX + scale * this.width, scale * this.height);
+            ctx.transform(-scale, 0,
+                          0, -scale,
+                          offsetX + scale * this.width, scale * this.height);
             break;
         case 6: /* 270 */
-            ctx.transform(0, scale, -scale, 0, offsetX + scale * this.height, 0);
+            ctx.transform(0, scale,
+                          -scale, 0,
+                          offsetX + scale * this.height, 0);
             break;
         case 8: /* 90 */
-            ctx.transform(0, -scale, scale, 0, offsetX, scale * this.width);
+            ctx.transform(0, -scale,
+                          scale, 0,
+                          offsetX, scale * this.width);
             break;
         }
 
