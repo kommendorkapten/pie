@@ -135,7 +135,7 @@ function loadCollection(collectionId) {
                    default:
                        innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
                    }
-                   
+
                    var rating = rateFilenameFromMob(i.mob);
                    innerHtml += "</div>";
                    innerHtml += "<div class=\"grid-view-table-footer\">";
@@ -356,29 +356,56 @@ function updateSingleView(mobId) {
         return;
     }
 
+    var mob = mobCache[mobId];
     var image = new Image();
+
     image.onload = function() {
         var canvas = document.getElementById("single-image-view");
         var scale = 1.0;
+        var x = this.width;
+        var y = this.height;
 
-        if (this.width > canvas.scrollWidth) {
-            scale = canvas.scrollWidth / this.width;
+        /* When calculating scaling, the presented orientation
+           must be used. */
+        if (mob.orientation == 6 ||
+            mob.orientation == 8) {
+            var tmp = x;
+            x = y;
+            y = tmp;
         }
 
-        if (this.height * scale > (window.innerHeight - 100)) {
-            scale = (innerHeight - 100)/ this.height;
+        if (x > canvas.scrollWidth) {
+            scale = canvas.scrollWidth / x;
+        }
+
+        if (y * scale > (window.innerHeight - 100)) {
+            scale = (innerHeight - 100)/ y;
         }
 
         canvas.width = canvas.scrollWidth;
-        canvas.height = Math.ceil(this.height * scale);
-        var newX = Math.ceil(this.width * scale);
-        var newY = Math.ceil(this.height * scale);
-        var context = canvas.getContext('2d');
-
+        canvas.height = Math.ceil(y * scale);
+        var newX = Math.ceil(x * scale);
+        var ctx = canvas.getContext('2d');
         // This may cause problem with down sampling, if so, perform it in
         // steps to trigger "larger" down sampling matrix.
         var offsetX = (canvas.width - newX) / 2;
-        context.drawImage(this, offsetX, 0, newX, newY);
+
+        switch (mob.orientation) {
+        case 1: /* 0 */
+            ctx.transform(scale, 0, 0, scale, offsetX, 0);
+            break;
+        case 3: /* 180 */
+            ctx.transform(-scale, 0, 0, -scale, offsetX + scale * this.width, scale * this.height);
+            break;
+        case 6: /* 270 */
+            ctx.transform(0, scale, -scale, 0, offsetX + scale * this.height, 0);
+            break;
+        case 8: /* 90 */
+            ctx.transform(0, -scale, scale, 0, offsetX, scale * this.width);
+            break;
+        }
+
+        ctx.drawImage(this, 0, 0, this.width, this.height);
     };
 
     image.src = "/proxy/" + mobId + ".jpg";
@@ -402,7 +429,7 @@ function calculateHistogram(img) {
     var histLum = [];
     var histRed = [];
     var histGreen = [];
-    var histBlue = [];    
+    var histBlue = [];
     var imgData = null;
     var pixels = null;
     var max = 0;
@@ -414,13 +441,13 @@ function calculateHistogram(img) {
         histGreen[i] = 0;
         histBlue[i] = 0;
     }
-    
+
     canvas.width = img.width;
     canvas.height = img.height;
     canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
     imgData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
     pixels = imgData.data;
-    
+
     for(i = 0; i < pixels.length; i += 4) {
         var red = pixels[i];
         var green = pixels[i+1];
@@ -456,7 +483,7 @@ function calculateHistogram(img) {
             max = c;
         }
     }
-    
+
     for (i = 0; i < histLum.length; i++) {
         var nl = (histLum[i] / max) * histYMax;
         var nr = (histRed[i] / max) * histYMax;
@@ -485,7 +512,7 @@ function calculateHistogram(img) {
     histDataR.data = pr;
     histDataG.data = pg;
     histDataB.data = pb;
-    histChart.update();    
+    histChart.update();
 }
 
 function rateMob(mobId, rate) {
@@ -507,13 +534,13 @@ function updateMob(mob) {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
             if (xmlhttp.status == 200) {
-                var newMob = JSON.parse(xmlhttp.responseText);                
+                var newMob = JSON.parse(xmlhttp.responseText);
                 mobCache[newMob.id] = newMob;
 
                 /* update rating */
                 var cellId = "grid-cell-mob-" + newMob.id;
                 var cell = document.getElementById(cellId);
-                var imgElem = cell.childNodes[1].childNodes[0];                
+                var imgElem = cell.childNodes[1].childNodes[0];
                 console.log(imgElem);
                 imgElem.src = rateFilenameFromMob(newMob);
 
@@ -522,10 +549,10 @@ function updateMob(mob) {
             }
         }
     };
-    
+
     xmlhttp.open("PUT", "mob/" + mob.id, true);
-    xmlhttp.setRequestHeader('Content-Type', 'application/json');    
-    xmlhttp.send(jsonString);    
+    xmlhttp.setRequestHeader('Content-Type', 'application/json');
+    xmlhttp.send(jsonString);
 }
 
 window.addEventListener("load", function(evt) {
@@ -569,7 +596,7 @@ window.addEventListener("load", function(evt) {
                 }]
             }
         }
-    });    
+    });
 
     // Fetch all collections and draw them.
     xmlhttp.onreadystatechange = function() {
