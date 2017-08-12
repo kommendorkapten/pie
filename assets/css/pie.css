@@ -229,8 +229,8 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .grid-view-table-cell {
-    margin-top:    10px;
-    margin-bottom: 20px;
+    margin-top:    40px;
+    margin-bottom: 40px;
     margin-right:  10px;
     margin-left:   10px;    
 }
@@ -239,6 +239,12 @@ td.grid-view-table-td {
     width:      232px;
     height:     252px;
     background-color: #686868;
+}
+
+.grid-view-table-footer {
+
+    margin-left: 5px;
+    margin-bottom: 5px;
 }
 
 td.grid-view-table-td-active {

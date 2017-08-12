@@ -61,6 +61,30 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function rateFilenameFromMob(mob) {
+    var filename = "img/rate_0.png";
+
+    switch(mob.rating) {
+    case 1:
+        filename = "img/rate_1.png";
+        break;
+    case 2:
+        filename = "img/rate_2.png";
+        break;
+    case 3:
+        filename = "img/rate_3.png";
+        break;
+    case 4:
+        filename = "img/rate_4.png";
+        break;
+    case 5:
+        filename = "img/rate_5.png";
+        break;
+    }
+
+    return filename;
+}
+
 function loadCollection(collectionId) {
     var xmlhttp = new XMLHttpRequest();
     var w = window.innerWidth;
@@ -91,8 +115,9 @@ function loadCollection(collectionId) {
 
                innerHtml += newRow
                for (i of coll.assets) {
+                   var cellId = "grid-cell-mob-" + i.id;
                    mobCache[i.id] = i.mob;
-                   var newCell = "<td class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
+                   var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
 
                    innerHtml += newCell;
                    innerHtml += div;
@@ -111,7 +136,11 @@ function loadCollection(collectionId) {
                        innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
                    }
                    
-                   innerHtml += "</div></td>";
+                   var rating = rateFilenameFromMob(i.mob);
+                   innerHtml += "</div>";
+                   innerHtml += "<div class=\"grid-view-table-footer\">";
+                   innerHtml += "<img width=\"80\" src=\"" + rating +"\"></div>";
+                   innerHtml += "</td>";
                    closed = false;
 
                    if (count % columns == 0) {
@@ -480,6 +509,13 @@ function updateMob(mob) {
             if (xmlhttp.status == 200) {
                 var newMob = JSON.parse(xmlhttp.responseText);                
                 mobCache[newMob.id] = newMob;
+
+                /* update rating */
+                var cellId = "grid-cell-mob-" + newMob.id;
+                var cell = document.getElementById(cellId);
+                var imgElem = cell.childNodes[1].childNodes[0];                
+                console.log(imgElem);
+                imgElem.src = rateFilenameFromMob(newMob);
 
                 /* Make new data visible */
                 loadExif(newMob.id);

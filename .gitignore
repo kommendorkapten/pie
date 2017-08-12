@@ -2,8 +2,8 @@
 bin/*
 obj/*
 *.o
-*.jpg
-*.png
+.jpg
+.png
 core
 include.*
 dm/init.sql
