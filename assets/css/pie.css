@@ -329,3 +329,21 @@ li.collapsibleListClosed{
 .rotate270 {
     transform: rotate(270deg);
 }
+
+.popup_rate_set {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    padding: 20px;
+    width: 90%;
+    background-color: rgba(104, 104, 104, 0.7);
+    color: #a9a9a9;
+    font-size: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+
+    -webkit-animation-name: zoom;
+    -webkit-animation-duration: 0.6s;
+    animation-name: zoom;
+    animation-duration: 0.6s;    
+}

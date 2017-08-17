@@ -530,6 +530,14 @@ function rateMob(mobId, rate) {
     }
 
     var mob = mobCache[mobId];
+    var not = document.getElementById("popup-rate-set");
+
+    /* Update and show rating information */
+    not.innerHTML = "Set rating to " + rate;
+    not.style.display = "block";
+    setTimeout(function(){
+        not.style.display = "none";
+    }, 800);
 
     mob.rating = rate;
     updateMob(mob);
