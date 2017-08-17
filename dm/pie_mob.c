@@ -374,6 +374,7 @@ struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
         
         if (ret != SQLITE_OK)
         {
+                llist_destroy(retl);
                 retl = NULL;
                 goto cleanup;
         }
@@ -381,7 +382,8 @@ struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
         ret = sqlite3_bind_int64(pstmt, 1, coll);        
         if (ret != SQLITE_OK)
         {
-                ret = NULL;
+                llist_destroy(retl);
+                retl = NULL;
                 goto cleanup;
         }
 
