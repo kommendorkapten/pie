@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <libwebsockets.h>
 #include <string.h>
+#include <strings.h>
 #include "pie_util.h"
 #include "pie_session.h"
 #include "../pie_log.h"
@@ -28,27 +29,27 @@ const char* get_mimetype(const char *path)
                 return NULL;
         }
 
-        if (strcmp(&path[n - 4], ".ico") == 0)
+        if (strcasecmp(&path[n - 4], ".ico") == 0)
         {
                 return "image/x-icon";
         }
-        if (strcmp(&path[n - 4], ".png") == 0)
+        if (strcasecmp(&path[n - 4], ".png") == 0)
         {
                 return "image/png";
         }
-        if (strcmp(&path[n - 5], ".html") == 0)
+        if (strcasecmp(&path[n - 5], ".html") == 0)
         {
                 return "text/html";
         }
-        if (strcmp(&path[n - 4], ".css") == 0)
+        if (strcasecmp(&path[n - 4], ".css") == 0)
         {
                 return "text/css";
         }
-        if (strcmp(&path[n - 4], ".jpg") == 0)
+        if (strcasecmp(&path[n - 4], ".jpg") == 0)
         {
                 return "image/jpeg";
         }
-        if (strcmp(&path[n - 3], ".js") == 0)
+        if (strcasecmp(&path[n - 3], ".js") == 0)
         {
                 return "text/javascript";
         }
