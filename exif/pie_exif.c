@@ -14,15 +14,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdint.h>
 #include <libexif/exif-tag.h>
 #include <libexif/exif-data.h>
+#include <libraw/libraw.h>
 #include "../dm/pie_exif_data.h"
 #include "../pie_log.h"
 #include "pie_exif.h"
 
 #define EXIF_TIME_FORMAT_E "YYYY:MM:DD HH:MM:SS"
 #define EXIF_TIME_FORMAT "%Y:%m:%d %T"
+
+static int pie_exif_load_libexif(struct pie_exif_data*, ExifData*);
+static int pie_exif_load_libraw(struct pie_exif_data*, libraw_data_t*);
 
 static ExifEntry* get_entry(ExifData*, ExifIfd, ExifTag);
 
@@ -47,22 +52,52 @@ static int this_endian = EXIF_BYTE_ORDER_INTEL;
 
 int pie_exif_load(struct pie_exif_data* ped, const char* path)
 {
-        char buf[256];
         ExifData* ed;
-        ExifEntry* entry;
-        int swap;
-        int ret = 1;
-
-        buf[255] = '\0';
+        libraw_data_t* lrd;
+        int ret;
 
         /* Clear ped first */
         memset(ped, 0, sizeof(*ped));
 
-        ed = exif_data_new_from_file(path);
-        if (ed == NULL)
+        /* Lib RAW first, some formats (e.g. Fujifilm's .RAF)
+           allows EXIF data to be extracted from the JPEG thumbnail
+           and that leads to wrong data being captures. */
+        lrd = libraw_init(0);
+        if (lrd == NULL)
         {
-                return ret;
+                ret = 1;
+                goto done;
         }
+        ret = libraw_open_file(lrd, path);
+        if (ret)
+        {
+                goto libexif;
+        }
+        ret = pie_exif_load_libraw(ped, lrd);
+        libraw_close(lrd);
+        goto done;
+
+libexif:
+        /* Lib EXIF */
+        ed = exif_data_new_from_file(path);
+        if (ed)
+        {
+                ret = pie_exif_load_libexif(ped, ed);
+                exif_data_unref(ed);
+        }
+
+done:
+        return ret;
+}
+
+static int pie_exif_load_libexif(struct pie_exif_data* ped, ExifData* ed)
+{
+        char buf[256];
+        ExifEntry* entry;
+        int swap;
+
+        buf[255] = '\0';
+
         if (this_endian == exif_data_get_byte_order(ed))
         {
                 swap = 0;
@@ -139,7 +174,7 @@ int pie_exif_load(struct pie_exif_data* ped, const char* path)
                 int num = (int)load_exif_int32(entry->data, 0);
                 int den = (int)load_exif_int32(entry->data + 4, 0);
 
-                if (num > 100 && den > 1000) {
+                if (num > 9 && den > 100) {
                         den = den / num;
                         num = 1;
                 }
@@ -197,10 +232,7 @@ int pie_exif_load(struct pie_exif_data* ped, const char* path)
                 ped->ped_white_point = (int)(num / den);
         }
 
-        exif_data_unref(ed);
-
-        ret = 0;
-        return ret;
+        return 0;
 }
 
 time_t pie_exif_date_to_millis(const char* date, int sub_sec)
@@ -290,4 +322,65 @@ static int load_exif_int(const ExifEntry* entry, int swap)
         }
 
         return ret;
+}
+
+static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
+{
+        char buf[256];
+        struct tm date_time;
+        
+        buf[255] = '\0';
+
+        ped->ped_artist = strdup(lrd->other.artist);
+        ped->ped_make = strdup(lrd->idata.make);
+        ped->ped_model = strdup(lrd->idata.model);
+        ped->ped_lens_model = strdup(lrd->lens.Lens);
+        ped->ped_x_dim = lrd->sizes.width;
+        ped->ped_y_dim = lrd->sizes.height;
+        
+        switch (lrd->sizes.flip)
+        {
+        case 0:
+                ped->ped_orientation = 1;
+                break;
+        case 5:
+                ped->ped_orientation = 8;
+                break;
+        default:
+                ped->ped_orientation = lrd->sizes.flip;
+        }
+        
+        ped->ped_iso = (int)lrd->other.iso_speed;
+        ped->ped_fnumber = (short)(lrd->other.aperture * 10.0f);
+
+        localtime_r(&lrd->other.timestamp, &date_time);
+        strftime(buf, 255, EXIF_TIME_FORMAT, &date_time);
+        ped->ped_date_time = strdup(buf);
+        if (lrd->other.shutter > 0.0f && lrd->other.shutter < 1.0f)
+        {
+                snprintf(buf, 255, "1/%d", (int)(1 / lrd->other.shutter));
+                ped->ped_exposure_time = strdup(buf);
+        }
+        else
+        {
+                snprintf(buf, 255, "%0.1f", lrd->other.shutter);
+                ped->ped_exposure_time = strdup(buf);                
+        }
+        
+        ped->ped_focal_len = (short)lrd->other.focal_len;
+
+        if (strcasecmp(lrd->idata.make, "canon") == 0)
+        {
+                ped->ped_flash = (short)lrd->makernotes.canon.FlashMode;
+        }
+        else if (strcasecmp(lrd->idata.make, "fujifilm") == 0)
+        {
+                ped->ped_flash = (short)lrd->makernotes.fuji.FlashMode;
+        }
+
+        ped->ped_metering_mode = (short)lrd->shootinginfo.MeteringMode;
+        ped->ped_exposure_mode = (short)lrd->shootinginfo.ExposureMode;
+        ped->ped_color_space = (short)lrd->params.output_color;
+
+        return 0;
 }
