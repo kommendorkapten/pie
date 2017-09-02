@@ -26,11 +26,9 @@
 /* PNG is stored in network order */
 #ifdef __BYTE_ORDER__
 # if __BYTE_ORDER__ == 4321
-#  define ptohs(x) (x)
-#  define htops(x) (x)
+#  define SWAP_PIXELS 0
 # else
-#  define ptohs(x) ((0xff00 & x) >> 8 | (0x00ff & x) << 8)
-#  define htops(x) ((0xff00 & x) >> 8 | (0x00ff & x) << 8)
+#  define SWAP_PIXELS 1
 # endif
 #else
 #  error __BYTE_ORDER__ not defined
@@ -106,6 +104,10 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         {
         case 8:
         case 16:
+                if (SWAP_PIXELS)
+                {
+                        png_set_swap(pngp);                        
+                }
                 break;
         default:
                 png_destroy_read_struct(&pngp, &infop, NULL);
@@ -169,18 +171,17 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 for (int y = 0; y < bm->height; y++)
                 {
                         uint16_t* row = (uint16_t*)rows[y];
-                        uint16_t* start = row;
 
                         for (int x = 0; x < bm->width; x++)
                         {
-                                uint16_t red = *row++;
-                                uint16_t green = *row++;
-                                uint16_t blue = *row++;
+                                float red = (float)*row++;
+                                float green = (float)*row++;
+                                float blue = (float)*row++;
                                 int offset = y * bm->row_stride + x;
 
-                                bm->c_red[offset] = ptohs(red) / 65535.0f;
-                                bm->c_green[offset] = ptohs(green) / 65535.0f;
-                                bm->c_blue[offset] = ptohs(blue) / 65535.0f;
+                                bm->c_red[offset] = red / 65535.0f;
+                                bm->c_green[offset] = green / 65535.0f;
+                                bm->c_blue[offset] = blue / 65535.0f;
                         }
                         
                         /* Free copy buffer */
@@ -351,18 +352,23 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                         struct pie_pixel_u16rgb p;
 
                         pie_pixel_u16rgb_get(&p, bitmap, x, y);
-                        *r16++ = htops(p.red);
-                        *r16++ = htops(p.green);
-                        *r16++ = htops(p.blue);
+                        *r16++ = p.red;
+                        *r16++ = p.green;
+                        *r16++ = p.blue;
                 }
         }
     
         /* Write PNG obj to disk */
+        int transforms = PNG_TRANSFORM_IDENTITY;
+        if (SWAP_PIXELS)
+        {
+                transforms = PNG_TRANSFORM_SWAP_ENDIAN;
+        }
         png_init_io(pngp, fp);
         png_set_rows(pngp, infop, rows);
         png_write_png(pngp, 
                       infop,
-                      PNG_TRANSFORM_IDENTITY, /* No transform */
+                      transforms, 
                       NULL); /* not used */
     
         for (int y = 0; y < bitmap->height; y++) 
