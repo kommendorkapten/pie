@@ -328,7 +328,7 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
 {
         char buf[256];
         struct tm date_time;
-        
+
         buf[255] = '\0';
 
         ped->ped_artist = strdup(lrd->other.artist);
@@ -337,7 +337,7 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
         ped->ped_lens_model = strdup(lrd->lens.Lens);
         ped->ped_x_dim = lrd->sizes.width;
         ped->ped_y_dim = lrd->sizes.height;
-        
+
         switch (lrd->sizes.flip)
         {
         case 0:
@@ -347,9 +347,9 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
                 ped->ped_orientation = 8;
                 break;
         default:
-                ped->ped_orientation = lrd->sizes.flip;
+                ped->ped_orientation = (short)lrd->sizes.flip;
         }
-        
+
         ped->ped_iso = (int)lrd->other.iso_speed;
         ped->ped_fnumber = (short)(lrd->other.aperture * 10.0f);
 
@@ -364,9 +364,9 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
         else
         {
                 snprintf(buf, 255, "%0.1f", lrd->other.shutter);
-                ped->ped_exposure_time = strdup(buf);                
+                ped->ped_exposure_time = strdup(buf);
         }
-        
+
         ped->ped_focal_len = (short)lrd->other.focal_len;
 
         if (strcasecmp(lrd->idata.make, "canon") == 0)
