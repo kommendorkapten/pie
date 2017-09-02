@@ -34,4 +34,12 @@ extern int png_f32_read(struct pie_bitmap_f32rgb*, const char*);
  */
 extern int png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
 
+/**
+ * Writes an 16bit RGB bitmap to a PNG file.
+ * @param the output filename of the PNG file.
+ * @param the bitmap to write.
+ * @return 0 on success, non-zero otherwise.
+ */
+extern int png_u16rgb_write(const char*, struct pie_bitmap_u16rgb*);
+
 #endif /* __PIE_IO_PNG_H__ */

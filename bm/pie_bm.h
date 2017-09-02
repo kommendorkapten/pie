@@ -100,6 +100,32 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
                          struct pie_pixel_u8rgb*);
 
 /**
+ * Get a pixel from a bitmap.
+ * @param the pixel to store the result in
+ * @param the bitmap to extract the pixel from.
+ * @param the x coordinate (column).
+ * @param the y coordinate (row).
+ * @return void
+ */
+void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
+                          const struct pie_bitmap_u16rgb*, 
+                          int, 
+                          int);
+
+/**
+ * Set a pixel int the bitmap.
+ * @param the bitmap to extract set pixel int.
+ * @param the x coordinate (column).
+ * @param the y coordinate (row)
+ * @param the pixel to use.
+ * @return void
+ */
+void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb*, 
+                          int, 
+                          int,
+                          struct pie_pixel_u16rgb*);
+
+/**
  * Convert a bitmap from a specific bitdepth.
  * The destination must point to a pie_bitmap_XXXrgb struct.
  * The destination bitmamp must *NOT* contain any allocated channels,

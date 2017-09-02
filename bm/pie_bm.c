@@ -210,6 +210,30 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb* bm,
         bm->c_blue[offset] = p->blue;
 }
 
+void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb* p,
+                          const struct pie_bitmap_u16rgb* bm,
+                          int x,
+                          int y)
+{
+        int offset = bm->row_stride * y + x;
+
+        p->red = bm->c_red[offset];
+        p->green = bm->c_green[offset];
+        p->blue = bm->c_blue[offset];
+}
+
+void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb* bm,
+                          int x,
+                          int y,
+                          struct pie_pixel_u16rgb* p)
+{
+        int offset = bm->row_stride * y + x;
+
+        bm->c_red[offset] = p->red;
+        bm->c_green[offset] = p->green;
+        bm->c_blue[offset] = p->blue;
+}
+
 int pie_bm_conv_bd(void* restrict dst,
                    enum pie_color_bit_depth dst_bd,
                    void* restrict src,
@@ -427,11 +451,11 @@ static void pie_bm_conv_u16_f32(struct pie_bitmap_u16rgb* dst,
                 {
                         int o = y * src->row_stride + x;
 
-                        dst->c_red[o] = (uint8_t) (src->c_red[o] * 65535.0f);
+                        dst->c_red[o] = (uint16_t) (src->c_red[o] * 65535.0f);
                         if (src->color_type == PIE_COLOR_TYPE_RGB)
                         {
-                                dst->c_green[o] = (uint8_t) (src->c_green[o] * 65535.0f);
-                                dst->c_blue[o] = (uint8_t) (src->c_blue[o] * 65535.0f);
+                                dst->c_green[o] = (uint16_t) (src->c_green[o] * 65535.0f);
+                                dst->c_blue[o] = (uint16_t) (src->c_blue[o] * 65535.0f);
                         }
                 }
         }
