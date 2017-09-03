@@ -15,7 +15,7 @@
 #include <math.h>
 #include "pie_math.h"
 
-float pie_gauss(float dx, float var)
+float pie_mth_gauss(float dx, float var)
 {
         float ret;
         float numerator = dx * dx;
@@ -31,7 +31,7 @@ float pie_gauss(float dx, float var)
         return ret;
 }
 
-float pie_gauss_2d(float dx, float dy, float var)
+float pie_mth_gauss_2d(float dx, float dy, float var)
 {
         float ret;
         float numerator = (dx * dx) + (dy * dy);
@@ -47,9 +47,7 @@ float pie_gauss_2d(float dx, float dy, float var)
         return ret;
 }
 
-void pie_gauss_matrix(float* m,
-                      size_t l,
-                      float var)
+void pie_mth_gauss_matrix(float* m, size_t l, float var)
 {
         float sum = 0;
         float delta = (float)l / 2;
@@ -61,7 +59,7 @@ void pie_gauss_matrix(float* m,
                         float dx = (float)((float)x - delta);
                         float dy = (float)((float)y - delta);
 
-                        m[y * l + x] = pie_gauss_2d(dx, dy, var);
+                        m[y * l + x] = pie_mth_gauss_2d(dx, dy, var);
                         sum += m[y * l + x];
                 }
         }
@@ -72,8 +70,7 @@ void pie_gauss_matrix(float* m,
         }                
 }
 
-void pie_matrix_print(float* m,
-                      size_t l)
+void pie_mth_matrix_print(float* m, size_t l)
 {
         for (size_t y = 0; y < l; y++)
         {

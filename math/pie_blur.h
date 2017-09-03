@@ -14,11 +14,11 @@
 #ifndef __PIE_BLUR_H__
 #define __PIE_BLUR_H__
 
-void pie_box_blur6(float* restrict img,
-                   float* restrict buf,
-                   float sigma,
-                   int w,
-                   int h,
-                   int s);
+void pie_mth_box_blur6(float* restrict img,
+                       float* restrict buf,
+                       float sigma,
+                       int w,
+                       int h,
+                       int s);
 
 #endif /* __PIE_BLUR_H__ */

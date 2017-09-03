@@ -46,7 +46,7 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         {
                 return 0;
         }
-        r->content_len = pie_json_enc_collection_list(r->wbuf,
+        r->content_len = pie_enc_json_collection_list(r->wbuf,
                                                       r->wbuf_len,
                                                       cl);
 
@@ -100,7 +100,7 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
                 r->http_sc = HTTP_STATUS_NOT_FOUND;
                 return 0;
         }
-        r->content_len = pie_json_enc_collection(r->wbuf,
+        r->content_len = pie_enc_json_collection(r->wbuf,
                                                  r->wbuf_len,
                                                  coll.col_id,
                                                  ml);
@@ -149,7 +149,7 @@ int pie_coll_h_exif(struct pie_coll_h_resp* r,
                 return 1;
         }
 
-        r->content_len = pie_json_enc_exif(r->wbuf,
+        r->content_len = pie_enc_json_exif(r->wbuf,
                                            r->wbuf_len,
                                            &exif);
 
@@ -197,7 +197,7 @@ int pie_coll_h_mob(struct pie_coll_h_resp* r,
                 return 1;
         }
 
-        r->content_len = pie_json_enc_mob(r->wbuf,
+        r->content_len = pie_enc_json_mob(r->wbuf,
                                           r->wbuf_len,
                                           &mob);
 
@@ -332,7 +332,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
         }
 
         /* Write back result */
-        r->content_len = pie_json_enc_mob(r->wbuf,
+        r->content_len = pie_enc_json_mob(r->wbuf,
                                           r->wbuf_len,
                                           &mob);
 

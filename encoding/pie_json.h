@@ -31,16 +31,18 @@ struct pie_mob;
  * @return the number of bytes written (excluding the null byte; if 
  *         it was written).
  */
-extern size_t pie_json_enc_hist(char*, size_t, const struct pie_histogram*);
+extern size_t pie_enc_json_hist(char*, size_t, const struct pie_histogram*);
 
-extern size_t pie_json_enc_settings(char*, size_t, const struct pie_img_settings*);
+extern size_t pie_enc_json_settings(char*,
+                                    size_t,
+                                    const struct pie_img_settings*);
 
-extern size_t pie_json_enc_exif(char*, size_t, const struct pie_exif_data*);
+extern size_t pie_enc_json_exif(char*, size_t, const struct pie_exif_data*);
 
-extern size_t pie_json_enc_collection(char*, size_t, pie_id, struct llist*);
+extern size_t pie_enc_json_collection(char*, size_t, pie_id, struct llist*);
 
-extern size_t pie_json_enc_collection_list(char*, size_t, struct llist*);
+extern size_t pie_enc_json_collection_list(char*, size_t, struct llist*);
 
-extern size_t pie_json_enc_mob(char*, size_t, struct pie_mob*);
+extern size_t pie_enc_json_mob(char*, size_t, struct pie_mob*);
 
 #endif /* __PIE_JSON_H__ */

@@ -43,12 +43,12 @@ static void pie_box_blur_t4(float* restrict tgt,
                             int h,
                             int s);
 
-void pie_box_blur6(float* restrict img,
-                   float* restrict buf,
-                   float sigma,
-                   int w,
-                   int h,
-                   int s)
+void pie_mth_box_blur6(float* restrict img,
+                       float* restrict buf,
+                       float sigma,
+                       int w,
+                       int h,
+                       int s)
 {
         float boxes[3];
 

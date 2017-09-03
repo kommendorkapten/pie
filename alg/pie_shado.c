@@ -112,7 +112,7 @@ void pie_alg_shado(float* restrict r,
 
         /* Create curve */
         len = pie_alg_shado_curve(p, e);
-        pie_catm_rom_chain(c, p, len, SEGMENT_LEN);
+        pie_mth_catm_rom_chain(c, p, len, SEGMENT_LEN);
 
         for (int i = 0; i < LUT_SIZE; i++)
         {

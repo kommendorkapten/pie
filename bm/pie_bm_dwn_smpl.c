@@ -14,7 +14,7 @@
 #include "../pie_log.h"
 #include "../math/pie_math.h"
 #include "pie_bm.h"
-#include "pie_dwn_smpl.h"
+#include "pie_bm_dwn_smpl.h"
 
 #define MAX_RADIUS 11
 
@@ -111,7 +111,7 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
         PIE_DEBUG("Matrix size %d, sigma: %f", radius, sigma);
 
         /* Create Gaussion blur matrix */
-        pie_gauss_matrix(&blur[0], radius, sigma * sigma);
+        pie_mth_gauss_matrix(&blur[0], radius, sigma * sigma);
 #if DEBUG > 2
         pie_matrix_print(blur, radius);
 #endif

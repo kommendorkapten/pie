@@ -1,8 +1,8 @@
-#include "../math/pie_catmull.h"
-#include "../alg/pie_expos.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../math/pie_catmull.h"
+#include "../alg/pie_expos.h"
 
 #define NUM_P 150
 
@@ -25,7 +25,7 @@ int main(void)
 
         /* test */
         pie_alg_expos_curve(p, 0.0f);        
-        pie_catm_rom_chain(o, p, 5, NUM_P);
+        pie_mth_catm_rom_chain(o, p, 5, NUM_P);
 
 #if 1
         int last = 0;

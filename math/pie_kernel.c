@@ -16,14 +16,14 @@
 # include <nmmintrin.h> /* sse 4.2 */
 #endif
 #include "pie_kernel.h"
-#include "../math/pie_math.h"
+#include "pie_math.h"
 
-void pie_kernel3x3_apply(float* restrict c,
-                         struct pie_kernel3x3* k,
-                         float* restrict buf,
-                         int w,
-                         int h,
-                         int s)
+void pie_mth_kernel3x3_apply(float* restrict c,
+                             struct pie_kernel3x3* k,
+                             float* restrict buf,
+                             int w,
+                             int h,
+                             int s)
 {
         /* Repeat the edge pixels */
 
@@ -145,12 +145,12 @@ void pie_kernel3x3_apply(float* restrict c,
         memcpy(c, buf, h * s * sizeof(float));
 }
 
-void pie_kernel5x5_apply(float* restrict c,
-                         struct pie_kernel5x5* k,
-                         float* restrict buf,
-                         int w,
-                         int h,
-                         int s)
+void pie_mth_kernel5x5_apply(float* restrict c,
+                             struct pie_kernel5x5* k,
+                             float* restrict buf,
+                             int w,
+                             int h,
+                             int s)
 {
         /* Repeat the edge pixels */
         for (int x = 2; x < w - 2; x++)
@@ -603,12 +603,12 @@ void pie_kernel5x5_apply(float* restrict c,
 
 #if 0
 /* Generic kernel a x a */
-void pie_kernel5x5_apply(float* restrict c,
-                         struct pie_kernel5x5* k,
-                         float* restrict buf,
-                         int w,
-                         int h,
-                         int s)
+void pie_mth_kernel5x5_apply(float* restrict c,
+                             struct pie_kernel5x5* k,
+                             float* restrict buf,
+                             int w,
+                             int h,
+                             int s)
 {
         for (int y = 0; y < h; y++)
         {
@@ -654,13 +654,13 @@ void pie_kernel5x5_apply(float* restrict c,
 }
 #endif
 
-void pie_kernel_sep_apply(float* restrict c,
-                          float* restrict k,
-                          int len,
-                          float* restrict buf,
-                          int w,
-                          int h,
-                          int s)
+void pie_mth_kernel_sep_apply(float* restrict c,
+                              float* restrict k,
+                              int len,
+                              float* restrict buf,
+                              int w,
+                              int h,
+                              int s)
 {
         int half = len >> 1;
         
@@ -805,28 +805,28 @@ void pie_kernel_sep_apply(float* restrict c,
         }
 }
 
-void pie_kernel3x3_gauss(struct pie_kernel3x3* k,
-                         float var)
+void pie_mth_kernel3x3_gauss(struct pie_kernel3x3* k,
+                             float var)
 {
-        pie_gauss_matrix(&k->v[0], 3, var);
+        pie_mth_gauss_matrix(&k->v[0], 3, var);
 }
 
-void pie_kernel5x5_gauss(struct pie_kernel5x5* k,
-                         float var)
+void pie_mth_kernel5x5_gauss(struct pie_kernel5x5* k,
+                             float var)
 {
-        pie_gauss_matrix(&k->v[0], 5, var);
+        pie_mth_gauss_matrix(&k->v[0], 5, var);
 }
 
-void pie_kernel_sep_gauss(float* r,
-                          int len,
-                          float var)
+void pie_mth_kernel_sep_gauss(float* r,
+                              int len,
+                              float var)
 {
         float sum = 0;
         int h = len >> 1;
 
         for (int i = 0; i < len; i++)
         {
-                float g = pie_gauss((float)(i - h), var);
+                float g = pie_mth_gauss((float)(i - h), var);
 
                 r[i] = g;
                 sum += g;

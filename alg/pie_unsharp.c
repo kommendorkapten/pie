@@ -26,7 +26,7 @@
 #include <string.h>
 #include <math.h>
 #include "pie_unsharp.h"
-#include "pie_kernel.h"
+#include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
 
 /**
@@ -107,7 +107,7 @@ int pie_alg_unsharp(float* restrict r,
                 return -1;
         }
         /* Create a separable gauss kernel */
-        pie_kernel_sep_gauss(kernel, kernel_len, param->radius * param->radius);
+        pie_mth_kernel_sep_gauss(kernel, kernel_len, param->radius * param->radius);
 
         /* Red channel */
         memcpy(blur, r, size);
@@ -352,27 +352,27 @@ static void pie_uns_blur_chan(float* restrict chan,
         if (sigma < 4.1f)
         {
                 /* use kernel convolution */
-                pie_kernel_sep_apply(chan,
-                                     kernel,
-                                     kernel_len,
-                                     buf,
-                                     w,
-                                     h,
-                                     s);
+                pie_mth_kernel_sep_apply(chan,
+                                         kernel,
+                                         kernel_len,
+                                         buf,
+                                         w,
+                                         h,
+                                         s);
         }
         else
         {
                 /* Use box blur */
-                pie_box_blur6(chan, buf, sigma, w, h, s);
+                pie_mth_box_blur6(chan, buf, sigma, w, h, s);
         }
 # endif
 #else
-        pie_kernel_sep_apply(chan,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             w,
-                             h,
-                             s);
+        pie_mth_kernel_sep_apply(chan,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 w,
+                                 h,
+                                 s);
 #endif
 }

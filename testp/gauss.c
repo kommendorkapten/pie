@@ -6,7 +6,7 @@
 #include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
 #include "../lib/timing.h"
-#include "../alg/pie_kernel.h"
+#include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
 
 #define KERNEL_LEN 281
@@ -69,15 +69,15 @@ int main(int argc, char** argv)
                s, kernel_len);
         timing_start(&t);
 
-        pie_kernel_sep_gauss(kernel, kernel_len, s * s);
+        pie_mth_kernel_sep_gauss(kernel, kernel_len, s * s);
         memcpy(tmp, img.c_red, size);
-        pie_kernel_sep_apply(tmp,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img.width,
-                             img.height,
-                             img.row_stride);
+        pie_mth_kernel_sep_apply(tmp,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img.width,
+                                 img.height,
+                                 img.row_stride);
         for (int i = 0; i < size/4; i++)
         {
                 img.c_red[i] -= tmp[i];
@@ -93,13 +93,13 @@ int main(int argc, char** argv)
 
 
         memcpy(tmp, img.c_green, size);
-        pie_kernel_sep_apply(tmp,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img.width,
-                             img.height,
-                             img.row_stride);
+        pie_mth_kernel_sep_apply(tmp,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img.width,
+                                 img.height,
+                                 img.row_stride);
         for (int i = 0; i < size/4; i++)
         {
                 img.c_green[i] -= tmp[i];                
@@ -114,13 +114,13 @@ int main(int argc, char** argv)
         }
 
         memcpy(tmp, img.c_blue, size);
-        pie_kernel_sep_apply(tmp,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img.width,
-                             img.height,
-                             img.row_stride);        
+        pie_mth_kernel_sep_apply(tmp,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img.width,
+                                 img.height,
+                                 img.row_stride);        
         for (int i = 0; i < size/4; i++)
         {
                 img.c_blue[i] -= tmp[i];                
@@ -147,12 +147,12 @@ int main(int argc, char** argv)
         /* BOX Blur 6 */
         timing_start(&t);
         memcpy(tmp, img.c_red, size);
-        pie_box_blur6(tmp,
-                      buf,
-                      s,
-                      img.width,
-                      img.height,
-                      img.row_stride);
+        pie_mth_box_blur6(tmp,
+                          buf,
+                          s,
+                          img.width,
+                          img.height,
+                          img.row_stride);
         for (int i = 0; i < size/4; i++)
         {
                 img.c_red[i] -= tmp[i];
@@ -167,12 +167,12 @@ int main(int argc, char** argv)
         }
 
         memcpy(tmp, img.c_green, size);        
-        pie_box_blur6(tmp,
-                      buf,
-                      s,
-                      img.width,
-                      img.height,
-                      img.row_stride);
+        pie_mth_box_blur6(tmp,
+                          buf,
+                          s,
+                          img.width,
+                          img.height,
+                          img.row_stride);
         for (int i = 0; i < size/4; i++)
         {
                 img.c_green[i] -= tmp[i];
@@ -187,12 +187,12 @@ int main(int argc, char** argv)
         }
 
         memcpy(tmp, img.c_blue, size);
-        pie_box_blur6(tmp,
-                      buf,    
-                      s,
-                      img.width,
-                      img.height,
-                      img.row_stride);
+        pie_mth_box_blur6(tmp,
+                          buf,    
+                          s,
+                          img.width,
+                          img.height,
+                          img.row_stride);
         for (int i = 0; i < size/4; i++)
         {
                 img.c_blue[i] -= tmp[i];

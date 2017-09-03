@@ -6,7 +6,7 @@
 #include "../io/pie_io.h"
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_dwn_smpl.h"
+#include "../bm/pie_bm_dwn_smpl.h"
 
 #define MAX_PATH 256
 

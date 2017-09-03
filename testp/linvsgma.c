@@ -1,7 +1,7 @@
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
-#include "../pie_cspace.h"
+#include "../alg/pie_cspace.h"
 
 #define USE_PNG 1
 

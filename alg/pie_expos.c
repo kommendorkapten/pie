@@ -151,7 +151,7 @@ void pie_alg_expos(float* restrict r,
 
         /* Create curve */
         pie_alg_expos_curve(p, e);
-        pie_catm_rom_chain(c, p, CURVE_LEN, SEGMENT_LEN);
+        pie_mth_catm_rom_chain(c, p, CURVE_LEN, SEGMENT_LEN);
 
         for (int i = 0; i < LUT_SIZE; i++)
         {

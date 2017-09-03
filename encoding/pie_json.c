@@ -29,7 +29,7 @@ Encode to following structure (without newlines)
 }
  */
 
-size_t pie_json_enc_hist(char* buf, size_t len, const struct pie_histogram* h)
+size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_histogram* h)
 {
         size_t bw = 0;
 
@@ -58,7 +58,7 @@ size_t pie_json_enc_hist(char* buf, size_t len, const struct pie_histogram* h)
         return bw;
 }
 
-size_t pie_json_enc_exif(char* buf,
+size_t pie_enc_json_exif(char* buf,
                          size_t len,
                          const struct pie_exif_data* ped)
 {
@@ -109,7 +109,7 @@ size_t pie_json_enc_exif(char* buf,
         return bw;
 }
 
-size_t pie_json_enc_collection(char* buf,
+size_t pie_enc_json_collection(char* buf,
                                size_t len,
                                pie_id id,
                                struct llist* ml)
@@ -138,7 +138,7 @@ size_t pie_json_enc_collection(char* buf,
                                len - bw,
                                "{\"id\": \"%ld\",\"mob\":",
                                m->mob_id);
-                bw += pie_json_enc_mob(buf + bw, len - bw, m);
+                bw += pie_enc_json_mob(buf + bw, len - bw, m);
                 bw += snprintf(buf + bw, len - bw, "}");
                 n = n->next;
         }
@@ -148,7 +148,7 @@ size_t pie_json_enc_collection(char* buf,
         return bw;
 }
 
-size_t pie_json_enc_collection_list(char* buf,
+size_t pie_enc_json_collection_list(char* buf,
                                     size_t len,
                                     struct llist* cl)
 {
@@ -182,7 +182,7 @@ size_t pie_json_enc_collection_list(char* buf,
         return bw;
 }
 
-size_t pie_json_enc_mob(char* buf, size_t len, struct pie_mob* mob)
+size_t pie_enc_json_mob(char* buf, size_t len, struct pie_mob* mob)
 {
         size_t bw;
 

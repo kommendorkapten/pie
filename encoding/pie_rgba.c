@@ -23,9 +23,9 @@
 #include "../pie_types.h"
 #include "pie_rgba.h"
 
-void encode_rgba(unsigned char* restrict buf,
-                 const struct pie_bitmap_f32rgb* restrict img,
-                 enum pie_image_type type)
+void pie_enc_bm_rgba(unsigned char* restrict buf,
+                     const struct pie_bitmap_f32rgb* restrict img,
+                     enum pie_image_type type)
 {
         uint32_t w = htonl(img->width);
         uint32_t h = htonl(img->height);

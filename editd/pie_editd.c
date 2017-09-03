@@ -25,7 +25,7 @@
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_dwn_smpl.h"
+#include "../bm/pie_bm_dwn_smpl.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
 #include "pie_msg.h"

@@ -1,9 +1,9 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
-#include "../pie_cspace.h"
-#include <stdlib.h>
-#include <stdio.h>
+#include "../alg/pie_cspace.h"
 
 int main(int argc, char** argv)
 {

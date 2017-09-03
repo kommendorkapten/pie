@@ -509,9 +509,9 @@ static int cb_img(struct lws* wsi,
                                 session->rgba = malloc(session->rgba_len + LWS_PRE);
                         }
                         
-                        encode_rgba(session->rgba + LWS_PRE,
-                                    &session->img->proxy_out,
-                                    PIE_IMAGE_TYPE_PRIMARY);
+                        pie_enc_bm_rgba(session->rgba + LWS_PRE,
+                                        &session->img->proxy_out,
+                                        PIE_IMAGE_TYPE_PRIMARY);
                         PIE_DEBUG("Encoded proxy:         %8ldusec",
                                   timing_dur_usec(&t));
         
@@ -596,7 +596,7 @@ static int cb_hist(struct lws* wsi,
                
                         timing_start(&t);
                         buf = malloc(JSON_HIST_SIZE + LWS_PRE);
-                        json_len = pie_json_enc_hist((char*)buf + LWS_PRE,
+                        json_len = pie_enc_json_hist((char*)buf + LWS_PRE,
                                                      JSON_HIST_SIZE,
                                                      &session->img->hist);
                         PIE_DEBUG("JSON encoded histogram: %8ldusec",

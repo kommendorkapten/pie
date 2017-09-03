@@ -36,12 +36,12 @@ struct pie_kernel5x5
  * @param row stride
  * @return void
  */
-extern void pie_kernel3x3_apply(float* restrict,
-                                struct pie_kernel3x3*,
-                                float* restrict,
-                                int,
-                                int,
-                                int);
+extern void pie_mth_kernel3x3_apply(float* restrict,
+                                    struct pie_kernel3x3*,
+                                    float* restrict,
+                                    int,
+                                    int,
+                                    int);
 
 /**
  * Apply a kernel to a channel.
@@ -53,12 +53,12 @@ extern void pie_kernel3x3_apply(float* restrict,
  * @param row stride
  * @return void
  */
-extern void pie_kernel5x5_apply(float* restrict,
-                                struct pie_kernel5x5*,
-                                float* restrict,
-                                int,
-                                int,
-                                int);
+extern void pie_mth_kernel5x5_apply(float* restrict,
+                                    struct pie_kernel5x5*,
+                                    float* restrict,
+                                    int,
+                                    int,
+                                    int);
 
 /**
  * Apply a separable kernel to a channel.
@@ -71,13 +71,13 @@ extern void pie_kernel5x5_apply(float* restrict,
  * @param row stride
  * @return void
  */
-extern void pie_kernel_sep_apply(float* restrict,
-                                 float* restrict,
-                                 int,
-                                 float* restrict,
-                                 int,
-                                 int,
-                                 int);
+extern void pie_mth_kernel_sep_apply(float* restrict,
+                                     float* restrict,
+                                     int,
+                                     float* restrict,
+                                     int,
+                                     int,
+                                     int);
 
 /**
  * Initialize a kernel with a Gauss distribution (E=1).
@@ -85,8 +85,8 @@ extern void pie_kernel_sep_apply(float* restrict,
  * @param variance.
  * @return void.
  */
-extern void pie_kernel3x3_gauss(struct pie_kernel3x3*,
-                                float);
+extern void pie_mth_kernel3x3_gauss(struct pie_kernel3x3*,
+                                    float);
 
 /**
  * Initialize a kernel with a Gauss distribution (E=1).
@@ -94,8 +94,8 @@ extern void pie_kernel3x3_gauss(struct pie_kernel3x3*,
  * @param variance.
  * @return void.
  */
-extern void pie_kernel5x5_gauss(struct pie_kernel5x5*,
-                                float);
+extern void pie_mth_kernel5x5_gauss(struct pie_kernel5x5*,
+                                    float);
 
 /**
  * Initialize a separable Gauss kernel.
@@ -104,9 +104,9 @@ extern void pie_kernel5x5_gauss(struct pie_kernel5x5*,
  * @param variance.
  * @return void.
  */
-extern void pie_kernel_sep_gauss(float*,
-                                 int,
-                                 float);
+extern void pie_mth_kernel_sep_gauss(float*,
+                                     int,
+                                     float);
                                  
 
 #endif /* __PIE_KERNEL_H__ */

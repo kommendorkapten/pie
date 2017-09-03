@@ -22,7 +22,7 @@
  * @param variance of the distribution.
  * @return the Gauss density value.
  */
-extern float pie_gauss(float, float);
+extern float pie_mth_gauss(float, float);
 
 /**
  * Calculate a value for a Gauss 2d distribution.
@@ -31,19 +31,18 @@ extern float pie_gauss(float, float);
  * @param variance of the distribution.
  * @return the Gauss density value.
  */
-extern float pie_gauss_2d(float, float, float);
+extern float pie_mth_gauss_2d(float, float, float);
 
 /**
- * Create a square Gaussian blur matrix. Matrix will be row dominant.
+ * Create a square Gaussian blur matrix. Matrix will be stored in row 
+ * major order.
  * The created matrix will be normalized (sum of all elements equal. one).
  * @param output matrix to store data in, must be at least (len*len) in size.
  * @param the size for a row/column.
  * @param the variance of the distribution.
  * @return void.
  */
-extern void pie_gauss_matrix(float*,
-                             size_t,
-                             float);
+extern void pie_mth_gauss_matrix(float*, size_t, float);
 
 /**
  * Print a square matrix to std out.
@@ -51,7 +50,6 @@ extern void pie_gauss_matrix(float*,
  * @param num elements for each row/column.
  * @return void.
  */
-extern void pie_matrix_print(float*,
-                             size_t);
+extern void pie_mth_matrix_print(float*, size_t);
 
 #endif /* __PIE_MATH_H__ */

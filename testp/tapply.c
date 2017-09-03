@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         printf("Wrote %s in %luusec\n", out_name, dur);
 
         timing_start(&t);
-        encode_rgba((unsigned char*)buf, &img, PIE_IMAGE_TYPE_PRIMARY);
+        pie_enc_bm_rgba((unsigned char*)buf, &img, PIE_IMAGE_TYPE_PRIMARY);
         dur = timing_dur_usec(&t);
         printf("RGBA encode in %luusec\n", dur);
 

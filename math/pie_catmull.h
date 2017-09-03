@@ -24,9 +24,9 @@
  * @param number of points to draw.
  * @return void
  */
-extern void pie_catm_rom(struct pie_point_2d*,
-                         const struct pie_point_2d*,
-                         int);
+extern void pie_mth_catm_rom(struct pie_point_2d*,
+                             const struct pie_point_2d*,
+                             int);
 
 /**
  * Chain centripetal Catmull-Rom splines.
@@ -42,9 +42,9 @@ extern void pie_catm_rom(struct pie_point_2d*,
  * @param number of points to draw per segment.
  * @return void
  */
-extern void pie_catm_rom_chain(struct pie_point_2d*,
-                               const struct pie_point_2d*,
-                               int,
-                               int);
+extern void pie_mth_catm_rom_chain(struct pie_point_2d*,
+                                   const struct pie_point_2d*,
+                                   int,
+                                   int);
 
 #endif /* __PIE_CATMULL_H__ */

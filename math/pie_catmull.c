@@ -18,9 +18,9 @@ static float pie_cm_tj(float,
                        const struct pie_point_2d*,
                        const struct pie_point_2d*);
 
-void pie_catm_rom(struct pie_point_2d* out,
-                  const struct pie_point_2d* p,
-                  int num_p)
+void pie_mth_catm_rom(struct pie_point_2d* out,
+                      const struct pie_point_2d* p,
+                      int num_p)
 {
         float t0 = 0.0f;
         float t1 = pie_cm_tj(t0, &p[0], &p[1]);
@@ -53,14 +53,14 @@ void pie_catm_rom(struct pie_point_2d* out,
         }
 }
 
-void pie_catm_rom_chain(struct pie_point_2d* out,
-                        const struct pie_point_2d* p,
-                        int num_p,
-                        int segment_p)
+void pie_mth_catm_rom_chain(struct pie_point_2d* out,
+                            const struct pie_point_2d* p,
+                            int num_p,
+                            int segment_p)
 {
         for (int i = 0; i < num_p - 3; i++)
         {
-                pie_catm_rom(out, p + i, segment_p);
+                pie_mth_catm_rom(out, p + i, segment_p);
                 out += segment_p;
         }
 }
