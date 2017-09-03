@@ -85,7 +85,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         png_read_info(pngp, infop);
         bm->width = (int)infop->width;
         bm->height = (int)infop->height;
-        
+
         switch (infop->color_type)
         {
         case PNG_COLOR_TYPE_GRAY:
@@ -106,13 +106,13 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         case 16:
                 if (SWAP_PIXELS)
                 {
-                        png_set_swap(pngp);                        
+                        png_set_swap(pngp);
                 }
                 break;
         default:
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_UNSUPPORTED_FMT;                
+                return PIE_IO_UNSUPPORTED_FMT;
         }
 
         if (png_get_gAMA(pngp, infop, &gamma))
@@ -121,7 +121,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 NOTE(EMPTY);
                 PIE_DEBUG("Read gamma from file: %f.", gamma);
         }
-        
+
         /* Update with any transformations set */
         png_read_update_info(pngp, infop);
 
@@ -130,7 +130,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         {
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_IO_ERR;                
+                return PIE_IO_IO_ERR;
         }
 
         rows = malloc(sizeof(png_byte*) * bm->height);
@@ -139,7 +139,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 rows[y] = malloc(infop->rowbytes);
         }
 
-        /* Read data  */        
+        /* Read data  */
         png_read_image(pngp, rows);
         pie_bm_alloc_f32(bm);
 
@@ -164,7 +164,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 
                         /* Free copy buffer */
                         free(rows[y]);
-                }                
+                }
         }
         else if (infop->bit_depth == 16)
         {
@@ -183,10 +183,10 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                                 bm->c_green[offset] = green / 65535.0f;
                                 bm->c_blue[offset] = blue / 65535.0f;
                         }
-                        
+
                         /* Free copy buffer */
                         free(rows[y]);
-                }                
+                }
         }
         else
         {
@@ -209,8 +209,8 @@ int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
         png_infop infop;
         png_byte** rows;
         int pixel_size = 3; /* RGB */
-        int depth = 8; 
-    
+        int depth = 8;
+
         fp = fopen(path, "wb");
         if (fp == NULL) {
                 return PIE_IO_NOT_FOUND;
@@ -224,20 +224,20 @@ int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         infop = png_create_info_struct(pngp);
         if (infop == NULL) {
                 png_destroy_write_struct(&pngp, NULL);
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         if (setjmp(png_jmpbuf(pngp))) {
                 png_destroy_write_struct(&pngp, &infop);
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         /* Set image attributes. */
         png_set_IHDR(pngp,
                      infop,
@@ -250,7 +250,7 @@ int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                      PNG_FILTER_TYPE_DEFAULT);
 
         png_set_gAMA(pngp, infop, 2.2);
-    
+
         /* Write rows to PNG obj */
         rows = malloc(bitmap->height * sizeof(png_byte*));
         for (int y = 0; y < bitmap->height; y++)
@@ -268,21 +268,21 @@ int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                         *row++ = p.blue;
                 }
         }
-    
+
         /* Write PNG obj to disk */
         png_init_io(pngp, fp);
         png_set_rows(pngp, infop, rows);
-        png_write_png(pngp, 
+        png_write_png(pngp,
                       infop,
                       PNG_TRANSFORM_IDENTITY, /* No transform */
                       NULL); /* not used */
-    
-        for (int y = 0; y < bitmap->height; y++) 
+
+        for (int y = 0; y < bitmap->height; y++)
         {
                 free(rows[y]);
         }
         free(rows);
-    
+
         png_destroy_write_struct(&pngp, &infop);
         fclose(fp);
 
@@ -296,8 +296,8 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
         png_infop infop;
         png_byte** rows;
         int pixel_size = 3; /* RGB */
-        int depth = 16; 
-    
+        int depth = 16;
+
         fp = fopen(path, "wb");
         if (fp == NULL) {
                 return PIE_IO_NOT_FOUND;
@@ -311,20 +311,20 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         infop = png_create_info_struct(pngp);
         if (infop == NULL) {
                 png_destroy_write_struct(&pngp, NULL);
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         if (setjmp(png_jmpbuf(pngp))) {
                 png_destroy_write_struct(&pngp, &infop);
                 fclose(fp);
                 return PIE_IO_INTERNAL_ERR;
         }
-    
+
         /* Set image attributes. */
         png_set_IHDR(pngp,
                      infop,
@@ -337,7 +337,7 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                      PNG_FILTER_TYPE_DEFAULT);
 
         png_set_gAMA(pngp, infop, 2.2);
-    
+
         /* Write rows to PNG obj */
         rows = malloc(bitmap->height * sizeof(png_byte*));
         for (int y = 0; y < bitmap->height; y++)
@@ -345,7 +345,7 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                 size_t row_size = depth / 8 * bitmap->width * pixel_size;
                 png_byte* row = malloc(row_size);
                 uint16_t* r16 = (uint16_t*)row;
-                
+
                 rows[y] = row;
                 for (int x = 0; x < bitmap->width; ++x)
                 {
@@ -357,7 +357,7 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                         *r16++ = p.blue;
                 }
         }
-    
+
         /* Write PNG obj to disk */
         int transforms = PNG_TRANSFORM_IDENTITY;
         if (SWAP_PIXELS)
@@ -366,20 +366,19 @@ int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
         }
         png_init_io(pngp, fp);
         png_set_rows(pngp, infop, rows);
-        png_write_png(pngp, 
+        png_write_png(pngp,
                       infop,
-                      transforms, 
+                      transforms,
                       NULL); /* not used */
-    
-        for (int y = 0; y < bitmap->height; y++) 
+
+        for (int y = 0; y < bitmap->height; y++)
         {
                 free(rows[y]);
         }
         free(rows);
-    
+
         png_destroy_write_struct(&pngp, &infop);
         fclose(fp);
 
         return 0;
 }
-
