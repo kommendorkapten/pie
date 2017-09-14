@@ -42,6 +42,10 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         png_infop infop;
         png_byte** rows;
         double gamma;
+        int width;
+        int height;
+        int color_type;
+        int bit_depth;
 
         if (fp == NULL)
         {
@@ -58,7 +62,6 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                                       NULL,
                                       NULL,
                                       NULL);
-
         if (pngp == NULL)
         {
                 return PIE_IO_INTERNAL_ERR;
@@ -83,10 +86,22 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         /* The first 8 bytes are already checkd */
         png_set_sig_bytes(pngp, 8);
         png_read_info(pngp, infop);
-        bm->width = (int)infop->width;
-        bm->height = (int)infop->height;
 
-        switch (infop->color_type)
+        width = png_get_image_width(pngp, infop);
+        height = png_get_image_height(pngp, infop);
+        color_type = png_get_color_type(pngp, infop);
+        bit_depth = png_get_bit_depth(pngp, infop);
+        if (png_get_gAMA(pngp, infop, &gamma))
+        {
+                /* png_set_gamma(pngp, display_exponent, gamma); */
+                NOTE(EMPTY);
+                PIE_DEBUG("Read gamma from file: %f.", gamma);
+        }
+        
+        bm->width = width;
+        bm->height = height;
+
+        switch (color_type)
         {
         case PNG_COLOR_TYPE_GRAY:
                 bm->color_type = PIE_COLOR_TYPE_GRAY;
@@ -100,7 +115,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 return PIE_IO_UNSUPPORTED_FMT;
         }
 
-        switch (infop->bit_depth)
+        switch (bit_depth)
         {
         case 8:
         case 16:
@@ -115,16 +130,6 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 return PIE_IO_UNSUPPORTED_FMT;
         }
 
-        if (png_get_gAMA(pngp, infop, &gamma))
-        {
-                /* png_set_gamma(pngp, display_exponent, gamma); */
-                NOTE(EMPTY);
-                PIE_DEBUG("Read gamma from file: %f.", gamma);
-        }
-
-        /* Update with any transformations set */
-        png_read_update_info(pngp, infop);
-
         /* Sett restore point */
         if (setjmp(png_jmpbuf(pngp)))
         {
@@ -133,10 +138,11 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 return PIE_IO_IO_ERR;
         }
 
+        size_t row_bytes = png_get_rowbytes(pngp, infop);
         rows = malloc(sizeof(png_byte*) * bm->height);
         for (int y = 0; y < bm->height; y++)
         {
-                rows[y] = malloc(infop->rowbytes);
+                rows[y] = malloc(row_bytes);
         }
 
         /* Read data  */
@@ -144,7 +150,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         pie_bm_alloc_f32(bm);
 
         /* Copy data to bitmap */
-        if (infop->bit_depth == 8)
+        if (bit_depth == 8)
         {
                 for (int y = 0; y < bm->height; y++)
                 {
@@ -166,7 +172,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                         free(rows[y]);
                 }
         }
-        else if (infop->bit_depth == 16)
+        else if (bit_depth == 16)
         {
                 for (int y = 0; y < bm->height; y++)
                 {
