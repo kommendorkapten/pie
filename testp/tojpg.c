@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         timing_start(&t);
         if (ok = pie_io_load(&bmf, in), ok)
         {
-                printf("%d\n", ok);
+                printf("pie_io_load: %d\n", ok);
                 return -1;
         }
         printf("Read %s in %luusec\n", in, timing_dur_usec(&t));
