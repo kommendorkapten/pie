@@ -297,4 +297,31 @@ user_qual = 2
 * jpg_u8rgb_write 1.059s
 
 openmp: No diff
+
+mac: 
+FSNF0172
+* libraw_open_file 0.003s
+* libraw_unpack 0.237s
+* libraw_dcraw_process 1.966s
+* libraw_dcraw_make_mem_image 0.182s
+FSN_3000
+* libraw_open_file 0.002s
+* libraw_unpack 1.273s
+* libraw_dcraw_process 1.408s
+* libraw_dcraw_make_mem_image 0.140s
+
+x3450 with O3
+FSNF0172
+* libraw_open_file 0.005s
+* libraw_unpack 0.200s
+* libraw_dcraw_process 1.769s
+* libraw_dcraw_make_mem_image 0.231s
+
+FSN_3000
+* libraw_open_file 0.004s
+* libraw_unpack 1.243s
+* libraw_dcraw_process 1.306s
+* libraw_dcraw_make_mem_image 0.173s
+
+    
  */
