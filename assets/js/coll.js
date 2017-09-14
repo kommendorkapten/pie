@@ -438,6 +438,7 @@ function calculateHistogram(img) {
     var histRed = [];
     var histGreen = [];
     var histBlue = [];
+    var histSum = 0;
     var imgData = null;
     var pixels = null;
     var max = 0;
@@ -472,32 +473,46 @@ function calculateHistogram(img) {
 
     /* Normalize */
     for (c of histLum) {
+        histSum += c;
         if (c > max) {
             max = c;
         }
     }
     for (c of histRed) {
+        histSum += c;
         if (c > max) {
             max = c;
         }
     }
     for (c of histGreen) {
+        histSum += c;
         if (c > max) {
             max = c;
         }
     }
     for (c of histBlue) {
+        histSum += c;
         if (c > max) {
             max = c;
         }
     }
+    var histMu = histSum / 1024;
+    var histLimit = histMu * 13.0;
+    if (histLimit < max) {
+        max = histLimit;
+    }
 
     for (i = 0; i < histLum.length; i++) {
-        var nl = (histLum[i] / max) * histYMax;
-        var nr = (histRed[i] / max) * histYMax;
-        var ng = (histGreen[i] / max) * histYMax;
-        var nb = (histBlue[i] / max) * histYMax;
+        var nl = histLum[i] < histLimit ? histLum[i]: histLimit;
+        var nr = histRed[i] < histLimit ? histRed[i]: histLimit;
+        var ng = histGreen[i] < histLimit ? histGreen[i]: histLimit;
+        var nb = histBlue[i] < histLimit ? histBlue[i]: histLimit;
 
+        nl = (nl / histLimit) * histYMax;
+        nr = (nr / histLimit) * histYMax;
+        ng = (nb / histLimit) * histYMax;
+        nb = (ng / histLimit) * histYMax;
+        
         pl[i] = {
             x: i,
             y: nl
