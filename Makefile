@@ -6,6 +6,7 @@ OS      = $(shell uname -s)
 ISA     = $(shell uname -p)
 DEBUG   = 1
 LCRYPTO = -lssl -lcrypto
+LIMG    = -lpng -ljpeg -lraw
 
 # -ftree-loop-linear MAY introduce bugs.
 PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
@@ -67,7 +68,7 @@ else
 endif
 
 DIRS       = obj bin
-IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c
+IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c pie_io_raw.c
 LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
 	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
@@ -133,52 +134,52 @@ clean:
 	rm -rf obj/*.o bin/* $(P_BINS)
 
 bin/pngrw: testp/pngrw.c obj/pie_bm.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/pngcreate: testp/pngcreate.c obj/pie_bm.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/imgread: testp/imgread.c  obj/pie_bm.o obj/timing.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/jpgcreate: testp/jpgcreate.c  obj/pie_bm.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/jpgtopng: testp/jpgtopng.c obj/timing.o  obj/pie_bm.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/linvsgma: testp/linvsgma.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/analin: testp/analin.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/histinfo: testp/histinfo.c obj/timing.o  obj/pie_bm.o obj/pie_hist.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/contr: testp/contr.c obj/pie_contr.o obj/pie_bm.o obj/timing.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/gauss: testp/gauss.c obj/timing.o $(IO_OBJS) obj/pie_bm.o $(MATH_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/unsharp: testp/unsharp.c obj/timing.o $(IO_OBJS) obj/pie_bm.o obj/pie_unsharp.o $(MATH_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
 bin/catm: testp/catm.c $(IO_OBJS) obj/pie_expos.o obj/pie_curve.o obj/pie_bm.o obj/pie_catmull.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/tapply: testp/tapply.c obj/pie_render.o obj/timing.o $(IO_OBJS) obj/pie_bm.o $(ALG_OBJS) $(MATH_OBJS) obj/pie_rgba.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/tdowns: testp/tdowns.c obj/timing.o $(IO_OBJS) $(BM_OBJS) obj/pie_math.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -ljpeg -lpng
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
 bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -lexif
@@ -187,7 +188,7 @@ bin/test_exif_meta: testp/test_exif_meta.c obj/pie_exif.o obj/pie_exif_data.o ob
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lexif -lsqlite3 -lraw
 
 bin/bench_blur: testp/bench_blur.c $(IO_OBJS)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG)
 
 bin/test_id: testp/test_id.c obj/pie_id.o
 	$(CC) $(CFLAGS) $< obj/pie_id.o -o $@ $(LFLAGS)
@@ -203,7 +204,7 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 
 # Servers
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o
-	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lpng -ljpeg
+	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG)
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)

@@ -20,9 +20,11 @@
 #define PIE_IO_INV_FMT         4
 #define PIE_IO_UNSUPPORTED_FMT 5
 
-#include "../pie_types.h"
 #include "pie_io_png.h"
 #include "pie_io_jpg.h"
+#include "pie_io_raw.h"
+
+struct pie_bitmap_f32rgb;
 
 /**
  * Open a file and load content into an empty bitmap.

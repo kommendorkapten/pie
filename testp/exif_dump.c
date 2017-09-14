@@ -20,7 +20,7 @@ int main(int argc, char** argv)
                 return 1;
         }
 
-        pie_json_enc_exif(buf, 4000, &ed);
+        pie_enc_json_exif(buf, 4000, &ed);
         printf("%s\n", buf);
         
         return 0;

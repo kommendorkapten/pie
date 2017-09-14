@@ -20,6 +20,8 @@
 # define NOTE(X)
 #endif
 #include "pie_io.h"
+#include "pie_io_png.h"
+#include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../pie_log.h"
 

@@ -338,6 +338,7 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
         ped->ped_x_dim = lrd->sizes.width;
         ped->ped_y_dim = lrd->sizes.height;
 
+        /* Map to EXIF orientation */
         switch (lrd->sizes.flip)
         {
         case 0:

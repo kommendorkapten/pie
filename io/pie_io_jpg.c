@@ -11,13 +11,14 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_io.h"
-#include "../bm/pie_bm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <jpeglib.h>
 #include <setjmp.h>
-
+#include "pie_io.h"
+#include "pie_io_jpg.h"
+#include "../pie_types.h"
+#include "../bm/pie_bm.h"
 
 #define ONE_OVER_255 0.003921569f
 

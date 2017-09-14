@@ -14,7 +14,9 @@
 #ifndef __PIE_IO_PNG_H__
 #define __PIE_IO_PNG_H__
 
-#include "../pie_types.h"
+struct pie_bitmap_u8rgb;
+struct pie_bitmap_u16rgb;
+struct pie_bitmap_f32rgb;
 
 /**
  * Reads an PNG image into the provided bitmap.
