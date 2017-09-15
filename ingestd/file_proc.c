@@ -31,7 +31,6 @@
 
 #define BUF_LEN (1<<14) /* 16kB */
 
-static void* worker(void*);
 int pie_fp_process_file(struct pie_mq_new_media*, const char*);
 
 /**
@@ -96,13 +95,12 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         md_len = pie_fp_mdigest(sum, src_fd);
         PIE_DEBUG("Digest in %ldms", timing_dur_msec(&t));
 
-        /* hex encode */
+        /* hex encode file checksum */
         for (unsigned int i = 0; i < md_len; i++)
         {
                 sprintf(hex + i * 2, "%02x", sum[i]);
         }
         hex[md_len * 2 + 1] = '\0';
-        /* Compare in database for duplicate based on digest */
 
         /* strip id_cfg.src_path from path */
         PIE_TRACE("Source path: %s", path);
