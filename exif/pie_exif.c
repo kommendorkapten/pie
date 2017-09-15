@@ -30,6 +30,12 @@ static int pie_exif_load_libexif(struct pie_exif_data*, ExifData*);
 static int pie_exif_load_libraw(struct pie_exif_data*, libraw_data_t*);
 
 static ExifEntry* get_entry(ExifData*, ExifIfd, ExifTag);
+/**
+ * Create a human readable exposure time in format 1/x.
+ * @param the exposure time as a float.
+ * @return a malloced string in human readable foramt.
+ */
+static char* pie_exif_exposure_time(float);
 
 static int16_t swap_int16(int16_t v);
 static int32_t swap_int32(int32_t v);
@@ -173,14 +179,9 @@ static int pie_exif_load_libexif(struct pie_exif_data* ped, ExifData* ed)
         {
                 int num = (int)load_exif_int32(entry->data, 0);
                 int den = (int)load_exif_int32(entry->data + 4, 0);
+                float et = (float)num / (float)den;
 
-                if (num > 9 && den > 100) {
-                        den = den / num;
-                        num = 1;
-                }
-
-                snprintf(buf, 255, "%d/%d", num, den);
-                ped->ped_exposure_time = strdup(buf);
+                ped->ped_exposure_time = pie_exif_exposure_time(et);
         }
         if ((entry = get_entry(ed, EXIF_IFD_EXIF, EXIF_TAG_ISO_SPEED_RATINGS)))
         {
@@ -357,16 +358,7 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
         localtime_r(&lrd->other.timestamp, &date_time);
         strftime(buf, 255, EXIF_TIME_FORMAT, &date_time);
         ped->ped_date_time = strdup(buf);
-        if (lrd->other.shutter > 0.0f && lrd->other.shutter < 1.0f)
-        {
-                snprintf(buf, 255, "1/%d", (int)(1 / lrd->other.shutter));
-                ped->ped_exposure_time = strdup(buf);
-        }
-        else
-        {
-                snprintf(buf, 255, "%0.1f", lrd->other.shutter);
-                ped->ped_exposure_time = strdup(buf);
-        }
+        ped->ped_exposure_time = pie_exif_exposure_time(lrd->other.shutter);
 
         ped->ped_focal_len = (short)lrd->other.focal_len;
 
@@ -384,4 +376,33 @@ static int pie_exif_load_libraw(struct pie_exif_data* ped, libraw_data_t* lrd)
         ped->ped_color_space = (short)lrd->params.output_color;
 
         return 0;
+}
+
+static char* pie_exif_exposure_time(float et)
+{
+        char buf[64];
+
+        if (et > 0.0f && et < 1.0f)
+        {
+                float tmp = 1.0f / et;
+                int denom;
+
+                if (tmp > 10.0f)
+                {
+                        /* Force denominator to be a multiple of 5 */
+                        denom = (int)((tmp / 5.0 + 0.5)) * 5;
+                }
+                else
+                {
+                        denom = (int)tmp;
+                }
+
+                snprintf(buf, 64, "1/%d", denom);
+        }
+        else
+        {
+                snprintf(buf, 64, "%0.1f", et);
+        }
+
+        return strdup(buf);
 }
