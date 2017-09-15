@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         out = argv[2];
 
         timing_start(&t);
-        if (jpg_f32_read(&bmf, in))
+        if (pie_io_jpg_f32_read(&bmf, in))
         {
                 printf("1\n");
                 return -1;
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         printf("Converted img to u8 in %luusec\n", timing_dur_usec(&t));
 
         timing_start(&t);
-        if (png_u8rgb_write(out, &bmu))
+        if (pie_io_png_u8rgb_write(out, &bmu))
         {
                 printf("2\n");
                 return -1;

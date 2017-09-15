@@ -98,9 +98,9 @@ int main(int argc, char** argv)
 
         timing_start(&t);        
 #if OUTPUT_16B
-        png_u16rgb_write(fout, &out);
+        pie_io_png_u16rgb_write(fout, &out);
 #else
-        png_u8rgb_write(fout, &out);
+        pie_io_png_u8rgb_write(fout, &out);
 #endif
         dur = timing_dur_usec(&t);
         printf("Write 16bit PNG took %luusec\n", dur);

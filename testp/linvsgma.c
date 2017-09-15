@@ -39,9 +39,9 @@ int main(void)
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
 #if USE_PNG
-        png_u8rgb_write(out_lin, &out);
+        pie_io_png_u8rgb_write(out_lin, &out);
 #else
-        jpg_u8rgb_write(out_lin, &out, 100);
+        pie_io_jpg_u8rgb_write(out_lin, &out, 100);
 #endif
 
         /* Convert to sRGB */
@@ -56,9 +56,9 @@ int main(void)
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
 #if USE_PNG
-        png_u8rgb_write(out_gma, &out);
+        pie_io_png_u8rgb_write(out_gma, &out);
 #else
-        jpg_u8rgb_write(out_gma, &out, 100);
+        pie_io_jpg_u8rgb_write(out_gma, &out, 100);
 #endif
 
         pie_bm_free_f32(&img);

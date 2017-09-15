@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
 
-        jpg_u8rgb_write("out.jpg", &out, 95);
+        pie_io_jpg_u8rgb_write("out.jpg", &out, 95);
 
         pie_bm_free_f32(&img);
         pie_bm_free_u8(&out);

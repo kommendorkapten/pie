@@ -77,10 +77,10 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm, const char* path)
         switch (ft)
         {
         case PIE_FT_JPG:
-                ret = jpg_f32_read(bm, path);
+                ret = pie_io_jpg_f32_read(bm, path);
                 break;
         case PIE_FT_PNG:
-                ret = png_f32_read(bm, path);
+                ret = pie_io_png_f32_read(bm, path);
                 break;
         case PIE_FT_UNKNOWN:
                 /* Assume a RAW format, try to load */

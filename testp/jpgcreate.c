@@ -46,7 +46,7 @@ int main ()
         }
 
         /* Write the image to a file 'out.png'. */
-        ret = jpg_u8rgb_write("out.jpg", &out, 90);
+        ret = pie_io_jpg_u8rgb_write("out.jpg", &out, 90);
         if (ret)
         {
                 printf("Failed: %d\n", ret);

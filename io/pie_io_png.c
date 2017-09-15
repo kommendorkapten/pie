@@ -36,7 +36,7 @@
 #  error __BYTE_ORDER__ not defined
 #endif
 
-int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 {
         unsigned char header[8];
         FILE* fp = fopen(path, "rb");
@@ -210,7 +210,7 @@ int png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         return 0;
 }
 
-int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
+int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;
@@ -297,7 +297,7 @@ int png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
         return 0;
 }
 
-int png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
+int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;

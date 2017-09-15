@@ -234,7 +234,7 @@ int main(int argc, char** argv)
         printf("* pie_bm_conv %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
-        if (png_u16rgb_write("out.png", &out))
+        if (pie_io_png_u16rgb_write("out.png", &out))
         {
                 printf("write jpg failed\n");
                 return 1;

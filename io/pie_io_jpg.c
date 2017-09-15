@@ -46,7 +46,7 @@ static void pie_jpg_error_exit(j_common_ptr cinfo)
         longjmp(err->setjmp_buffer, 1);
 }
 
-int jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 {
         struct jpeg_decompress_struct cinfo;
         struct pie_jpg_error_mgr jerr;
@@ -143,7 +143,9 @@ int jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         return 0;
 }
 
-int jpg_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bm, int quality)
+int pie_io_jpg_u8rgb_write(const char* path,
+                           struct pie_bitmap_u8rgb* bm,
+                           int quality)
 {
         struct jpeg_compress_struct cinfo;
         /* Error handling stuff, default is to exit() */

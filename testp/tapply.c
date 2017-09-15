@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         printf("Converted media to 8bit in %luusec\n", dur);
 
         timing_start(&t);
-        jpg_u8rgb_write(out_name, &out, 95);
+        pie_io_jpg_u8rgb_write(out_name, &out, 95);
         dur = timing_dur_usec(&t);
         printf("Wrote %s in %luusec\n", out_name, dur);
 

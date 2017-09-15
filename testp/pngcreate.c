@@ -46,7 +46,7 @@ int main ()
 
         /* Write the image to a file 'out.png'. */
 
-        png_u8rgb_write("out.png", &out);
+        pie_io_png_u8rgb_write("out.png", &out);
         pie_bm_free_u8(&out);
 
         return 0;

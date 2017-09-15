@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                        &img, PIE_COLOR_32B);
 
         timing_start(&t);
-        png_u8rgb_write("out.png", &out);
+        pie_io_png_u8rgb_write("out.png", &out);
         dur = timing_dur_usec(&t);
         printf("Wrote output in %luusec\n", dur);
 

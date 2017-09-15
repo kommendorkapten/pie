@@ -26,7 +26,7 @@ struct pie_bitmap_f32rgb;
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int png_f32_read(struct pie_bitmap_f32rgb*, const char*);
+extern int pie_io_png_f32_read(struct pie_bitmap_f32rgb*, const char*);
 
 /**
  * Writes an 8bit RGB bitmap to a PNG file.
@@ -34,7 +34,7 @@ extern int png_f32_read(struct pie_bitmap_f32rgb*, const char*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
+extern int pie_io_png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
 
 /**
  * Writes an 16bit RGB bitmap to a PNG file.
@@ -42,6 +42,6 @@ extern int png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int png_u16rgb_write(const char*, struct pie_bitmap_u16rgb*);
+extern int pie_io_png_u16rgb_write(const char*, struct pie_bitmap_u16rgb*);
 
 #endif /* __PIE_IO_PNG_H__ */

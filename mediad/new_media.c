@@ -474,7 +474,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
         PIE_DEBUG("Converted to 8b in %ldms", timing_dur_msec(&t));
 
         timing_start(&t);
-        ok = jpg_u8rgb_write(p, &bm_out, 90);
+        ok = pie_io_jpg_u8rgb_write(p, &bm_out, 90);
         PIE_DEBUG("Wrote %s in %ldms", p, timing_dur_msec(&t));
         if (ok)
         {

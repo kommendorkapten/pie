@@ -28,12 +28,12 @@ int main(void)
                 }
         }
 
-        if (png_u8rgb_write(f, &src))
+        if (pie_io_png_u8rgb_write(f, &src))
         {
                 printf("Failed to write\n");
         }
 
-        if (png_f32_read(&dst, f))
+        if (pie_io_png_f32_read(&dst, f))
         {
                 printf("Failed to read\n");
         }

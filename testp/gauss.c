@@ -139,7 +139,7 @@ int main(int argc, char** argv)
 
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
-        png_u8rgb_write("gauss.png", &out);
+        pie_io_png_u8rgb_write("gauss.png", &out);
         pie_bm_free_u8(&out);
         pie_bm_free_f32(&img);
         ret = pie_io_load(&img, argv[1]);
@@ -210,7 +210,7 @@ int main(int argc, char** argv)
         printf("Box blur 6 took      %8luusec\n", dur);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
-        png_u8rgb_write("box.png", &out);
+        pie_io_png_u8rgb_write("box.png", &out);
         pie_bm_free_u8(&out);
         
         free(buf);

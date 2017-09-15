@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         printf("Converted img to u8 in %luusec\n", timing_dur_usec(&t));
 
         timing_start(&t);
-        if (jpg_u8rgb_write(out, &bmu, 100))
+        if (pie_io_jpg_u8rgb_write(out, &bmu, 100))
         {
                 printf("2\n");
                 return -1;
