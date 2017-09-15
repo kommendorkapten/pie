@@ -106,7 +106,7 @@ COLLD_OBJS  = $(COLLD_SRC:%.c=obj/%.o)
 # Binaries
 TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
-              testfwlk qserver qclient test_exif_meta lrawtest
+              testfwlk qserver qclient test_exif_meta lrawtest exif_dump
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd exif jsmn
