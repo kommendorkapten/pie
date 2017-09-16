@@ -29,7 +29,7 @@ int q_intra_c_init(struct q_queue* q, char* name)
         un.sun_family = AF_UNIX;
         strcpy(un.sun_path, qc->queue);
 
-        qc->fd = socket(AF_UNIX, SOCK_DGRAM, PF_UNSPEC);
+        qc->fd = socket(AF_UNIX, SOCK_DGRAM, 0);
         if (qc->fd  < 0)
         {
                 return -1;
@@ -78,7 +78,7 @@ int q_intra_p_init(struct q_queue* q, char* name)
         qp->local[MAX_QUEUE_NAME - 1] = '\0';
         strcpy(un.sun_path, qp->local);
 
-        qp->fd = socket(AF_UNIX, SOCK_DGRAM, PF_UNSPEC);
+        qp->fd = socket(AF_UNIX, SOCK_DGRAM, 0);
         if (qp->fd < 0)
         {
                 return -1;

@@ -26,14 +26,18 @@
 #include "../pie_log.h"
 
 /* PNG is stored in network order */
-#ifdef __BYTE_ORDER__
+#if defined (__BYTE_ORDER__)
 # if __BYTE_ORDER__ == 4321
 #  define SWAP_PIXELS 0
 # else
 #  define SWAP_PIXELS 1
 # endif
+#elif defined (__BIG_ENDIAN__)
+# define SWAP_PIXELS 0
+#elif defined (__SMAL_ENDIAN__)
+# define SWAP_PIXELS 1
 #else
-#  error __BYTE_ORDER__ not defined
+# error __BYTE_ORDER__, __BIG_ENDIAN__  or __SMALL_ENDIAN__ not defined
 #endif
 
 int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)

@@ -7,6 +7,7 @@ ISA     = $(shell uname -p)
 DEBUG   = 1
 LCRYPTO = -lssl -lcrypto
 LIMG    = -lpng -ljpeg -lraw
+LNET    =
 
 # -ftree-loop-linear MAY introduce bugs.
 PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
@@ -36,6 +37,7 @@ endif
 
 # Configure based on OS/Compiler
 ifeq ($(OS), SunOS)
+  LNET = -lnsl -lsocket
   ifeq ($(CC), cc)
     CFLAGS += -std=c99 -pedantic -v -errwarn -mt -fast -xalias_level=std
   else ifeq ($(CC), c99)
@@ -197,20 +199,20 @@ bin/testfwlk: testp/testfwlk.c obj/llist.o obj/fswalk.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LCRYPTO)
 
 bin/qserver: testp/qserver.c obj/s_queue.o obj/s_queue_intra.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
 
 bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
 
 # Servers
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG)
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket -lsqlite3 $(LCRYPTO)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
 
 bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/evp_hw.o obj/timing.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o 
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lnsl -lsocket $(LCRYPTO) -lsqlite3 -ljpeg -lpng -lexif -lraw
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
-	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/jsmn.o -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
+	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/jsmn.o -o $@ $(LNET) -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
