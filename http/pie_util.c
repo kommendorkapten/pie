@@ -273,6 +273,8 @@ const char* pie_http_verb_string(enum pie_http_verb v)
         case PIE_HTTP_VERB_DELETE:
                 ret = "DELETE";
                 break;
+        default:
+                break;
         }
 
         return ret;

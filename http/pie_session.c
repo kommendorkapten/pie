@@ -36,7 +36,7 @@ struct pie_sess* pie_sess_create(struct chan* command, struct chan* response)
 
         s = malloc(sizeof(struct pie_sess));
         gettimeofday(&tv, NULL);
-        n = snprintf(buf, 64, "x&y_z%ld%ld", tv.tv_sec, tv.tv_usec);
+        n = snprintf(buf, 64, "x&y_z%ld%d", tv.tv_sec, (int)tv.tv_usec);
         SHA1_Init(&ctx);
         SHA1_Update(&ctx, (void*)buf, n);
         SHA1_Final(sum, &ctx);

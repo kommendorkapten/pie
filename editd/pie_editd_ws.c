@@ -596,9 +596,9 @@ static int cb_hist(struct lws* wsi,
                
                         timing_start(&t);
                         buf = malloc(JSON_HIST_SIZE + LWS_PRE);
-                        json_len = pie_enc_json_hist((char*)buf + LWS_PRE,
-                                                     JSON_HIST_SIZE,
-                                                     &session->img->hist);
+                        json_len = (int)pie_enc_json_hist((char*)buf + LWS_PRE,
+                                                          JSON_HIST_SIZE,
+                                                          &session->img->hist);
                         PIE_DEBUG("JSON encoded histogram: %8ldusec",
                                   timing_dur_usec(&t));
                         

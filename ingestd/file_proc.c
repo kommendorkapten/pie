@@ -45,7 +45,6 @@ unsigned int pie_fp_mdigest(unsigned char[], int);
 int pie_fp_add_file(const char* p)
 {
         struct pie_mq_new_media new_mmsg;
-        int ok;
 
         /* path is the absolute path for src file on local disk */
         if (pie_fp_process_file(&new_mmsg, p))

@@ -256,7 +256,8 @@ static void* fun_fan_in(void* arg)
 
         for (;;)
         {
-                struct chan_msg msg = {0};
+                struct chan_msg msg = {.data = NULL,
+                                       .len = 0};
                 int ret = chan_select(chans + 1, num, &msg, -1);
 
                 if (ret == 0)
@@ -297,7 +298,8 @@ static void* fun_fan_out(void* arg)
         }
         for (;;)
         {
-                struct chan_msg msg = {0};
+                struct chan_msg msg = {.data = NULL,
+                                       .len = 0};
                 
                 if (chan_read(src, &msg, -1))
                 {

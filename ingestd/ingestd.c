@@ -40,7 +40,6 @@ int main(int argc, char** argv)
         int ok;
         int status = -1;
         long evp_hw;
-        long lval;
         int c;
 
         id_cfg.cp_mode = MODE_COPY_INTO;

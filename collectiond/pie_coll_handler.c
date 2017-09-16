@@ -41,6 +41,8 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         struct llist* cl;
         struct lnode* n;
 
+        (void)url;
+        
         cl = pie_collection_find_all(db);
         if (cl == NULL)
         {
@@ -53,8 +55,6 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         n = llist_head(cl);
         while (n)
         {
-                struct pie_collection* c = n->data;
-
                 pie_collection_free(n->data);
                 n = n->next;
         }
@@ -167,6 +167,10 @@ int pie_coll_h_exif_put(struct pie_coll_h_resp* r,
                         struct pie_http_post_data* data,
                         sqlite3* db)
 {
+        (void)url;
+        (void)data;
+        (void)db;
+        
         r->http_sc = 501;
         return 0;
 }
@@ -294,7 +298,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                 else if (jsoneq(data->data, tokens + i, "color") == 0)
                 {
                         PIE_DEBUG("color: %s", field);
-                        mob.mob_color = strtol(field, &p, 10);
+                        mob.mob_color = (char)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid color: '%s'", field);
@@ -304,7 +308,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                 else if (jsoneq(data->data, tokens + i, "rating") == 0)
                 {
                         PIE_DEBUG("rating: %s", field);
-                        mob.mob_rating = strtol(field, &p, 10);
+                        mob.mob_rating = (char)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid rating: '%s'", field);
@@ -314,7 +318,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                 else if (jsoneq(data->data, tokens + i, "orientation") == 0)
                 {
                         PIE_DEBUG("orientation: %s", field);
-                        mob.mob_orientation = strtol(field, &p, 10);
+                        mob.mob_orientation = (char)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid orientation: '%s'", field);

@@ -25,7 +25,17 @@ enum pie_obj_type
         PIE_ID_TYPE_PRESET = 0x4
 };
 
+#ifdef __APPLE__
+# if __LONG_MAX__ == 9223372036854775807L
+/* int64_t is long long on apple, force to long to avoid
+   warnings. */
+typedef long pie_id;
+# else
+#  error long is not 64b.
+# endif
+#else
 typedef int64_t pie_id;
+#endif
 
 /**
  * Create a new pie_id.

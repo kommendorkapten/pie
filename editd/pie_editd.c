@@ -18,7 +18,11 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include <note.h>
+#ifdef __sun
+# include <note.h>
+#else
+# define NOTE(X)
+#endif
 #include "../editd/pie_editd_ws.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
