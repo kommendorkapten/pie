@@ -42,6 +42,7 @@ var histDataB = {
         y: 0
     }]
 };
+var sliderTimeout = 200;
 
 function getWsUrl(){
     var pcol;
@@ -329,7 +330,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("COLORT " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -355,7 +356,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("TINT " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -381,7 +382,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("EXPOS " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -407,7 +408,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("CONTR " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -433,7 +434,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("HIGHL " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -459,7 +460,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHADO " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -485,7 +486,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("WHITE " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -511,7 +512,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("BLACK " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -537,7 +538,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("CLARI " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -563,7 +564,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("VIBRA " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -589,7 +590,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("SATUR " + targ.value);
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -613,12 +614,12 @@ window.addEventListener("load", function(evt) {
             clearTimeout(targ.wsCall);
         }
         targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
             var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHARP " + a + " " + r + " " + t + " ");       
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -642,12 +643,12 @@ window.addEventListener("load", function(evt) {
             clearTimeout(targ.wsCall);
         }
         targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
             var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };
@@ -671,12 +672,12 @@ window.addEventListener("load", function(evt) {
             clearTimeout(targ.wsCall);
         }
         targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
             var t = document.getElementById("sl_sharp_t").value;        
+            wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-        }, 50);
+        }, sliderTimeout);
 
         return true;
     };    
@@ -911,6 +912,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_colortemp").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("COLORT " + targ.value);
     };
 
@@ -936,6 +938,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_tint").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("TINT " + targ.value);
     };    
 
@@ -961,6 +964,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_exposure").value=targ.value * 10;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("EXPOS " + Math.ceil(targ.value * 10));
     };
 
@@ -986,6 +990,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_contrast").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("CONTR " + targ.value);
     };
 
@@ -1011,6 +1016,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_highlights").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("HIGHL " + targ.value);
     };
 
@@ -1036,6 +1042,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_shadows").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHADO " + targ.value);
     };
 
@@ -1061,6 +1068,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_white").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("WHITE " + targ.value);
     };
 
@@ -1086,6 +1094,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_black").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("BLACK " + targ.value);
     };
 
@@ -1111,6 +1120,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_clarity").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("CLARI " + targ.value);
     };
 
@@ -1136,6 +1146,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_vibrance").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("VIBRA " + targ.value);
     };
 
@@ -1161,6 +1172,7 @@ window.addEventListener("load", function(evt) {
         }
 
         document.getElementById("sl_saturation").value=targ.value;
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("SATUR " + targ.value);
     };
 
@@ -1189,6 +1201,7 @@ window.addEventListener("load", function(evt) {
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
         var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
     };
 
@@ -1217,6 +1230,7 @@ window.addEventListener("load", function(evt) {
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
         var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
     };
 
@@ -1245,6 +1259,7 @@ window.addEventListener("load", function(evt) {
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
         var t = document.getElementById("sl_sharp_t").value;        
+        wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
     };    
 

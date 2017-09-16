@@ -68,7 +68,8 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
-        
+
+        /* Linear scan over entries */
         for (int i = 0; i < mgr->cap; i++)
         {
                 if (mgr->cache[i].flags == FLAG_FREE)
@@ -90,11 +91,14 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         {
                 goto done;
         }
-        
+
+        /* Set to the first free pos (if empty slots exists */
         int pos = -1;
+        /* Set to the slot to evict if cache is full */
         int evict = -1;
         time_t min = tv.tv_sec;
 
+        /* New entry needs to be inserted, scan for free slots */
         /* Cache is LRU */
         for (int i = 0; i < mgr->cap; i++)
         {
@@ -115,13 +119,13 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
 
         if (pos == -1 && evict != -1)
         {
-                /* Free old image */
+                /* Cache is full. Free old image */
                 img = mgr->cache[evict].img;
                 PIE_TRACE("Replace %s at pos %d with %s",
                           img->path,
                           evict,
                           path);
-                
+
                 pie_bm_free_f32(&img->raw);
                 /* make sure that proxies are allocated */
                 if (img->proxy.c_red)
@@ -134,7 +138,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 }
                 free(img);
                 img = NULL;
-                /* Mark slot as free, as it is not know yet wheter the 
+                /* Mark slot as free, as it is not know yet wheter the
                    new image actually exists */
                 mgr->cache[evict].flags = FLAG_FREE;
                 pos = evict;
@@ -163,17 +167,6 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                         goto done;
                 }
 
-#if _USE_GAMMA_CONV > 0
-                for (int y = 0; y < img->raw.height; y++)
-                {
-                        srgb_to_linearv(img->raw.c_red + y * img->raw.row_stride, 
-                                        img->raw.width);
-                        srgb_to_linearv(img->raw.c_green + y * img->raw.row_stride, 
-                                        img->raw.width);
-                        srgb_to_linearv(img->raw.c_blue + y * img->raw.row_stride, 
-                                        img->raw.width);
-                }
-#endif
                 strncpy(img->path, path, PIE_PATH_LEN);
                 mgr->cache[pos].flags = FLAG_ACTIVE;
                 mgr->cache[pos].img = img;
@@ -215,7 +208,7 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
                         struct pie_img_workspace* img;
 
                         PIE_TRACE("%s", mgr->cache[i].img->path);
-                        
+
                         img = mgr->cache[i].img;
                         pie_bm_free_f32(&img->raw);
                         /* make sure that proxies are allocated */

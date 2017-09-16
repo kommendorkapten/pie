@@ -68,37 +68,37 @@ struct pie_ctx_cmd
 static const char* context_root;
 /* Only one server can be executed at a time */
 static struct pie_editd_ws* server;
-static struct pie_sess_mgr* sess_mgr;
+extern struct pie_sess_mgr* sess_mgr;
 
 /**
  * Callback methods.
  * @param The web-sockets instance.
- * @param The reason fro the callback. 
+ * @param The reason fro the callback.
  *        See libwebsockets/enum lws_callback_reasons for alternatives.
  * @param The per session context data.
  * @param Incoming data for this request. (Path for HTTP, data for WS etc).
  * @param Length of data for request.
  * @return 0 on sucess, negative otherwise.
  */
-static int cb_http(struct lws* wsi, 
-                   enum lws_callback_reasons reason, 
+static int cb_http(struct lws* wsi,
+                   enum lws_callback_reasons reason,
                    void* user,
                    void* in,
                    size_t len);
 static int cb_img(struct lws* wsi,
                   enum lws_callback_reasons reason,
                   void* user,
-                  void* in, 
+                  void* in,
                   size_t len);
 static int cb_hist(struct lws* wsi,
                    enum lws_callback_reasons reason,
                    void* user,
-                   void* in, 
+                   void* in,
                    size_t len);
 static int cb_cmd(struct lws* wsi,
                   enum lws_callback_reasons reason,
                   void* user,
-                  void* in, 
+                  void* in,
                   size_t len);
 
 static const struct lws_extension exts[] = {
@@ -114,49 +114,46 @@ static const struct lws_extension exts[] = {
         },
         {NULL, NULL, NULL}
 };
+static struct lws_protocols protocols[] = {
+        /* HTTP must be first */
+        {
+                "http-only", /* name */
+                cb_http,     /* callback */
+                sizeof(struct pie_ctx_http), /* ctx size */
+                0,           /* max frame size / rx buffer */
+                0,           /* id, not used */
+                NULL         /* void* user data, let lws allocate */
+        },
+        {
+                "pie-img",
+                cb_img,
+                sizeof(struct pie_ctx_img),
+                0,
+                0,
+                NULL
+        },
+        {
+                "pie-hist",
+                cb_hist,
+                sizeof(struct pie_ctx_hist),
+                0,
+                0,
+                NULL
+        },
+        {
+                "pie-cmd",
+                cb_cmd,
+                sizeof(struct pie_ctx_cmd),
+                0,
+                0,
+                NULL
+        },
+        {NULL, NULL, 0, 0, 0, NULL}
+};
 
-int start_editd_ws(struct pie_editd_ws* srv)
+int pie_editd_ws_start(struct pie_editd_ws* srv)
 {
-        struct lws_protocols protocols[] = {
-                /* HTTP must be first */
-                {
-                        "http-only", /* name */
-                        cb_http,     /* callback */
-                        sizeof(struct pie_ctx_http), /* ctx size */
-                        0,           /* max frame size / rx buffer */
-                        0,           /* id, not used */
-                        NULL         /* void* user data, let lws allocate */
-                },
-                {
-                        "pie-img",
-                        cb_img,
-                        sizeof(struct pie_ctx_img),
-                        0, 
-                        0,
-                        NULL
-                },
-                {
-                        "pie-hist",
-                        cb_hist,
-                        sizeof(struct pie_ctx_hist),
-                        0, 
-                        0,
-                        NULL
-                },
-                {
-                        "pie-cmd",
-                        cb_cmd,
-                        sizeof(struct pie_ctx_cmd),
-                        0, 
-                        0,
-                        NULL
-                },
-                {NULL, NULL, 0, 0, 0, NULL}
-        };
         struct lws_context_creation_info info;
-        int status;
-
-        sess_mgr = pie_sess_mgr_create();
 
         context_root = srv->context_root;
         server = srv;
@@ -194,99 +191,104 @@ int start_editd_ws(struct pie_editd_ws* srv)
         }
         srv->run = 1;
 
-        /* start loop */
-        status = 1;
-        while (status >= 0 && srv->run)
-        {
-                /* Run state machine here */
-                /* Receiver is responsible to free data */
-                struct chan_msg msg;
-                int n;
-
-                n = chan_read(srv->response, &msg, 0);
-                if (n == 0)
-                {
-                        struct pie_msg* resp = (struct pie_msg*)msg.data;
-                        struct pie_sess* session;
-
-                        PIE_DEBUG("[%s] received message %d (RTT %ldusec).",
-                                  resp->token,
-                                  (int)resp->type,
-                                  timing_dur_usec(&resp->t));
-
-                        if (msg.len != sizeof(struct pie_msg))
-                        {
-                                PIE_WARN("Invalid message received.");
-                                goto msg_done;
-                        }
-                        
-                        session = pie_sess_mgr_get(sess_mgr, resp->token);
-                        if (session == NULL)
-                        {
-                                PIE_ERR("[%s] sesion not found.",
-                                       resp->token);
-                                goto msg_done;
-                        }
-                        switch (resp->type)
-                        {
-                        case PIE_MSG_LOAD_DONE:
-                                /* On load done, a new image workspace 
-                                   is created, store it in the session. */
-                                session->img = resp->img;
-                        NOTE(FALLTHRU)
-                        case PIE_MSG_RENDER_DONE:
-                                /* Update session with tx ready */
-                                session->tx_ready = (PIE_TX_IMG | PIE_TX_HIST);
-                                lws_callback_on_writable_all_protocol(srv->context, 
-                                                                      &protocols[PIE_PROTO_IMG]);
-                                lws_callback_on_writable_all_protocol(srv->context,
-                                                                      &protocols[PIE_PROTO_HIST]);
-                                break;
-                        default:
-                                PIE_WARN("[%s] invalid message: %d",
-                                         resp->token,
-                                         (int)resp->type);
-                        }
-
-                msg_done:
-                        pie_msg_free(msg.data);
-                }
-                else if (n != EAGAIN)
-                {
-                        PIE_ERR("Error reading channel %d.", n);
-                        srv->run = 0;
-                }
-
-                /* Check for stop condition or img/hist is computed */
-                /* If nothing to do, return after Xms */
-                status = lws_service(srv->context, 5);
-                /* Reap sessions with inactivity for one hour */
-                pie_sess_mgr_reap(sess_mgr, 60 * 60);
-        }
-
-        PIE_LOG("Shutdown server.");
-        lws_context_destroy(srv->context);
-        pie_sess_mgr_destroy(sess_mgr);
-        
         return 0;
 }
 
-static int cb_http(struct lws* wsi, 
-                   enum lws_callback_reasons reason, 
+int pie_editd_ws_service(struct pie_editd_ws* srv)
+{
+        int status;
+        struct chan_msg msg;
+        int n;
+
+        /* Run state machine here */
+        /* Receiver is responsible to free data */
+        n = chan_read(srv->response, &msg, 0);
+        if (n == 0)
+        {
+                struct pie_msg* resp = (struct pie_msg*)msg.data;
+                struct pie_sess* session;
+
+                PIE_DEBUG("[%s] received message %d (RTT %ldusec).",
+                          resp->token,
+                          (int)resp->type,
+                          timing_dur_usec(&resp->t));
+
+                if (msg.len != sizeof(struct pie_msg))
+                {
+                        PIE_WARN("Invalid message received.");
+                        goto msg_done;
+                }
+
+                session = pie_sess_mgr_get(sess_mgr, resp->token);
+                if (session == NULL)
+                {
+                        PIE_ERR("[%s] sesion not found.",
+                                resp->token);
+                        goto msg_done;
+                }
+                switch (resp->type)
+                {
+                case PIE_MSG_LOAD_DONE:
+                        /* On load done, a new image workspace
+                           is created, store it in the session. */
+                        session->img = resp->img;
+                        NOTE(FALLTHRU)
+                case PIE_MSG_RENDER_DONE:
+                        /* Update session with tx ready */
+                        session->tx_ready = (PIE_TX_IMG | PIE_TX_HIST);
+                        lws_callback_on_writable_all_protocol(srv->context,
+                                                              &protocols[PIE_PROTO_IMG]);
+                        lws_callback_on_writable_all_protocol(srv->context,
+                                                              &protocols[PIE_PROTO_HIST]);
+                        break;
+                default:
+                        PIE_WARN("[%s] invalid message: %d",
+                                 resp->token,
+                                 (int)resp->type);
+                }
+
+        msg_done:
+                pie_msg_free(msg.data);
+        }
+        else if (n != EAGAIN)
+        {
+                PIE_ERR("Error reading channel %d.", n);
+                srv->run = 0;
+        }
+
+        /* Check for stop condition or img/hist is computed */
+        /* If nothing to do, return after Xms */
+        status = lws_service(srv->context, 5);
+        /* Reap sessions with inactivity for one hour */
+        pie_sess_mgr_reap(sess_mgr, 60 * 60);
+
+        return status;
+}
+
+int pie_editd_ws_stop(struct pie_editd_ws* srv)
+{
+        PIE_LOG("Shutdown server.");
+        lws_context_destroy(srv->context);
+
+        return 0;
+}
+
+static int cb_http(struct lws* wsi,
+                   enum lws_callback_reasons reason,
                    void* user,
                    void* in,
                    size_t len)
 {
         char url[256];
         unsigned char resp_headers[256];
-        struct hmap* req_headers = NULL;
+        struct hmap* query_params = NULL;
         struct pie_sess* session = NULL;
         const char* mimetype;
         struct pie_ctx_http* ctx = (struct pie_ctx_http*)user;
         int hn = 0;
         int n;
         int ret;
-        
+
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
@@ -295,7 +297,7 @@ static int cb_http(struct lws* wsi,
         {
         case LWS_CALLBACK_HTTP:
                 try_keepalive = 1;
-                req_headers = get_request_headers(wsi);
+                query_params = pie_http_req_params(wsi);
 
                 /* Look for existing session */
                 session = get_session(sess_mgr, wsi);
@@ -304,11 +306,10 @@ static int cb_http(struct lws* wsi,
                         /* Create a new */
                         char cookie[128];
                         unsigned char* p = &resp_headers[0];
-                        
+
                         session = pie_sess_create(server->command,
                                                   server->response);
-                        
-                        hn = snprintf(cookie, 
+                        hn = snprintf(cookie,
                                       128,
                                       "pie-session=%s;Max Age=3600",
                                       session->token);
@@ -329,15 +330,15 @@ static int cb_http(struct lws* wsi,
                                   session->token);
 
                         pie_sess_mgr_put(sess_mgr, session);
-                        /* 
+                        /*
                          * This is usually safe. P should never be incremented
                          * more than the size of headers.
                          * P can never be decremented.
                          * But it's not beautiful, but needed to silence lint.
                          */
                         hn = (int)((unsigned long)p - (unsigned long)&resp_headers[0]);
-                        strncpy(ctx->token, 
-                                session->token, 
+                        strncpy(ctx->token,
+                                session->token,
                                 PIE_SESS_TOKEN_LEN);
                 }
 
@@ -352,6 +353,17 @@ static int cb_http(struct lws* wsi,
 			goto keepalive;
 		}
 
+                PIE_LOG("Got url: '%s'", in);
+                char* qv = hmap_get(query_params, "img");
+                if (qv)
+                {
+                        PIE_LOG("img=%s", qv);
+                }
+                qv = hmap_get(query_params, "coll");
+                if (qv)
+                {
+                        PIE_LOG("coll=%s", qv);
+                }
                 strcpy(url, context_root);
 
                 /* Get the URL */
@@ -360,17 +372,17 @@ static int cb_http(struct lws* wsi,
                         /* File provided */
                         strncat(url, in, sizeof(url) - strlen(url) - 1);
                 }
-                else 
+                else
                 {
-                        /* Get index.html */
-                        strcat(url, "/index.html");
+                        /* Get index page */
+                        strcat(url, "/edit.html");
                 }
                 url[sizeof(url) - 1] = 0;
                 mimetype = get_mimetype(url);
                 PIE_LOG("[%s] GET %s",
                           session->token,
                           url);
-                
+
 		if (!mimetype)
                 {
 			lws_return_http_status(wsi,
@@ -390,7 +402,7 @@ static int cb_http(struct lws* wsi,
                                         hn);
                 if (n == 0)
                 {
-                        /* File is beeing served, but we can not 
+                        /* File is beeing served, but we can not
                            check for transaction completion yet */
                         try_keepalive = 0;
                 }
@@ -420,38 +432,39 @@ keepalive:
                         {
                                 token = session->token;
                         }
-                
                         PIE_WARN("[%s] Failed to keep connection open",
                                  token);
                         goto bailout;
                 }
-        }        
+        }
+
         goto cleanup;
 bailout:
         ret = -1;
 cleanup:
-        if (req_headers)
+        if (query_params)
         {
                 size_t h_size;
-                struct hmap_entry* it = hmap_iter(req_headers, &h_size);
+                struct hmap_entry* it = hmap_iter(query_params, &h_size);
 
                 for (size_t i = 0; i < h_size; i++)
                 {
+                        PIE_LOG("Req params: %s=%s", it[i].key, it[i].data);
                         free(it[i].key);
                         free(it[i].data);
                 }
-                
+
                 free(it);
-                hmap_destroy(req_headers);
+                hmap_destroy(query_params);
         }
-        
+
 	return ret;
 }
 
 static int cb_img(struct lws* wsi,
                   enum lws_callback_reasons reason,
                   void* user,
-                  void* in, 
+                  void* in,
                   size_t len)
 {
         struct pie_sess* session = NULL;
@@ -486,7 +499,7 @@ static int cb_img(struct lws* wsi,
                         ret = -1;
                         break;
                 }
-                PIE_DEBUG("[%s] tx_ready: 0x%x",
+                PIE_TRACE("[%s] tx_ready: 0x%x",
                           session->token,
                           session->tx_ready);
 
@@ -494,11 +507,11 @@ static int cb_img(struct lws* wsi,
                 {
                         struct timing t;
                         int bw;
-                        
+
                         /* Allocate output buffer */
                         /* Outputbuffer format is x,y,rgba data.
-                         * Buffer is intented for raw copy on ws channel, 
-                         * so allocate extra space in the beginning for ws 
+                         * Buffer is intented for raw copy on ws channel,
+                         * so allocate extra space in the beginning for ws
                          * related data. */
                         timing_start(&t);
                         if (session->rgba == NULL)
@@ -508,13 +521,12 @@ static int cb_img(struct lws* wsi,
                                                           4 + 3 * sizeof(uint32_t));
                                 session->rgba = malloc(session->rgba_len + LWS_PRE);
                         }
-                        
+
                         pie_enc_bm_rgba(session->rgba + LWS_PRE,
                                         &session->img->proxy_out,
                                         PIE_IMAGE_TYPE_PRIMARY);
                         PIE_DEBUG("Encoded proxy:         %8ldusec",
                                   timing_dur_usec(&t));
-        
                         bw = lws_write(wsi,
                                        session->rgba + LWS_PRE,
                                        session->rgba_len,
@@ -531,7 +543,7 @@ static int cb_img(struct lws* wsi,
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:
-                PIE_LOG("[%s] Got data: '%s'", 
+                PIE_LOG("[%s] Got data: '%s'",
                         session->token,
                         (char*)in);
 
@@ -546,7 +558,7 @@ static int cb_img(struct lws* wsi,
 static int cb_hist(struct lws* wsi,
                    enum lws_callback_reasons reason,
                    void* user,
-                   void* in, 
+                   void* in,
                    size_t len)
 {
         struct pie_sess* session = NULL;
@@ -583,7 +595,7 @@ static int cb_hist(struct lws* wsi,
                         break;
                 }
 
-                PIE_DEBUG("[%s] tx_ready: 0x%x",
+                PIE_TRACE("[%s] tx_ready: 0x%x",
                           session->token,
                           session->tx_ready);
 
@@ -593,7 +605,7 @@ static int cb_hist(struct lws* wsi,
                         unsigned char* buf;
                         int bw;
                         int json_len;
-               
+
                         timing_start(&t);
                         buf = malloc(JSON_HIST_SIZE + LWS_PRE);
                         json_len = (int)pie_enc_json_hist((char*)buf + LWS_PRE,
@@ -601,7 +613,6 @@ static int cb_hist(struct lws* wsi,
                                                           &session->img->hist);
                         PIE_DEBUG("JSON encoded histogram: %8ldusec",
                                   timing_dur_usec(&t));
-                        
                         bw = lws_write(wsi,
                                        buf + LWS_PRE,
                                        json_len,
@@ -634,7 +645,7 @@ static int cb_hist(struct lws* wsi,
 static int cb_cmd(struct lws* wsi,
                   enum lws_callback_reasons reason,
                   void* user,
-                  void* in, 
+                  void* in,
                   size_t len)
 {
         struct chan_msg envelope;
@@ -702,7 +713,7 @@ static int cb_cmd(struct lws* wsi,
                         envelope.data = msg;
                         envelope.len = sizeof(struct pie_msg);
                         timing_start(&msg->t);
-                        
+
                         if (chan_write(session->command, &envelope))
                         {
                                 PIE_ERR("[%s] Failed to write msg %d to chan",

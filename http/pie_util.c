@@ -57,7 +57,7 @@ const char* get_mimetype(const char *path)
         return NULL;
 }
 
-struct hmap* get_request_headers(struct lws* wsi)
+struct hmap* pie_http_req_params(struct lws* wsi)
 {
         char header[256];
         struct hmap* h = hmap_create(NULL, NULL, 8, 0.7f);

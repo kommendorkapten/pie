@@ -230,7 +230,7 @@ static int cb_http(struct lws* wsi,
         unsigned char resp_headers[256];
         char file_url[256];
         struct pie_coll_h_resp resp;
-        struct hmap* req_headers = NULL;
+        struct hmap* query_params = NULL;
         const char* req_url = in;
         const char* p;
         struct pie_ctx_http* ctx = user;
@@ -259,7 +259,7 @@ static int cb_http(struct lws* wsi,
                           user,
                           req_url);
                 try_keepalive = 1;
-                req_headers = get_request_headers(wsi);
+                query_params = pie_http_req_params(wsi);
 
                 /* Deal with PUT/POST */
                 /* First set up cb to slurp the data. When all data is slurped
@@ -508,10 +508,10 @@ bailout:
         ret = -1;
 
 cleanup:
-        if (req_headers)
+        if (query_params)
         {
                 size_t h_size;
-                struct hmap_entry* it = hmap_iter(req_headers, &h_size);
+                struct hmap_entry* it = hmap_iter(query_params, &h_size);
 
                 for (size_t i = 0; i < h_size; i++)
                 {
@@ -520,7 +520,7 @@ cleanup:
                 }
 
                 free(it);
-                hmap_destroy(req_headers);
+                hmap_destroy(query_params);
         }
 
 	return ret;

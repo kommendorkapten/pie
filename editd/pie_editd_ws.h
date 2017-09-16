@@ -28,6 +28,8 @@ struct pie_editd_ws
         volatile int run;
 };
 
-extern int start_editd_ws(struct pie_editd_ws*);
+extern int pie_editd_ws_start(struct pie_editd_ws*);
+extern int pie_editd_ws_service(struct pie_editd_ws*);
+extern int pie_editd_ws_stop(struct pie_editd_ws*);
 
 #endif /* __PIE_EDITD_H__ */

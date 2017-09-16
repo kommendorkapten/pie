@@ -44,12 +44,12 @@ struct pie_http_post_data
 extern const char* get_mimetype(const char*);
 
 /**
- * Exract request headers from the current request.
+ * Exract request query parameters.
  * Limitations: Only a signel value per key can be stored.
  * @param the request
- * @return pointer to a hash map of the headers.
+ * @return pointer to a hash map of the query parameters.
  */
-extern struct hmap* get_request_headers(struct lws*);
+extern struct hmap* pie_http_req_params(struct lws*);
 
 /**
  * Extract a session from the current request.

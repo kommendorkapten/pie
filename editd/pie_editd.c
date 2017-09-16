@@ -24,6 +24,7 @@
 # define NOTE(X)
 #endif
 #include "../editd/pie_editd_ws.h"
+#include "../http/pie_session.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
 #include "../pie_types.h"
@@ -45,6 +46,7 @@ struct config
 static struct config config;
 static struct pie_editd_ws server;
 static struct pie_wrkspc_mgr* wrkspc_mgr;
+struct pie_sess_mgr* sess_mgr;
 
 /**
  * Signal handler.
@@ -102,7 +104,7 @@ int main(void)
 
         wrkspc_mgr = pie_wrkspc_mgr_create(config.lib_path,
                                            config.wrk_cache_size);
-        
+
         /* interrupt handler thread */
         ok = pthread_create(&thr_int,
                             NULL,
@@ -136,18 +138,29 @@ int main(void)
 
         PIE_LOG("Start with config:");
         PIE_LOG("  image library path: %s", config.lib_path);
-        
-        if (start_editd_ws(&server))
+
+        sess_mgr = pie_sess_mgr_create();
+        if (pie_editd_ws_start(&server))
         {
-                PIE_ERR("Failed");
+                PIE_ERR("Failed to start websocket server");
+                server.run = 0;
         }
 
-        
+
+        /* Run service loop */
+        int ws_ok = 0;
+        while (ws_ok >= 0 && server.run)
+        {
+                ws_ok = pie_editd_ws_service(&server);
+        }
+        pie_editd_ws_stop(&server);
+        pie_sess_mgr_destroy(sess_mgr);
+
         PIE_LOG("Shutdown main.");
         ok = 1;
         chan_close(server.command);
         chan_close(server.response);
-        
+
         pthread_join(thr_int, &ret);
         if (ret)
         {
@@ -169,7 +182,7 @@ cleanup:
         chan_destroy(server.command);
         chan_destroy(server.response);
         pie_wrkspc_mgr_destroy(wrkspc_mgr);
-        
+
         return 0;
 }
 
@@ -196,7 +209,7 @@ static void* i_handler(void* a)
                 perror("i_handler::sigaction");
                 return (void*)0x1L;
         }
-        
+
         pause();
         PIE_DEBUG("Leaving.");
         s->run = 0;
@@ -259,7 +272,7 @@ static void* ev_loop(void* a)
                                 break;
                         default:
                                 processed = 0;
-                                PIE_WARN("Unknown message %d.", 
+                                PIE_WARN("Unknown message %d.",
                                          (int)cmd->type);
                         }
                         if (processed)
@@ -316,7 +329,7 @@ static void* ev_loop(void* a)
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         struct timing t;
-        struct timing t_l;        
+        struct timing t_l;
         int len;
         int res;
         int proxy_w;
@@ -325,7 +338,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         int downsample = 0;
 
         timing_start(&t_l);
-        
+
         if (msg->img)
         {
                 /* Release earlier workspace */
@@ -338,7 +351,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         {
                 return PIE_MSG_INVALID;
         }
-        
+
         /* Init proxies */
         stride = msg->img->raw.row_stride;
         proxy_w = msg->i1;
@@ -372,7 +385,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                           proxy_h);
         }
 
-        /* Allocate proxy images */        
+        /* Allocate proxy images */
         if (downsample)
         {
                 struct pie_unsharp_param up = {
@@ -393,7 +406,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 PIE_DEBUG("[%s] Downsampled proxy in %ldusec",
                           msg->token,
                           timing_dur_usec(&t));
-                
+
                 /* Add some sharpening to mitigate any blur created
                    during downsampling. */
                 timing_start(&t);
@@ -410,7 +423,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 }
                 PIE_DEBUG("[%s] Added post-downsampling sharpening in %ldusec",
                           msg->token,
-                          timing_dur_usec(&t));                
+                          timing_dur_usec(&t));
         }
         else
         {
@@ -436,7 +449,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
         memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
         memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);
-        
+
         /* Read from database to get settings */
         pie_img_init_settings(&msg->img->settings,
                               msg->img->proxy.width,
@@ -447,18 +460,18 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                              NULL,
                              &msg->img->settings);
         assert(res == 0);
-        
+
         /* Create histogram */
         pie_alg_hist_lum(&msg->img->hist, &msg->img->proxy_out);
         pie_alg_hist_rgb(&msg->img->hist, &msg->img->proxy_out);
-        
+
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
                   msg->token,
                   msg->img->proxy.width,
                   msg->img->proxy.height,
                   timing_dur_usec(&t_l));
-        
+
         return PIE_MSG_LOAD_DONE;
 }
 
@@ -469,7 +482,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 #if 0
         int resample = 0;
 #endif
-        
+
         switch (msg->type)
         {
         case PIE_MSG_SET_COLOR_TEMP:
@@ -503,7 +516,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                   msg->token,
                                   msg->img->settings.tint);
                 }
-                break;                
+                break;
         case PIE_MSG_SET_EXSPOSURE:
                 if (msg->f1 < -5.0f || msg->f1 > 5.0f)
                 {
@@ -535,7 +548,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                   msg->token,
                                   msg->img->settings.contrast);
                 }
-                break;                
+                break;
         case PIE_MSG_SET_HIGHL:
                 if (msg->f1 < -1.0f || msg->f1 > 1.0f)
                 {
@@ -606,7 +619,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid clarity: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;                        
+                        status = -1;
                 }
                 else
                 {
@@ -622,7 +635,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid vibrance: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;                        
+                        status = -1;
                 }
                 else
                 {
@@ -677,7 +690,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                   msg->img->settings.sharpening.radius,
                                   msg->img->settings.sharpening.threshold);
                 }
-                break;                
+                break;
         default:
                 PIE_WARN("[%s] Invalid message: %d.",
                          msg->token,
@@ -693,7 +706,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         }
 #endif
 
-        /* New parameters are set. Update the current workspace with the 
+        /* New parameters are set. Update the current workspace with the
          * following steps:
          * 1 create a new copy of the stored proxy.
          * 2 extract histogram data.
@@ -705,7 +718,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 struct pie_bitmap_f32rgb* new = &msg->img->proxy_out;
                 size_t len = org->height * org->row_stride * sizeof(float);
                 int r_ok;
-                
+
                 /* Copy fresh proxy */
                 timing_start(&t1);
                 memcpy(new->c_red, org->c_red, len);
@@ -713,7 +726,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 memcpy(new->c_blue, org->c_blue, len);
                 PIE_DEBUG(" Reset proxy:           %8ldusec",
                           timing_dur_usec(&t1));
-                
+
                 r_ok = pie_img_render(new,
                                       NULL,
                                       &msg->img->settings);
@@ -727,7 +740,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                  new);
                 PIE_DEBUG(" Created histogram:     %8ldusec",
                           timing_dur_usec(&t1));
-                
+
                 ret_msg = PIE_MSG_RENDER_DONE;
         }
 
