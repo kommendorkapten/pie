@@ -25,7 +25,7 @@ struct pie_sess_mgr
         struct hmap* store;
 };
 
-struct pie_sess* pie_sess_create(struct chan* command, struct chan* response)
+struct pie_sess* pie_sess_create(void)
 {
         struct pie_sess* s;
         char buf[64];
@@ -47,8 +47,6 @@ struct pie_sess* pie_sess_create(struct chan* command, struct chan* response)
                 sprintf(s->token + i * 2, "%02x", sum[i]);
         }
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
-        s->command = command;
-        s->response = response;        
         s->img = NULL;
         s->rgba = NULL;
         s->tx_ready = 0;

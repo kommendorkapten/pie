@@ -24,7 +24,6 @@
 # define NOTE(X)
 #endif
 #include "../editd/pie_editd_ws.h"
-#include "../http/pie_session.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
 #include "../pie_types.h"
@@ -46,7 +45,7 @@ struct config
 static struct config config;
 static struct pie_editd_ws server;
 static struct pie_wrkspc_mgr* wrkspc_mgr;
-struct pie_sess_mgr* sess_mgr;
+static volatile int run;
 
 /**
  * Signal handler.
@@ -64,7 +63,7 @@ static void* ev_loop(void*);
 
 /**
  * Interrupt handler.
- * @param struct server.
+ * @param NULL.
  * @return NULL if successfull.
  */
 static void* i_handler(void*);
@@ -94,10 +93,10 @@ int main(void)
         void* ret;
         int ok;
 
+        run = 1;
         config.lib_path = "test-images";
         config.wrk_cache_size = 10;
-        server.run = 1;
-        server.context_root = "assets";
+        server.directory = "assets";
         server.port = 8080;
         server.command = chan_create();
         server.response = chan_create();
@@ -109,7 +108,7 @@ int main(void)
         ok = pthread_create(&thr_int,
                             NULL,
                             &i_handler,
-                            (void*) &server);
+                            NULL);
         if (ok)
         {
                 PIE_LOG("pthread_create:thr_int: %d", ok);
@@ -136,25 +135,19 @@ int main(void)
 
         }
 
-        PIE_LOG("Start with config:");
-        PIE_LOG("  image library path: %s", config.lib_path);
-
-        sess_mgr = pie_sess_mgr_create();
         if (pie_editd_ws_start(&server))
         {
                 PIE_ERR("Failed to start websocket server");
-                server.run = 0;
         }
 
 
         /* Run service loop */
         int ws_ok = 0;
-        while (ws_ok >= 0 && server.run)
+        while (ws_ok >= 0 && run)
         {
-                ws_ok = pie_editd_ws_service(&server);
+                ws_ok = pie_editd_ws_service();
         }
-        pie_editd_ws_stop(&server);
-        pie_sess_mgr_destroy(sess_mgr);
+        pie_editd_ws_stop();
 
         PIE_LOG("Shutdown main.");
         ok = 1;
@@ -190,15 +183,15 @@ static void sig_h(int signum)
 {
         if (signum == SIGINT)
         {
-                server.run = 0;
+                run = 0;
         }
 }
 
 static void* i_handler(void* a)
 {
         struct sigaction sa;
-        struct pie_editd_ws* s = (struct pie_editd_ws*)a;
         void* ret = NULL;
+        (void)a;
 
         /* Set up signal handler */
         sa.sa_handler = &sig_h;
@@ -212,7 +205,7 @@ static void* i_handler(void* a)
 
         pause();
         PIE_DEBUG("Leaving.");
-        s->run = 0;
+        run = 0;
 
         return ret;
 }
@@ -225,7 +218,7 @@ static void* ev_loop(void* a)
 
         PIE_DEBUG("Ready for messages.");
 
-        while (s->run)
+        while (run)
         {
                 /* Select on multiple channels,
                    after a load issue the response will appear*/

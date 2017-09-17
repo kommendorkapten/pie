@@ -64,11 +64,8 @@ struct pie_ctx_cmd
         char token[PIE_SESS_TOKEN_LEN];
 };
 
-/* Global root to asset directory */
-static const char* context_root;
 /* Only one server can be executed at a time */
-static struct pie_editd_ws* server;
-extern struct pie_sess_mgr* sess_mgr;
+static struct pie_editd_ws* server = NULL;
 
 /**
  * Callback methods.
@@ -155,7 +152,11 @@ int pie_editd_ws_start(struct pie_editd_ws* srv)
 {
         struct lws_context_creation_info info;
 
-        context_root = srv->context_root;
+        if (server)
+        {
+                PIE_ERR("One server is already active");
+                return -1;
+        }
         server = srv;
 
         memset(&info, 0, sizeof(info));
@@ -183,18 +184,18 @@ int pie_editd_ws_start(struct pie_editd_ws* srv)
                                "!DHE-RSA-AES256-SHA256:"
                                "!AES256-GCM-SHA384:"
                                "!AES256-SHA256";
-
+        
+        srv->sess_mgr = pie_sess_mgr_create();
         srv->context = lws_create_context(&info);
         if (srv->context == NULL)
         {
                 return 1;
         }
-        srv->run = 1;
 
         return 0;
 }
 
-int pie_editd_ws_service(struct pie_editd_ws* srv)
+int pie_editd_ws_service(void)
 {
         int status;
         struct chan_msg msg;
@@ -202,7 +203,7 @@ int pie_editd_ws_service(struct pie_editd_ws* srv)
 
         /* Run state machine here */
         /* Receiver is responsible to free data */
-        n = chan_read(srv->response, &msg, 0);
+        n = chan_read(server->response, &msg, 0);
         if (n == 0)
         {
                 struct pie_msg* resp = (struct pie_msg*)msg.data;
@@ -219,7 +220,7 @@ int pie_editd_ws_service(struct pie_editd_ws* srv)
                         goto msg_done;
                 }
 
-                session = pie_sess_mgr_get(sess_mgr, resp->token);
+                session = pie_sess_mgr_get(server->sess_mgr, resp->token);
                 if (session == NULL)
                 {
                         PIE_ERR("[%s] sesion not found.",
@@ -236,9 +237,9 @@ int pie_editd_ws_service(struct pie_editd_ws* srv)
                 case PIE_MSG_RENDER_DONE:
                         /* Update session with tx ready */
                         session->tx_ready = (PIE_TX_IMG | PIE_TX_HIST);
-                        lws_callback_on_writable_all_protocol(srv->context,
+                        lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_IMG]);
-                        lws_callback_on_writable_all_protocol(srv->context,
+                        lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_HIST]);
                         break;
                 default:
@@ -253,23 +254,25 @@ int pie_editd_ws_service(struct pie_editd_ws* srv)
         else if (n != EAGAIN)
         {
                 PIE_ERR("Error reading channel %d.", n);
-                srv->run = 0;
+                return -1;
         }
 
         /* Check for stop condition or img/hist is computed */
         /* If nothing to do, return after Xms */
-        status = lws_service(srv->context, 5);
+        status = lws_service(server->context, 5);
         /* Reap sessions with inactivity for one hour */
-        pie_sess_mgr_reap(sess_mgr, 60 * 60);
+        pie_sess_mgr_reap(server->sess_mgr, 60 * 60);
 
         return status;
 }
 
-int pie_editd_ws_stop(struct pie_editd_ws* srv)
+int pie_editd_ws_stop(void)
 {
         PIE_LOG("Shutdown server.");
-        lws_context_destroy(srv->context);
+        lws_context_destroy(server->context);
+        pie_sess_mgr_destroy(server->sess_mgr);
 
+        server = NULL;
         return 0;
 }
 
@@ -300,15 +303,15 @@ static int cb_http(struct lws* wsi,
                 query_params = pie_http_req_params(wsi);
 
                 /* Look for existing session */
-                session = get_session(sess_mgr, wsi);
+                session = get_session(server->sess_mgr, wsi);
                 if (session == NULL)
                 {
                         /* Create a new */
                         char cookie[128];
                         unsigned char* p = &resp_headers[0];
 
-                        session = pie_sess_create(server->command,
-                                                  server->response);
+                        session = pie_sess_create();
+
                         hn = snprintf(cookie,
                                       128,
                                       "pie-session=%s;Max Age=3600",
@@ -329,7 +332,7 @@ static int cb_http(struct lws* wsi,
                         PIE_DEBUG("[%s] Init session",
                                   session->token);
 
-                        pie_sess_mgr_put(sess_mgr, session);
+                        pie_sess_mgr_put(server->sess_mgr, session);
                         /*
                          * This is usually safe. P should never be incremented
                          * more than the size of headers.
@@ -364,7 +367,7 @@ static int cb_http(struct lws* wsi,
                 {
                         PIE_LOG("coll=%s", qv);
                 }
-                strcpy(url, context_root);
+                strcpy(url, server->directory);
 
                 /* Get the URL */
                 if (strcmp(in, "/"))
@@ -475,14 +478,14 @@ static int cb_img(struct lws* wsi,
 
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
-                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+                session = pie_sess_mgr_get(server->sess_mgr, ctx->token);
         }
 
         switch (reason)
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(sess_mgr, wsi)))
+                if ((session = get_session(server->sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
                 }
@@ -569,14 +572,14 @@ static int cb_hist(struct lws* wsi,
 
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
-                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+                session = pie_sess_mgr_get(server->sess_mgr, ctx->token);
         }
 
         switch (reason)
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(sess_mgr, wsi)))
+                if ((session = get_session(server->sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
 
@@ -656,14 +659,14 @@ static int cb_cmd(struct lws* wsi,
 
         if (user && reason != LWS_CALLBACK_ESTABLISHED)
         {
-                session = pie_sess_mgr_get(sess_mgr, ctx->token);
+                session = pie_sess_mgr_get(server->sess_mgr, ctx->token);
         }
 
         switch (reason)
         {
         case LWS_CALLBACK_ESTABLISHED:
                 /* Copy the session token, it is not available later on */
-                if ((session = get_session(sess_mgr, wsi)))
+                if ((session = get_session(server->sess_mgr, wsi)))
                 {
                         strcpy(ctx->token, session->token);
                 }
@@ -714,7 +717,7 @@ static int cb_cmd(struct lws* wsi,
                         envelope.len = sizeof(struct pie_msg);
                         timing_start(&msg->t);
 
-                        if (chan_write(session->command, &envelope))
+                        if (chan_write(server->command, &envelope))
                         {
                                 PIE_ERR("[%s] Failed to write msg %d to chan",
                                         session->token,

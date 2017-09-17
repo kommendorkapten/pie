@@ -20,7 +20,6 @@
 
 struct pie_sess_mgr;
 struct pie_img_workspace;
-struct chan;
 
 /**
  * Represents a session.
@@ -34,10 +33,6 @@ struct pie_sess
         char token[PIE_SESS_TOKEN_LEN];
         struct pie_img_workspace* img;
         unsigned char* rgba;
-        /* Server sends commands */
-        struct chan* command;
-        /* Server receives responses */
-        struct chan* response;
         long access_ts;
         int rgba_len;
         /* New data can be written to client */
@@ -50,7 +45,7 @@ struct pie_sess
  * @param void
  * @return a new session.
  */
-extern struct pie_sess* pie_sess_create(struct chan*, struct chan*);
+extern struct pie_sess* pie_sess_create(void);
 
 /**
  * Destroy a session.

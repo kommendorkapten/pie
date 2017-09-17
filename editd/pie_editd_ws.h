@@ -19,17 +19,20 @@ struct lws_context;
 
 struct pie_editd_ws
 {
-        const char* context_root;
+        /* Configuratio parameters */
         struct lws_context* context;
+        const char* directory;
         /* server initiates commands */
         struct chan* command;
         struct chan* response;
         int port;
-        volatile int run;
+
+        /* private variables */
+        struct pie_sess_mgr* sess_mgr;        
 };
 
 extern int pie_editd_ws_start(struct pie_editd_ws*);
-extern int pie_editd_ws_service(struct pie_editd_ws*);
-extern int pie_editd_ws_stop(struct pie_editd_ws*);
+extern int pie_editd_ws_service(void);
+extern int pie_editd_ws_stop(void);
 
 #endif /* __PIE_EDITD_H__ */
