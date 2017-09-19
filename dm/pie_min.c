@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "../lib/llist.h"
 #include "pie_min.h"
+
 struct pie_min *
 pie_min_alloc(void)
 {
@@ -280,4 +282,74 @@ cleanup:
 		ret = -1;
 	}
 	return ret;
+}
+
+struct llist* pie_min_find_mob(sqlite3* db, pie_id mob_id)
+{
+	char           *q = "SELECT min_id,min_added_ts_millis,min_stg_id,min_path FROM pie_min WHERE min_mob_id = ?";
+	sqlite3_stmt   *pstmt;
+        struct llist   *retl = llist_create();
+	int             ret;
+	const unsigned char *c;
+	int             br;
+
+	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+	if (ret != SQLITE_OK)
+	{
+                llist_destroy(retl);
+                retl = NULL;
+		goto cleanup;
+	}
+	ret = sqlite3_bind_int64(pstmt, 1, mob_id);
+	if (ret != SQLITE_OK)
+	{
+                llist_destroy(retl);
+                retl = NULL;
+		goto cleanup;
+	}
+
+        for (;;)
+        {
+                struct pie_min* min;
+
+                ret = sqlite3_step(pstmt);
+                
+                if (ret == SQLITE_DONE)
+                {
+                        break;
+                }
+                if (ret != SQLITE_ROW)
+                {
+                        struct lnode* l = llist_head(retl);
+
+                        while (l)
+                        {
+                                pie_min_free((struct pie_min*)l->data);
+                                l = l->next;
+                        }
+                        llist_destroy(retl);
+                        retl = NULL;
+                        break;
+                }
+
+                min = pie_min_alloc();
+                min->min_id = sqlite3_column_int64(pstmt, 0);
+                min->min_mob_id = mob_id;
+                min->min_added_ts_millis = sqlite3_column_int64(pstmt, 1);
+                min->min_stg_id = (int) sqlite3_column_int(pstmt, 2);
+                /* Force reading text into memory, and ge the length */
+                /* of the string (null terminator not included). */
+                /* Allocate memory and copy string to destination, */
+                /* and set the null terminator., */
+                c = sqlite3_column_text(pstmt, 3);
+                br = sqlite3_column_bytes(pstmt, 3);
+                min->min_path = malloc(br + 1);
+                memcpy(min->min_path, c, br);
+                min->min_path[br] = '\0';
+        }
+
+cleanup:
+        sqlite3_finalize(pstmt);
+
+	return retl;
 }

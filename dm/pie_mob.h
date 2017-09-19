@@ -48,6 +48,13 @@ extern int      pie_mob_create(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_read(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_update(sqlite3 * db, struct pie_mob * this);
 extern int      pie_mob_delete(sqlite3 * db, struct pie_mob * this);
+/**
+ * Find all MOBs associated with a specific collection.
+ * @param datbase.
+ * @param collection id.
+ * @return a possible empty list with the matching MOBs, or NULL if
+ *         error occured.
+ */
 extern struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll);
 extern void     pie_mob_print(const struct pie_mob* mob);
 #endif				/* __27782_PIE_MOB_H__ */
