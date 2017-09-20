@@ -59,7 +59,7 @@ struct pie_msg
         /* A general token, can contain a null terminated,
            hex encoded sha1 sum */
         char token[PIE_MSG_TOKEN_LEN];
-        struct pie_img_workspace* img;
+        struct pie_img_workspace* wrkspc;
         struct timing t;
         float f1;
         float f2;

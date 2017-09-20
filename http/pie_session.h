@@ -31,7 +31,7 @@ struct pie_img_workspace;
 struct pie_sess
 {
         char token[PIE_SESS_TOKEN_LEN];
-        struct pie_img_workspace* img;
+        struct pie_img_workspace* wrkspc;
         unsigned char* rgba;
         long access_ts;
         int rgba_len;

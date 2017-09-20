@@ -81,6 +81,7 @@ MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c
 BM_SRC     = pie_bm.c pie_bm_dwn_smpl.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
+STG_SRC    = pie_stg.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c \
              pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c
@@ -111,7 +112,8 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               testfwlk qserver qclient test_exif_meta lrawtest exif_dump
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm ingestd exif jsmn
+VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
+        ingestd exif jsmn stg
 
 .PHONY: all
 .PHONY: test
@@ -205,8 +207,8 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
 
 # Servers
-bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o
-	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG)
+bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DM_OBJS) $(CFG_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o obj/pie_stg.o obj/strutil.o obj/pie_id.o
+	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG) -lsqlite3
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)

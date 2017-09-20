@@ -11,6 +11,7 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <stdlib.h>
 #include <stddef.h>
 #include <sys/time.h>
 #include <assert.h>
@@ -27,7 +28,7 @@ pie_id pie_id_create(unsigned char host,
                      enum pie_obj_type type)
 {
         struct timeval tv;
-        
+
         assert(host);
         assert(worker);
         assert(type);
@@ -57,7 +58,7 @@ pie_id pie_id_create(unsigned char host,
    bit 63    unused (shall be 0)
        24-62 timestamp, in hundreds of a second
        16-23 host
-       8-15  worker   
+       8-15  worker
        0-7   type.
    Timestamp (39 bits) gives us a timespan of 174 years in 1/100th of a sec.
 */
@@ -81,3 +82,17 @@ pie_id pie_id_from_ts(unsigned char host,
         return id;
 }
 
+pie_id pie_id_from_str(char* s)
+{
+        char* p;
+        pie_id id;
+
+        id = strtol(s, &p, 10);
+
+        if (p == s)
+        {
+                id = 0;
+        }
+
+        return id;
+}

@@ -346,6 +346,8 @@ struct llist* pie_min_find_mob(sqlite3* db, pie_id mob_id)
                 min->min_path = malloc(br + 1);
                 memcpy(min->min_path, c, br);
                 min->min_path[br] = '\0';
+
+                llist_pushb(retl, min);                
         }
 
 cleanup:

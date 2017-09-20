@@ -56,6 +56,13 @@ struct pie_stg_mnt_arr
 extern int pie_cfg_load(const char*);
 
 /**
+ * Test if configuration has been loaded.
+ * @param void.
+ * @return 1 if config was successfully loaded.
+ */
+extern int pie_cfg_loaded(void);
+
+/**
  * Destroy and free any allocated resources maintained by this module.
  * @param void
  * @return void

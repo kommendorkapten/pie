@@ -11,14 +11,19 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <string.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include "pie_wrkspc_mgr.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../io/pie_io.h"
 #include "../bm/pie_bm.h"
 #include "../lib/timing.h"
-#include <string.h>
-#include <stdlib.h>
-#include <sys/time.h>
+#include "../cfg/pie_cfg.h"
+#include "../stg/pie_stg.h"
+#include "../dm/pie_host.h"
+#include "../dm/pie_min.h"
 
 #ifdef __sun
 # include <note.h>
@@ -32,27 +37,67 @@
 
 struct entry
 {
-        struct pie_img_workspace* img;
+        struct pie_img_workspace* wrkspc;
         time_t ts;
         unsigned int flags;
 };
 
 struct pie_wrkspc_mgr
 {
-        char library[PIE_PATH_LEN];
+        /* Storage config */
+        struct pie_host* host;
+        struct pie_stg_mnt_arr* storages;
+        sqlite3* db;
         struct entry* cache;
         int cap;
 };
 
-struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(const char* l, int cap)
+struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3* db, int cap)
 {
-        struct pie_wrkspc_mgr* mgr = malloc(sizeof(struct pie_wrkspc_mgr));
+        struct pie_wrkspc_mgr* mgr;
 
-        strncpy(mgr->library, l, PIE_PATH_LEN);
-        mgr->library[PIE_PATH_LEN - 1] = 0;
+        if (!pie_cfg_loaded())
+        {
+                PIE_ERR("Configuration is not loaded");
+                return NULL;
+        }
+
+        mgr = malloc(sizeof(struct pie_wrkspc_mgr));
+        if (mgr == NULL)
+        {
+                PIE_ERR("Failed to malloc struct");
+                return NULL;
+        }
+
+        mgr->db = db;
+        mgr->host = pie_cfg_get_host(-1);
+        if (mgr->host == NULL)
+        {
+                free(mgr);
+                PIE_ERR("Failed to get host");
+                return NULL;
+        }
+
+        mgr->storages = pie_cfg_get_hoststg(mgr->host->hst_id);
+        if (mgr->storages == NULL)
+        {
+                PIE_ERR("Could not resolve mount point for storage");
+                pie_host_free(mgr->host);
+                free(mgr);
+                return NULL;
+        }        
+
         mgr->cap = cap;
         mgr->cache = malloc(mgr->cap * sizeof(struct entry));
-
+        if (mgr->cache == NULL)
+        {
+                PIE_ERR("Could not malloc cache");
+                pie_host_free(mgr->host);
+                pie_cfg_free_hoststg(mgr->storages);
+                free(mgr);
+                return NULL;
+        }
+        
         for (int i = 0; i < mgr->cap; i++)
         {
                 mgr->cache[i].flags = FLAG_FREE;
@@ -62,9 +107,9 @@ struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(const char* l, int cap)
 }
 
 struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
-                                                 const char* path)
+                                                 pie_id id)
 {
-        struct pie_img_workspace* img = NULL;
+        struct pie_img_workspace* wrkspc = NULL;
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
@@ -76,18 +121,18 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 {
                         continue;
                 }
-                if (strncmp(mgr->cache[i].img->path, path, PIE_PATH_LEN) == 0)
+                if (mgr->cache[i].wrkspc->mob_id == id)
                 {
-                        img = mgr->cache[i].img;
+                        wrkspc = mgr->cache[i].wrkspc;
                         mgr->cache[i].flags = FLAG_ACTIVE;
                         mgr->cache[i].ts = tv.tv_sec;
-                        PIE_TRACE("Reuse: %s at pos %d",
-                                  mgr->cache[i].img->path,
+                        PIE_TRACE("Reuse: %ld at pos %d",
+                                  mgr->cache[i].wrkspc->mob_id,
                                   i);
                         break;
                 }
         }
-        if (img != NULL)
+        if (wrkspc != NULL)
         {
                 goto done;
         }
@@ -120,24 +165,23 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         if (pos == -1 && evict != -1)
         {
                 /* Cache is full. Free old image */
-                img = mgr->cache[evict].img;
-                PIE_TRACE("Replace %s at pos %d with %s",
-                          img->path,
+                wrkspc = mgr->cache[evict].wrkspc;
+                PIE_TRACE("Replace %ld at pos %d with %s",
+                          wrkspc->mob_id,
                           evict,
                           path);
 
-                pie_bm_free_f32(&img->raw);
+                pie_bm_free_f32(&wrkspc->raw);
                 /* make sure that proxies are allocated */
-                if (img->proxy.c_red)
+                if (wrkspc->proxy.c_red)
                 {
-                        pie_bm_free_f32(&img->proxy);
+                        pie_bm_free_f32(&wrkspc->proxy);
                 }
-                if (img->proxy_out.c_red)
+                if (wrkspc->proxy_out.c_red)
                 {
-                        pie_bm_free_f32(&img->proxy_out);
+                        pie_bm_free_f32(&wrkspc->proxy_out);
                 }
-                free(img);
-                img = NULL;
+                free(wrkspc);
                 /* Mark slot as free, as it is not know yet wheter the
                    new image actually exists */
                 mgr->cache[evict].flags = FLAG_FREE;
@@ -147,32 +191,61 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         if (pos != -1)
         {
                 char buf[PIE_PATH_LEN];
+                struct pie_min* min;
                 struct timing t;
                 int res;
 
-                img = malloc(sizeof(struct pie_img_workspace));
-                memset(img, 0, sizeof(struct pie_img_workspace));
-                snprintf(buf, PIE_PATH_LEN, "%s/%s", mgr->library, path);
+                /* Check for MIN existance before allocating anything */
+                min = pie_stg_min_for_mob(mgr->db,
+                                          mgr->storages->arr,
+                                          mgr->storages->len,
+                                          id);
+                if (min == NULL)
+                {
+                        PIE_WARN("Could not find any MIN for MOB %ld", id);
+                        return NULL;
+                }
+                PIE_DEBUG("Got MIN %ld for MOB %ld",
+                          min->min_id,
+                          id);
+                
+                wrkspc = malloc(sizeof(struct pie_img_workspace));
+                if (wrkspc == NULL)
+                {
+                        goto done;
+                }
+                memset(wrkspc, 0, sizeof(struct pie_img_workspace));
+
+                /* Accessing mgr->storages[min->min_stg_id] is safe.
+                   pie_stg_min_for_mob verifies storage is mounted. */
+                snprintf(buf, PIE_PATH_LEN,
+                         "%s%s",
+                         mgr->storages->arr[min->min_stg_id]->mnt_path,
+                         min->min_path);
+                /* Drop min, no longer needed */
+                pie_min_delete(mgr->db, min);
+                
                 timing_start(&t);
-                res = pie_io_load(&img->raw, buf);
-                PIE_DEBUG("Loaded %s in %ldusec",
+                res = pie_io_load(&wrkspc->raw, buf);
+                PIE_DEBUG("Loaded '%s'@stg-%d in %ldusec",
                           buf,
+                          min->min_stg_id,
                           timing_dur_usec(&t));
                 if (res)
                 {
                         PIE_ERR("Could not open '%s'",
                                 buf);
-                        free(img);
-                        img = NULL;
+                        free(wrkspc);
+                        wrkspc = NULL;
                         goto done;
                 }
 
-                strncpy(img->path, path, PIE_PATH_LEN);
+                wrkspc->mob_id = id;
                 mgr->cache[pos].flags = FLAG_ACTIVE;
-                mgr->cache[pos].img = img;
+                mgr->cache[pos].wrkspc = wrkspc;
                 mgr->cache[pos].ts = tv.tv_sec;
-                PIE_TRACE("Create: %s at pos %d",
-                          mgr->cache[pos].img->path,
+                PIE_TRACE("Create: %ld at pos %d",
+                          mgr->cache[pos].wrkspc->mob_id,
                           pos);
         }
         else
@@ -182,17 +255,18 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
         }
 
 done:
-        return img;
+        return wrkspc;
 }
 
 void pie_wrkspc_mgr_release(struct pie_wrkspc_mgr* mgr,
-                            struct pie_img_workspace* img)
+                            struct pie_img_workspace* wrkspc)
 {
         for (int i = 0; i < mgr->cap; i++)
         {
-                if (mgr->cache[i].img == img)
+                if (mgr->cache[i].wrkspc == wrkspc)
                 {
-                        PIE_TRACE("%s at pos %d", mgr->cache[i].img->path, i);
+                        PIE_TRACE("%ld at pos %d",
+                                  mgr->cache[i].wrkscp->mob_id, i);
                         mgr->cache[i].flags = FLAG_INACTIVE;
                         break;
                 }
@@ -205,25 +279,27 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
         {
                 if (mgr->cache[i].flags != FLAG_FREE)
                 {
-                        struct pie_img_workspace* img;
+                        struct pie_img_workspace* wrkspc;
 
-                        PIE_TRACE("%s", mgr->cache[i].img->path);
+                        PIE_TRACE("%ld", mgr->cache[i].wrkspc->mob_id);
 
-                        img = mgr->cache[i].img;
-                        pie_bm_free_f32(&img->raw);
+                        wrkspc = mgr->cache[i].wrkspc;
+                        pie_bm_free_f32(&wrkspc->raw);
                         /* make sure that proxies are allocated */
-                        if (img->proxy.c_red)
+                        if (wrkspc->proxy.c_red)
                         {
-                                pie_bm_free_f32(&img->proxy);
+                                pie_bm_free_f32(&wrkspc->proxy);
                         }
-                        if (img->proxy_out.c_red)
+                        if (wrkspc->proxy_out.c_red)
                         {
-                                pie_bm_free_f32(&img->proxy_out);
+                                pie_bm_free_f32(&wrkspc->proxy_out);
                         }
-                        free(img);
+                        free(wrkspc);
                 }
         }
 
+        pie_host_free(mgr->host);
+        pie_cfg_free_hoststg(mgr->storages);
         free(mgr->cache);
         free(mgr);
 }

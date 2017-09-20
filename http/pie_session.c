@@ -47,7 +47,7 @@ struct pie_sess* pie_sess_create(void)
                 sprintf(s->token + i * 2, "%02x", sum[i]);
         }
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
-        s->img = NULL;
+        s->wrkspc = NULL;
         s->rgba = NULL;
         s->tx_ready = 0;
 

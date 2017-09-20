@@ -2,21 +2,23 @@
 
 # Feature
 
-* Editd, when loading image, automatically set parameters in ui.
-* Editd, manage img via mobs.
+## Sorted
 * Add hex (sha1) to min.
+* Create links from collectiond to editd.
+* Editd, when loading image, automatically set parameters in ui.
 * editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.
-* Update proxy and thumb with any adjustments from editd.
-* Zoom in library mode.
-* Auto expand top collection.
 * In library view, metadata field to right, present proper collection
   name.
-* Support for color.
+* Zoom in library mode.
+
+## Unsorted
+* Update proxy and thumb with any adjustments from editd.
+* Auto expand top collection.
+* Support for color tagging in collection mode.
 * Filter based on rating and color.
 * Move images between collections (rename(2), EXDEV (different file
   sys)).
-* Create links from collectiond to editd.
 * Load collection in editd.
 * Black adjustment is quite simple, pure linear for both +/-. For
   lightening blacks a non-linear method should be used.
@@ -30,7 +32,6 @@
 
 # Performance:
 
-* Write of jpg.
 * Downsample.
 * Blur for powerpc.
 * Multi threaded algs.
@@ -46,3 +47,6 @@
 * ~~Load exif metadata via libraw.~~
 * ~~Load image from libraw.~~
 * ~~Exif parsing, wierd fractions for shutter speed < 1s.~~
+* ~~Editd/session, remove command/response in session object.
+  Fix duplicate global server object.~~
+* ~~Editd, manage img via mobs.~~

@@ -15,6 +15,7 @@
 #include "pie_editd_ws.h"
 #include "pie_cmd.h"
 #include "pie_msg.h"
+#include "pie_wrkspc_mgr.h"
 #include "../http/pie_session.h"
 #include "../http/pie_util.h"
 #include "../pie_log.h"
@@ -232,7 +233,7 @@ int pie_editd_ws_service(void)
                 case PIE_MSG_LOAD_DONE:
                         /* On load done, a new image workspace
                            is created, store it in the session. */
-                        session->img = resp->img;
+                        session->wrkspc = resp->wrkspc;
                         NOTE(FALLTHRU)
                 case PIE_MSG_RENDER_DONE:
                         /* Update session with tx ready */
@@ -519,14 +520,14 @@ static int cb_img(struct lws* wsi,
                         timing_start(&t);
                         if (session->rgba == NULL)
                         {
-                                session->rgba_len = (int)(session->img->proxy_out.width *
-                                                          session->img->proxy_out.height *
+                                session->rgba_len = (int)(session->wrkspc->proxy_out.width *
+                                                          session->wrkspc->proxy_out.height *
                                                           4 + 3 * sizeof(uint32_t));
                                 session->rgba = malloc(session->rgba_len + LWS_PRE);
                         }
 
                         pie_enc_bm_rgba(session->rgba + LWS_PRE,
-                                        &session->img->proxy_out,
+                                        &session->wrkspc->proxy_out,
                                         PIE_IMAGE_TYPE_PRIMARY);
                         PIE_DEBUG("Encoded proxy:         %8ldusec",
                                   timing_dur_usec(&t));
@@ -613,7 +614,7 @@ static int cb_hist(struct lws* wsi,
                         buf = malloc(JSON_HIST_SIZE + LWS_PRE);
                         json_len = (int)pie_enc_json_hist((char*)buf + LWS_PRE,
                                                           JSON_HIST_SIZE,
-                                                          &session->img->hist);
+                                                          &session->wrkspc->hist);
                         PIE_DEBUG("JSON encoded histogram: %8ldusec",
                                   timing_dur_usec(&t));
                         bw = lws_write(wsi,
@@ -705,14 +706,14 @@ static int cb_cmd(struct lws* wsi,
                                         session->rgba = NULL;
                                 }
                         }
-                        else if (session->img == NULL)
+                        else if (session->wrkspc == NULL)
                         {
                                 PIE_LOG("[%s] No image loaded",
                                        session->token);
                                 goto done;
                         }
                         /* Copy image from session to message */
-                        msg->img = session->img;
+                        msg->wrkspc = session->wrkspc;
                         envelope.data = msg;
                         envelope.len = sizeof(struct pie_msg);
                         timing_start(&msg->t);

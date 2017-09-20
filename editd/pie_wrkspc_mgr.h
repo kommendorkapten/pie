@@ -14,27 +14,43 @@
 #ifndef __PIE_WRKSPC_MGR_H__
 #define __PIE_WRKSPC_MGR_H__
 
-struct pie_img_workspace;
+#include <sqlite3.h>
+#include "../pie_types.h"
+#include "../pie_id.h"
+
 struct pie_wrkspc_mgr;
+
+/* The main workspace for an image being open in editd. */
+struct pie_img_workspace
+{
+        pie_id mob_id;
+        struct pie_histogram hist;
+        struct pie_img_settings settings;
+        /* Unmodified full resolution image */
+        struct pie_bitmap_f32rgb raw;
+        /* Downsampled unmodified proxy image */
+        struct pie_bitmap_f32rgb proxy;
+        /* Downsampled and rendered proxy image */
+        struct pie_bitmap_f32rgb proxy_out;
+};
 
 /**
  * Create an image workspace manager.
  * The manager creates (loads images from disk) and prepares a workspace.
- * @param path where to find images on disk.
+ * @param database to use
  * @param cache size for workspaces.
  * @return a work space manager.
  */
-extern struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(const char*,
-                                                    int);
+extern struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3*, int);
 
 /**
  * Load an image from disk. Proxy, and proxy_out are not allocated.
  * @param the mangaer.
- * @param path to load.
+ * @param mob to load.
  * @return an image workspace, or NULL if cache is full.
  */
 extern struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr*,
-                                                        const char*);
+                                                        pie_id);
 
 /**
  * Return an image workspace.

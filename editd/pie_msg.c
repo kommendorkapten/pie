@@ -18,7 +18,7 @@ struct pie_msg* pie_msg_alloc(void)
 
         m->buf[0] = 0;
         m->type = PIE_MSG_INVALID;
-        m->img = NULL;
+        m->wrkspc = NULL;
         m->f1 = 0.0f;
         m->f2 = 0.0f;
         m->i1 = 0;

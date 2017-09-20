@@ -32,13 +32,14 @@
 #include "../bm/pie_bm_dwn_smpl.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
+#include "../pie_id.h"
+#include "../cfg/pie_cfg.h"
 #include "pie_msg.h"
 #include "pie_render.h"
 #include "pie_wrkspc_mgr.h"
 
 struct config
 {
-        char* lib_path;
         int wrk_cache_size;
 };
 
@@ -93,15 +94,21 @@ int main(void)
         void* ret;
         int ok;
 
+        /* Load storages */
+        if (pie_cfg_load(PIE_CFG_PATH))
+        {
+                PIE_ERR("Failed to read conf");
+                return 1;
+        }
+        
         run = 1;
-        config.lib_path = "test-images";
         config.wrk_cache_size = 10;
         server.directory = "assets";
         server.port = 8080;
         server.command = chan_create();
         server.response = chan_create();
 
-        wrkspc_mgr = pie_wrkspc_mgr_create(config.lib_path,
+        wrkspc_mgr = pie_wrkspc_mgr_create(pie_cfg_get_db(),
                                            config.wrk_cache_size);
 
         /* interrupt handler thread */
@@ -329,34 +336,43 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         int proxy_h;
         int stride;
         int downsample = 0;
+        pie_id id;
 
         timing_start(&t_l);
 
-        if (msg->img)
+        if (msg->wrkspc)
         {
                 /* Release earlier workspace */
-                pie_wrkspc_mgr_release(wrkspc_mgr, msg->img);
+                pie_wrkspc_mgr_release(wrkspc_mgr, msg->wrkspc);
         }
 
-        msg->img = pie_wrkspc_mgr_acquire(wrkspc_mgr, msg->buf);
-
-        if (msg->img == NULL)
+        PIE_DEBUG("Load id %s", msg->buf);
+        id = pie_id_from_str(msg->buf);
+        PIE_DEBUG("Parsed id: %ld\n", id);
+        if (id == 0 || !PIE_ID_IS_MOB(id))
+        {
+                return PIE_MSG_INVALID;
+        }
+        
+        msg->wrkspc = pie_wrkspc_mgr_acquire(wrkspc_mgr, id);
+        if (msg->wrkspc == NULL)
         {
                 return PIE_MSG_INVALID;
         }
 
         /* Init proxies */
-        stride = msg->img->raw.row_stride;
+        stride = msg->wrkspc->raw.row_stride;
         proxy_w = msg->i1;
         proxy_h = msg->i2;
         PIE_DEBUG("[%s] Request proxy [%d, %d] for image [%d, %d]",
                   msg->token,
                   proxy_w,
                   proxy_h,
-                  msg->img->raw.width,
-                  msg->img->raw.height);
+                  msg->wrkspc->raw.width,
+                  msg->wrkspc->raw.height);
 
-        if (proxy_w < msg->img->raw.width || proxy_h < msg->img->raw.height)
+        if (proxy_w < msg->wrkspc->raw.width ||
+            proxy_h < msg->wrkspc->raw.height)
         {
                 PIE_DEBUG("[%s] Downsampling needed", msg->token);
                 downsample = 1;
@@ -364,13 +380,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         else
         {
                 /* Do not do any up sampling */
-                if (proxy_w > msg->img->raw.width)
+                if (proxy_w > msg->wrkspc->raw.width)
                 {
-                        proxy_w = msg->img->raw.width;
+                        proxy_w = msg->wrkspc->raw.width;
                 }
-                if (proxy_h > msg->img->raw.height)
+                if (proxy_h > msg->wrkspc->raw.height)
                 {
-                        proxy_h = msg->img->raw.height;
+                        proxy_h = msg->wrkspc->raw.height;
                 }
                 PIE_DEBUG("[%s] Image smaller than proxy, new proxy size [%d, %d]",
                           msg->token,
@@ -388,8 +404,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 };
 
                 timing_start(&t);
-                res = pie_bm_dwn_smpl(&msg->img->proxy,
-                                      &msg->img->raw,
+                res = pie_bm_dwn_smpl(&msg->wrkspc->proxy,
+                                      &msg->wrkspc->raw,
                                       proxy_w,
                                       proxy_h);
                 if (res)
@@ -403,13 +419,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 /* Add some sharpening to mitigate any blur created
                    during downsampling. */
                 timing_start(&t);
-                res = pie_alg_unsharp(msg->img->proxy.c_red,
-                                      msg->img->proxy.c_green,
-                                      msg->img->proxy.c_blue,
+                res = pie_alg_unsharp(msg->wrkspc->proxy.c_red,
+                                      msg->wrkspc->proxy.c_green,
+                                      msg->wrkspc->proxy.c_blue,
                                       &up,
-                                      msg->img->proxy.width,
-                                      msg->img->proxy.height,
-                                      msg->img->proxy.row_stride);
+                                      msg->wrkspc->proxy.width,
+                                      msg->wrkspc->proxy.height,
+                                      msg->wrkspc->proxy.row_stride);
                 if (res)
                 {
                         abort();
@@ -420,49 +436,49 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         }
         else
         {
-                msg->img->proxy.width = proxy_w;
-                msg->img->proxy.height = proxy_h;
-                msg->img->proxy.color_type = PIE_COLOR_TYPE_RGB;
-                pie_bm_alloc_f32(&msg->img->proxy);
+                msg->wrkspc->proxy.width = proxy_w;
+                msg->wrkspc->proxy.height = proxy_h;
+                msg->wrkspc->proxy.color_type = PIE_COLOR_TYPE_RGB;
+                pie_bm_alloc_f32(&msg->wrkspc->proxy);
                 /* Copy raw to proxy */
                 len = (int)(proxy_h * stride * sizeof(float));
-                memcpy(msg->img->proxy.c_red, msg->img->raw.c_red, len);
-                memcpy(msg->img->proxy.c_green, msg->img->raw.c_green, len);
-                memcpy(msg->img->proxy.c_blue, msg->img->raw.c_blue, len);
+                memcpy(msg->wrkspc->proxy.c_red, msg->wrkspc->raw.c_red, len);
+                memcpy(msg->wrkspc->proxy.c_green, msg->wrkspc->raw.c_green, len);
+                memcpy(msg->wrkspc->proxy.c_blue, msg->wrkspc->raw.c_blue, len);
         }
 
         /* Create a working copy of the proxy for editing */
-        msg->img->proxy_out.width = msg->img->proxy.width;
-        msg->img->proxy_out.height = msg->img->proxy.height;
-        msg->img->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
-        pie_bm_alloc_f32(&msg->img->proxy_out);
+        msg->wrkspc->proxy_out.width = msg->wrkspc->proxy.width;
+        msg->wrkspc->proxy_out.height = msg->wrkspc->proxy.height;
+        msg->wrkspc->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
+        pie_bm_alloc_f32(&msg->wrkspc->proxy_out);
 
         /* Copy proxy to proxy out */
-        len = (int)(msg->img->proxy.height * msg->img->proxy.row_stride * sizeof(float));
-        memcpy(msg->img->proxy_out.c_red, msg->img->proxy.c_red, len);
-        memcpy(msg->img->proxy_out.c_green, msg->img->proxy.c_green, len);
-        memcpy(msg->img->proxy_out.c_blue, msg->img->proxy.c_blue, len);
+        len = (int)(msg->wrkspc->proxy.height * msg->wrkspc->proxy.row_stride * sizeof(float));
+        memcpy(msg->wrkspc->proxy_out.c_red, msg->wrkspc->proxy.c_red, len);
+        memcpy(msg->wrkspc->proxy_out.c_green, msg->wrkspc->proxy.c_green, len);
+        memcpy(msg->wrkspc->proxy_out.c_blue, msg->wrkspc->proxy.c_blue, len);
 
         /* Read from database to get settings */
-        pie_img_init_settings(&msg->img->settings,
-                              msg->img->proxy.width,
-                              msg->img->proxy.height);
+        pie_img_init_settings(&msg->wrkspc->settings,
+                              msg->wrkspc->proxy.width,
+                              msg->wrkspc->proxy.height);
 
         /* Call render */
-        res = pie_img_render(&msg->img->proxy_out,
+        res = pie_img_render(&msg->wrkspc->proxy_out,
                              NULL,
-                             &msg->img->settings);
+                             &msg->wrkspc->settings);
         assert(res == 0);
 
         /* Create histogram */
-        pie_alg_hist_lum(&msg->img->hist, &msg->img->proxy_out);
-        pie_alg_hist_rgb(&msg->img->hist, &msg->img->proxy_out);
+        pie_alg_hist_lum(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
+        pie_alg_hist_rgb(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
 
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
                   msg->token,
-                  msg->img->proxy.width,
-                  msg->img->proxy.height,
+                  msg->wrkspc->proxy.width,
+                  msg->wrkspc->proxy.height,
                   timing_dur_usec(&t_l));
 
         return PIE_MSG_LOAD_DONE;
@@ -488,10 +504,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.color_temp = msg->f1;
+                        msg->wrkspc->settings.color_temp = msg->f1;
                         PIE_TRACE("[%s] Set color temp: %f.",
                                   msg->token,
-                                  msg->img->settings.color_temp);
+                                  msg->wrkspc->settings.color_temp);
                 }
                 break;
         case PIE_MSG_SET_TINT:
@@ -504,10 +520,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.tint = msg->f1;
+                        msg->wrkspc->settings.tint = msg->f1;
                         PIE_TRACE("[%s] Set tint: %f.",
                                   msg->token,
-                                  msg->img->settings.tint);
+                                  msg->wrkspc->settings.tint);
                 }
                 break;
         case PIE_MSG_SET_EXSPOSURE:
@@ -520,10 +536,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.exposure = msg->f1;
+                        msg->wrkspc->settings.exposure = msg->f1;
                         PIE_TRACE("[%s] Set exposure: %f.",
                                   msg->token,
-                                  msg->img->settings.exposure);
+                                  msg->wrkspc->settings.exposure);
                 }
                 break;
         case PIE_MSG_SET_CONTRAST:
@@ -536,10 +552,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.contrast = msg->f1;
+                        msg->wrkspc->settings.contrast = msg->f1;
                         PIE_TRACE("[%s] Set contrast: %f.",
                                   msg->token,
-                                  msg->img->settings.contrast);
+                                  msg->wrkspc->settings.contrast);
                 }
                 break;
         case PIE_MSG_SET_HIGHL:
@@ -552,10 +568,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.highlights = msg->f1;
+                        msg->wrkspc->settings.highlights = msg->f1;
                         PIE_TRACE("[%s] Set highlights: %f.",
                                   msg->token,
-                                  msg->img->settings.highlights);
+                                  msg->wrkspc->settings.highlights);
                 }
                 break;
         case PIE_MSG_SET_SHADOW:
@@ -568,10 +584,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.shadows = msg->f1;
+                        msg->wrkspc->settings.shadows = msg->f1;
                         PIE_TRACE("[%s] Set shadows: %f.",
                                   msg->token,
-                                  msg->img->settings.shadows);
+                                  msg->wrkspc->settings.shadows);
                 }
                 break;
         case PIE_MSG_SET_WHITE:
@@ -584,10 +600,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.white = msg->f1;
+                        msg->wrkspc->settings.white = msg->f1;
                         PIE_TRACE("[%s] Set white: %f.",
                                   msg->token,
-                                  msg->img->settings.white);
+                                  msg->wrkspc->settings.white);
                 }
                 break;
         case PIE_MSG_SET_BLACK:
@@ -600,10 +616,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.black = msg->f1;
+                        msg->wrkspc->settings.black = msg->f1;
                         PIE_TRACE("[%s] Set black: %f.",
                                   msg->token,
-                                  msg->img->settings.black);
+                                  msg->wrkspc->settings.black);
                 }
                 break;
         case PIE_MSG_SET_CLARITY:
@@ -616,10 +632,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.clarity.amount = msg->f1;
+                        msg->wrkspc->settings.clarity.amount = msg->f1;
                         PIE_TRACE("[%s] Set clarity: %f.",
                                   msg->token,
-                                  msg->img->settings.clarity.amount);
+                                  msg->wrkspc->settings.clarity.amount);
                 }
                 break;
         case PIE_MSG_SET_VIBRANCE:
@@ -632,10 +648,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.vibrance = msg->f1;
+                        msg->wrkspc->settings.vibrance = msg->f1;
                         PIE_TRACE("[%s] Set vibrance: %f.",
                                   msg->token,
-                                  msg->img->settings.vibrance);
+                                  msg->wrkspc->settings.vibrance);
                 }
                 break;
         case PIE_MSG_SET_SATURATION:
@@ -648,10 +664,10 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.saturation = msg->f1;
+                        msg->wrkspc->settings.saturation = msg->f1;
                         PIE_TRACE("[%s] Set saturation: %f.",
                                   msg->token,
-                                  msg->img->settings.saturation);
+                                  msg->wrkspc->settings.saturation);
                 }
                 break;
         case PIE_MSG_SET_ROTATE:
@@ -674,14 +690,14 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 else
                 {
-                        msg->img->settings.sharpening.amount = msg->f1;
-                        msg->img->settings.sharpening.radius = msg->f2;
-                        msg->img->settings.sharpening.threshold = msg->f3;
+                        msg->wrkspc->settings.sharpening.amount = msg->f1;
+                        msg->wrkspc->settings.sharpening.radius = msg->f2;
+                        msg->wrkspc->settings.sharpening.threshold = msg->f3;
                         PIE_TRACE("[%s] Set sharpening: %f %f %f.",
                                   msg->token,
-                                  msg->img->settings.sharpening.amount,
-                                  msg->img->settings.sharpening.radius,
-                                  msg->img->settings.sharpening.threshold);
+                                  msg->wrkspc->settings.sharpening.amount,
+                                  msg->wrkspc->settings.sharpening.radius,
+                                  msg->wrkspc->settings.sharpening.threshold);
                 }
                 break;
         default:
@@ -707,8 +723,8 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         if (status == 0)
         {
                 struct timing t1;
-                struct pie_bitmap_f32rgb* org = &msg->img->proxy;
-                struct pie_bitmap_f32rgb* new = &msg->img->proxy_out;
+                struct pie_bitmap_f32rgb* org = &msg->wrkspc->proxy;
+                struct pie_bitmap_f32rgb* new = &msg->wrkspc->proxy_out;
                 size_t len = org->height * org->row_stride * sizeof(float);
                 int r_ok;
 
@@ -722,14 +738,14 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 
                 r_ok = pie_img_render(new,
                                       NULL,
-                                      &msg->img->settings);
+                                      &msg->wrkspc->settings);
                 assert(r_ok == 0);
 
                 /* Create histogram */
                 timing_start(&t1);
-                pie_alg_hist_lum(&msg->img->hist,
+                pie_alg_hist_lum(&msg->wrkspc->hist,
                                  new);
-                pie_alg_hist_rgb(&msg->img->hist,
+                pie_alg_hist_rgb(&msg->wrkspc->hist,
                                  new);
                 PIE_DEBUG(" Created histogram:     %8ldusec",
                           timing_dur_usec(&t1));

@@ -47,11 +47,11 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 int w;
                 int h;
 
-                /* LOAD path w h */
+                /* LOAD pie_id w h */
                 t = strtok_r(NULL, " ", &lasts);
                 if (t == NULL)
                 {
-                        PIE_WARN("[%s] (LOAD) No path provided",
+                        PIE_WARN("[%s] (LOAD) No pie_id provided",
                                  msg->token);
                         return -1;
                 }

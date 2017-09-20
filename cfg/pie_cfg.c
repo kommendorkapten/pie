@@ -101,6 +101,11 @@ int pie_cfg_load(const char* p)
         return 0;
 }
 
+int pie_cfg_loaded(void)
+{
+        return pie_cfg.db != NULL;
+}
+
 void pie_cfg_close(void)
 {
         if (pie_cfg.cfg_map)

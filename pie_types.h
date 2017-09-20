@@ -104,7 +104,7 @@ struct pie_img_settings
        /* [-0.5, 0.5]  def 0 */
         float color_temp;
        /* [-0.5, 0.5]  def 0 */
-        float tint;        
+        float tint;
         /* [-5, 5]     def 0 */
         float exposure;
         /* [0,2]       def 1 */
@@ -126,7 +126,7 @@ struct pie_img_settings
         /* [0, 359]    def 0 */
         float rotate;
         /* unknown def */
-        struct pie_unsharp_param sharpening;        
+        struct pie_unsharp_param sharpening;
 };
 
 struct pie_histogram
@@ -135,19 +135,6 @@ struct pie_histogram
         unsigned int c_red[PIE_HIST_RES];
         unsigned int c_green[PIE_HIST_RES];
         unsigned int c_blue[PIE_HIST_RES];
-};
-
-struct pie_img_workspace
-{
-        char path[PIE_PATH_LEN];
-        struct pie_histogram hist;
-        struct pie_img_settings settings;
-        /* Unmodified full resolution image */
-        struct pie_bitmap_f32rgb raw;
-        /* Downsampled unmodified proxy image */
-        struct pie_bitmap_f32rgb proxy;
-        /* Downsampled and rendered proxy image */
-        struct pie_bitmap_f32rgb proxy_out;
 };
 
 #endif /* __PIE_TYPES_H__ */

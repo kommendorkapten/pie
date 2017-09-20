@@ -25,6 +25,11 @@ enum pie_obj_type
         PIE_ID_TYPE_PRESET = 0x4
 };
 
+#define PIE_ID_IS_MOB(x) (x & PIE_ID_TYPE_MOB)
+#define PIE_ID_IS_MIN(x) (x & PIE_ID_TYPE_MIN)
+#define PIE_ID_IS_COLL(x) (x & PIE_ID_TYPE_COLL)
+#define PIE_ID_IS_PRESET(x) (x & PIE_ID_TYPE_PRESET)
+
 #ifdef __APPLE__
 # if __LONG_MAX__ == 9223372036854775807L
 /* int64_t is long long on apple, force to long to avoid
@@ -45,5 +50,13 @@ typedef int64_t pie_id;
  * @return a new pie id > 0 if ok, 0 invalid arguments were provided.
  */
 extern pie_id pie_id_create(unsigned char, unsigned char, enum pie_obj_type);
+
+
+/**
+ * Parse a pie_id from a decimal string.
+ * @param string to parse id from.
+ * @return pie_id or 0 if no pie_id could be created.
+ */
+extern pie_id pie_id_from_str(char*);
 
 #endif /* __PIE_ID_H__ */
