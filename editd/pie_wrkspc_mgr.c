@@ -223,7 +223,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                          mgr->storages->arr[min->min_stg_id]->mnt_path,
                          min->min_path);
                 /* Drop min, no longer needed */
-                pie_min_delete(mgr->db, min);
+                pie_min_free(min);
                 
                 timing_start(&t);
                 res = pie_io_load(&wrkspc->raw, buf);
