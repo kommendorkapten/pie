@@ -207,10 +207,6 @@ window.addEventListener("load", function(evt) {
         var now = Date.now()
         var dur = now - wsCmd.pieStartTs;
 
-        /* Keep start point to measure draw time */
-        wsCmd.pieStartTs = now;
-
-        console.log("RT in " + dur + "ms");
         if (typeof evt.data === "string") {
             conslog.log("ERROR: Got data: " + evt.data);
         } else {
@@ -218,17 +214,34 @@ window.addEventListener("load", function(evt) {
             var w;
             var h;
             var t;
+            var server_dur;
+            var tx;
 
             /* Data arrives as :
-               0:3 width (uint32, network order)
-               4:7 height (uint32, network order)
-               8:  rgba
-
+               0:3 duration in milli seconds
+               4:7 type of message
+               8:11 width (uint32, network order)
+               12:15 height (uint32, network order)
+               16:  rgba */
+            
             /* width and height are in network order */
-            t = new DataView(evt.data, 0, 4).getUint32(0, false);            
-            w = new DataView(evt.data, 4, 4).getUint32(0, false);
-            h = new DataView(evt.data, 8, 4).getUint32(0, false);
-            var pixels = new Uint8ClampedArray(evt.data, 12);
+            server_dur = new DataView(evt.data, 0, 4).getUint32(0, false);
+            t = new DataView(evt.data, 4, 4).getUint32(0, false);
+            w = new DataView(evt.data, 8, 4).getUint32(0, false);
+            h = new DataView(evt.data, 12, 4).getUint32(0, false);
+
+            /* Keep start point to measure draw time */
+            wsCmd.pieStartTs = now;
+
+            console.log("Server duration: " + server_dur + "ms");
+            console.log("RT in " + dur + "ms");
+            tx = dur - server_dur;
+            var mbs = evt.data.byteLength / (1024.0 * 1024.0);
+            console.log("Estimaged tx: " + tx + "ms for " + mbs + "MiB");
+            mbs = mbs * 1000.0 / tx;
+            console.log("Estimaged bw " + mbs + "MiB/s");
+
+            var pixels = new Uint8ClampedArray(evt.data, 16);
             var bm = new ImageData(pixels, w, h);
 
             console.log("Type: " + t + " width: " + w + " height:" + h);

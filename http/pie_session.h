@@ -18,6 +18,8 @@
 #define PIE_TX_IMG  0x1
 #define PIE_TX_HIST 0x2
 
+#include "../lib/timing.h"
+
 struct pie_sess_mgr;
 struct pie_img_workspace;
 
@@ -33,6 +35,9 @@ struct pie_sess
         char token[PIE_SESS_TOKEN_LEN];
         struct pie_img_workspace* wrkspc;
         unsigned char* rgba;
+        /* Used for duration measurement, set by cb_cmd */
+        struct timing t;
+        /* Timestamp for last accessed time, in seconds */
         long access_ts;
         int rgba_len;
         /* New data can be written to client */

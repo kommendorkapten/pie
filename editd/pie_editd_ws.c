@@ -510,10 +510,11 @@ static int cb_img(struct lws* wsi,
                 if (session->tx_ready & PIE_TX_IMG)
                 {
                         struct timing t;
+                        uint32_t dur_ms;
                         int bw;
 
                         /* Allocate output buffer */
-                        /* Outputbuffer format is x,y,rgba data.
+                        /* Outputbuffer format is duration,type,x,y,rgba data.
                          * Buffer is intented for raw copy on ws channel,
                          * so allocate extra space in the beginning for ws
                          * related data. */
@@ -522,15 +523,22 @@ static int cb_img(struct lws* wsi,
                         {
                                 session->rgba_len = (int)(session->wrkspc->proxy_out.width *
                                                           session->wrkspc->proxy_out.height *
-                                                          4 + 3 * sizeof(uint32_t));
+                                                          4 + 4 * sizeof(uint32_t));
                                 session->rgba = malloc(session->rgba_len + LWS_PRE);
                         }
 
-                        pie_enc_bm_rgba(session->rgba + LWS_PRE,
+                        /* Write type, w, h and data */
+                        pie_enc_bm_rgba(session->rgba + LWS_PRE + sizeof(dur_ms),
                                         &session->wrkspc->proxy_out,
                                         PIE_IMAGE_TYPE_PRIMARY);
                         PIE_DEBUG("Encoded proxy:         %8ldusec",
                                   timing_dur_usec(&t));
+                        /* Write server duration */
+                        dur_ms = (uint32_t)timing_dur_msec(&session->t);
+                        PIE_DEBUG("Server duration:       %8d000usec", dur_ms);
+                        /* Make sure data is in network order */
+                        dur_ms = htonl(dur_ms);
+                        memcpy(session->rgba + LWS_PRE, &dur_ms, sizeof(dur_ms));
                         bw = lws_write(wsi,
                                        session->rgba + LWS_PRE,
                                        session->rgba_len,
@@ -683,6 +691,7 @@ static int cb_cmd(struct lws* wsi,
                         PIE_WARN("No session found");
                         return -1;
                 }
+                timing_start(&session->t);
                 msg = pie_msg_alloc();
                 strncpy(msg->token, session->token, PIE_MSG_TOKEN_LEN);
                 if (parse_cmd_msg(msg, (char*)in, len))
