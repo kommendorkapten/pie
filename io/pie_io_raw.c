@@ -18,7 +18,9 @@
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 
-int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
+                        const char* path,
+                        struct pie_io_opt* opts)
 {
         libraw_data_t* lrd;
         libraw_processed_image_t* mem_img;
@@ -36,13 +38,27 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         lrd->params.use_camera_wb = 1;
         lrd->params.user_flip = 0;
         lrd->params.output_color = 1; /* sRGB */
-        lrd->params.user_qual = 0;
+        lrd->params.user_qual = 2;
         /* user_qual 0 - linear interpolation
                      1 - VNG interpolation
-                     2 - PPG interpolation
+                     2 - PPG interpolation <--- Best qual/perf
                      3 - AHD interpolation
                      4 - DCB interpolation
+                    11 - DHT interpolation <--- Best performance 2x slower
         */
+
+        /* Load any options */
+        if (opts)
+        {
+                switch (opts->qual)
+                {
+                case PIE_IO_HIGH_QUAL:
+                        lrd->params.user_qual = 11;
+                        break;
+                default:
+                        break;
+                }
+        }
         
         ret = libraw_open_file(lrd, path);
         if (ret)

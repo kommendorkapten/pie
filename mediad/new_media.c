@@ -157,6 +157,9 @@ static void* worker(void* arg)
         struct nm_worker* me = (struct nm_worker*)arg;
         struct pie_stg_mnt* proxy_stg = NULL;
         struct pie_stg_mnt* thumb_stg = NULL;
+        struct pie_io_opt io_opts;
+
+        io_opts.qual = PIE_IO_HIGH_QUAL;
 
         for (int i = 0; i < md_cfg.storages->len; i++)
         {
@@ -229,6 +232,9 @@ static void* worker(void* arg)
                          "%s%s",
                          stg->mnt_path,
                          new->path);
+                PIE_DEBUG("[%d]Begin loading %s...",
+                          me->me,
+                          src_path);
                 /* hex encode digest */
                 for (int i = 0; i < new->digest_len; i++)
                 {
@@ -237,7 +243,7 @@ static void* worker(void* arg)
                 hex[new->digest_len * 2 + 1] = '\0';
 
                 timing_start(&t);
-                ok = pie_io_load(&bm_src, src_path);
+                ok = pie_io_load(&bm_src, src_path, &io_opts);
                 PIE_DEBUG("[%d]Loaded %s in %ldms",
                           me->me,
                           src_path,

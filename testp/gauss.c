@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1]);
+        ret = pie_io_load(&img, argv[1], NULL);
         dur = timing_dur_usec(&t);
         if (ret)
         {
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
         pie_io_png_u8rgb_write("gauss.png", &out);
         pie_bm_free_u8(&out);
         pie_bm_free_f32(&img);
-        ret = pie_io_load(&img, argv[1]);
+        ret = pie_io_load(&img, argv[1], NULL);
 
         /* BOX Blur 6 */
         timing_start(&t);

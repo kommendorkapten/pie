@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         }
         
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1]);
+        ret = pie_io_load(&img, argv[1], NULL);
         dur = timing_dur_usec(&t);
         if (ret)
         {

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
         }
         /* scale = atoi(argv[2]); */
         
-        ret = pie_io_load(&img, argv[1]);
+        ret = pie_io_load(&img, argv[1], NULL);
         if (ret)
         {
                 printf("Error reading file. Code %d\n", ret);

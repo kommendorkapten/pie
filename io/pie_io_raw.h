@@ -16,12 +16,17 @@
 
 #include "../pie_types.h"
 
+struct pie_io_opt;
+
 /**
  * Reads an RAW image into the provided bitmap.
  * @param the bitmap to store image in.
  * @param path to the file on disk.
+ * @param options to use when loading, or NULL for default.
  * @return 0 on success, error code otherwise.
  */
-extern int pie_io_raw_f32_read(struct pie_bitmap_f32rgb*, const char*);
+extern int pie_io_raw_f32_read(struct pie_bitmap_f32rgb*,
+                               const char*,
+                               struct pie_io_opt*);
 
 #endif /* __PIE_IO_RAW_H__ */

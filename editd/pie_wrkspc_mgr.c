@@ -226,7 +226,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 pie_min_free(min);
                 
                 timing_start(&t);
-                res = pie_io_load(&wrkspc->raw, buf);
+                res = pie_io_load(&wrkspc->raw, buf, NULL);
                 PIE_DEBUG("Loaded '%s'@stg-%d in %ldusec",
                           buf,
                           min->min_stg_id,

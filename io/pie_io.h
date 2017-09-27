@@ -25,13 +25,26 @@
 #include "pie_io_raw.h"
 
 struct pie_bitmap_f32rgb;
+enum pie_io_opt_qual
+{
+        PIE_IO_NORM_QUAL,
+        PIE_IO_HIGH_QUAL
+};
+
+struct pie_io_opt
+{
+        enum pie_io_opt_qual qual;
+};
 
 /**
  * Open a file and load content into an empty bitmap.
  * @param the bitmap to load content into.
  * @param the path to open.
+ * @param options to use when loading, or NULL for default.
  * @return 0 on success.
  */
-extern int pie_io_load(struct pie_bitmap_f32rgb*, const char*);
+extern int pie_io_load(struct pie_bitmap_f32rgb*,
+                       const char*,
+                       struct pie_io_opt*);
 
 #endif /* __PIE_IO_H__ */

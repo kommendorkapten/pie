@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 #if 0
         ret = png_f32_read(&bm, argv[1]);
 #else
-        ret = pie_io_load(&bm, argv[1]);
+        ret = pie_io_load(&bm, argv[1], NULL);
 #endif
         if (ret)
         {

@@ -24,7 +24,7 @@ int main(int argc, char** argv)
         out = argv[2];
 
         timing_start(&t);
-        if (ok = pie_io_load(&bmf, in), ok)
+        if (ok = pie_io_load(&bmf, in, NULL), ok)
         {
                 printf("pie_io_load: %d\n", ok);
                 return -1;

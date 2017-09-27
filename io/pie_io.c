@@ -51,7 +51,9 @@ static struct pie_magic fmts[PIE_FT_COUNT] = {
 static enum pie_file_type pie_get_magic(unsigned char magic[PIE_MAGIC_MAX],
                                         ssize_t len);
 
-int pie_io_load(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_io_load(struct pie_bitmap_f32rgb* bm,
+                const char* path,
+                struct pie_io_opt* opts)
 {
         /* Read the magic bytes */
         unsigned char magic[PIE_MAGIC_MAX];
@@ -84,7 +86,7 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm, const char* path)
                 break;
         case PIE_FT_UNKNOWN:
                 /* Assume a RAW format, try to load */
-                ret = pie_io_raw_f32_read(bm, path);
+                ret = pie_io_raw_f32_read(bm, path, opts);
                 break;
         default:
                 ret = PIE_IO_UNSUPPORTED_FMT;
