@@ -102,7 +102,7 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
         }
         r->content_len = pie_enc_json_collection(r->wbuf,
                                                  r->wbuf_len,
-                                                 coll.col_id,
+                                                 &coll,
                                                  ml);
 
         n = llist_head(ml);

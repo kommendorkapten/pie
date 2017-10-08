@@ -111,7 +111,7 @@ size_t pie_enc_json_exif(char* buf,
 
 size_t pie_enc_json_collection(char* buf,
                                size_t len,
-                               pie_id id,
+                               const struct pie_collection* c,
                                struct llist* ml)
 {
         struct lnode* n = llist_head(ml);
@@ -119,7 +119,9 @@ size_t pie_enc_json_collection(char* buf,
         int first = 1;
 
         bw += snprintf(buf + bw, len - bw, "{");
-        bw += snprintf(buf + bw, len - bw, "\"id\": \"%ld\",", id);
+        bw += snprintf(buf + bw, len - bw, "\"id\":\"%ld\",\"path\":\"%s\",",
+                       c->col_id,
+                       c->col_path);
         bw += snprintf(buf + bw, len - bw, "\"assets\":[");
         while (n)
         {
@@ -170,9 +172,12 @@ size_t pie_enc_json_collection_list(char* buf,
                 {
                         first = 0;
                 }
-                bw += snprintf(buf + bw, len - bw, "{\"id\":\"%ld\",\"path\":\"%s\"}",
-                       c->col_id,
-                       c->col_path);
+                bw += snprintf(buf + bw, len - bw, "{\"id\":\"%ld\",\"path\":\"%s\",\"usr_id\":\"%d\",\"grp_id\":\"%d\",\"acl\":\"%d\"}",
+                               c->col_id,
+                               c->col_path,
+                               c->col_usr_id,
+                               c->col_grp_id,
+                               c->col_acl);
 
                 n = n->next;
         }

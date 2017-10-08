@@ -106,6 +106,7 @@ function loadCollection(collectionId) {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
            if (xmlhttp.status == 200) {
+               var table = document.getElementById("meta_data_tbl_top");
                var coll = JSON.parse(xmlhttp.responseText);
                var innerHtml = "";
                var newRow = "<tr>";
@@ -113,6 +114,9 @@ function loadCollection(collectionId) {
                var count = 1;
                var closed = false;
 
+               table = document.getElementById("meta_data_tbl_1");
+               table.rows[1].cells[1].innerHTML = coll.path;
+               
                innerHtml += newRow
                for (i of coll.assets) {
                    var cellId = "grid-cell-mob-" + i.id;
@@ -308,7 +312,6 @@ function renderExif(exif) {
 
     table = document.getElementById("meta_data_tbl_1");
     table.rows[0].cells[1].innerHTML = mob.name;
-    table.rows[1].cells[1].innerHTML = "collection";
 
     table = document.getElementById("meta_data_tbl_2");
     table.rows[0].cells[1].innerHTML = exif.copyright;
