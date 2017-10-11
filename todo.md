@@ -1,7 +1,7 @@
 # In progress
+* Create links from collectiond to editd.
 
 # Feature
-* Create links from collectiond to editd.
 
 ## Sorted
 * Editd, when loading image, automatically set parameters in ui.
@@ -59,3 +59,4 @@
 * ~~Editd, manage img via mobs.~~
 * ~~collection in meta data pane.~~
 * ~~Add hex (sha1) to min.~~
+* ~~Short cut for color (6-9).~~

@@ -1,3 +1,6 @@
+var PIE_HOST = "localhost";
+var COLLECTIOND_PORT = 8081;
+var EDITD_PORT = 8080;
 var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
@@ -293,8 +296,6 @@ function mobColorString(color) {
     case 3:
         return "Blue";
     case 4:
-        return "Yellow";
-    case 5:
         return "Black";
     }
 
@@ -561,6 +562,26 @@ function rateMob(mobId, rate) {
     updateMob(mob);
 }
 
+function coloriseMob(mobId, color) {
+    if (!mobId || mobId == "") {
+        console.log("No mob selected");
+        return
+    }
+
+    var mob = mobCache[mobId];
+    var not = document.getElementById("popup-rate-set");
+
+    /* Update and show rating information */
+    not.innerHTML = "Set color to " +  mobColorString(color);
+    not.style.display = "block";
+    setTimeout(function(){
+        not.style.display = "none";
+    }, 800);
+
+    mob.color = color;
+    updateMob(mob);
+}
+
 function updateMob(mob) {
     var xmlhttp = new XMLHttpRequest();
     var jsonString = JSON.stringify(mob);
@@ -575,7 +596,7 @@ function updateMob(mob) {
                 var cellId = "grid-cell-mob-" + newMob.id;
                 var cell = document.getElementById(cellId);
                 var imgElem = cell.childNodes[1].childNodes[0];
-                console.log(imgElem);
+
                 imgElem.src = rateFilenameFromMob(newMob);
 
                 /* Make new data visible */
@@ -767,8 +788,18 @@ document.onkeydown = function(evt) {
         var rate = evt.keyCode - 48;
         rateMob(selectedMobId, rate);
         break;
+    case 54:
+    case 55:
+    case 56:
+    case 57:
+        var color = evt.keyCode - 53;
+        coloriseMob(selectedMobId, color);
+        break;
     case 68: /* d */
         console.log("Develop view");
+        var url = PIE_HOST + ":" + EDITD_PORT + "/?img=" + selectedMobId;
+        console.log(url);
+        console.log(selectedCollection.id);
         break;
     case 69: /* e */
         viewSingleMob(selectedMobId);

@@ -1,3 +1,6 @@
+var PIE_HOST = "localhost";
+var COLLECTIOND_PORT = 8081;
+var EDITD_PORT = 8080;
 var histChart;
 var lowerPaneHeight = 220;
 var histYMax = 255;

@@ -26,7 +26,6 @@ enum pie_mob_color
         PIE_MOB_COLOR_RED,
         PIE_MOB_COLOR_GREEN,
         PIE_MOB_COLOR_BLUE,
-        PIE_MOB_COLOR_YELLOW,
         PIE_MOB_COLOR_BLACK,
         PIE_MOB_COLOR_COUNT
 };
