@@ -1,11 +1,11 @@
 # In progress
 
 # Feature
+* Create links from collectiond to editd.
 
 ## Sorted
-* Add hex (sha1) to min.
-* Create links from collectiond to editd.
 * Editd, when loading image, automatically set parameters in ui.
+* Editd, persist parameters in db.
 * editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.
 * In library view, metadata field to right, present proper collection
@@ -13,6 +13,8 @@
 * Zoom in library mode.
 
 ## Unsorted
++ handle file name collisions during import.
++ show num files in collection list.
 * Update proxy and thumb with any adjustments from editd.
 * Auto expand top collection.
 * Support for color tagging in collection mode.
@@ -32,6 +34,11 @@
 
 # Performance:
 
+* Memory leak check
+** Editd (may need to be converted to single thread).
+** Ingestd
+** Collectiond
+** Mediad
 * Downsample.
 * Blur for powerpc.
 * Multi threaded algs.
@@ -50,3 +57,5 @@
 * ~~Editd/session, remove command/response in session object.
   Fix duplicate global server object.~~
 * ~~Editd, manage img via mobs.~~
+* ~~collection in meta data pane.~~
+* ~~Add hex (sha1) to min.~~

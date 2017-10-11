@@ -3,7 +3,8 @@ CREATE TABLE pie_min (
        min_mob_id BIGINT NOT NULL,
        min_added_ts_millis BIGINT,
        min_stg_id INTEGER NOT NULL,
-       min_path VARCHAR(255),
+       min_path VARCHAR(257),
+       min_sha1_hash VARCHAR(129),
        PRIMARY KEY (min_id)
 );
 

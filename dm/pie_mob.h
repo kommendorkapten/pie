@@ -7,6 +7,8 @@
 
 struct llist;
 
+#define MOB_NAME_LEN 64
+
 enum pie_mob_rating
 {
         PIE_MOB_RATING_0,
@@ -33,7 +35,7 @@ struct pie_mob
 {
 	long            mob_id;
 	long            mob_parent_mob_id;
-	char           *mob_name;
+	char            mob_name[MOB_NAME_LEN];
 	long            mob_capture_ts_millis;
 	long            mob_added_ts_millis;
 	short           mob_format;

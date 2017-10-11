@@ -186,7 +186,6 @@ static void* worker(void* arg)
         {
                 char src_path[PIE_PATH_LEN];
                 char tgt_path[PIE_PATH_LEN];
-                char hex[2 * PIE_MAX_DIGEST + 1];
                 struct pie_exif_data ped;
                 struct pie_bitmap_f32rgb bm_src;
                 struct pie_mob mob;
@@ -235,12 +234,6 @@ static void* worker(void* arg)
                 PIE_DEBUG("[%d]Begin loading %s...",
                           me->me,
                           src_path);
-                /* hex encode digest */
-                for (int i = 0; i < new->digest_len; i++)
-                {
-                        sprintf(hex + i * 2, "%02x", new->digest[i]);
-                }
-                hex[new->digest_len * 2 + 1] = '\0';
 
                 timing_start(&t);
                 ok = pie_io_load(&bm_src, src_path, &io_opts);
@@ -274,7 +267,7 @@ static void* worker(void* arg)
                    EXIF for capture time */
                 mob.mob_id = mob_id;
                 mob.mob_parent_mob_id = 0;
-                mob.mob_name = strdup(p);
+                strncpy(mob.mob_name, p, MOB_NAME_LEN);
                 mob.mob_capture_ts_millis = now_ms;
                 mob.mob_added_ts_millis = now_ms;
                 mob.mob_format = 0;
@@ -289,7 +282,23 @@ static void* worker(void* arg)
                 min.min_added_ts_millis = now_ms;
                 min.min_mob_id = mob_id;
                 min.min_stg_id = new->stg_id;
-                min.min_path = strdup(new->path);
+                strncpy(min.min_path, new->path, MIN_PATH_LEN);
+                /* hex encode digest into MIN */
+                if (new->digest_len * 2 + 1 > MIN_HASH_LEN)
+                {
+                        PIE_ERR("Too larget digest received %d, max is %d",
+                                new->digest_len * 2 + 1,
+                                MIN_HASH_LEN);
+                        abort();
+                }
+                for (int i = 0; i < new->digest_len; i++)
+                {
+                        sprintf(min.min_sha1_hash + i * 2,
+                                "%02x",
+                                new->digest[i]);
+                }
+                min.min_sha1_hash[new->digest_len * 2] = '\0';
+                
                 ok = pie_min_create(pie_cfg_get_db(), &min);
                 if (ok)
                 {

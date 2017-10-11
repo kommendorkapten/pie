@@ -72,7 +72,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         char tmp_path[PIE_PATH_LEN];
         char rel_path[PIE_PATH_LEN]; /* relative stg mountpoint */
         char hex[2 * EVP_MAX_MD_SIZE + 1];
-        unsigned char sum[EVP_MAX_MD_SIZE];
+        unsigned char digest[EVP_MAX_MD_SIZE];
         size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
         struct timing t;
         ssize_t len;
@@ -91,15 +91,15 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         }
 
         timing_start(&t);
-        md_len = pie_fp_mdigest(sum, src_fd);
+        md_len = pie_fp_mdigest(digest, src_fd);
         PIE_DEBUG("Digest in %ldms", timing_dur_msec(&t));
 
         /* hex encode file checksum */
         for (unsigned int i = 0; i < md_len; i++)
         {
-                sprintf(hex + i * 2, "%02x", sum[i]);
+                sprintf(hex + i * 2, "%02x", digest[i]);
         }
-        hex[md_len * 2 + 1] = '\0';
+        hex[md_len * 2] = '\0';
 
         /* strip id_cfg.src_path from path */
         PIE_TRACE("Source path: %s", path);
@@ -131,7 +131,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
                  "%s%s",
                  id_cfg.dst_path, rel_path);
         new_mmsg->path[PIE_PATH_LEN - 1] = '\0';
-        memcpy(new_mmsg->digest, sum, md_len);
+        memcpy(new_mmsg->digest, digest, md_len);
         new_mmsg->stg_id = htonl(id_cfg.dst_stg->stg.stg_id);
         new_mmsg->digest_len = htonl(md_len);
         PIE_DEBUG("New media message path: %s", new_mmsg->path);
@@ -198,7 +198,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         return 0;
 }
 
-unsigned int pie_fp_mdigest(unsigned char sum[], int fd)
+unsigned int pie_fp_mdigest(unsigned char digest[], int fd)
 {
         char buf[BUF_LEN];
         EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
@@ -213,7 +213,7 @@ unsigned int pie_fp_mdigest(unsigned char sum[], int fd)
                 EVP_DigestUpdate(mdctx, buf, nb);
         }
 
-        EVP_DigestFinal_ex(mdctx, sum, &md_len);
+        EVP_DigestFinal_ex(mdctx, digest, &md_len);
         EVP_MD_CTX_destroy(mdctx);
 
         return md_len;

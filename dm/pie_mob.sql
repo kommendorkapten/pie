@@ -1,7 +1,7 @@
 CREATE TABLE pie_mob (
        mob_id BIGINT NOT NULL,
        mob_parent_mob_id BIGINT,
-       mob_name VARCHAR(64),
+       mob_name VARCHAR(65),
        mob_capture_ts_millis BIGINT,
        mob_added_ts_millis BIGINT,
        mob_format SMALLINT,

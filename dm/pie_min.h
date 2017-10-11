@@ -7,13 +7,22 @@
 
 struct llist;
 
+/* Keep SHA 1 hash in hex code + null terminator */
+#define MIN_HASH_LEN (20 * 2 + 1)
+#ifdef PIE_PATH_LEN
+# define MIN_PATH_LEN PIE_PATH_LEN
+#else
+# define MIN_PATH_LEN 256
+#endif
+
 struct pie_min
 {
 	long            min_id;
 	long            min_mob_id;
 	long            min_added_ts_millis;
 	int             min_stg_id;
-	char           *min_path;
+	char            min_path[MIN_PATH_LEN];
+        char            min_sha1_hash[MIN_HASH_LEN];
 };
 
 extern struct pie_min *pie_min_alloc(void);

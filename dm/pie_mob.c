@@ -12,7 +12,7 @@ pie_mob_alloc(void)
 {
 	struct pie_mob *this = malloc(sizeof(struct pie_mob));
 
-	this->mob_name = NULL;
+	this->mob_name[0] = '\0';
 	return this;
 }
 void 
@@ -26,11 +26,7 @@ void
 pie_mob_release(struct pie_mob * this)
 {
 	assert(this);
-	if (this->mob_name)
-	{
-		free(this->mob_name);
-		this->mob_name = NULL;
-	}
+	this->mob_name[0] = '\0';
 }
 
 int 
@@ -224,7 +220,6 @@ pie_mob_read(sqlite3 * db, struct pie_mob * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 1);
 	br = sqlite3_column_bytes(pstmt, 1);
-	this->mob_name = malloc(br + 1);
 	memcpy(this->mob_name, c, br);
 	this->mob_name[br] = '\0';
 	this->mob_capture_ts_millis = sqlite3_column_int64(pstmt, 2);
@@ -422,7 +417,6 @@ struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
                 /* and set the null terminator., */
                 c = sqlite3_column_text(pstmt, 2);
                 br = sqlite3_column_bytes(pstmt, 2);
-                mob->mob_name = malloc(br + 1);
                 memcpy(mob->mob_name, c, br);
                 mob->mob_name[br] = '\0';
                 mob->mob_capture_ts_millis = sqlite3_column_int64(pstmt, 3);

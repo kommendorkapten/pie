@@ -11,7 +11,8 @@ pie_min_alloc(void)
 {
 	struct pie_min *this = malloc(sizeof(struct pie_min));
 
-	this->min_path = NULL;
+	this->min_path[0] = '\0';
+	this->min_sha1_hash[0] = '\0';
 	return this;
 }
 void 
@@ -25,16 +26,13 @@ void
 pie_min_release(struct pie_min * this)
 {
 	assert(this);
-	if (this->min_path)
-	{
-		free(this->min_path);
-		this->min_path = NULL;
-	}
+	this->min_path[0] = '\0';
+	this->min_sha1_hash[0] = '\0';
 }
 int 
 pie_min_create(sqlite3 * db, struct pie_min * this)
 {
-	char           *q = "INSERT INTO pie_min (min_id,min_mob_id,min_added_ts_millis,min_stg_id,min_path) VALUES (?,?,?,?,?)";
+	char           *q = "INSERT INTO pie_min (min_id,min_mob_id,min_added_ts_millis,min_stg_id,min_path,min_sha1_hash) VALUES (?,?,?,?,?,?)";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -43,7 +41,7 @@ pie_min_create(sqlite3 * db, struct pie_min * this)
 	/* Check if a key is expected to be generated or not */
 	if (this->min_id == 0)
 	{
-		q = "INSERT INTO pie_min (min_mob_id,min_added_ts_millis,min_stg_id,min_path) VALUES (?,?,?,?)";
+		q = "INSERT INTO pie_min (min_mob_id,min_added_ts_millis,min_stg_id,min_path,min_sha1_hash) VALUES (?,?,?,?,?)";
 	}
 	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
 	if (ret != SQLITE_OK)
@@ -72,6 +70,12 @@ pie_min_create(sqlite3 * db, struct pie_min * this)
 			goto cleanup;
 		}
 		ret = sqlite3_bind_text(pstmt, 4, this->min_path, -1, SQLITE_STATIC);
+		if (ret != SQLITE_OK)
+		{
+			ret = -1;
+			goto cleanup;
+		}
+		ret = sqlite3_bind_text(pstmt, 5, this->min_sha1_hash, -1, SQLITE_STATIC);
 		if (ret != SQLITE_OK)
 		{
 			ret = -1;
@@ -110,6 +114,12 @@ pie_min_create(sqlite3 * db, struct pie_min * this)
 			ret = -1;
 			goto cleanup;
 		}
+		ret = sqlite3_bind_text(pstmt, 6, this->min_sha1_hash, -1, SQLITE_STATIC);
+		if (ret != SQLITE_OK)
+		{
+			ret = -1;
+			goto cleanup;
+		}                
 	}
 	ret = sqlite3_step(pstmt);
 	if (ret != SQLITE_DONE)
@@ -135,7 +145,7 @@ cleanup:
 int 
 pie_min_read(sqlite3 * db, struct pie_min * this)
 {
-	char           *q = "SELECT min_mob_id,min_added_ts_millis,min_stg_id,min_path FROM pie_min WHERE min_id = ?";
+	char           *q = "SELECT min_mob_id,min_added_ts_millis,min_stg_id,min_path,min_sha1_hash FROM pie_min WHERE min_id = ?";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -175,9 +185,14 @@ pie_min_read(sqlite3 * db, struct pie_min * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 3);
 	br = sqlite3_column_bytes(pstmt, 3);
-	this->min_path = malloc(br + 1);
 	memcpy(this->min_path, c, br);
 	this->min_path[br] = '\0';
+        /* sha1 hash */
+        c = sqlite3_column_text(pstmt, 4);
+        br = sqlite3_column_bytes(pstmt, 4);
+        memcpy(this->min_sha1_hash, c, br);
+        this->min_sha1_hash[br] = '\0';
+        
 	ret = 0;
 cleanup:
 	retf = sqlite3_finalize(pstmt);
@@ -190,7 +205,7 @@ cleanup:
 int 
 pie_min_update(sqlite3 * db, struct pie_min * this)
 {
-	char           *q = "UPDATE pie_min SET min_mob_id = ?,min_added_ts_millis = ?,min_stg_id = ?,min_path = ? WHERE min_id = ?";
+	char           *q = "UPDATE pie_min SET min_mob_id = ?,min_added_ts_millis = ?,min_stg_id = ?,min_path = ?,min_sha1_hash = ? WHERE min_id = ?";
 	sqlite3_stmt   *pstmt;
 	int             ret;
 	int             retf;
@@ -226,7 +241,13 @@ pie_min_update(sqlite3 * db, struct pie_min * this)
 		ret = -1;
 		goto cleanup;
 	}
-	ret = sqlite3_bind_int64(pstmt, 5, this->min_id);
+	ret = sqlite3_bind_text(pstmt, 5, this->min_sha1_hash, -1, SQLITE_STATIC);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}        
+	ret = sqlite3_bind_int64(pstmt, 6, this->min_id);
 	if (ret != SQLITE_OK)
 	{
 		ret = -1;
@@ -286,7 +307,7 @@ cleanup:
 
 struct llist* pie_min_find_mob(sqlite3* db, pie_id mob_id)
 {
-	char           *q = "SELECT min_id,min_added_ts_millis,min_stg_id,min_path FROM pie_min WHERE min_mob_id = ?";
+	char           *q = "SELECT min_id,min_added_ts_millis,min_stg_id,min_path,min_sha1_hash FROM pie_min WHERE min_mob_id = ?";
 	sqlite3_stmt   *pstmt;
         struct llist   *retl = llist_create();
 	int             ret;
@@ -343,9 +364,13 @@ struct llist* pie_min_find_mob(sqlite3* db, pie_id mob_id)
                 /* and set the null terminator., */
                 c = sqlite3_column_text(pstmt, 3);
                 br = sqlite3_column_bytes(pstmt, 3);
-                min->min_path = malloc(br + 1);
                 memcpy(min->min_path, c, br);
                 min->min_path[br] = '\0';
+                /* sha1 hash */
+                c = sqlite3_column_text(pstmt, 4);
+                br = sqlite3_column_bytes(pstmt, 4);
+                memcpy(min->min_sha1_hash, c, br);
+                min->min_sha1_hash[br] = '\0';
 
                 llist_pushb(retl, min);                
         }
