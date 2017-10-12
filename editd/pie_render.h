@@ -15,7 +15,7 @@
 #define __PIE_RENDER_H__
 
 struct pie_bitmap_f32rgb;
-struct pie_img_settings;
+struct pie_dev_settings;
 
 /**
  * Init settings to default values.
@@ -24,7 +24,7 @@ struct pie_img_settings;
  * @param height of image.
  * @return void.
  */
-extern void pie_img_init_settings(struct pie_img_settings*, int, int);
+extern void pie_dev_init_settings(struct pie_dev_settings*, int, int);
 
 /**
  * Render a bitmap.
@@ -33,8 +33,8 @@ extern void pie_img_init_settings(struct pie_img_settings*, int, int);
  * @param settings to apply.
  * @return 0 on success.
  */
-extern int pie_img_render(struct pie_bitmap_f32rgb*,
+extern int pie_dev_render(struct pie_bitmap_f32rgb*,
                           float*,
-                          const struct pie_img_settings*);
+                          const struct pie_dev_settings*);
 
 #endif /* __PIE_RENDER_H__ */

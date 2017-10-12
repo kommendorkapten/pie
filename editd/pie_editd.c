@@ -460,12 +460,12 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         memcpy(msg->wrkspc->proxy_out.c_blue, msg->wrkspc->proxy.c_blue, len);
 
         /* Read from database to get settings */
-        pie_img_init_settings(&msg->wrkspc->settings,
+        pie_dev_init_settings(&msg->wrkspc->settings,
                               msg->wrkspc->proxy.width,
                               msg->wrkspc->proxy.height);
 
         /* Call render */
-        res = pie_img_render(&msg->wrkspc->proxy_out,
+        res = pie_dev_render(&msg->wrkspc->proxy_out,
                              NULL,
                              &msg->wrkspc->settings);
         assert(res == 0);
@@ -736,7 +736,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 PIE_DEBUG(" Reset proxy:           %8ldusec",
                           timing_dur_usec(&t1));
 
-                r_ok = pie_img_render(new,
+                r_ok = pie_dev_render(new,
                                       NULL,
                                       &msg->wrkspc->settings);
                 assert(r_ok == 0);

@@ -99,7 +99,7 @@ struct pie_unsharp_param
         float threshold; /* typically from 3 to 20 */
 };
 
-struct pie_img_settings
+struct pie_dev_settings
 {
        /* [-0.5, 0.5]  def 0 */
         float color_temp;

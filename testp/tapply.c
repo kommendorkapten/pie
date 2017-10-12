@@ -13,7 +13,7 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb img;
         struct pie_bitmap_u8rgb out;
         struct timing t;
-        struct pie_img_settings settings;
+        struct pie_dev_settings settings;
         struct pie_histogram hist;
         char* out_name = "out.jpg";
         float* buf;
@@ -37,11 +37,11 @@ int main(int argc, char** argv)
         printf("Loaded media in %luusec\n", dur);
 
         buf = malloc(img.width * img.row_stride * sizeof(float) + 8);
-        pie_img_init_settings(&settings, img.width, img.height);
+        pie_dev_init_settings(&settings, img.width, img.height);
 
         settings.saturation = 1.3f;
         //settings.vibrance = 0.3f;
-        pie_img_render(&img, buf, &settings);
+        pie_dev_render(&img, buf, &settings);
         
         timing_start(&t);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
