@@ -1,6 +1,8 @@
-var PIE_HOST = "localhost";
-var COLLECTIOND_PORT = 8081;
+var COLLD_PORT = 8081;
 var EDITD_PORT = 8080;
+var COLLD_HOST = null;
+var EDITD_HOST = null;
+var PROTO = null;
 var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
@@ -759,7 +761,22 @@ window.addEventListener("load", function(evt) {
     if (id) {
         console.log("Get collection: " + id);
         loadCollection(id);
-   }
+    }
+
+    // Configure hosts
+    var url = window.location.href.split("/");
+    PROTO = url[0];
+    if (COLLD_HOST == null) {
+        COLLD_HOST = url[2].split(":")[0];
+    }
+    if (EDITD_HOST == null) {
+        EDITD_HOST = url[2].split(":")[0];
+    }
+
+    var col = getParameterByName('col');
+    if (col != null && col != "") {
+        loadCollection(col);
+    }    
 });
 
 document.onkeydown = function(evt) {
@@ -788,6 +805,7 @@ document.onkeydown = function(evt) {
         var rate = evt.keyCode - 48;
         rateMob(selectedMobId, rate);
         break;
+        /* color */
     case 54:
     case 55:
     case 56:
@@ -796,10 +814,8 @@ document.onkeydown = function(evt) {
         coloriseMob(selectedMobId, color);
         break;
     case 68: /* d */
-        console.log("Develop view");
-        var url = PIE_HOST + ":" + EDITD_PORT + "/?img=" + selectedMobId;
-        console.log(url);
-        console.log(selectedCollection.id);
+        var newUrl = PROTO + "//" + EDITD_HOST + ":" + EDITD_PORT + "/?img=" + selectedMobId + "&col=" + selectedCollection.id;
+        window.location.replace(newUrl);
         break;
     case 69: /* e */
         viewSingleMob(selectedMobId);

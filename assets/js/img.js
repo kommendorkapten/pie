@@ -1,6 +1,8 @@
-var PIE_HOST = "localhost";
-var COLLECTIOND_PORT = 8081;
+var COLLD_PORT = 8081;
 var EDITD_PORT = 8080;
+var COLLD_HOST = null;
+var EDITD_HOST = null;
+var PROTO = null;
 var histChart;
 var lowerPaneHeight = 220;
 var histYMax = 255;
@@ -85,7 +87,7 @@ function getParameterByName(name, url) {
 }
 
 function wsLoadImage(ws) {
-    var img = getParameterByName('img');    
+    var img = getParameterByName('img');
     var c = document.getElementById("img_canvas");
 
     if (!img) {
@@ -1317,6 +1319,62 @@ window.addEventListener("load", function(evt) {
         }
     });
 
+    // Configure hosts
+    var url = window.location.href.split("/");
+    PROTO = url[0];
+    if (COLLD_HOST == null) {
+        COLLD_HOST = url[2].split(":")[0];
+    }
+    if (EDITD_HOST == null) {
+        EDITD_HOST = url[2].split(":")[0];
+    }
 });
 
 
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+
+    console.log("Captured key code: " + evt.keyCode);
+    switch (evt.keyCode) {
+    case 27:
+        console.log("esc");
+        alert("escape clicked yo!");
+        break;
+        /* nav */
+    case 37:
+    case 38:
+    case 39:
+    case 40:
+        console.log("navigate yo");
+        break;
+        /* rating */
+    case 48:
+    case 49:
+    case 50:
+    case 51:
+    case 52:
+    case 53:
+        console.log("rate yo");
+        break;
+        /* color */
+    case 54:
+    case 55:
+    case 56:
+    case 57:
+        console.log("color yo");
+        break;
+    case 71: /* g */
+        var col = getParameterByName('col');
+        var newUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT + "/";
+
+        if (col != null && col != "") {
+            newUrl += "?col=" + col;
+        }
+        window.location.replace(newUrl);        
+        break;
+    case 90:
+        console.log("zoom");
+        break;
+    }
+
+};
