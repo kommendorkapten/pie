@@ -19,6 +19,7 @@
 
 struct pie_histogram;
 struct pie_dev_settings;
+struct pie_unsharp_param;
 struct pie_exif_data;
 struct pie_collection;
 struct llist;
@@ -30,7 +31,7 @@ struct pie_mob;
  * @param the buffer to write JSON to.
  * @param number of bytes the buffer can hold.
  * @param histogram to encode.
- * @return the number of bytes written (excluding the null byte; if 
+ * @return the number of bytes written (excluding the null byte; if
  *         it was written).
  */
 extern size_t pie_enc_json_hist(char*, size_t, const struct pie_histogram*);
@@ -38,6 +39,10 @@ extern size_t pie_enc_json_hist(char*, size_t, const struct pie_histogram*);
 extern size_t pie_enc_json_settings(char*,
                                     size_t,
                                     const struct pie_dev_settings*);
+
+extern int pie_dec_json_settings(struct pie_dev_settings*, char*);
+
+extern int pie_dec_json_unsharp(struct pie_unsharp_param*, char*);
 
 extern size_t pie_enc_json_exif(char*, size_t, const struct pie_exif_data*);
 
@@ -48,6 +53,8 @@ extern size_t pie_enc_json_collection(char*,
 
 extern size_t pie_enc_json_collection_list(char*, size_t, struct llist*);
 
-extern size_t pie_enc_json_mob(char*, size_t, struct pie_mob*);
+extern size_t pie_enc_json_mob(char*, size_t, const struct pie_mob*);
+
+extern int pie_dec_json_mob(struct pie_mob*, char*);
 
 #endif /* __PIE_JSON_H__ */

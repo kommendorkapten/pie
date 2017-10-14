@@ -12,12 +12,19 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include "pie_json.h"
+#include "../pie_log.h"
 #include "../pie_types.h"
 #include "../dm/pie_exif_data.h"
 #include "../dm/pie_collection.h"
 #include "../dm/pie_mob.h"
 #include "../lib/llist.h"
+#include "../jsmn/jsmn.h"
+
+#define DEV_SET_SCALE 10000.0f
+
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s);
 
 /*
 Encode to following structure (without newlines)
@@ -56,6 +63,277 @@ size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_histogram* h)
         bw += snprintf(buf + bw, len - bw, "]}");
 
         return bw;
+}
+
+/*
+ * Encodes all floats with scaling of 10000.
+ */
+size_t pie_enc_json_settings(char* buf,
+                             size_t len,
+                             const struct pie_dev_settings* d)
+{
+        size_t bw = 0;
+
+        bw += snprintf(buf + bw, len - bw, "{\"colort\":%d,",
+                       (int)(d->color_temp * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"tint\":%d,",
+                       (int)(d->tint * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"expos\":%d,",
+                       (int)(d->exposure * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"contr\":%d,",
+                       (int)(d->contrast * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"highl\":%d,",
+                       (int)(d->highlights * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"shado\":%d,",
+                       (int)(d->shadows * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"white\":%d,",
+                       (int)(d->white * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"black\":%d,",
+                       (int)(d->black * DEV_SET_SCALE));
+
+        bw += snprintf(buf + bw, len - bw, "\"clarity\":{\"amount\": %d,",
+                       (int)(d->clarity.amount * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"rad\": %d,",
+                       (int)(d->clarity.radius * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"thresh\": %d},",
+                       (int)(d->clarity.threshold * DEV_SET_SCALE));
+
+        bw += snprintf(buf + bw, len - bw, "\"vibra\":%d,",
+                       (int)(d->vibrance * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"satur\":%d,",
+                       (int)(d->saturation * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"rot\":%d,",
+                       (int)(d->rotate * DEV_SET_SCALE));
+
+        bw += snprintf(buf + bw, len - bw, "\"sharp\":{\"amount\": %d,",
+                       (int)(d->sharpening.amount * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"rad\": %d,",
+                       (int)(d->sharpening.radius * DEV_SET_SCALE));
+        bw += snprintf(buf + bw, len - bw, "\"thresh\": %d}}",
+                       (int)(d->sharpening.threshold * DEV_SET_SCALE));
+
+        return bw;
+}
+
+int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
+{
+        jsmn_parser parser;
+        jsmntok_t tokens[64];
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser,
+                         buf,
+                         strlen(buf) + 1,
+                         tokens,
+                         sizeof(tokens)/sizeof(tokens[0]));
+        if (ret < 0)
+        {
+                PIE_WARN("Failed to JSON parse: '%s'\n",
+                         buf);
+                return 1;
+        }
+        if (tokens[0].type != JSMN_OBJECT)
+        {
+                PIE_WARN("Broken state in parser");
+                return 2;
+        }
+
+        for (int i = 0; i < ret - 1; i++)
+        {
+                char field[128];
+                char* p = buf + tokens[i + 1].start;
+                int len = tokens[i + 1].end - tokens[i + 1].start;
+
+                memcpy(field, p, len);
+                field[len] = '\0';
+
+                if (jsoneq(buf, tokens + i, "colort") == 0)
+                {
+                        s->color_temp = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid %s:%s", "color_temp", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "tint") == 0)
+                {
+                        s->tint = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid tint %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "expos") == 0)
+                {
+                        s->exposure = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid exposure %s",field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "contr") == 0)
+                {
+                        s->contrast = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid contrast %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "highl") == 0)
+                {
+                        s->highlights = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid highlight %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "shado") == 0)
+                {
+                        s->shadows = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid shadows%s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "white") == 0)
+                {
+                        s->white = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid white %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "black") == 0)
+                {
+                        s->black = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid black %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "clarity") == 0)
+                {
+                        if (pie_dec_json_unsharp(&s->clarity, field))
+                        {
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "vibra") == 0)
+                {
+                        s->vibrance = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid vibrance %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "satur") == 0)
+                {
+                        s->saturation = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid saturation %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "rot") == 0)
+                {
+                        s->rotate = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid rotate %s", field);
+                                goto done;
+                        }
+                }
+                else if (jsoneq(buf, tokens + i, "sharp") == 0)
+                {
+                        if (pie_dec_json_unsharp(&s->sharpening, field))
+                        {
+                                goto done;
+                        }
+                }
+        }
+
+        ret = 0;
+done:
+        return ret;
+}
+
+int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
+{
+        jsmn_parser parser;
+        jsmntok_t tokens[16];
+
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser,
+                         buf,
+                         strlen(buf) + 1,
+                         tokens,
+                         sizeof(tokens)/sizeof(tokens[0]));
+        if (ret < 0)
+        {
+                PIE_WARN("Failed to JSON parse: '%s'\n",
+                         buf);
+                return 1;
+        }
+        if (tokens[0].type != JSMN_OBJECT)
+        {
+                PIE_WARN("Broken state in parser");
+                return 2;
+        }
+
+        for (int i = 0; i < ret - 1; i++)
+        {
+                char field[64];
+                char* p = buf + tokens[i + 1].start;
+                int len = tokens[i + 1].end - tokens[i + 1].start;
+
+                memcpy(field, p, len);
+                field[len] = '\0';
+
+                if (jsoneq(buf, tokens + i, "amount") == 0)
+                {
+                        s->amount = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid amount %s", field);
+                                goto done;
+                        }
+                }
+                else if(jsoneq(buf, tokens + i, "rad") == 0)
+                {
+                        s->radius = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid radius %s", field);
+                                goto done;
+                        }
+                }
+                else if(jsoneq(buf, tokens + i, "thresh") == 0)
+                {
+                        s->threshold = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid threshold %s", field);
+                                goto done;
+                        }
+                }
+        }
+
+        ret = 0;
+done:
+        return ret;
 }
 
 size_t pie_enc_json_exif(char* buf,
@@ -105,7 +383,7 @@ size_t pie_enc_json_exif(char* buf,
                         break;
                 }
         }
-        
+
         return bw;
 }
 
@@ -187,7 +465,7 @@ size_t pie_enc_json_collection_list(char* buf,
         return bw;
 }
 
-size_t pie_enc_json_mob(char* buf, size_t len, struct pie_mob* mob)
+size_t pie_enc_json_mob(char* buf, size_t len, const struct pie_mob* mob)
 {
         size_t bw;
 
@@ -212,4 +490,15 @@ size_t pie_enc_json_mob(char* buf, size_t len, struct pie_mob* mob)
                       mob->mob_orientation);
 
         return bw;
+}
+
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
+{
+        if (tok->type == JSMN_STRING &&
+            (int) strlen(s) == tok->end - tok->start &&
+            strncmp(json + tok->start, s, tok->end - tok->start) == 0)
+        {
+                return 0;
+        }
+        return -1;
 }

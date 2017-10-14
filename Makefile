@@ -109,7 +109,8 @@ COLLD_OBJS  = $(COLLD_SRC:%.c=obj/%.o)
 # Binaries
 TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
-              testfwlk qserver qclient test_exif_meta lrawtest exif_dump
+              testfwlk qserver qclient test_exif_meta lrawtest exif_dump \
+              tjson
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
@@ -187,6 +188,9 @@ bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS)
 
 bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -lexif
+
+bin/tjson: testp/tjson.c obj/pie_json.o obj/llist.o obj/jsmn.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 bin/test_exif_meta: testp/test_exif_meta.c obj/pie_exif.o obj/pie_exif_data.o obj/pie_cfg.o obj/hmap.o obj/strutil.o obj/pie_storage.o obj/pie_host.o obj/pie_mountpoint.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lexif -lsqlite3 -lraw
