@@ -84,7 +84,8 @@ CFG_SRC    = pie_cfg.c
 STG_SRC    = pie_stg.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c \
-             pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c
+             pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c \
+             pie_dev_params.c
 CORE_SRC   = pie_id.c
 EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
              pie_editd.c pie_msg.c

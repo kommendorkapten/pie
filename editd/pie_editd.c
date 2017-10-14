@@ -40,6 +40,7 @@
 #include "../mq_msg/pie_mq_msg.h"
 #include "../lib/s_queue.h"
 #include "../encoding/pie_json.h"
+#include "../dm/pie_dev_params.h"
 
 struct config
 {
@@ -92,10 +93,11 @@ static enum pie_msg_type cb_msg_render(struct pie_msg*);
 
 /**
  * Send message to mediad for persistance.
+ * @param mob id
  * @param settigs to store.
  * @return void.
  */
-static void store_settings(const struct pie_dev_settings*);
+static void store_settings(pie_id, const struct pie_dev_settings*);
 
 int main(void)
 {
@@ -323,7 +325,8 @@ static void* ev_loop(void* a)
                                 {
                                         /* Store update development settings */
                                         timing_start(&t_proc);
-                                        store_settings(&cmd->wrkspc->settings);
+                                        store_settings(cmd->wrkspc->mob_id,
+                                                       &cmd->wrkspc->settings);
                                         PIE_DEBUG("Stored dev settings in %ldusec.",
                                                   timing_dur_usec(&t_proc));
                                 }
@@ -362,6 +365,7 @@ static void* ev_loop(void* a)
  */
 static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
+        struct pie_dev_params settings_json;
         struct timing t;
         struct timing t_l;
         int len;
@@ -497,6 +501,20 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         pie_dev_init_settings(&msg->wrkspc->settings,
                               msg->wrkspc->proxy.width,
                               msg->wrkspc->proxy.height);
+        settings_json.pdp_mob_id = id;
+        res = pie_dev_params_read(pie_cfg_get_db(), &settings_json);
+        if (res < 0)
+        {
+                PIE_ERR("Database error: %d", res);
+        }
+        else if (res > 0)
+        {
+                PIE_DEBUG("No development settings found");
+        }
+        else
+        {
+                PIE_DEBUG("Development settings found");
+        }
 
         /* Call render */
         res = pie_dev_render(&msg->wrkspc->proxy_out,
@@ -790,12 +808,15 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         return ret_msg;
 }
 
-static void store_settings(const struct pie_dev_settings* settings)
+static void store_settings(pie_id mob_id,
+                           const struct pie_dev_settings* settings)
 {
         struct pie_mq_upd_media msg;
         size_t bw;
 
         msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
+        PIE_DEBUG("Update settings for %lu", mob_id);
+        msg.id = pie_htonll(mob_id);
         if (pie_enc_json_settings(msg.msg,
                                   PIE_MQ_MAX_UPD,
                                   settings) == 0)

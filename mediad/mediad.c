@@ -27,6 +27,7 @@
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
+#include "../dm/pie_dev_params.h"
 
 #define Q_INC 0
 #define Q_UPD 1
@@ -263,7 +264,7 @@ static void* process_inc(void* arg)
         PIE_LOG("Incoming media thread ready for messages");
         while ((br = q->recv(q->this,
                              (char*)&msg,
-                             sizeof(struct pie_mq_new_media))) > 0)
+                             sizeof(msg))) > 0)
         {
                 if (pie_nm_add_job(&msg))
                 {
@@ -279,17 +280,46 @@ static void* process_inc(void* arg)
 
 static void* process_upd(void* arg)
 {
+        struct pie_dev_params dp;
+        struct pie_mq_upd_media msg;
         void* ret = NULL;
         struct q_consumer* q = (struct q_consumer*)arg;
-        int i;
         ssize_t br;
 
         PIE_LOG("Update media thread ready for messages");
         while ((br = q->recv(q->this,
-                             (char*)&i,
-                             sizeof(int))) > 0)
+                             (char*)&msg,
+                             sizeof(msg))) > 0)
         {
-                PIE_LOG("Read %d from update meta data", i);
+                int status;
+                int db_ok = 0;
+
+                dp.pdp_mob_id = pie_ntohll(msg.id);
+                PIE_DEBUG("Update mob: %ld with msg type %d",
+                          dp.pdp_mob_id,
+                          msg.type);
+                strncpy(dp.pdp_settings,
+                        msg.msg,
+                        PIE_DEV_PARAMS_LEN - 1);
+
+                status = pie_dev_params_exist(pie_cfg_get_db(), dp.pdp_mob_id);
+                if (status == 0)
+                {
+                        db_ok = pie_dev_params_create(pie_cfg_get_db(), &dp);
+                }
+                else if (status < 0)
+                {
+                        PIE_ERR("Database error: %d", status);
+                }
+                else
+                {
+                        db_ok = pie_dev_params_update(pie_cfg_get_db(), &dp);
+                }
+
+                if (db_ok)
+                {
+                        PIE_ERR("Database error: %d", db_ok);
+                }
         }
 
         PIE_LOG("Update meta data thread leaving");

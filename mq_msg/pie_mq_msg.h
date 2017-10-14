@@ -15,6 +15,36 @@
 #define __PIE_MQ_MSG_H__
 
 #include "../pie_types.h"
+#include "../pie_id.h"
+
+#define pie_mq_swap64(x) ( ((x) & 0x00000000000000ff) << 56 | \
+                           ((x) & 0x000000000000ff00) << 40 | \
+                           ((x) & 0x0000000000ff0000) << 24 | \
+                           ((x) & 0x00000000ff000000) <<  8 | \
+                           ((x) & 0x000000ff00000000) >>  8 | \
+                           ((x) & 0x0000ff0000000000) >> 24 | \
+                           ((x) & 0x00ff000000000000) >> 40 | \
+                           ((x) & 0xff00000000000000) >> 56 )
+
+#if defined (__BYTE_ORDER__)
+# if __BYTE_ORDER__ == 4321
+/* Big endian */
+#  define pie_ntohll(x) (x)
+#  define pie_htonll(x) (x)
+# else
+/* Small endian */
+#  define pie_ntohll(x) pie_mq_swap64(x)
+#  define pie_htonll(x) pie_mq_swap64(x)
+# endif
+#elif defined (__BIG_ENDIAN__)
+# define ntohll(x) (x)
+# define htonll(x) (x)
+#elif defined (__SMALL_ENDIAN__)
+# define pie_ntohll(x) pie_mq_swap64(x)
+# define pie_htonll(x) pie_mq_swap64(x)
+#else
+# error __BYTE_ORDER__, __BIG_ENDIAN__  or __SMALL_ENDIAN__ not defined
+#endif
 
 #define Q_INCOMING_MEDIA "/tmp/pie_new_media.sock"
 #define Q_UPDATE_META    "/tmp/pie_update_meta.sock"
@@ -41,6 +71,7 @@ struct pie_mq_new_media
 struct pie_mq_upd_media
 {
         enum pie_mq_upd_media_type type;
+        pie_id id;
         /* JSON encoded data */
         char msg[PIE_MQ_MAX_UPD];
 };

@@ -10,3 +10,4 @@ CREATE TABLE pie_min (
 
 CREATE INDEX im_min_mob on pie_min(min_mob_id);
 CREATE INDEX im_min_stg on pie_min(min_stg_id);
+CREATE INDEX im_min_hsh on pie_min(min_sha1_hash);
