@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -23,7 +23,10 @@
 #else
 # define NOTE(X)
 #endif
-#include "../editd/pie_editd_ws.h"
+#include "pie_msg.h"
+#include "pie_render.h"
+#include "pie_wrkspc_mgr.h"
+#include "pie_editd_ws.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
 #include "../pie_types.h"
@@ -34,9 +37,9 @@
 #include "../alg/pie_unsharp.h"
 #include "../pie_id.h"
 #include "../cfg/pie_cfg.h"
-#include "pie_msg.h"
-#include "pie_render.h"
-#include "pie_wrkspc_mgr.h"
+#include "../mq_msg/pie_mq_msg.h"
+#include "../lib/s_queue.h"
+#include "../encoding/pie_json.h"
 
 struct config
 {
@@ -46,6 +49,7 @@ struct config
 static struct config config;
 static struct pie_editd_ws server;
 static struct pie_wrkspc_mgr* wrkspc_mgr;
+static struct q_producer* media_q;
 static volatile int run;
 
 /**
@@ -86,6 +90,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg*);
  */
 static enum pie_msg_type cb_msg_render(struct pie_msg*);
 
+/**
+ * Send message to mediad for persistance.
+ * @param settigs to store.
+ * @return void.
+ */
+static void store_settings(const struct pie_dev_settings*);
+
 int main(void)
 {
         pthread_t thr_ev_loop;
@@ -100,7 +111,21 @@ int main(void)
                 PIE_ERR("Failed to read conf");
                 return 1;
         }
-        
+
+        /* Init media queue */
+        media_q = q_new_producer(QUEUE_INTRA_HOST);
+        if (media_q == NULL)
+        {
+                PIE_ERR("Could not initiate media queue");
+                return 1;
+        }
+        ok = media_q->init(media_q->this, Q_UPDATE_META);
+        if (ok)
+        {
+                PIE_ERR("Can not connect to '%s'", Q_UPDATE_META);
+                return 1;
+        }
+
         run = 1;
         config.wrk_cache_size = 10;
         server.directory = "assets";
@@ -293,6 +318,15 @@ static void* ev_loop(void* a)
                                         PIE_ERR("Failed to send response %d.",
                                                 (int)cmd->type);
                                 }
+
+                                if (cmd->type == PIE_MSG_RENDER_DONE)
+                                {
+                                        /* Store update development settings */
+                                        timing_start(&t_proc);
+                                        store_settings(&cmd->wrkspc->settings);
+                                        PIE_DEBUG("Stored dev settings in %ldusec.",
+                                                  timing_dur_usec(&t_proc));
+                                }
                         }
                         else
                         {
@@ -353,7 +387,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         {
                 return PIE_MSG_INVALID;
         }
-        
+
         msg->wrkspc = pie_wrkspc_mgr_acquire(wrkspc_mgr, id);
         if (msg->wrkspc == NULL)
         {
@@ -754,4 +788,27 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         }
 
         return ret_msg;
+}
+
+static void store_settings(const struct pie_dev_settings* settings)
+{
+        struct pie_mq_upd_media msg;
+        size_t bw;
+
+        msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
+        if (pie_enc_json_settings(msg.msg,
+                                  PIE_MQ_MAX_UPD,
+                                  settings) == 0)
+        {
+                PIE_ERR("Failed to JSON encode development settings");
+                return;
+        }
+
+        bw = media_q->send(media_q->this,
+                           (char*)&msg,
+                           sizeof(msg));
+        if (bw != sizeof(msg))
+        {
+                PIE_ERR("Failed to store new development settings");
+        }
 }
