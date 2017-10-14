@@ -32,7 +32,6 @@
  * @return 0 if pie_id could be extracted, non-zero otherwise.
  */
 int get_id1(pie_id*, const char*);
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s);
 
 int  pie_coll_h_collections(struct pie_coll_h_resp* r,
                             const char* url,
@@ -42,7 +41,7 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         struct lnode* n;
 
         (void)url;
-        
+
         cl = pie_collection_find_all(db);
         if (cl == NULL)
         {
@@ -170,7 +169,7 @@ int pie_coll_h_exif_put(struct pie_coll_h_resp* r,
         (void)url;
         (void)data;
         (void)db;
-        
+
         r->http_sc = 501;
         return 0;
 }
@@ -269,7 +268,10 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                 goto bailout;
         }
 
-        /* Update new fields */
+        /* Update new fields.
+         * Need to parse the JSON here (which is bad) as we must be able
+         * to determine which fields that were updated, so pie_dec_json_mob
+         * can not be used. */
         for (int i = 1; i < ret - 1; i++)
         {
                 char field[64];
@@ -285,7 +287,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                 memcpy(field, p, token_len);
                 field[token_len] = '\0';
 
-                if (jsoneq(data->data, tokens + i, "parent_id") == 0)
+                if (pie_enc_jsoneq(data->data, tokens + i, "parent_id") == 0)
                 {
                         PIE_DEBUG("parent_id: %s", field);
                         mob.mob_parent_mob_id = strtol(field, &p, 10);
@@ -295,7 +297,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                                 goto bailout;
                         }
                 }
-                else if (jsoneq(data->data, tokens + i, "color") == 0)
+                else if (pie_enc_jsoneq(data->data, tokens + i, "color") == 0)
                 {
                         PIE_DEBUG("color: %s", field);
                         mob.mob_color = (char)strtol(field, &p, 10);
@@ -305,7 +307,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                                 goto bailout;
                         }
                 }
-                else if (jsoneq(data->data, tokens + i, "rating") == 0)
+                else if (pie_enc_jsoneq(data->data, tokens + i, "rating") == 0)
                 {
                         PIE_DEBUG("rating: %s", field);
                         mob.mob_rating = (char)strtol(field, &p, 10);
@@ -315,7 +317,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                                 goto bailout;
                         }
                 }
-                else if (jsoneq(data->data, tokens + i, "orientation") == 0)
+                else if (pie_enc_jsoneq(data->data, tokens + i, "orientation") == 0)
                 {
                         PIE_DEBUG("orientation: %s", field);
                         mob.mob_orientation = (char)strtol(field, &p, 10);
@@ -390,16 +392,4 @@ int get_id1(pie_id* id, const char* url)
         }
 
         return 0;
-}
-
-/* Stolen from jsmn/example/simple.c */
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
-{
-        if (tok->type == JSMN_STRING &&
-            (int) strlen(s) == tok->end - tok->start &&
-            strncmp(json + tok->start, s, tok->end - tok->start) == 0)
-        {
-                return 0;
-        }
-        return -1;
 }

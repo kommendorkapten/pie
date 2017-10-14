@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -23,8 +23,6 @@
 #include "../jsmn/jsmn.h"
 
 #define DEV_SET_SCALE 10000.0f
-
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s);
 
 /*
 Encode to following structure (without newlines)
@@ -148,7 +146,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                 memcpy(field, p, len);
                 field[len] = '\0';
 
-                if (jsoneq(buf, tokens + i, "colort") == 0)
+                if (pie_enc_jsoneq(buf, tokens + i, "colort") == 0)
                 {
                         s->color_temp = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -157,7 +155,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "tint") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "tint") == 0)
                 {
                         s->tint = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -166,7 +164,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "expos") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "expos") == 0)
                 {
                         s->exposure = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -175,7 +173,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "contr") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "contr") == 0)
                 {
                         s->contrast = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -184,7 +182,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "highl") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "highl") == 0)
                 {
                         s->highlights = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -193,7 +191,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "shado") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "shado") == 0)
                 {
                         s->shadows = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -202,7 +200,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "white") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "white") == 0)
                 {
                         s->white = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -211,7 +209,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "black") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "black") == 0)
                 {
                         s->black = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -220,14 +218,14 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "clarity") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "clarity") == 0)
                 {
                         if (pie_dec_json_unsharp(&s->clarity, field))
                         {
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "vibra") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "vibra") == 0)
                 {
                         s->vibrance = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -236,7 +234,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "satur") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "satur") == 0)
                 {
                         s->saturation = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -245,7 +243,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "rot") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "rot") == 0)
                 {
                         s->rotate = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -254,7 +252,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
-                else if (jsoneq(buf, tokens + i, "sharp") == 0)
+                else if (pie_enc_jsoneq(buf, tokens + i, "sharp") == 0)
                 {
                         if (pie_dec_json_unsharp(&s->sharpening, field))
                         {
@@ -302,7 +300,7 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
                 memcpy(field, p, len);
                 field[len] = '\0';
 
-                if (jsoneq(buf, tokens + i, "amount") == 0)
+                if (pie_enc_jsoneq(buf, tokens + i, "amount") == 0)
                 {
                         s->amount = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -311,7 +309,7 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
                                 goto done;
                         }
                 }
-                else if(jsoneq(buf, tokens + i, "rad") == 0)
+                else if(pie_enc_jsoneq(buf, tokens + i, "rad") == 0)
                 {
                         s->radius = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -320,7 +318,7 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
                                 goto done;
                         }
                 }
-                else if(jsoneq(buf, tokens + i, "thresh") == 0)
+                else if(pie_enc_jsoneq(buf, tokens + i, "thresh") == 0)
                 {
                         s->threshold = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -492,7 +490,8 @@ size_t pie_enc_json_mob(char* buf, size_t len, const struct pie_mob* mob)
         return bw;
 }
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
+/* Stolen from jsmn/example/simple.c */
+int pie_enc_jsoneq(const char *json, jsmntok_t *tok, const char *s)
 {
         if (tok->type == JSMN_STRING &&
             (int) strlen(s) == tok->end - tok->start &&

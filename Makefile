@@ -41,7 +41,7 @@ ifeq ($(OS), SunOS)
   ifeq ($(CC), cc)
     CFLAGS += -std=c99 -pedantic -v -errwarn -mt -fast -xalias_level=std
   else ifeq ($(CC), c99)
-    CFLAGS += -v -errwarn -mt -xalias_level=std -fast 
+    CFLAGS += -v -errwarn -mt -xalias_level=std -fast
   else ifeq ($(CC), gcc)
     CFLAGS += -Wconversion -Wno-sign-conversion
   endif
@@ -125,7 +125,7 @@ VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
 
 all: test bin/editd bin/collectiond bin/mediad bin/ingestd
 
-test: $(T_BINS) 
+test: $(T_BINS)
 
 dir: $(DIRS)
 
@@ -186,7 +186,7 @@ bin/tdowns: testp/tdowns.c obj/timing.o $(IO_OBJS) $(BM_OBJS) obj/pie_math.o
 bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
-bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o
+bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o obj/jsmn.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -lexif
 
 bin/tjson: testp/tjson.c obj/pie_json.o obj/llist.o obj/jsmn.o
@@ -211,13 +211,13 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
 
 # Servers
-bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DM_OBJS) $(CFG_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o obj/pie_stg.o obj/strutil.o obj/pie_id.o
+bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DM_OBJS) $(CFG_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o obj/pie_stg.o obj/strutil.o obj/pie_id.o obj/jsmn.o
 	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG) -lsqlite3
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/evp_hw.o obj/timing.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o 
+bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/evp_hw.o obj/timing.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
