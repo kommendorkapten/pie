@@ -219,7 +219,7 @@ int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
                        struct pie_http_post_data* data,
                        sqlite3* db)
 {
-        struct pie_mob mob = {.mob_name = NULL};
+        struct pie_mob mob;
         jsmn_parser parser;
         jsmntok_t tokens[32]; /* Can only parse with 32 tokens */
         int ret;
