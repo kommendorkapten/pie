@@ -41,6 +41,12 @@ extern size_t pie_enc_json_settings(char*,
                                     size_t,
                                     const struct pie_dev_settings*);
 
+/**
+ * Decodes a pie_dev_settigns from a JSON string.
+ * @param settings up decode into.
+ * @param null terminated string.
+ * @return 0 on success, non zero on failure.
+ */
 extern int pie_dec_json_settings(struct pie_dev_settings*, char*);
 
 extern int pie_dec_json_unsharp(struct pie_unsharp_param*, char*);

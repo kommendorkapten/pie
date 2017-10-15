@@ -368,13 +368,14 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         struct pie_dev_params settings_json;
         struct timing t;
         struct timing t_l;
+        pie_id id;
         int len;
         int res;
         int proxy_w;
         int proxy_h;
         int stride;
         int downsample = 0;
-        pie_id id;
+        int clear_settings = 0;
 
         timing_start(&t_l);
 
@@ -497,23 +498,37 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         memcpy(msg->wrkspc->proxy_out.c_green, msg->wrkspc->proxy.c_green, len);
         memcpy(msg->wrkspc->proxy_out.c_blue, msg->wrkspc->proxy.c_blue, len);
 
-        /* Read from database to get settings */
-        pie_dev_init_settings(&msg->wrkspc->settings,
-                              msg->wrkspc->proxy.width,
-                              msg->wrkspc->proxy.height);
+        /* Load stored development settings */
         settings_json.pdp_mob_id = id;
         res = pie_dev_params_read(pie_cfg_get_db(), &settings_json);
-        if (res < 0)
+        if (res == 0)
         {
-                PIE_ERR("Database error: %d", res);
+                res = pie_dec_json_settings(&msg->wrkspc->settings,
+                                            settings_json.pdp_settings);
+                if (res)
+                {
+                        PIE_ERR("Broken dev settings stored in db for MOB %ul",
+                                id);
+                        clear_settings = 1;
+                }
         }
         else if (res > 0)
         {
-                PIE_DEBUG("No development settings found");
+                /* No settings found */
+                clear_settings = 1;
         }
         else
         {
-                PIE_DEBUG("Development settings found");
+                PIE_ERR("Database error: %d", res);
+                clear_settings = 1;
+
+        }
+
+        if (clear_settings)
+        {
+                pie_dev_init_settings(&msg->wrkspc->settings,
+                                      msg->wrkspc->proxy.width,
+                                      msg->wrkspc->proxy.height);
         }
 
         /* Call render */
