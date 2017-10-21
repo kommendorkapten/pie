@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -202,6 +202,18 @@ ssize_t pie_http_lws_write(struct lws* wsi,
                                                resp_headers + 256))
         {
                 PIE_ERR("Can not write content len");
+                return -1;
+        }
+
+        /* FIMXE: remove this in future */
+        if (lws_add_http_header_by_name(wsi,
+                                        (unsigned char*)"Access-Control-Allow-Origin:",
+                                        (unsigned char*)"*",
+                                        1,
+                                        &hp,
+                                        resp_headers + 256))
+        {
+                PIE_ERR("Can not write CORS header");
                 return -1;
         }
 
