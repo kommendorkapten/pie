@@ -1,20 +1,26 @@
 # In progress
-* Create links from collectiond to editd.
+
 
 # Feature
-
-## Sorted
-* Editd, when loading image, automatically set parameters in ui.
-* Editd, persist parameters in db.
 * editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.
-* In library view, metadata field to right, present proper collection
-  name.
+* Export pictures.
 * Zoom in library mode.
 
+## Sorted
+* Add method to get fd from q_consumser.
+* Rewrite mediad to use poll(2) when reading from queues.
+* collectiond should update mobs via mediad.
+
 ## Unsorted
-+ handle file name collisions during import.
-+ show num files in collection list.
+* show info on images with development settings.
+* sort order in collecton view.
+* Remove CORS headers from pie_http_lws_write, replace with hmap for
+  custom headers.
+* Calculate new radius for clarity when an image is loaded. The one
+  stored in the database may be for the wrong resolution.
+* handle file name collisions during import.
+* show num files in collection list.
 * Update proxy and thumb with any adjustments from editd.
 * Auto expand top collection.
 * Support for color tagging in collection mode.
@@ -26,9 +32,14 @@
   lightening blacks a non-linear method should be used.
 * White adjustment is quite simple, pure linear for both +/-. For
   darkening whites a non-linear method should be used.
+* "time line" with pictures in bottom with selected collection. Both
+  dev and coll view.
+
 
 # Bugs
-
+* When navigating from dev to coll, expand list and show last state.
+* Canvas in editd sometimes contains a non-used line in the top (white
+  colored). Can be seen for image: IMG_0259.CR2
 * Exif parsing, shutter speed greater than 1s
 * Downsample yields weird results when scale factor is close to 1.
 
@@ -60,3 +71,8 @@
 * ~~collection in meta data pane.~~
 * ~~Add hex (sha1) to min.~~
 * ~~Short cut for color (6-9).~~
+* ~~Create links from collectiond to editd.~~
+* ~~In library view, metadata field to right, present proper collection
+  name.~~
+* ~~Editd, persist parameters in db.~~
+* ~~Editd, when loading image, automatically set parameters in ui.~~

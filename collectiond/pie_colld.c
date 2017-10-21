@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -25,11 +25,12 @@
 #define ROUTE_COLLECTION "/collection/"
 #define ROUTE_EXIF "/exif/"
 #define ROUTE_MOB "/mob/"
+#define ROUTE_DEV_PARAM "/devparams/"
 #define ROUTE_THUMB "/thumb/"
 #define ROUTE_PROXY "/proxy/"
 #define ROUTE_FULL_SIZE "/fullsize/"
 
-#define RESP_LEN (1 << 14) /* 16k */
+#define RESP_LEN (1 << 20) /* 1M */
 #define MAX_URL 256
 
 struct config
@@ -233,6 +234,7 @@ static int cb_http(struct lws* wsi,
         struct hmap* query_params = NULL;
         const char* req_url = in;
         const char* p;
+        unsigned char* header_p = &resp_headers[0];
         struct pie_ctx_http* ctx = user;
         const char* mimetype;
         int hn = 0;
@@ -254,10 +256,6 @@ static int cb_http(struct lws* wsi,
         {
         case LWS_CALLBACK_HTTP:
                 verb = pie_http_verb_get(wsi);
-                PIE_DEBUG("%s [%p] '%s'",
-                          pie_http_verb_string(verb),
-                          user,
-                          req_url);
                 try_keepalive = 1;
                 query_params = pie_http_req_params(wsi);
 
@@ -335,6 +333,17 @@ static int cb_http(struct lws* wsi,
                         ret = pie_coll_h_mob(&resp,
                                              req_url,
                                              pie_cfg_get_db());
+
+                        goto writebody;
+                }
+
+                /* /devparams/\d+$ */
+                p = strstr(req_url, ROUTE_DEV_PARAM);
+                if (p == req_url)
+                {
+                        ret = pie_coll_h_devp(&resp,
+                                              req_url,
+                                              pie_cfg_get_db());
 
                         goto writebody;
                 }
@@ -465,6 +474,12 @@ static int cb_http(struct lws* wsi,
         }
 
 writebody:
+        PIE_DEBUG("%s [%p] '%s' %d %ul",
+                  pie_http_verb_string(verb),
+                  user,
+                  req_url,
+                  resp.http_sc,
+                  resp.content_len);
         if (ret || resp.http_sc > 399)
         {
                 goto bailout;

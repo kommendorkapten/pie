@@ -23,6 +23,7 @@
 #include "../dm/pie_collection.h"
 #include "../dm/pie_exif_data.h"
 #include "../dm/pie_mob.h"
+#include "../dm/pie_dev_params.h"
 #include "../jsmn/jsmn.h"
 
 /**
@@ -356,6 +357,44 @@ release:
         pie_mob_release(&mob);
 
         return ret;
+}
+
+int pie_coll_h_devp(struct pie_coll_h_resp* r,
+                    const char* url,
+                    sqlite3* db)
+{
+        struct pie_dev_params devp;
+        int ret;
+
+        if (get_id1(&devp.pdp_mob_id, url))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        ret = pie_dev_params_read(db, &devp);
+        if (ret > 0)
+        {
+                r->http_sc = HTTP_STATUS_NOT_FOUND;
+                return 0;
+        }
+        if (ret < 0)
+        {
+                PIE_WARN("pie_dev_params_read: %d", ret);
+                r->http_sc = HTTP_STATUS_SERVICE_UNAVAILABLE;
+                return 1;
+        }
+
+        r->content_len = strlen(devp.pdp_settings);
+        memcpy(r->wbuf, devp.pdp_settings, r->content_len);
+
+        r->http_sc = HTTP_STATUS_OK;
+        r->content_type = "application/json; charset=UTF-8";
+
+        /* free any allocated data */
+        pie_dev_params_release(&devp);
+
+        return 0;
 }
 
 int get_id1(pie_id* id, const char* url)

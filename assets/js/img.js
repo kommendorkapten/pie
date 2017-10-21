@@ -7,6 +7,7 @@ var histChart;
 var lowerPaneHeight = 220;
 var histYMax = 255;
 var bigEndian = 1;
+var devSetScale = 10000.0;
 var histDataL = {
     borderColor: "rgba(200, 200, 200, 0.5)",
     backgroundColor: "rgba(200, 200, 200, 0.7)",
@@ -66,9 +67,9 @@ function getWsUrl(){
 	if (u.substring(0, 4) == "http")
 	    u = u.substr(7);
     }
-    
+
     u = u.split('/');
-    
+
     /* + "/xxx" bit is for IE10 workaround */
 
     return pcol + u[0] + "/xxx";
@@ -93,7 +94,7 @@ function wsLoadImage(ws) {
     if (!img) {
         return false;
     }
-    
+
     ws.pieStartTs = Date.now();
     ws.send("LOAD " + img + " " + c.width + " " + c.height);
 
@@ -106,7 +107,7 @@ function pieInitEdit() {
     var h;
 
     w = w - 282 - 50; // edit pane and margin
-    
+
     if (w < 640) {
         w = 640;
     }
@@ -114,7 +115,7 @@ function pieInitEdit() {
     if ((window.outerHeight - h) < lowerPaneHeight) {
         h = window.outerHeight - lowerPaneHeight;
         w = (h * 3) / 2;
-        
+
         if (w < 640) {
             w = 640;
             h = Math.ceil((w / 3) * 2);
@@ -123,6 +124,53 @@ function pieInitEdit() {
 
     c.width = w;
     c.height = h;
+}
+
+function updateDevParams(params) {
+    /*
+      sl_colortemp   -30,  30
+      sl_tint        -30,  30
+      sl_exposure    -50,  50
+      sl_contrast   -100, 100
+      sl_highlights -100, 100
+      sl_shadows    -100, 100
+      sl_white      -100, 100
+      sl_black      -100, 100
+      sl_clarity    -100, 100
+      sl_vibrance   -100, 100
+      sl_saturation -100, 100
+      sl_sharp_a       0, 300
+      sl_sharp_r,      1, 100
+      sl_sharp_t,      0,  20
+     */
+    document.getElementById("sl_colortemp").value = params.colort;
+    document.getElementById("in_colortemp").value = params.colort;
+    document.getElementById("sl_tint").value = params.tint;
+    document.getElementById("in_tint").value = params.tint;
+    document.getElementById("sl_exposure").value = params.expos;
+    document.getElementById("in_exposure").value = params.expos / 10;
+    document.getElementById("sl_contrast").value = params.contr;
+    document.getElementById("in_contrast").value = params.contr;
+    document.getElementById("sl_highlights").value = params.highl;
+    document.getElementById("in_highlights").value = params.highl;
+    document.getElementById("sl_shadows").value = params.shado;
+    document.getElementById("in_shadows").value = params.shado;
+    document.getElementById("sl_white").value = params.white;
+    document.getElementById("in_white").value = params.white;
+    document.getElementById("sl_black").value = params.black;
+    document.getElementById("in_black").value = params.black;
+    document.getElementById("sl_clarity").value = params.clarity.amount;
+    document.getElementById("in_clarity").value = params.clarity.amount;
+    document.getElementById("sl_vibrance").value = params.vibra;
+    document.getElementById("in_vibrance").value = params.vibra;
+    document.getElementById("sl_saturation").value = params.satur;
+    document.getElementById("in_saturation").value = params.satur;
+    document.getElementById("sl_sharp_a").value = params.sharp.amount;
+    document.getElementById("in_sharp_a").value = params.sharp.amount;
+    document.getElementById("sl_sharp_r").value = params.sharp.rad;
+    document.getElementById("in_sharp_r").value = params.sharp.rad / 10;
+    document.getElementById("sl_sharp_t").value = params.sharp.thresh;
+    document.getElementById("in_sharp_t").value = params.sharp.thresh;
 }
 
 window.onresize = function(evt) {
@@ -183,17 +231,17 @@ window.addEventListener("load", function(evt) {
 
         if (wsSync == 0) {
             wsLoadImage(wsCmd);
-        }        
+        }
     }
 
     wsImg.onopen = function(evt) {
         console.log("Opening image websocket..." + wsSync);
-        wsSync = wsSync - 1;        
+        wsSync = wsSync - 1;
 
         if (wsSync == 0) {
             wsLoadImage(wsCmd);
         }
-    }    
+    }
 
     wsCmd.onclose = function(evt) {
         console.log("Closing websocket...");
@@ -228,7 +276,7 @@ window.addEventListener("load", function(evt) {
                8:11 width (uint32, network order)
                12:15 height (uint32, network order)
                16:  rgba */
-            
+
             /* width and height are in network order */
             server_dur = new DataView(evt.data, 0, 4).getUint32(0, false);
             t = new DataView(evt.data, 4, 4).getUint32(0, false);
@@ -250,7 +298,7 @@ window.addEventListener("load", function(evt) {
             var bm = new ImageData(pixels, w, h);
 
             console.log("Type: " + t + " width: " + w + " height:" + h);
-            
+
             /* Update canvas */
             var c = document.getElementById("img_canvas");
             var x = (c.width - w) / 2;
@@ -339,7 +387,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_colortemp").value=targ.value;
 
         if (targ.wsCall) {
@@ -365,7 +413,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_tint").value=targ.value;
 
         if (targ.wsCall) {
@@ -378,7 +426,7 @@ window.addEventListener("load", function(evt) {
 
         return true;
     };
-    
+
     document.getElementById("sl_exposure").oninput = function(evt) {
         var targ;
 
@@ -391,7 +439,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_exposure").value=targ.value / 10.0;
 
         if (targ.wsCall) {
@@ -417,7 +465,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_contrast").value=targ.value;
 
         if (targ.wsCall) {
@@ -443,7 +491,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_highlights").value=targ.value;
 
         if (targ.wsCall) {
@@ -469,7 +517,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_shadows").value=targ.value;
 
         if (targ.wsCall) {
@@ -495,7 +543,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_white").value=targ.value;
 
         if (targ.wsCall) {
@@ -521,7 +569,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_black").value=targ.value;
 
         if (targ.wsCall) {
@@ -547,7 +595,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_clarity").value=targ.value;
 
         if (targ.wsCall) {
@@ -573,7 +621,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_vibrance").value = targ.value;
 
         if (targ.wsCall) {
@@ -599,7 +647,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_saturation").value = targ.value;
 
         if (targ.wsCall) {
@@ -625,7 +673,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_sharp_a").value=targ.value;
 
         if (targ.wsCall) {
@@ -634,9 +682,9 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;        
+            var t = document.getElementById("sl_sharp_t").value;
             wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");       
+            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
         }, sliderTimeout);
 
         return true;
@@ -654,7 +702,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_sharp_r").value=targ.value / 10.0;
 
         if (targ.wsCall) {
@@ -663,7 +711,7 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;        
+            var t = document.getElementById("sl_sharp_t").value;
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
         }, sliderTimeout);
@@ -683,7 +731,7 @@ window.addEventListener("load", function(evt) {
         } else {
             targ = evt.srcElement;
         }
-        
+
         document.getElementById("in_sharp_t").value=targ.value;
 
         if (targ.wsCall) {
@@ -692,14 +740,14 @@ window.addEventListener("load", function(evt) {
         targ.wsCall = setTimeout(function(){
             var a = document.getElementById("sl_sharp_a").value;
             var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;        
+            var t = document.getElementById("sl_sharp_t").value;
             wsCmd.pieStartTs = Date.now();
             wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
         }, sliderTimeout);
 
         return true;
-    };    
-    
+    };
+
     /*
      * I N P U T   V A L I D A T O R S
      */
@@ -729,8 +777,8 @@ window.addEventListener("load", function(evt) {
         }
 
         evt.preventDefault();
-    };    
-    
+    };
+
     document.getElementById("in_exposure").onkeydown = function(evt) {
         /* Only allow 0-9 - */
         /* ASCII 0-9 is 48 to 57 */
@@ -903,10 +951,10 @@ window.addEventListener("load", function(evt) {
         }
 
         evt.preventDefault();
-    };    
+    };
 
     /*
-     * M A P   I N P U T   T O   S L I D E R S 
+     * M A P   I N P U T   T O   S L I D E R S
      */
     document.getElementById("in_colortemp").onchange = function(evt) {
         var targ;
@@ -919,7 +967,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -945,7 +993,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -958,7 +1006,7 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_tint").value=targ.value;
         wsCmd.pieStartTs = Date.now();
         wsCmd.send("TINT " + targ.value);
-    };    
+    };
 
     document.getElementById("in_exposure").onchange = function(evt) {
         var targ;
@@ -971,7 +1019,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -997,7 +1045,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1023,7 +1071,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1049,7 +1097,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1075,7 +1123,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1101,7 +1149,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1127,7 +1175,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1153,7 +1201,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1179,7 +1227,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1205,7 +1253,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1218,7 +1266,7 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_sharp_a").value=targ.value;
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;        
+        var t = document.getElementById("sl_sharp_t").value;
         wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
     };
@@ -1234,7 +1282,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1247,7 +1295,7 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_sharp_r").value=targ.value * 10;
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;        
+        var t = document.getElementById("sl_sharp_t").value;
         wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
     };
@@ -1263,7 +1311,7 @@ window.addEventListener("load", function(evt) {
             targ = evt.target;
         } else {
             targ = evt.srcElement;
-        }        
+        }
 
         if (isNaN(targ.value)) {
             targ.value = 0;
@@ -1276,10 +1324,10 @@ window.addEventListener("load", function(evt) {
         document.getElementById("sl_sharp_t").value=targ.value;
         var a = document.getElementById("sl_sharp_a").value;
         var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;        
+        var t = document.getElementById("sl_sharp_t").value;
         wsCmd.pieStartTs = Date.now();
         wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-    };    
+    };
 
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
     histChart = new Chart(histCanvas, {
@@ -1328,6 +1376,44 @@ window.addEventListener("load", function(evt) {
     if (EDITD_HOST == null) {
         EDITD_HOST = url[2].split(":")[0];
     }
+
+    // Load development settings
+    var devpClient = new XMLHttpRequest();
+    var img = getParameterByName('img');
+    devpClient.onreadystatechange = function() {
+        if (devpClient.readyState == XMLHttpRequest.DONE) {
+            if (devpClient.status == 200) {
+                var settings = JSON.parse(devpClient.responseText);
+
+                // Settings are scaled with devSetScale
+                settings.colort = Math.round(settings.colort / devSetScale);
+                settings.tint = Math.round(settings.tint / devSetScale);
+                settings.expos = Math.round(settings.expos / devSetScale);
+                settings.contr = Math.round(settings.contr / devSetScale);
+                settings.highl = Math.round(settings.highl / devSetScale);
+                settings.shado = Math.round(settings.shado / devSetScale);
+                settings.white = Math.round(settings.white / devSetScale);
+                settings.black = Math.round(settings.black / devSetScale);
+                settings.clarity.amount = Math.round(settings.clarity.amount / devSetScale);
+                settings.clarity.rad    = Math.round(settings.clarity.rad    / devSetScale);
+                settings.clarity.thresh = Math.round(settings.clarity.thresh / devSetScale);
+                settings.vibra = Math.round(settings.vibra / devSetScale);
+                settings.satur = Math.round(settings.satur / devSetScale);
+                settings.rot = Math.round(settings.rot / devSetScale);
+                settings.sharp.amount = Math.round(settings.sharp.amount / devSetScale);
+                settings.sharp.rad    = Math.round(settings.sharp.rad    / devSetScale);
+                settings.sharp.thresh = Math.round(settings.sharp.thresh / devSetScale);
+
+                updateDevParams(settings);
+            }
+        }
+    };
+
+    var devpUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
+    devpUrl += "/devparams/" + img;
+    console.log(devpUrl);
+    devpClient.open("GET", devpUrl, true);
+    devpClient.send();
 });
 
 
@@ -1370,7 +1456,7 @@ document.onkeydown = function(evt) {
         if (col != null && col != "") {
             newUrl += "?col=" + col;
         }
-        window.location.replace(newUrl);        
+        window.location.replace(newUrl);
         break;
     case 90:
         console.log("zoom");
