@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -85,7 +85,7 @@ struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3* db, int cap)
                 pie_host_free(mgr->host);
                 free(mgr);
                 return NULL;
-        }        
+        }
 
         mgr->cap = cap;
         mgr->cache = malloc(mgr->cap * sizeof(struct entry));
@@ -97,7 +97,7 @@ struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3* db, int cap)
                 free(mgr);
                 return NULL;
         }
-        
+
         for (int i = 0; i < mgr->cap; i++)
         {
                 mgr->cache[i].flags = FLAG_FREE;
@@ -126,7 +126,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                         wrkspc = mgr->cache[i].wrkspc;
                         mgr->cache[i].flags = FLAG_ACTIVE;
                         mgr->cache[i].ts = tv.tv_sec;
-                        PIE_TRACE("Reuse: %ld at pos %d",
+                        PIE_DEBUG("Found: %ld at pos %d",
                                   mgr->cache[i].wrkspc->mob_id,
                                   i);
                         break;
@@ -208,7 +208,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 PIE_DEBUG("Got MIN %ld for MOB %ld",
                           min->min_id,
                           id);
-                
+
                 wrkspc = malloc(sizeof(struct pie_img_workspace));
                 if (wrkspc == NULL)
                 {
@@ -224,7 +224,7 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                          min->min_path);
                 /* Drop min, no longer needed */
                 pie_min_free(min);
-                
+
                 timing_start(&t);
                 res = pie_io_load(&wrkspc->raw, buf, NULL);
                 PIE_DEBUG("Loaded '%s'@stg-%d in %ldusec",
