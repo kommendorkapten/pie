@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -31,7 +31,7 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
         int m = w > h ? w : h;
 
         s->color_temp = 0.0f;
-        s->tint = 0.0f;        
+        s->tint = 0.0f;
         s->exposure = 0.0f;
         s->contrast = 1.0f;
         s->highlights = 0.0f;
@@ -40,13 +40,53 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
         s->black = 0.0f;
         s->clarity.amount = 0.0f;
         s->clarity.radius = (float)m * PIE_CLARITY_SCALE;
-        s->clarity.threshold = 2.0f;        
+        s->clarity.threshold = 2.0f;
         s->vibrance = 0.0f;
         s->saturation = 1.0f;
         s->sharpening.amount = 0.0f;
         s->sharpening.radius = 1.0f;
         s->sharpening.threshold = 4.0f;
         s->rotate = 0.0f;
+}
+
+void pie_dev_set_to_int_fmt(struct pie_dev_settings* s)
+{
+        s->color_temp /= 100.0f;
+        s->tint /= 100.0f;
+        s->exposure /= 10.0f;
+        s->contrast = (s->contrast + 100.0f) / 100.0f;
+        s->highlights /= 100.0f;
+        s->shadows /= 100.0f;
+        s->white /= 100.0f;
+        s->black /= 100.0f;
+        s->clarity.amount /= 100.0f;
+        s->vibrance /= 100.0f;
+        s->saturation = (s->saturation + 100.0f) / 100.0f;
+        s->sharpening.amount /= 100.0f;
+        s->sharpening.radius /= 10.0f;
+        /* s->sharpening.threshod not transformed */
+        /* s->rotate not transformed */
+}
+
+void pie_dev_set_to_can_fmt(struct pie_dev_settings* s)
+{
+        s->color_temp *= 100.0f;
+        s->tint *= 100.0f;
+        s->exposure *= 10.0f;
+        s->contrast *= 100.0f;
+        s->contrast -= 100.0f;
+        s->highlights *= 100.0f;
+        s->shadows *= 100.0f;
+        s->white *= 100.0f;
+        s->black *= 100.0f;
+        s->clarity.amount *= 100.0f;
+        s->vibrance *= 100.0f;
+        s->saturation *= 100.0f;
+        s->saturation -= 100.0f;
+        s->sharpening.amount *= 100.0f;
+        s->sharpening.radius *= 10.0f;
+        /* s->sharpening.threshod not transformed */
+        /* s->rotate not transformed */
 }
 
 int pie_dev_render(struct pie_bitmap_f32rgb* img,
@@ -70,7 +110,7 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                            img->height,
                            img->row_stride);
         PIE_DEBUG("Render color temp:        %8ldusec", timing_dur_usec(&t2));
-        
+
         /* E X P O S U R E */
         timing_start(&t2);
         pie_alg_expos(img->c_red,
@@ -146,7 +186,7 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
         PIE_DEBUG("Render black:             %8ldusec", timing_dur_usec(&t2));
 
         /* C L A R I T Y */
-        timing_start(&t2);        
+        timing_start(&t2);
         pie_alg_unsharp(img->c_red,
                         img->c_green,
                         img->c_blue,
@@ -168,7 +208,7 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                       img->row_stride);
         PIE_DEBUG("Render vibrance:          %8ldusec", timing_dur_usec(&t2));
 
-        /* S A T U R A T I O N */        
+        /* S A T U R A T I O N */
         timing_start(&t2);
         pie_alg_satur(img->c_red,
                       img->c_green,
@@ -179,11 +219,11 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                       img->row_stride);
         PIE_DEBUG("Render saturation:        %8ldusec", timing_dur_usec(&t2));
 #if 0
-        s->rotate = 0.0f;        
+        s->rotate = 0.0f;
 #endif
 
         /* S H A R P E N I N G */
-        timing_start(&t2);        
+        timing_start(&t2);
         pie_alg_unsharp(img->c_red,
                         img->c_green,
                         img->c_blue,
@@ -193,7 +233,7 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                         img->row_stride);
         PIE_DEBUG("Render sharpening: (%.2f) %8ldusec",
                   s->sharpening.radius, timing_dur_usec(&t2));
-        
+
         PIE_DEBUG("Render total:             %8ldusec", timing_dur_usec(&t1));
 
         return 0;

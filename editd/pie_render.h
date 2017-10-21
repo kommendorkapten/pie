@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -25,6 +25,21 @@ struct pie_dev_settings;
  * @return void.
  */
 extern void pie_dev_init_settings(struct pie_dev_settings*, int, int);
+
+/**
+ * Convert pie_dev_settings to internal format.
+ * @param settings struct.
+ * @return void
+ */
+extern void pie_dev_set_to_int_fmt(struct pie_dev_settings*);
+
+/**
+ * Convert pie_dev_settings to canonical format. Used for exchanging
+ * data.
+ * @param settings struct.
+ * @return void
+ */
+extern void pie_dev_set_to_can_fmt(struct pie_dev_settings*);
 
 /**
  * Render a bitmap.
