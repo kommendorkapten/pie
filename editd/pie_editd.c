@@ -511,6 +511,11 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                 id);
                         clear_settings = 1;
                 }
+                /* Free any resources */
+                pie_dev_params_release(&settings_json);
+
+                /* Convert to internal format */
+                pie_dev_set_to_int_fmt(&msg->wrkspc->settings);
         }
         else if (res > 0)
         {
@@ -827,14 +832,18 @@ static void store_settings(pie_id mob_id,
                            const struct pie_dev_settings* settings)
 {
         struct pie_mq_upd_media msg;
+        struct pie_dev_settings copy = *settings;
         size_t bw;
+
+        /* Convert to canonical format */
+        pie_dev_set_to_can_fmt(&copy);
 
         msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
         PIE_DEBUG("Update settings for %lu", mob_id);
         msg.id = pie_htonll(mob_id);
         if (pie_enc_json_settings(msg.msg,
                                   PIE_MQ_MAX_UPD,
-                                  settings) == 0)
+                                  &copy) == 0)
         {
                 PIE_ERR("Failed to JSON encode development settings");
                 return;
