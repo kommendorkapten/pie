@@ -81,7 +81,7 @@ int main(void)
 
         if (pie_cfg_get_long("global:workers", &lval))
         {
-                PIE_LOG("Config global:workers not found in config");
+                PIE_WARN("Config global:workers not found in config");
         }
         else
         {
@@ -91,7 +91,7 @@ int main(void)
 
         if (pie_cfg_get_long("image:thumbnail:size", &lval))
         {
-                PIE_LOG("Config image:thumbnail:size not found in config");
+                PIE_WARN("Config image:thumbnail:size not found in config");
                 lval = 256;
         }
         else
@@ -101,7 +101,7 @@ int main(void)
         PIE_LOG("Maximum thumbnail size: %d", md_cfg.max_thumb);
         if (pie_cfg_get_long("image:proxy:size", &lval))
         {
-                PIE_LOG("Config image:proxy:size not found in config");
+                PIE_WARN("Config image:proxy:size not found in config");
                 lval = 1024;
         }
         else
