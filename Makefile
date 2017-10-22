@@ -78,7 +78,7 @@ ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
              pie_unsharp.c pie_vibra.c pie_colort.c
 ENC_SRC    = pie_json.c pie_rgba.c
 MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c
-BM_SRC     = pie_bm.c pie_bm_dwn_smpl.c
+BM_SRC     = pie_bm.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
 STG_SRC    = pie_stg.c
@@ -139,31 +139,31 @@ obj/%.o: %.c
 clean:
 	rm -rf obj/*.o bin/* $(P_BINS)
 
-bin/pngrw: testp/pngrw.c obj/pie_bm.o $(IO_OBJS)
+bin/pngrw: testp/pngrw.c obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/pngcreate: testp/pngcreate.c obj/pie_bm.o $(IO_OBJS)
+bin/pngcreate: testp/pngcreate.c obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/imgread: testp/imgread.c  obj/pie_bm.o obj/timing.o $(IO_OBJS)
+bin/imgread: testp/imgread.c  obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/jpgcreate: testp/jpgcreate.c  obj/pie_bm.o $(IO_OBJS)
+bin/jpgcreate: testp/jpgcreate.c  obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/jpgtopng: testp/jpgtopng.c obj/timing.o  obj/pie_bm.o $(IO_OBJS)
+bin/jpgtopng: testp/jpgtopng.c obj/timing.o  obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/linvsgma: testp/linvsgma.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS)
+bin/linvsgma: testp/linvsgma.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/analin: testp/analin.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS)
+bin/analin: testp/analin.c  obj/pie_bm.o obj/pie_cspace.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/histinfo: testp/histinfo.c obj/timing.o  obj/pie_bm.o obj/pie_hist.o $(IO_OBJS)
+bin/histinfo: testp/histinfo.c obj/timing.o  obj/pie_bm.o obj/pie_hist.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/contr: testp/contr.c obj/pie_contr.o obj/pie_bm.o obj/timing.o $(IO_OBJS)
+bin/contr: testp/contr.c obj/pie_contr.o obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/gauss: testp/gauss.c obj/timing.o $(IO_OBJS) obj/pie_bm.o $(MATH_OBJS)
@@ -172,10 +172,10 @@ bin/gauss: testp/gauss.c obj/timing.o $(IO_OBJS) obj/pie_bm.o $(MATH_OBJS)
 bin/unsharp: testp/unsharp.c obj/timing.o $(IO_OBJS) obj/pie_bm.o obj/pie_unsharp.o $(MATH_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS)
+bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
-bin/catm: testp/catm.c $(IO_OBJS) obj/pie_expos.o obj/pie_curve.o obj/pie_bm.o obj/pie_catmull.o
+bin/catm: testp/catm.c $(IO_OBJS) obj/pie_expos.o obj/pie_curve.o obj/pie_bm.o obj/pie_catmull.o obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/tapply: testp/tapply.c obj/pie_render.o obj/timing.o $(IO_OBJS) obj/pie_bm.o $(ALG_OBJS) $(MATH_OBJS) obj/pie_rgba.o
@@ -184,7 +184,7 @@ bin/tapply: testp/tapply.c obj/pie_render.o obj/timing.o $(IO_OBJS) obj/pie_bm.o
 bin/tdowns: testp/tdowns.c obj/timing.o $(IO_OBJS) $(BM_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS)
+bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
 bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o obj/jsmn.o

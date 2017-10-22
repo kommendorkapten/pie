@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -82,8 +82,8 @@ void pie_bm_free_f32(struct pie_bitmap_f32rgb*);
  * @return void
  */
 void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
-                         const struct pie_bitmap_u8rgb*, 
-                         int, 
+                         const struct pie_bitmap_u8rgb*,
+                         int,
                          int);
 
 /**
@@ -94,8 +94,8 @@ void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*, 
-                         int, 
+void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
+                         int,
                          int,
                          struct pie_pixel_u8rgb*);
 
@@ -108,8 +108,8 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
  * @return void
  */
 void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
-                          const struct pie_bitmap_u16rgb*, 
-                          int, 
+                          const struct pie_bitmap_u16rgb*,
+                          int,
                           int);
 
 /**
@@ -120,8 +120,8 @@ void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb*, 
-                          int, 
+void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
+                          int,
                           int,
                           struct pie_pixel_u16rgb*);
 
@@ -138,8 +138,28 @@ void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
  * @param the source bit dept.
  * @return 0 on success.
  */
-int pie_bm_conv_bd(void* restrict, 
+int pie_bm_conv_bd(void* restrict,
                    enum pie_color_bit_depth,
-                   void* restrict, 
+                   void* restrict,
                    enum pie_color_bit_depth);
+
+/**
+ * Down sample an bitmap. Downscaling is performed by a Gaussian blur
+ * across the neighbours. The new size is provided by maximum new width
+ * and height. The new size is the smallest of the new parameters that
+ * can be achieved by maintaining the original aspect ratio.
+ * A dimension can be set to don't care by providing -1. It is an error
+ * to set both directions as don't care.
+ * @param output bitmap. Must be an uninitialized bitmap structure.
+ *        If initialized, memory leak will occur.
+ * @param source bitmap to downsample.
+ * @param maximum new width in pixels, -1 if don't care.
+ * @param maximum new height in pixels, -1 if dont' care.
+ * @return 0 on success. Non zero otherwise.
+ */
+int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict,
+                    const struct pie_bitmap_f32rgb* restrict,
+                    int,
+                    int);
+
 #endif /* __PIE_BM_H__ */

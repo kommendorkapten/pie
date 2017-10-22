@@ -6,7 +6,6 @@
 #include "../io/pie_io.h"
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_bm_dwn_smpl.h"
 
 #define MAX_PATH 256
 #define OUTPUT_16B 0
@@ -14,7 +13,7 @@
 int main(int argc, char** argv)
 {
         struct pie_bitmap_f32rgb img;
-        struct pie_bitmap_f32rgb dwn;        
+        struct pie_bitmap_f32rgb dwn;
 #if OUTPUT_16B
         struct pie_bitmap_u16rgb out;
 #else
@@ -24,7 +23,7 @@ int main(int argc, char** argv)
         char fout[MAX_PATH] = {0};
         char fin[MAX_PATH] = {0};
         time_t dur;
-        int c;        
+        int c;
         int max = 0;
         int ret;
 
@@ -38,7 +37,7 @@ int main(int argc, char** argv)
                         break;
                 case 'o':
                         strncpy(fout, optarg, MAX_PATH);
-                        fin[MAX_PATH - 1] = 0;                        
+                        fin[MAX_PATH - 1] = 0;
                         break;
                 case 'd':
                         max = atoi(optarg);
@@ -63,7 +62,7 @@ int main(int argc, char** argv)
                 printf("Invalid output dimension\n");
                 return 1;
         }
-        
+
         timing_start(&t);
         ret = pie_io_load(&img, fin, NULL);
         dur = timing_dur_usec(&t);
@@ -73,18 +72,18 @@ int main(int argc, char** argv)
                 return -1;
         }
         printf("Loaded media in %luusec\n", dur);
-        
+
         timing_start(&t);
 
         if (pie_bm_dwn_smpl(&dwn, &img, max, max))
         {
                 abort();
         }
-        
+
         dur = timing_dur_usec(&t);
         printf("Downsample took %luusec\n", dur);
 
-        timing_start(&t);        
+        timing_start(&t);
         pie_bm_conv_bd(&out,
 #if OUTPUT_16B
                        PIE_COLOR_16B,
@@ -96,7 +95,7 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("To 16bit took %luusec\n", dur);
 
-        timing_start(&t);        
+        timing_start(&t);
 #if OUTPUT_16B
         pie_io_png_u16rgb_write(fout, &out);
 #else
@@ -106,7 +105,7 @@ int main(int argc, char** argv)
         printf("Write 16bit PNG took %luusec\n", dur);
 
         pie_bm_free_f32(&img);
-        pie_bm_free_f32(&dwn);        
+        pie_bm_free_f32(&dwn);
 #if OUTPUT_16B
         pie_bm_free_u16(&out);
 #else

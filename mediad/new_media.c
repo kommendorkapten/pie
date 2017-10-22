@@ -37,7 +37,6 @@
 #include "../dm/pie_min.h"
 #include "../dm/pie_mob.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_bm_dwn_smpl.h"
 #include "../exif/pie_exif.h"
 #include "../io/pie_io.h"
 #include "../io/pie_io_jpg.h"

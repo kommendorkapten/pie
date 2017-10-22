@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include "../io/pie_io.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_bm_dwn_smpl.h"
 #include "../pie_types.h"
 #include "../pie_id.h"
 #include "../pie_log.h"
