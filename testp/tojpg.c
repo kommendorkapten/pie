@@ -12,6 +12,7 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb bmf;
         struct pie_bitmap_u8rgb bmu;
         struct timing t;
+        struct pie_io_opt opts;
         int ok;
 
         if (argc != 3)
@@ -23,8 +24,10 @@ int main(int argc, char** argv)
         in = argv[1];
         out = argv[2];
 
+        opts.qual = PIE_IO_HIGH_QUAL;
+
         timing_start(&t);
-        if (ok = pie_io_load(&bmf, in, NULL), ok)
+        if (ok = pie_io_load(&bmf, in, &opts), ok)
         {
                 printf("pie_io_load: %d\n", ok);
                 return -1;
@@ -40,12 +43,12 @@ int main(int argc, char** argv)
         printf("Converted img to u8 in %luusec\n", timing_dur_usec(&t));
 
         timing_start(&t);
-        if (pie_io_jpg_u8rgb_write(out, &bmu, 100))
+        if (pie_io_jpg_u8rgb_write(out, &bmu, 80))
         {
                 printf("2\n");
                 return -1;
         }
-        printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));        
+        printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));
 
         pie_bm_free_u8(&bmu);
         pie_bm_free_f32(&bmf);
