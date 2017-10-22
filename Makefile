@@ -115,7 +115,7 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
-        ingestd exif jsmn stg
+        ingestd exif jsmn stg tools
 
 .PHONY: all
 .PHONY: test
@@ -124,7 +124,7 @@ VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
 
 ########################################################################
 
-all: test bin/editd bin/collectiond bin/mediad bin/ingestd
+all: test bin/editd bin/collectiond bin/mediad bin/ingestd bin/collver
 
 test: $(T_BINS)
 
@@ -223,3 +223,7 @@ bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
 	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/jsmn.o -o $@ $(LNET) -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
+
+# Tools
+bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/llist.o obj/hmap.o $(BM_OBJS) $(MATH_OBJS) $(IO_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 -L/usr/local/lib $(LIMG)
