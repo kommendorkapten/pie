@@ -307,7 +307,7 @@ function mobColorString(color) {
     case 3:
         return "Blue";
     case 4:
-        return "Black";
+        return "Yellow";
     }
 
     return "";
@@ -605,6 +605,54 @@ function rateMob(mobId, rate) {
 
     mob.rating = rate;
     updateMob(mob);
+}
+
+function filterRate(rate) {
+    var btnGrp = document.getElementById("rate-btn-grp");
+    /*
+      button layout: 1, 3, 5, 7, 9
+      rating:        5, 4, 3, 2, 1
+    */
+
+    /* reset */
+    for (i = 1; i < 10; i += 2) {
+        btnGrp.childNodes[i].className = "";
+    }
+
+    if (rate == 0) {
+        return;
+    }
+
+    rate = 5 - rate;
+    rate = rate * 2;
+
+    for (i = rate + 1; i < 10; i += 2) {
+        btnGrp.childNodes[i].className = "selected";
+    }
+}
+
+function filterColor(color) {
+    var btnGrp = document.getElementById("color-btn-grp");
+    /*
+      button layout: 1, 3, 5, 7, 9
+      rating:        r, g, b, y, none
+      values:        1, 2, 3, 4, 0
+    */
+
+    for (i = 1; i < 10; i += 2) {
+        console.log(btnGrp.childNodes[i]);
+        btnGrp.childNodes[i].style.border = "3px solid #686868";
+    }
+
+    if (color == 0) {
+        return;
+    }
+
+    color -= 1;
+    color *= 2;
+    color += 1;
+
+    btnGrp.childNodes[color].style.border = "0px";
 }
 
 function coloriseMob(mobId, color) {

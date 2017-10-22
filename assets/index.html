@@ -1,8 +1,8 @@
 <html>
   <head>
-    <meta charset="utf-8"> 
+    <meta charset="utf-8">
     <script type="text/javascript" charset="utf-8"
-            src="js/chart.bundle.js"></script> 
+            src="js/chart.bundle.js"></script>
     <script type="text/javascript" charset="utf-8"
             src="js/coll.js"></script>
     <script type="text/javascript" charset="utf-8"
@@ -19,12 +19,64 @@
 
       <div id="popup-rate-set" class="popup_rate_set">
         Empty
-      </div> 
-      
-      <div class="header-40px">
-        hej header
       </div>
-      
+
+      <div class="header-40px">
+        <!-- sorting -->
+        <div class="header-grp">
+          <div class="coll-select-med semi-square">
+            <select>
+              <option value="added_time">Added time</option>
+              <option selected="selected" value="capture_time">Captured time</option>
+            </select>
+          </div>
+
+          <div class="coll-select-small semi-square">
+            <select>
+              <option selected="selected" value="asc">Asc</option>
+              <option value="desc">Desc</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Metadata selection -->
+        <div class="header-grp">
+          <div class="coll-select-tiny semi-square">
+            <select>
+              <option value="gt">&gt;</option>
+              <option selected="selected" value="gte">&ge;</option>
+              <option value="lt">&lt;</option>
+              <option value="lte">&le;</option>
+              <option value="eq">&#x3d;</option>
+              <option value="ne">&ne;</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="rate-btn-grp" class="rate-btn-group">
+          <button onclick="filterRate(5);"></button>
+          <button onclick="filterRate(4);"></button>
+          <button onclick="filterRate(3);"></button>
+          <button onclick="filterRate(2);"></button>
+          <button onclick="filterRate(1);"></button>
+        </div>
+
+        <!-- clear filter button -->
+        <div class="header-grp">
+          <button class="coll-none-rate" onclick="filterRate(0);">none</button>
+        </div>
+
+        <!-- color selection -->
+        <div id="color-btn-grp" class="color-btn-group">
+          <button onclick="filterColor(1);" class="red"></button>
+          <button onclick="filterColor(2);" class="green"></button>
+          <button onclick="filterColor(3);" class="blue"></button>
+          <button onclick="filterColor(4);" class="yellow"></button>
+          <button onclick="filterColor(0);"></button>
+        </div>
+
+      </div>
       <!-- left pane -->
       <div class="float-l-item">
         <div class="fixed-collection-list-pane">
@@ -42,14 +94,14 @@
           </table>
         </div>
       </div>
-          
+
       <!-- rigth pane -->
       <div class="float-r-item">
         <div class="fixed-edit-pane">
           <div class="center" >
             <div class="edit-meta">
               <div style="margin-left:5px; margin-right:5px;">
-                <canvas id="hist_canvas" width="265" height="150" 
+                <canvas id="hist_canvas" width="265" height="150"
                         style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
                 </canvas>
               </div>
@@ -94,7 +146,7 @@
                   <col span="1" style="width: 40%;">
                   <col span="1" style="width: 60%;">
                 </colgroup>
-                <tr>                
+                <tr>
                   <td>Rating</td>
                   <td class="text-bright"></td>
                 </tr>
@@ -151,7 +203,7 @@
                   <td class="text-bright"></td>
                 </tr>
               </table>
-            </div>          
+            </div>
           </div>
         </div>
       </div>
@@ -160,7 +212,7 @@
       <div class="footer-collection">
         hej footer
       </div>
-      
+
     </div>
   </body>
 </html>

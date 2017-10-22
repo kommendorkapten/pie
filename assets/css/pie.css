@@ -37,7 +37,7 @@ canvas {
 }
 
 .fixed-collection-list-pane a:visited {
-    color:	     #a9a9a9;    
+    color:	     #a9a9a9;
     text-decoration: none;
 }
 
@@ -54,16 +54,24 @@ canvas {
 }
 
 .header-40px {
+    display: -webkit-flex;
+    display: flex;
     width: 100%;
     height: 40px;
-    border:1px solid #000000;    
+    border:1px solid #000000;
+}
+
+.header-grp {
+    display: -webkit-flex;
+    display: flex;
+    margin: 10px;
 }
 
 .footer-collection {
     width: 100%;
     height: 150px;
     clear: both;
-    border:1px solid #000000;    
+    border:1px solid #000000;
 }
 
 table {
@@ -87,7 +95,7 @@ table {
 .edit-meta-text-marker {
     font-family: Arial, Verdana, sans-serif;
     color:	 #a9a9a9;
-    text-align:  left;    
+    text-align:  left;
 }
 
 .edit-in {
@@ -100,7 +108,7 @@ table {
 }
 
 .meta-data-table {
-    text-shadow: 1px 1px #000000;    
+    text-shadow: 1px 1px #000000;
 }
 
 .text-bright {
@@ -108,9 +116,9 @@ table {
 }
 
 input[type=range] {
-    -webkit-appearance: none; 
-    width: 160px; 
-    background: transparent; 
+    -webkit-appearance: none;
+    width: 160px;
+    background: transparent;
 }
 
 input[type=range]::-webkit-slider-thumb {
@@ -126,7 +134,7 @@ input[type=range]::-ms-track {
     cursor: pointer;
 
     /* Hides the slider so custom styles can be added */
-    background: transparent; 
+    background: transparent;
     border-color: transparent;
     color: transparent;
 }
@@ -232,7 +240,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin-top:    40px;
     margin-bottom: 40px;
     margin-right:  10px;
-    margin-left:   10px;    
+    margin-left:   10px;
 }
 
 td.grid-view-table-td {
@@ -248,7 +256,7 @@ td.grid-view-table-td {
 }
 
 td.grid-view-table-td-active {
-    background-color: #a8a8a8;    
+    background-color: #a8a8a8;
 }
 
 td.grid-view-table-td:hover {
@@ -279,10 +287,10 @@ li.collapsibleListClosed{
     padding-bottom: 50px;
     left: 0;
     top: 0;
-    width: 100%; 
-    height: 100%; 
+    width: 100%;
+    height: 100%;
     overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); 
+    background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.9);
 }
 
@@ -291,6 +299,7 @@ li.collapsibleListClosed{
     display: block;
     width: 80%;
     max-width: 90%;
+    border: 1px solid #FF0000;
 }
 
 /* Animation */
@@ -302,12 +311,12 @@ li.collapsibleListClosed{
 }
 
 @-webkit-keyframes zoom {
-    from {-webkit-transform:scale(0)} 
+    from {-webkit-transform:scale(0)}
     to {-webkit-transform:scale(1)}
 }
 
 @keyframes zoom {
-    from {transform:scale(0)} 
+    from {transform:scale(0)}
     to {transform:scale(1)}
 }
 
@@ -345,5 +354,146 @@ li.collapsibleListClosed{
     -webkit-animation-name: zoom;
     -webkit-animation-duration: 0.6s;
     animation-name: zoom;
-    animation-duration: 0.6s;    
+    animation-duration: 0.6s;
+}
+
+.rate-btn-group button {
+    background: url(../img/star_outline.png);
+    background-size: 20px 20px;
+    height: 20px;
+    width: 20px;
+    border: 0px;
+    padding: 1px 1px;
+    cursor: pointer;
+    float: left; /* Float the buttons side by side */
+    margin-top: 10px;
+}
+
+.rate-btn-group button.selected {
+    background: url(../img/star_selected.png);
+    background-size: 20px 20px;
+}
+
+.rate-btn-group button:not(:last-child) {
+    border-right: none;
+}
+
+/* Clear floats (clearfix hack) */
+.rate-btn-group:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.rate-btn-group button:hover {
+    background: url(../img/star_selected.png);
+    background-size: 20px 20px;
+}
+
+.color-btn-group button {
+    background-color: #282828;
+    height: 20px;
+    width: 20px;
+    border: 3px solid #686868;
+    padding: 1px 1px;
+    cursor: pointer;
+    float: left; /* Float the buttons side by side */
+    margin-top: 10px;
+}
+
+.color-btn-group button.red {
+    background-color: #e05b5d;
+}
+
+.color-btn-group button.green {
+    background-color: 57c160;
+}
+
+.color-btn-group button.blue {
+    background-color: 5d88de;
+}
+
+.color-btn-group button.yellow {
+    background-color: #d9dd42;
+}
+
+.color-btn-group button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+}
+
+/* Clear floats (clearfix hack) */
+.color-btn-group:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+/* Add a background color on hover */
+.color-btn-group button:hover {
+    border: 0px;
+}
+
+.coll-none-rate {
+    background-color: #686868;
+    border: 1px solid #c9c9c9;
+    color: #c9c9c9;
+    cursor: pointer;
+    float: left;
+}
+
+.coll-select-med {
+    background: url(../img/select_arrow_21.png) no-repeat 96% 0;
+    height: 20px;
+    overflow: hidden;
+    width: 140px;
+    background-color: #686868;
+    margin-left: 10px;
+}
+
+.coll-select-med select {
+    color: #c9c9c9;
+    background: transparent;
+    border: none;
+    height: 20px;
+    width: 156px;
+}
+
+.coll-select-small {
+    background: url(../img/select_arrow_21.png) no-repeat 90% 0;
+    height: 20px;
+    overflow: hidden;
+    width: 60px;
+    background-color: #686868;
+    margin-left: 10px;
+}
+
+.coll-select-small select {
+    color: #c9c9c9;
+    background: transparent;
+    border: none;
+    height: 20px;
+    width: 76px;
+}
+
+.coll-select-tiny {
+    background: url(../img/select_arrow_21.png) no-repeat 86% 0;
+    height: 20px;
+    overflow: hidden;
+    width: 45px;
+    background-color: #686868;
+    margin-left: 10px;
+}
+
+.coll-select-tiny select {
+    color: #c9c9c9;
+    background: transparent;
+    border: none;
+    height: 20px;
+    width: 60px;
+}
+
+.semi-square {
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
 }
