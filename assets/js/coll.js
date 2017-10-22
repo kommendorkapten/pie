@@ -7,6 +7,15 @@ var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
 var selectedCollection = {};
+var zoomMode = {
+    "enabled": false,
+    "mode": "center",
+    "drag": false,
+    "startX": 0,
+    "startY": 0,
+    "dx": 0,
+    "dy": 0,
+};
 var NAV_LEFT = 37;
 var NAV_UP = 38;
 var NAV_RIGHT = 39;
@@ -121,7 +130,7 @@ function loadCollection(collectionId) {
 
                table = document.getElementById("meta_data_tbl_1");
                table.rows[1].cells[1].innerHTML = coll.path;
-               
+
                innerHtml += newRow
                for (i of coll.assets) {
                    var cellId = "grid-cell-mob-" + i.id;
@@ -367,9 +376,16 @@ function updateSingleView(mobId) {
 
     image.onload = function() {
         var canvas = document.getElementById("single-image-view");
+        var ctx = canvas.getContext('2d');
         var scale = 1.0;
         var x = this.width;
         var y = this.height;
+        var offsetX = 0;
+        var offsetY = 0;
+        var ratio = x / y;
+
+        // This may cause problem with down sampling, if so, perform it in
+        // steps to trigger "larger" down sampling matrix.
 
         /* When calculating scaling, the presented orientation
            must be used. */
@@ -388,34 +404,61 @@ function updateSingleView(mobId) {
             scale = (innerHeight - 100)/ y;
         }
 
-        canvas.width = canvas.scrollWidth;
+        canvas.width = Math.ceil(y * scale * ratio);
         canvas.height = Math.ceil(y * scale);
-        var newX = Math.ceil(x * scale);
-        var ctx = canvas.getContext('2d');
-        // This may cause problem with down sampling, if so, perform it in
-        // steps to trigger "larger" down sampling matrix.
-        var offsetX = (canvas.width - newX) / 2;
 
+        if (zoomMode.enabled) {
+            scale = 1.0;
+            var lim;
+
+            lim = x - canvas.width;
+            lim = -lim;
+            if (zoomMode.dx > 0.0) {
+                zoomMode.dx = 0.0;
+            } else if (zoomMode.dx < lim) {
+                zoomMode.dx = lim;
+            }
+            offsetX = zoomMode.dx;
+
+            lim = y - canvas.height;
+            lim = - lim;
+            if (zoomMode.dy > 0.0) {
+                zoomMode.dy = 0.0;
+            } else if (zoomMode.dy < lim) {
+                zoomMode.dy = lim;
+            }
+            offsetY = zoomMode.dy;
+        } else {
+            var newX = Math.ceil(x * scale);
+            offsetX = (canvas.width - newX) / 2;
+        }
+
+        /*
+        console.log("picture dim: " + x + ":" + y);
+        console.log("canvas dim: " + canvas.width + ":" + canvas.height);
+        console.log("picture dim in canvas " + Math.ceil(canvas.height * ratio) + ":" + canvas.height);
+        console.log("Offset: " + offsetX + ":" + offsetY);
+        */
         switch (mob.orientation) {
         case 1: /* 0 */
             ctx.transform(scale, 0,
                           0, scale,
-                          offsetX, 0);
+                          offsetX, offsetY);
             break;
         case 3: /* 180 */
             ctx.transform(-scale, 0,
                           0, -scale,
-                          offsetX + scale * this.width, scale * this.height);
+                          offsetX + scale * this.width, offsetY + scale * this.height);
             break;
         case 6: /* 270 */
             ctx.transform(0, scale,
                           -scale, 0,
-                          offsetX + scale * this.height, 0);
+                          offsetX + scale * this.height, offsetY);
             break;
         case 8: /* 90 */
             ctx.transform(0, -scale,
                           scale, 0,
-                          offsetX, scale * this.width);
+                          offsetX, offsetY + scale * this.width);
             break;
         }
 
@@ -518,7 +561,7 @@ function calculateHistogram(img) {
         nr = (nr / histLimit) * histYMax;
         ng = (nb / histLimit) * histYMax;
         nb = (ng / histLimit) * histYMax;
-        
+
         pl[i] = {
             x: i,
             y: nl
@@ -754,6 +797,32 @@ window.addEventListener("load", function(evt) {
         }
     };
 
+    // Mouse listeners for single image canvas
+    var siCanvas = document.getElementById("single-image-view");
+    siCanvas.addEventListener('mousedown', function(event) {
+        if (zoomMode.enabled) {
+            zoomMode.drag = true;
+            zoomMode.startX = event.pageX;
+            zoomMode.startY = event.pageY;
+        }
+    });
+
+    siCanvas.addEventListener('mouseup', function(event) {
+        if (zoomMode.enabled) {
+            zoomMode.drag = false;
+        }
+    });
+
+    siCanvas.addEventListener('mousemove', function(event) {
+        if (zoomMode.enabled && zoomMode.drag){
+            zoomMode.dx += (event.pageX - zoomMode.startX);
+            zoomMode.dy += (event.pageY - zoomMode.startY);
+            updateSingleView(selectedMobId);
+            zoomMode.startX = event.pageX;
+            zoomMode.startY = event.pageY;
+        }
+    });
+
     xmlhttp.open("GET", "collection/", true);
     xmlhttp.send();
 
@@ -776,7 +845,7 @@ window.addEventListener("load", function(evt) {
     var col = getParameterByName('col');
     if (col != null && col != "") {
         loadCollection(col);
-    }    
+    }
 });
 
 document.onkeydown = function(evt) {
@@ -824,7 +893,12 @@ document.onkeydown = function(evt) {
         closeSingleView();
         break;
     case 90:
-        console.log("zoom");
+        if (zoomMode.enabled) {
+            zoomMode.enabled = false;
+        } else {
+            zoomMode.enabled = true;
+        }
+        updateSingleView(selectedMobId);
         break;
     }
 
