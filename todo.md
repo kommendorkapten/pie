@@ -1,30 +1,30 @@
 # In progress
+* sort order in collecton view.
 
+# Sorted
+* Filter based on rating and color.
+* collectiond should update mobs via mediad.
+* Add method to get fd from q_consumser.
+* Rewrite mediad to use poll(2) when reading from queues.
+* show info on images with development settings.
+* show num files in collection list.
+* Sort order in collection view
 
-# Feature
+# Unsorted
 * editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.
 * Export pictures.
-* Zoom in library mode.
-
-## Sorted
-* Add method to get fd from q_consumser.
-* Rewrite mediad to use poll(2) when reading from queues.
-* collectiond should update mobs via mediad.
-
-## Unsorted
-* show info on images with development settings.
-* sort order in collecton view.
+* Thumbnail in single view, that shows zoomed part of image (navigation).
+* zoom/pan in development view
+* Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
+* Smarter management of collections, only load visible thumbnails.
 * Calculate new radius for clarity when an image is loaded. The one
   stored in the database may be for the wrong resolution.
 * handle file name collisions during import.
-* show num files in collection list.
 * Update proxy and thumb with any adjustments from editd.
 * Auto expand top collection.
-* Support for color tagging in collection mode.
-* Filter based on rating and color.
 * Move images between collections (rename(2), EXDEV (different file
   sys)).
 * Load collection in editd.
@@ -34,17 +34,17 @@
   darkening whites a non-linear method should be used.
 * "time line" with pictures in bottom with selected collection. Both
   dev and coll view.
-
-
-# Bugs
+* libraw to use lcms on sparc.
+* add size to min
+* add min to proxy
 * When navigating from dev to coll, expand list and show last state.
 * Canvas in editd sometimes contains a non-used line in the top (white
   colored). Can be seen for image: IMG_0259.CR2
 * Exif parsing, shutter speed greater than 1s
 * Downsample yields weird results when scale factor is close to 1.
+* Better visualization for color tag in collection view.
 
 # Performance:
-
 * Memory leak check
 ** Editd (may need to be converted to single thread).
 ** Ingestd
@@ -55,7 +55,6 @@
 * Multi threaded algs.
 
 # Misc
-
 * Convert Makefile to POSIX make.
 
 # Done
@@ -76,3 +75,5 @@
   name.~~
 * ~~Editd, persist parameters in db.~~
 * ~~Editd, when loading image, automatically set parameters in ui.~~
+* ~~Zoom/pan in library mode.~~
+* ~~Move pie dwn sample into pie_bm.h~~
