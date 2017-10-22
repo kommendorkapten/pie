@@ -99,6 +99,7 @@ int main(void)
                 md_cfg.max_thumb = (int)lval;
         }
         PIE_LOG("Maximum thumbnail size: %d", md_cfg.max_thumb);
+
         if (pie_cfg_get_long("image:proxy:size", &lval))
         {
                 PIE_WARN("Config image:proxy:size not found in config");
@@ -109,6 +110,42 @@ int main(void)
                 md_cfg.max_proxy = (int)lval;
         }
         PIE_LOG("Maximum proxy size: %d", md_cfg.max_proxy);
+
+        if (pie_cfg_get_long("image:proxy:fullsize", &lval))
+        {
+                PIE_WARN("Config image:proxy:fullsize not found in config");
+                lval = 0;
+        }
+        else
+        {
+                md_cfg.proxy_fullsize = lval ? 1 : 0;
+        }
+        PIE_LOG("Proxy fullsize: %d", md_cfg.proxy_fullsize);
+        if (md_cfg.proxy_fullsize)
+        {
+                md_cfg.max_proxy = -md_cfg.max_proxy;
+                PIE_LOG("Changing maximum proxy size: %d", md_cfg.max_proxy);
+        }
+
+        if (pie_cfg_get_long("image:proxy:quality", &lval))
+        {
+                PIE_WARN("Config image:proxy:quality not found in config");
+                lval = 90;
+        }
+        else
+        {
+                md_cfg.proxy_qual = (int)lval;
+
+                if (md_cfg.proxy_qual > 100)
+                {
+                        md_cfg.proxy_qual = 100;
+                }
+                else if (md_cfg.proxy_qual < 10)
+                {
+                        md_cfg.proxy_qual = 10;
+                }
+        }
+        PIE_LOG("Proxy quality: %d", md_cfg.proxy_qual);
 
         md_cfg.host = pie_cfg_get_host(-1);
         if (md_cfg.host == NULL)

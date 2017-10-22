@@ -63,11 +63,12 @@ static struct pie_collection* get_or_create_coll(const char*, long);
 /**
  * Write a downsampled version to disk.
  * @param the bitmap to downsample.
- * @param maximum size (in both w and h).
+ * @param maximum size (in both w and h). Set to negative to keep size.
  * @param complete path to write file to.
+ * @param JPEG quality [0,100]
  * @return 0 on success.
  */
-static int write_dwn_smpl(struct pie_bitmap_f32rgb*, int, const char*);
+static int write_dwn_smpl(struct pie_bitmap_f32rgb*, int, const char*, int);
 
 static pthread_t* workers;
 static int num_workers;
@@ -298,7 +299,7 @@ static void* worker(void* arg)
                                 new->digest[i]);
                 }
                 min.min_sha1_hash[new->digest_len * 2] = '\0';
-                
+
                 ok = pie_min_create(pie_cfg_get_db(), &min);
                 if (ok)
                 {
@@ -306,14 +307,14 @@ static void* worker(void* arg)
                                 me->me,
                                 mob_id);
                 }
-                
+
                 /* Extract EXIF data and store in meta_data */
-                timing_start(&t);                
+                timing_start(&t);
                 ok = pie_exif_load(&ped, src_path);
                 PIE_DEBUG("[%d]Extracted EXIF for %s in %ldms",
                           me->me,
                           src_path,
-                          timing_dur_msec(&t));                
+                          timing_dur_msec(&t));
                 if (ok)
                 {
                         PIE_ERR("[%d]Could not extract EXIF data from %s",
@@ -332,7 +333,7 @@ static void* worker(void* arg)
                         {
                                 mob.mob_orientation = (char)ped.ped_orientation;
                         }
-                        
+
                         ped.ped_mob_id = mob_id;
                         ok = pie_exif_data_create(pie_cfg_get_db(), &ped);
                         if (ok)
@@ -343,7 +344,7 @@ static void* worker(void* arg)
                         }
                         pie_exif_data_release(&ped);
                 }
-                
+
                 /* Perist MOB */
                 ok = pie_mob_create(pie_cfg_get_db(), &mob);
                 if (ok)
@@ -352,9 +353,9 @@ static void* worker(void* arg)
                                 me->me,
                                 mob_id);
                 }
-                
+
                 /* Create default pie_adjust and store */
-                
+
                 /* TODO move this to processd */
                 /* Write thumbnail */
                 snprintf(tgt_path,
@@ -363,7 +364,7 @@ static void* worker(void* arg)
                          thumb_stg->mnt_path,
                          mob_id);
                 PIE_DEBUG("[%d]Thumb: %s", me->me, tgt_path);
-                if (write_dwn_smpl(&bm_src, md_cfg.max_thumb, tgt_path))
+                if (write_dwn_smpl(&bm_src, md_cfg.max_thumb, tgt_path, 100))
                 {
                         pie_bm_free_f32(&bm_src);
                         goto next_msg;
@@ -376,7 +377,10 @@ static void* worker(void* arg)
                          proxy_stg->mnt_path,
                          mob_id);
                 PIE_DEBUG("[%d]Proxy: %s", me->me, tgt_path);
-                if (write_dwn_smpl(&bm_src, md_cfg.max_proxy, tgt_path))
+                if (write_dwn_smpl(&bm_src,
+                                   md_cfg.max_proxy,
+                                   tgt_path,
+                                   md_cfg.proxy_qual))
                 {
                         pie_bm_free_f32(&bm_src);
                         goto next_msg;
@@ -456,30 +460,43 @@ static void free_msg(struct pie_mq_new_media* m)
         free(m);
 }
 
-static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
+static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
+                          int max,
+                          const char* p,
+                          int qual)
 {
         struct pie_bitmap_f32rgb bm_dwn;
         struct pie_bitmap_u8rgb bm_out;
+        struct pie_bitmap_f32rgb* bm_src = src;
         struct timing t;
         int ok;
 
-        timing_start(&t);
-        if (pie_bm_dwn_smpl(&bm_dwn,
-                            src,
-                            max,
-                            max))
+        if (max >= 0 && max < 100)
         {
-                PIE_ERR("Failed to downsample");
-                return -1;
+                max = 100;
         }
-        PIE_DEBUG("Downsampled tp %dpx in %ldms",
-                  max,
-                  timing_dur_msec(&t));
+
+        if (max > 0)
+        {
+                timing_start(&t);
+                if (pie_bm_dwn_smpl(&bm_dwn,
+                                    src,
+                                    max,
+                                    max))
+                {
+                        PIE_ERR("Failed to downsample");
+                        return -1;
+                }
+                PIE_DEBUG("Downsampled tp %dpx in %ldms",
+                          max,
+                          timing_dur_msec(&t));
+                bm_src = &bm_dwn;
+        }
 
         timing_start(&t);
         if (pie_bm_conv_bd(&bm_out,
                            PIE_COLOR_8B,
-                           &bm_dwn,
+                           bm_src,
                            PIE_COLOR_32B))
         {
                 PIE_ERR("Could not convert to 8b");
@@ -488,8 +505,13 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
         }
         PIE_DEBUG("Converted to 8b in %ldms", timing_dur_msec(&t));
 
+        if (max > 0)
+        {
+                pie_bm_free_f32(&bm_dwn);
+        }
+
         timing_start(&t);
-        ok = pie_io_jpg_u8rgb_write(p, &bm_out, 90);
+        ok = pie_io_jpg_u8rgb_write(p, &bm_out, qual);
         PIE_DEBUG("Wrote %s in %ldms", p, timing_dur_msec(&t));
         if (ok)
         {
@@ -499,7 +521,6 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src, int max, const char* p)
         }
 
         pie_bm_free_u8(&bm_out);
-        pie_bm_free_f32(&bm_dwn);
 
         return ok;
 }
