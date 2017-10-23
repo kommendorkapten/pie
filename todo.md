@@ -1,14 +1,13 @@
 # In progress
-* sort order in collecton view.
+* show info on images with development settings.
+* Better visualization for color tag in collection view.
+* Timing for loadCollection and friends in coll.js.
 
 # Sorted
-* Filter based on rating and color.
 * collectiond should update mobs via mediad.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
-* show info on images with development settings.
 * show num files in collection list.
-* Sort order in collection view
 
 # Unsorted
 * editd, remove histogram websocket. Calculate histogram in ui as of
@@ -42,7 +41,6 @@
   colored). Can be seen for image: IMG_0259.CR2
 * Exif parsing, shutter speed greater than 1s
 * Downsample yields weird results when scale factor is close to 1.
-* Better visualization for color tag in collection view.
 
 # Performance:
 * Memory leak check
@@ -77,3 +75,5 @@
 * ~~Editd, when loading image, automatically set parameters in ui.~~
 * ~~Zoom/pan in library mode.~~
 * ~~Move pie dwn sample into pie_bm.h~~
+* ~~sort order in collecton view.~~
+* ~~Filter based on rating and color.~~
