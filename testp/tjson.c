@@ -33,12 +33,12 @@ int main(void)
         s.clarity.amount = 9.0;
         s.clarity.radius = 10.0;
         s.clarity.threshold = 11.0;
-        s.vibrance = 0.01;
-        s.saturation = - 0.01;
+        s.vibrance = 0.01f;
+        s.saturation = - 0.01f;
         s.rotate = 359;
-        s.sharpening.amount = 0.001;
-        s.sharpening.radius = 0.002;
-        s.sharpening.threshold = 0.003;
+        s.sharpening.amount = 0.001f;
+        s.sharpening.radius = 0.002f;
+        s.sharpening.threshold = 0.003f;
 
         len = pie_enc_json_settings(buf, BUF_LEN, &s);
         buf[len] = '\0';

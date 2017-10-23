@@ -506,7 +506,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                             settings_json.pdp_settings);
                 if (res)
                 {
-                        PIE_ERR("Broken dev settings stored in db for MOB %ul",
+                        PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
                         clear_settings = 1;
                 }

@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
         ped.ped_mob_id = 6;
 
-        printf("%p\n", ped.ped_lens_model);
+        printf("%p\n", (void*)ped.ped_lens_model);
         printf("strlen: %ld\n", strlen(ped.ped_lens_model));
         
         ok = pie_exif_data_create(pie_cfg_get_db(), &ped);

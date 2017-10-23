@@ -234,7 +234,6 @@ static int cb_http(struct lws* wsi,
         struct hmap* query_params = NULL;
         const char* req_url = in;
         const char* p;
-        unsigned char* header_p = &resp_headers[0];
         struct pie_ctx_http* ctx = user;
         const char* mimetype;
         int hn = 0;
@@ -242,7 +241,7 @@ static int cb_http(struct lws* wsi,
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
-        enum pie_http_verb verb;
+        enum pie_http_verb verb = pie_http_verb_get(wsi);
 
         resp.wbuf = &gresp[0];
         resp.wbuf_len = RESP_LEN;
@@ -255,7 +254,6 @@ static int cb_http(struct lws* wsi,
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
-                verb = pie_http_verb_get(wsi);
                 try_keepalive = 1;
                 query_params = pie_http_req_params(wsi);
 
@@ -474,7 +472,7 @@ static int cb_http(struct lws* wsi,
         }
 
 writebody:
-        PIE_DEBUG("%s [%p] '%s' %d %ul",
+        PIE_DEBUG("%s [%p] '%s' %d %lu",
                   pie_http_verb_string(verb),
                   user,
                   req_url,
