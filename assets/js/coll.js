@@ -204,6 +204,35 @@ function renderCollection(coll, options) {
     }
 
     /* Sort */
+    assets.sort(function(a, b) {
+        var va;
+        var vb;
+        var ret;
+
+        if (options.sort.key == "added_time") {
+            va = a.mob.added_ts_ms;
+            vb = b.mob.added_ts_ms;
+        } else {
+            va = a.mob.capture_ts_ms;
+            vb = b.mob.capture_ts_ms;
+        }
+
+        if (options.sort.order == "asc") {
+            ret = va - vb;
+
+            if (ret == 0) {
+                ret = a.mob.name.localeCompare(b.mob.name);
+            }
+        } else {
+            ret = vb - va;
+
+            if (ret == 0) {
+                ret = b.mob.name.localeCompare(a.mob.name);
+            }
+        }
+
+        return ret;
+    });
 
     var w = window.innerWidth;
     var h = window.innerHeight;
