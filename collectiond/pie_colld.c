@@ -241,7 +241,7 @@ static int cb_http(struct lws* wsi,
         /* Set to true if callback should attempt to keep the connection
            open. */
         int try_keepalive = 0;
-        enum pie_http_verb verb = pie_http_verb_get(wsi);
+        enum pie_http_verb verb = PIE_HTTP_VERB_UNKNOWN;
 
         resp.wbuf = &gresp[0];
         resp.wbuf_len = RESP_LEN;
@@ -254,6 +254,7 @@ static int cb_http(struct lws* wsi,
         switch (reason)
         {
         case LWS_CALLBACK_HTTP:
+                verb = pie_http_verb_get(wsi);
                 try_keepalive = 1;
                 query_params = pie_http_req_params(wsi);
 
