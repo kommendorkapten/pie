@@ -16,6 +16,8 @@ var zoomMode = {
     "dx": 0,
     "dy": 0,
 };
+var globalFilterRate = 0;
+var globalFilterColor = 0;
 var NAV_LEFT = 37;
 var NAV_UP = 38;
 var NAV_RIGHT = 39;
@@ -99,91 +101,43 @@ function rateFilenameFromMob(mob) {
     return filename;
 }
 
+function getCollectionModifiers() {
+    var sortSelect = document.getElementById("sort-select");
+    var sortOrderSelect = document.getElementById("sort-order-select");
+    var sort = sortSelect.options[sortSelect.selectedIndex].value;
+    var sortOrder = sortOrderSelect.options[sortOrderSelect.selectedIndex].value;
+    var filterOpSelect = document.getElementById("filter-op-select");
+    var filterOp = filterOpSelect.options[filterOpSelect.selectedIndex].value;
+    var options = {
+        "sort": {
+            "key": sort,
+            "order": sortOrder
+        },
+        "rating": {
+            "value": globalFilterRate,
+            "op": filterOp
+        },
+        "color": globalFilterColor
+    };
+
+    return options;
+}
+
 function loadCollection(collectionId) {
     var xmlhttp = new XMLHttpRequest();
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    // pane: 232px
-    // margin 10px r, 10px l
-    // thumb size is 212px
-    // min number of columns is 3
-    // border spacing is 3
-    // scroll window is 15px
-    // footer is 150px
-    // header is 40px
-    var columns = 3;
-    var img_x = w - 15 - 2 * 238;
-    var thumb_size = 212;
-
-    columns = Math.floor(img_x / (thumb_size + 28));
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
            if (xmlhttp.status == 200) {
-               var table = document.getElementById("meta_data_tbl_top");
                var coll = JSON.parse(xmlhttp.responseText);
-               var innerHtml = "";
-               var newRow = "<tr>";
-               var div = "<div class=\"grid-view-table-cell\">";
-               var count = 1;
-               var closed = false;
+               var options = getCollectionModifiers();
 
-               table = document.getElementById("meta_data_tbl_1");
-               table.rows[1].cells[1].innerHTML = coll.path;
-
-               innerHtml += newRow
-               for (i of coll.assets) {
-                   var cellId = "grid-cell-mob-" + i.id;
-                   mobCache[i.id] = i.mob;
-                   var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
-
-                   innerHtml += newCell;
-                   innerHtml += div;
-
-                   switch(i.mob.orientation) {
-                   case 3: /* image is rotated 180 cw */
-                       innerHtml += "<img class=\"rotate180\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-                       break;
-                   case 6:/* image is rotated 270 cw */
-                       innerHtml += "<img class=\"rotate90\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-                       break;
-                   case 8: /* image is rotated 90 cw */
-                       innerHtml += "<img class=\"rotate270\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-                       break;
-                   default:
-                       innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-                   }
-
-                   var rating = rateFilenameFromMob(i.mob);
-                   innerHtml += "</div>";
-                   innerHtml += "<div class=\"grid-view-table-footer\">";
-                   innerHtml += "<img width=\"80\" src=\"" + rating +"\"></div>";
-                   innerHtml += "</td>";
-                   closed = false;
-
-                   if (count % columns == 0) {
-                       innerHtml += "</tr>";
-                       innerHtml += newRow;
-                       closed = true;
-                   }
-                   count++;
-               }
-
-               if (!closed) {
-                   innerHtml += "</tr>";
-               }
-
-               var collTable = document.getElementById("coll-grid-table");
-               collTable.innerHTML = innerHtml;
-
-               /* Save selected collection last after any sorting has been
-                  applied */
                selectedCollection = coll;
-           }
-           else if (xmlhttp.status == 400) {
+
+               renderCollection(selectedCollection, options);
+           } else if (xmlhttp.status == 400) {
                console.log("There was an error 400");
-           }
-           else {
+           } else {
                console.log("something else other than 200 was returned");
            }
         }
@@ -193,8 +147,137 @@ function loadCollection(collectionId) {
     xmlhttp.send();
 }
 
+function renderCollection(coll, options) {
+    if (coll == null) {
+        console.log("No collection selected");
+        return;
+    }
+
+    var assets = [];
+
+    for (asset of coll.assets) {
+        var keep = false;
+
+        /* Color */
+        switch (options.color) {
+        case 0:
+            keep = true;
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            if (asset.mob.color == options.color) {
+                keep = true;
+            }
+            break;
+        }
+
+        if (!keep) {
+            continue;
+        }
+        /* rate */
+        switch (options.rating.op) {
+        case "gt":
+            keep = asset.mob.rating > options.rating.value;
+            break;
+        case "gte":
+            keep = asset.mob.rating >= options.rating.value;
+            break;
+        case "lt":
+            keep = asset.mob.rating < options.rating.value;
+            break;
+        case "lte":
+            keep = asset.mob.rating <= options.rating.value;
+            break;
+        case "eq":
+            keep = asset.mob.rating == options.rating.value;
+            break;
+        case "ne":
+            keep = asset.mob.rating != options.rating.value;
+            break;
+        }
+
+        if (keep) {
+            assets.push(asset);
+        }
+    }
+
+    /* Sort */
+
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    /* pane: 232px
+       margin 10px r, 10px l
+       thumb size is 212px
+       min number of columns is 3
+       border spacing is 3
+       scroll window is 15px
+       footer is 150px
+       header is 40px */
+    var columns = 3;
+    var img_x = w - 15 - 2 * 238;
+    var thumb_size = 212;
+    var table = document.getElementById("meta_data_tbl_top");
+    var innerHtml = "";
+    var newRow = "<tr>";
+    var div = "<div class=\"grid-view-table-cell\">";
+    var count = 1;
+    var closed = false;
+
+    table = document.getElementById("meta_data_tbl_1");
+    table.rows[1].cells[1].innerHTML = coll.path;
+
+    columns = Math.floor(img_x / (thumb_size + 28));
+    innerHtml += newRow
+    for (i of assets) {
+        var cellId = "grid-cell-mob-" + i.id;
+        mobCache[i.id] = i.mob;
+        var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
+
+        innerHtml += newCell;
+        innerHtml += div;
+
+        switch(i.mob.orientation) {
+        case 3: /* image is rotated 180 cw */
+            innerHtml += "<img class=\"rotate180\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+            break;
+        case 6:/* image is rotated 270 cw */
+            innerHtml += "<img class=\"rotate90\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+            break;
+        case 8: /* image is rotated 90 cw */
+            innerHtml += "<img class=\"rotate270\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+            break;
+        default:
+            innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
+        }
+
+        var rating = rateFilenameFromMob(i.mob);
+        innerHtml += "</div>";
+        innerHtml += "<div class=\"grid-view-table-footer\">";
+        innerHtml += "<img width=\"80\" src=\"" + rating +"\"></div>";
+        innerHtml += "</td>";
+        closed = false;
+
+        if (count % columns == 0) {
+            innerHtml += "</tr>";
+            innerHtml += newRow;
+            closed = true;
+        }
+        count++;
+    }
+
+    if (!closed) {
+        innerHtml += "</tr>";
+    }
+
+    var collTable = document.getElementById("coll-grid-table");
+    collTable.innerHTML = innerHtml;
+
+}
+
 function selectMob(id, cell) {
-    // Clear selected item
+    /* Clear selected item */
     var collTable = document.getElementById("coll-grid-table");
 
     for (row of collTable.rows) {
@@ -202,10 +285,10 @@ function selectMob(id, cell) {
             column.className = "grid-view-table-td";
         }
     }
-    // Mark new element
+    /* Mark new element */
     cell.className += " grid-view-table-td-active";
 
-    // Get the img element
+    /* Get the img element */
     var imgElem = cell.childNodes[0].childNodes[0];
 
     calculateHistogram(imgElem);
@@ -384,8 +467,8 @@ function updateSingleView(mobId) {
         var offsetY = 0;
         var ratio = x / y;
 
-        // This may cause problem with down sampling, if so, perform it in
-        // steps to trigger "larger" down sampling matrix.
+        /* This may cause problem with down sampling, if so, perform it in
+           steps to trigger "larger" down sampling matrix. */
 
         /* When calculating scaling, the presented orientation
            must be used. */
@@ -510,7 +593,7 @@ function calculateHistogram(img) {
         var red = pixels[i];
         var green = pixels[i+1];
         var blue = pixels[i+2];
-        // Omit alpha
+        /* Omit alpha */
 
         var lum = red * 0.2126 + green * 0.7152 + blue * 0.0722;
 
@@ -614,12 +697,18 @@ function filterRate(rate) {
       rating:        5, 4, 3, 2, 1
     */
 
+    /* save state */
+    globalFilterRate = rate;
+
     /* reset */
     for (i = 1; i < 10; i += 2) {
         btnGrp.childNodes[i].className = "";
     }
 
     if (rate == 0) {
+        /* update view */
+        var options = getCollectionModifiers();
+        renderCollection(selectedCollection, options);
         return;
     }
 
@@ -629,6 +718,10 @@ function filterRate(rate) {
     for (i = rate + 1; i < 10; i += 2) {
         btnGrp.childNodes[i].className = "selected";
     }
+
+    /* update view */
+    var options = getCollectionModifiers();
+    renderCollection(selectedCollection, options);
 }
 
 function filterColor(color) {
@@ -639,12 +732,16 @@ function filterColor(color) {
       values:        1, 2, 3, 4, 0
     */
 
+    globalFilterColor = color;
+
     for (i = 1; i < 10; i += 2) {
-        console.log(btnGrp.childNodes[i]);
         btnGrp.childNodes[i].style.border = "3px solid #686868";
     }
 
     if (color == 0) {
+        /* update view */
+        var options = getCollectionModifiers();
+        renderCollection(selectedCollection, options);
         return;
     }
 
@@ -653,6 +750,10 @@ function filterColor(color) {
     color += 1;
 
     btnGrp.childNodes[color].style.border = "0px";
+
+    /* update view */
+    var options = getCollectionModifiers();
+    renderCollection(selectedCollection, options);
 }
 
 function coloriseMob(mobId, color) {
@@ -746,14 +847,14 @@ window.addEventListener("load", function(evt) {
         }
     });
 
-    // Fetch all collections and draw them.
+    /* Fetch all collections and draw them. */
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
             if (xmlhttp.status == 200) {
                 var coll_tree = {};
                 var coll = JSON.parse(xmlhttp.responseText);
 
-                // Build the tree structure of all collections
+                /* Build the tree structure of all collections */
                 coll.sort(function(a,b) {
                     return a.path.localeCompare(b.path);
                 });
@@ -791,9 +892,8 @@ window.addEventListener("load", function(evt) {
                     root["id"] = i.id;
                 }
 
-                console.log(coll_tree);
-                // Create the HTML for it by doing a depth first
-                // traversal.
+                /* Create the HTML for it by doing a depth first
+                   traversal. */
                 var stack = [];
                 var innerHtml = "";
 
@@ -836,7 +936,7 @@ window.addEventListener("load", function(evt) {
 
                 var collUl = document.getElementById("coll-list");
                 collUl.innerHTML = innerHtml;
-                // Initialize the list
+                /* Initialize the list */
                 CollapsibleLists.apply();
             } else {
                 console.log("Error");
@@ -845,7 +945,7 @@ window.addEventListener("load", function(evt) {
         }
     };
 
-    // Mouse listeners for single image canvas
+    /* Mouse listeners for single image canvas */
     var siCanvas = document.getElementById("single-image-view");
     siCanvas.addEventListener('mousedown', function(event) {
         if (zoomMode.enabled) {
@@ -874,13 +974,12 @@ window.addEventListener("load", function(evt) {
     xmlhttp.open("GET", "collection/", true);
     xmlhttp.send();
 
-    // Load collection if present
+    /* Load collection if present */
     if (id) {
-        console.log("Get collection: " + id);
         loadCollection(id);
     }
 
-    // Configure hosts
+    /* Configure hosts */
     var url = window.location.href.split("/");
     PROTO = url[0];
     if (COLLD_HOST == null) {

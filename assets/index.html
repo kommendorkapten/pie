@@ -25,14 +25,16 @@
         <!-- sorting -->
         <div class="header-grp">
           <div class="coll-select-med semi-square">
-            <select>
+            <select id="sort-select"
+                    onchange="renderCollection(selectedCollection, getCollectionModifiers());">
               <option value="added_time">Added time</option>
               <option selected="selected" value="capture_time">Captured time</option>
             </select>
           </div>
 
           <div class="coll-select-small semi-square">
-            <select>
+            <select id="sort-order-select"
+                    onchange="renderCollection(selectedCollection, getCollectionModifiers());">
               <option selected="selected" value="asc">Asc</option>
               <option value="desc">Desc</option>
             </select>
@@ -43,7 +45,8 @@
         <!-- Metadata selection -->
         <div class="header-grp">
           <div class="coll-select-tiny semi-square">
-            <select>
+            <select id="filter-op-select"
+                    onchange="renderCollection(selectedCollection, getCollectionModifiers());">
               <option value="gt">&gt;</option>
               <option selected="selected" value="gte">&ge;</option>
               <option value="lt">&lt;</option>
