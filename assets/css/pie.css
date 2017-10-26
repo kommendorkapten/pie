@@ -400,6 +400,67 @@ li.collapsibleListClosed{
     margin-top: 10px;
 }
 
+.color-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.color-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.color-dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.color-dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.color-dropdown-show {display:block;}
+
+.color-btn {
+    background-color: #282828;
+    height: 20px;
+    width: 20px;
+    border: 3px solid #585858;
+    padding: 1px 1px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.color-btn.red {
+    background-color: #e05b5d;
+}
+
+.color-btn.green {
+    background-color: 57c160;
+}
+
+.color-btn.blue {
+    background-color: 5d88de;
+}
+
+.color-btn.yellow {
+    background-color: #d9dd42;
+}
+
+.color-btn:hover, .color-btn:focus {
+    background-color: #686868;
+}
+
+.rate-img {
+    vertical-align: middle;
+}
+
 .color-btn-group button.red {
     background-color: #e05b5d;
 }

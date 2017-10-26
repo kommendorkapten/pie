@@ -64,6 +64,11 @@ var histDataB = {
         y: 0
     }]
 };
+var MOB_COLOR_NONE = 0;
+var MOB_COLOR_RED = 1;
+var MOB_COLOR_GREEN = 2;
+var MOB_COLOR_BLUE = 3;
+var MOB_COLOR_YELLOW = 4;
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -148,6 +153,7 @@ function loadCollection(collectionId) {
 }
 
 function renderCollection(coll, options) {
+    var start = Date.now();
     if (coll == null) {
         console.log("No collection selected");
         return;
@@ -263,6 +269,7 @@ function renderCollection(coll, options) {
         var cellId = "grid-cell-mob-" + i.id;
         mobCache[i.id] = i.mob;
         var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
+        var color = "";
 
         innerHtml += newCell;
         innerHtml += div;
@@ -281,11 +288,40 @@ function renderCollection(coll, options) {
             innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
         }
 
+        switch (i.mob.color) {
+        case MOB_COLOR_RED:
+            color = "red";
+            break;
+        case MOB_COLOR_GREEN:
+            color = "green";
+            break;
+        case MOB_COLOR_BLUE:
+            color = "blue";
+            break;
+        case MOB_COLOR_YELLOW:
+            color = "yellow";
+            break;
+        }
+
         var rating = rateFilenameFromMob(i.mob);
         innerHtml += "</div>";
         innerHtml += "<div class=\"grid-view-table-footer\">";
-        innerHtml += "<img width=\"80\" src=\"" + rating +"\"></div>";
-        innerHtml += "</td>";
+        /* rating */
+        innerHtml += "<img class=\"rate-img\" width=\"80\" src=\"" + rating +"\">";
+        /* Color */
+        innerHtml += "<div onclick=\"colorDropdToggle('" + i.id + "');\"class=\"color-dropdown\">";
+
+        innerHtml += "<button class=\"color-btn " + color + "\"></button>";
+        innerHtml += "<div id=\"colorDropdown-" + i.id + "\" class=\"color-dropdown-content\">";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_RED)\" href=\"#\">Red</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_GREEN)\" href=\"#\">Green</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_BLUE)\" href=\"#\">Blue</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_YELLOW)\" href=\"#\">Yellow</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_NONE)\" href=\"#\">None</a>";
+        innerHtml += "</div></div>";
+        /* edit marker */
+
+        innerHtml += "</div></td>";
         closed = false;
 
         if (count % columns == 0) {
@@ -303,6 +339,13 @@ function renderCollection(coll, options) {
     var collTable = document.getElementById("coll-grid-table");
     collTable.innerHTML = innerHtml;
 
+    var dur = Date.now() - start;
+    console.log("renderCollection: " + dur + "ms");
+}
+
+function colorDropdToggle(id) {
+    var cellId = "colorDropdown-" + id;
+    document.getElementById(cellId).classList.toggle("color-dropdown-show");
 }
 
 function selectMob(id, cell) {
@@ -315,7 +358,7 @@ function selectMob(id, cell) {
         }
     }
     /* Mark new element */
-    cell.className += " grid-view-table-td-active";
+    cell.classList.add("grid-view-table-td-active");
 
     /* Get the img element */
     var imgElem = cell.childNodes[0].childNodes[0];
@@ -745,7 +788,7 @@ function filterRate(rate) {
     rate = rate * 2;
 
     for (i = rate + 1; i < 10; i += 2) {
-        btnGrp.childNodes[i].className = "selected";
+        btnGrp.childNodes[i].classList.add("selected");
     }
 
     /* update view */
@@ -791,6 +834,8 @@ function coloriseMob(mobId, color) {
         return
     }
 
+    console.log(mobId);
+
     var mob = mobCache[mobId];
     var not = document.getElementById("popup-rate-set");
 
@@ -821,6 +866,29 @@ function updateMob(mob) {
                 var imgElem = cell.childNodes[1].childNodes[0];
 
                 imgElem.src = rateFilenameFromMob(newMob);
+
+                /* update color */
+                var colorElem = cell.childNodes[1].childNodes[1].childNodes[0];
+                console.log(colorElem);
+                colorElem.classList.remove("red");
+                colorElem.classList.remove("green");
+                colorElem.classList.remove("blue");
+                colorElem.classList.remove("yellow");
+
+                switch (newMob.color) {
+                case MOB_COLOR_RED:
+                    colorElem.classList.add("red");
+                    break;
+                case MOB_COLOR_GREEN:
+                    colorElem.classList.add("green");
+                    break;
+                case MOB_COLOR_BLUE:
+                    colorElem.classList.add("blue");
+                    break;
+                case MOB_COLOR_YELLOW:
+                    colorElem.classList.add("yellow");
+                    break;
+                }
 
                 /* Make new data visible */
                 loadExif(newMob.id);
@@ -1023,6 +1091,18 @@ window.addEventListener("load", function(evt) {
         loadCollection(col);
     }
 });
+
+window.onclick = function(event) {
+    if (!event.target.matches('.color-btn')) {
+
+        var dropdowns = document.getElementsByClassName("color-dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            openDropdown.classList.remove('color-dropdown-show');
+        }
+    }
+};
 
 document.onkeydown = function(evt) {
     evt = evt || window.event;
