@@ -310,14 +310,13 @@ function renderCollection(coll, options) {
         innerHtml += "<img class=\"rate-img\" width=\"80\" src=\"" + rating +"\">";
         /* Color */
         innerHtml += "<div onclick=\"colorDropdToggle('" + i.id + "');\"class=\"color-dropdown\">";
-
         innerHtml += "<button class=\"color-btn " + color + "\"></button>";
         innerHtml += "<div id=\"colorDropdown-" + i.id + "\" class=\"color-dropdown-content\">";
-        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_RED)\" href=\"#\">Red</a>";
-        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_GREEN)\" href=\"#\">Green</a>";
-        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_BLUE)\" href=\"#\">Blue</a>";
-        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_YELLOW)\" href=\"#\">Yellow</a>";
-        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_NONE)\" href=\"#\">None</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_RED)\" href=\"#\"><button class=\"color-btn-indrop red\"></button>Red</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_GREEN)\" href=\"#\"><button class=\"color-btn-indrop green\"></button>Green</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_BLUE)\" href=\"#\"><button class=\"color-btn-indrop blue\"></button>Blue</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_YELLOW)\" href=\"#\"><button class=\"color-btn-indrop yellow\"></button>Yellow</a>";
+        innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_NONE)\" href=\"#\"><button class=\"color-btn-indrop\"></button>None</a>";
         innerHtml += "</div></div>";
         /* edit marker */
 
@@ -834,8 +833,6 @@ function coloriseMob(mobId, color) {
         return
     }
 
-    console.log(mobId);
-
     var mob = mobCache[mobId];
     var not = document.getElementById("popup-rate-set");
 
@@ -869,7 +866,7 @@ function updateMob(mob) {
 
                 /* update color */
                 var colorElem = cell.childNodes[1].childNodes[1].childNodes[0];
-                console.log(colorElem);
+
                 colorElem.classList.remove("red");
                 colorElem.classList.remove("green");
                 colorElem.classList.remove("blue");
