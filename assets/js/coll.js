@@ -350,7 +350,11 @@ function renderCollection(coll, options) {
 
 function colorDropdToggle(id) {
     var cellId = "colorDropdown-" + id;
-    document.getElementById(cellId).classList.toggle("color-dropdown-show");
+    var elem = document.getElementById(cellId);
+
+    if (elem) {
+        elem.classList.toggle("color-dropdown-show");
+    }
 }
 
 function selectMob(id, cell) {
@@ -755,6 +759,7 @@ function rateMob(mobId, rate) {
 
     var mob = mobCache[mobId];
     var not = document.getElementById("popup-rate-set");
+    var opt = getCollectionModifiers();
 
     /* Update and show rating information */
     not.innerHTML = "Set rating to " + rate;
@@ -765,6 +770,11 @@ function rateMob(mobId, rate) {
 
     mob.rating = rate;
     updateMob(mob);
+
+    /* If filters is active, update collection */
+    if (opt.rating.value > 0 || opt.color > 0) {
+        renderCollection(selectedCollection, opt);
+    }
 }
 
 function filterRate(rate) {
@@ -841,6 +851,7 @@ function coloriseMob(mobId, color) {
 
     var mob = mobCache[mobId];
     var not = document.getElementById("popup-rate-set");
+    var opt = getCollectionModifiers();
 
     /* Update and show rating information */
     not.innerHTML = "Set color to " +  mobColorString(color);
@@ -851,6 +862,11 @@ function coloriseMob(mobId, color) {
 
     mob.color = color;
     updateMob(mob);
+
+    /* If filters is active, update collection */
+    if (opt.rating.value > 0 || opt.color > 0) {
+        renderCollection(selectedCollection, opt);
+    }
 }
 
 function updateMob(mob) {
@@ -866,6 +882,18 @@ function updateMob(mob) {
                 /* update rating */
                 var cellId = "grid-cell-mob-" + newMob.id;
                 var cell = document.getElementById(cellId);
+
+                if (cell == null) {
+                    /* This can happen during update of a mob when a filter is
+                       active, i.e filter on 3+ rating, and lower ratint to
+                       not match filter. When the response for update mob
+                       is returned, the collection list may already have been
+                       rebuilt. */
+                    console.log("Could not get cell for mob: " + newMob.id);
+                    return;
+                }
+
+
                 var imgElem = cell.childNodes[1].childNodes[0];
 
                 imgElem.src = rateFilenameFromMob(newMob);
