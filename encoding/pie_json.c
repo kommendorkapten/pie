@@ -449,12 +449,14 @@ size_t pie_enc_json_collection_list(char* buf,
                 {
                         first = 0;
                 }
-                bw += snprintf(buf + bw, len - bw, "{\"id\":\"%ld\",\"path\":\"%s\",\"usr_id\":\"%d\",\"grp_id\":\"%d\",\"acl\":\"%d\"}",
+                bw += snprintf(buf + bw, len - bw,
+                               "{\"id\":\"%ld\",\"path\":\"%s\",\"usr_id\":\"%d\",\"grp_id\":\"%d\",\"acl\":\"%d\",\"count\":%d}",
                                c->col_id,
                                c->col_path,
                                c->col_usr_id,
                                c->col_grp_id,
-                               c->col_acl);
+                               c->col_acl,
+                               c->col_count);
 
                 n = n->next;
         }

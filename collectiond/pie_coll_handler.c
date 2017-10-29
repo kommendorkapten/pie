@@ -48,6 +48,18 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         {
                 return 0;
         }
+
+        /* Fetch cardinality for each collection */
+        n = llist_head(cl);
+        while (n)
+        {
+                if (pie_collection_read_count(db, n->data))
+                {
+                        PIE_WARN("pie_collection_read_count");
+                }
+                n = n->next;
+        }
+
         r->content_len = pie_enc_json_collection_list(r->wbuf,
                                                       r->wbuf_len,
                                                       cl);

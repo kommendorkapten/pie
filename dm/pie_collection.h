@@ -21,12 +21,24 @@ struct pie_collection
 	int             col_usr_id;
 	int             col_grp_id;
 	int             col_acl;
+        /* col_count does not exist in database and is not updated by any
+           find/read calls. */
+        int             col_count;
 };
 extern struct pie_collection *pie_collection_alloc(void);
 extern void     pie_collection_free(struct pie_collection * this);
 extern void     pie_collection_release(struct pie_collection * this);
 extern int      pie_collection_create(sqlite3 * db, struct pie_collection * this);
 extern int      pie_collection_read(sqlite3 * db, struct pie_collection * this);
+/**
+ * Update the count for a collection struct.
+ * @param db handle.
+ * @param collection to set count on.
+ * @return >0 if no collection is found.
+ *          0 on ok.
+ *         <0 on error.
+ */
+extern int      pie_collection_read_count(sqlite3* db, struct pie_collection* this);
 
 /**
  * Find a collection matching a specific path. The collection's path must
@@ -43,6 +55,7 @@ extern struct pie_collection* pie_collection_find_path(sqlite3 * db, const char 
  * @return a list with pointers to all collections.
  */
 extern struct llist* pie_collection_find_all(sqlite3 * db);
+
 /**
  * Find all assets associated with a specific collection.
  * @param datbase.

@@ -189,6 +189,51 @@ cleanup:
 	return ret;
 }
 
+int
+pie_collection_read_count(sqlite3 * db, struct pie_collection * this)
+{
+	char           *q = "SELECT COUNT(cmb_mob_id) FROM pie_collection_member WHERE cmb_col_id = ?";
+	sqlite3_stmt   *pstmt;
+	int             ret;
+	int             retf;
+
+	assert(this);
+        assert(db);
+	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_bind_int64(pstmt, 1, this->col_id);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_step(pstmt);
+	if (ret == SQLITE_DONE)
+	{
+		ret = 1;
+		goto cleanup;
+	}
+	if (ret != SQLITE_ROW)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	this->col_count = (int) sqlite3_column_int(pstmt, 0);
+
+	ret = 0;
+cleanup:
+	retf = sqlite3_finalize(pstmt);
+	if (retf != SQLITE_OK)
+	{
+		ret = -1;
+	}
+	return ret;
+}
+
 struct pie_collection*
 pie_collection_find_path(sqlite3 * db, const char * path)
 {
