@@ -306,8 +306,10 @@ function renderCollection(coll, options) {
         var rating = rateFilenameFromMob(i.mob);
         innerHtml += "</div>";
         innerHtml += "<div class=\"grid-view-table-footer\">";
+
         /* rating */
         innerHtml += "<img class=\"rate-img\" width=\"80\" src=\"" + rating +"\">";
+
         /* Color */
         innerHtml += "<div onclick=\"colorDropdToggle('" + i.id + "');\"class=\"color-dropdown\">";
         innerHtml += "<button class=\"color-btn " + color + "\"></button>";
@@ -318,7 +320,11 @@ function renderCollection(coll, options) {
         innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_YELLOW)\" href=\"#\"><button class=\"color-btn-indrop yellow\"></button>Yellow</a>";
         innerHtml += "<a onclick=\"coloriseMob('" + i.id + "',MOB_COLOR_NONE)\" href=\"#\"><button class=\"color-btn-indrop\"></button>None</a>";
         innerHtml += "</div></div>";
+
         /* edit marker */
+        if (i.developed) {
+            innerHtml += "<img class=\"dev-icon-img\" src='../img/dev_icon_20.png'>";
+        }
 
         innerHtml += "</div></td>";
         closed = false;

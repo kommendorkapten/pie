@@ -1,15 +1,15 @@
 # In progress
-* show info on images with development settings.
-* Better visualization for color tag in collection view.
-* Timing for loadCollection and friends in coll.js.
+* Update collection table in UI when an image's rating/color is updated.
 
 # Sorted
+* show num files in collection list.
 * collectiond should update mobs via mediad.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
-* show num files in collection list.
 
 # Unsorted
+* better javascript management for color tag dropdown. Remove global
+  js func.
 * editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.
 * Export pictures.
@@ -77,3 +77,5 @@
 * ~~Move pie dwn sample into pie_bm.h~~
 * ~~sort order in collecton view.~~
 * ~~Filter based on rating and color.~~
+* ~~Better visualization for color tag in collection view.~~
+* ~~show info on images with development settings.~~

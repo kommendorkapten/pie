@@ -487,6 +487,11 @@ li.collapsibleListClosed{
     vertical-align: middle;
 }
 
+.dev-icon-img {
+    vertical-align: middle;
+    margin-left: 90px;
+}
+
 .color-btn-group button.red {
     background-color: #e05b5d;
 }

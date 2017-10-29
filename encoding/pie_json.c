@@ -401,7 +401,7 @@ size_t pie_enc_json_collection(char* buf,
         bw += snprintf(buf + bw, len - bw, "\"assets\":[");
         while (n)
         {
-                struct pie_mob* m = n->data;
+                struct pie_collection_asset* a = n->data;
 
                 if (!first)
                 {
@@ -414,9 +414,10 @@ size_t pie_enc_json_collection(char* buf,
 
                 bw += snprintf(buf + bw,
                                len - bw,
-                               "{\"id\": \"%ld\",\"mob\":",
-                               m->mob_id);
-                bw += pie_enc_json_mob(buf + bw, len - bw, m);
+                               "{\"id\": \"%ld\",\"developed\":%d,\"mob\":",
+                               a->mob->mob_id,
+                               a->developed);
+                bw += pie_enc_json_mob(buf + bw, len - bw, a->mob);
                 bw += snprintf(buf + bw, len - bw, "}");
                 n = n->next;
         }
