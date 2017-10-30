@@ -1094,10 +1094,9 @@ window.addEventListener("load", function(evt) {
 
 window.onclick = function(event) {
     if (!event.target.matches('.color-btn')) {
-
         var dropdowns = document.getElementsByClassName("color-dropdown-content");
-        var i;
-        for (i = 0; i < dropdowns.length; i++) {
+
+        for (var i = 0; i < dropdowns.length; i++) {
             var openDropdown = dropdowns[i];
             openDropdown.classList.remove('color-dropdown-show');
         }
