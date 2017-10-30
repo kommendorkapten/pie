@@ -1,8 +1,6 @@
 # In progress
-* Update collection table in UI when an image's rating/color is updated.
 
 # Sorted
-* show num files in collection list.
 * collectiond should update mobs via mediad.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
@@ -79,3 +77,5 @@
 * ~~Filter based on rating and color.~~
 * ~~Better visualization for color tag in collection view.~~
 * ~~show info on images with development settings.~~
+* ~~Update collection table in UI when an image's rating/color is updated.~~
+* ~~show num files in collection list.~~
