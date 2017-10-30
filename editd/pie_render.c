@@ -44,8 +44,8 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
         s->vibrance = 0.0f;
         s->saturation = 1.0f;
         s->sharpening.amount = 0.0f;
-        s->sharpening.radius = 1.0f;
-        s->sharpening.threshold = 4.0f;
+        s->sharpening.radius = 0.1f;
+        s->sharpening.threshold = 0.0f;
         s->rotate = 0.0f;
 }
 

@@ -94,10 +94,10 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
                 return 1;
         }
 
-        ml = pie_mob_find_collection(db, coll.col_id);
+        ml = pie_collection_find_assets(db, coll.col_id);
         if (ml == NULL)
         {
-                r->http_sc = HTTP_STATUS_NOT_FOUND;
+                r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
                 return 0;
         }
         r->content_len = pie_enc_json_collection(r->wbuf,
@@ -108,9 +108,9 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
         n = llist_head(ml);
         while(n)
         {
-                struct pie_mob* mob = n->data;
+                struct pie_collection_asset* asset = n->data;
 
-                pie_mob_free(mob);
+                pie_collection_asset_free(asset);
                 n = n->next;
 
         }

@@ -15,21 +15,21 @@ pie_mob_alloc(void)
 	this->mob_name[0] = '\0';
 	return this;
 }
-void 
+void
 pie_mob_free(struct pie_mob * this)
 {
 	assert(this);
 	pie_mob_release(this);
 	free(this);
 }
-void 
+void
 pie_mob_release(struct pie_mob * this)
 {
 	assert(this);
 	this->mob_name[0] = '\0';
 }
 
-int 
+int
 pie_mob_create(sqlite3 * db, struct pie_mob * this)
 {
 	char           *q = "INSERT INTO pie_mob (mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation) VALUES (?,?,?,?,?,?,?,?,?)";
@@ -179,7 +179,7 @@ cleanup:
 	return ret;
 }
 
-int 
+int
 pie_mob_read(sqlite3 * db, struct pie_mob * this)
 {
 	char           *q = "SELECT mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation FROM pie_mob WHERE mob_id = ?";
@@ -227,7 +227,7 @@ pie_mob_read(sqlite3 * db, struct pie_mob * this)
 	this->mob_format = (short) sqlite3_column_int(pstmt, 4);
 	this->mob_color = (char) sqlite3_column_int(pstmt, 5);
 	this->mob_rating = (char) sqlite3_column_int(pstmt, 6);
-	this->mob_orientation = (char) sqlite3_column_int(pstmt, 7);        
+	this->mob_orientation = (char) sqlite3_column_int(pstmt, 7);
 	ret = 0;
 cleanup:
 	retf = sqlite3_finalize(pstmt);
@@ -237,7 +237,7 @@ cleanup:
 	}
 	return ret;
 }
-int 
+int
 pie_mob_update(sqlite3 * db, struct pie_mob * this)
 {
 	char           *q = "UPDATE pie_mob SET mob_parent_mob_id = ?,mob_name = ?,mob_capture_ts_millis = ?,mob_added_ts_millis = ?,mob_format = ?,mob_color = ?,mob_rating = ?,mob_orientation = ? WHERE mob_id = ?";
@@ -321,7 +321,7 @@ cleanup:
 	}
 	return ret;
 }
-int 
+int
 pie_mob_delete(sqlite3 * db, struct pie_mob * this)
 {
 	char           *q = "DELETE FROM pie_mob WHERE mob_id = ?";
@@ -356,84 +356,6 @@ cleanup:
 		ret = -1;
 	}
 	return ret;
-}
-
-struct llist* pie_mob_find_collection(sqlite3* db, pie_id coll)
-{
-        struct llist* retl = llist_create();
-        char* q = "SELECT mob_id,mob_parent_mob_id,mob_name,mob_capture_ts_millis,mob_added_ts_millis,mob_format,mob_color,mob_rating,mob_orientation FROM pie_collection_member INNER JOIN pie_mob ON pie_collection_member.cmb_mob_id = pie_mob.mob_id WHERE cmb_col_id=?";
-        sqlite3_stmt* pstmt;
-        int ret;
-
-        ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
-        
-        if (ret != SQLITE_OK)
-        {
-                llist_destroy(retl);
-                retl = NULL;
-                goto cleanup;
-        }
-
-        ret = sqlite3_bind_int64(pstmt, 1, coll);        
-        if (ret != SQLITE_OK)
-        {
-                llist_destroy(retl);
-                retl = NULL;
-                goto cleanup;
-        }
-
-        for (;;)
-        {
-                struct pie_mob* mob;
-                const unsigned char* c;
-                int br;
-
-                ret = sqlite3_step(pstmt);
-
-                if (ret == SQLITE_DONE)
-                {
-                        break;
-                }
-                if (ret != SQLITE_ROW)
-                {
-                        struct lnode* l = llist_head(retl);
-
-                        while (l)
-                        {
-                                pie_mob_free((struct pie_mob*)l->data);
-                                l = l->next;
-                        }
-                        llist_destroy(retl);
-                        retl = NULL;
-                        break;
-                }
-
-                mob = pie_mob_alloc();
-                mob->mob_id = sqlite3_column_int64(pstmt, 0);
-                mob->mob_parent_mob_id = sqlite3_column_int64(pstmt, 1);
-                /* Force reading text into memory, and ge the length */
-                /* of the string (null terminator not included). */
-                /* Allocate memory and copy string to destination, */
-                /* and set the null terminator., */
-                c = sqlite3_column_text(pstmt, 2);
-                br = sqlite3_column_bytes(pstmt, 2);
-                memcpy(mob->mob_name, c, br);
-                mob->mob_name[br] = '\0';
-                mob->mob_capture_ts_millis = sqlite3_column_int64(pstmt, 3);
-                mob->mob_added_ts_millis = sqlite3_column_int64(pstmt, 4);
-                mob->mob_format = (short) sqlite3_column_int(pstmt, 5);
-                mob->mob_color = (char) sqlite3_column_int(pstmt, 6);
-                mob->mob_rating = (char) sqlite3_column_int(pstmt, 7);
-                mob->mob_orientation = (char) sqlite3_column_int(pstmt, 8);
-
-                llist_pushb(retl, mob);
-        }
-
-cleanup:
-        sqlite3_finalize(pstmt);
-
-        return retl;
-
 }
 
 void pie_mob_print(const struct pie_mob* mob)
