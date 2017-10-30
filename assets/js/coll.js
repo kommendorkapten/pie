@@ -932,6 +932,20 @@ function updateMob(mob) {
     xmlhttp.send(jsonString);
 }
 
+function updateCounts(coll) {
+    var c = coll["children"];
+    var count = 0;
+
+    for (var prop in c) {
+        if (c.hasOwnProperty(prop)) {
+            updateCounts(c[prop]);
+            count += c[prop]["count"];
+        }
+    }
+
+    coll["count"] += count;
+}
+
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
     var xmlhttp = new XMLHttpRequest();
@@ -992,6 +1006,7 @@ window.addEventListener("load", function(evt) {
                 }
                 coll_tree["path"] = "Collection root";
                 coll_tree["id"] = coll[0].id;
+                coll_tree["count"] = coll[0].count;
                 coll_tree["children"] = {};
 
                 for (i of coll) {
@@ -1001,6 +1016,7 @@ window.addEventListener("load", function(evt) {
 
                     var comps = i.path.split("/");
                     var root = coll_tree;
+
                     for (c of comps) {
                         if (c.length == 0) {
                             continue;
@@ -1010,6 +1026,7 @@ window.addEventListener("load", function(evt) {
                             var child = {
                                 "children": {},
                                 "path": c,
+                                "count": 0,
                             };
                             root["children"][c] = child;
                         }
@@ -1018,7 +1035,11 @@ window.addEventListener("load", function(evt) {
                     }
 
                     root["id"] = i.id;
+                    root["count"] = i.count;
                 }
+
+                /* Update cumulative count of assets */
+                updateCounts(coll_tree);
 
                 /* Create the HTML for it by doing a depth first
                    traversal. */
@@ -1028,6 +1049,7 @@ window.addEventListener("load", function(evt) {
                 stack.push(coll_tree);
                 while (stack.length > 0) {
                     var node = stack.pop();
+                    var name = node.path + " (" + node.count + ")";
 
                     if ("closeLi" in node) {
                         innerHtml += "</li>";
@@ -1041,9 +1063,9 @@ window.addEventListener("load", function(evt) {
                     innerHtml += "<li>";
 
                     if ("id" in node) {
-                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\">" + node.path + "</a>";
+                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\">" + name + "</a>";
                     } else {
-                        innerHtml += node.path;
+                        innerHtml += name;
                     }
 
                     stack.push({
