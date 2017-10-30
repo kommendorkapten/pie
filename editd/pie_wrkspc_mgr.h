@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -24,7 +24,6 @@ struct pie_wrkspc_mgr;
 struct pie_img_workspace
 {
         pie_id mob_id;
-        struct pie_histogram hist;
         struct pie_dev_settings settings;
         /* Unmodified full resolution image */
         struct pie_bitmap_f32rgb raw;
@@ -69,4 +68,3 @@ extern void pie_wrkspc_mgr_release(struct pie_wrkspc_mgr*,
 extern void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr*);
 
 #endif /* __PIE_WRKSPC_MGR_H__ */
-

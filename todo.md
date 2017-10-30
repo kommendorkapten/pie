@@ -1,18 +1,18 @@
 # In progress
 
 # Sorted
+* zoom/pan in development view
+* Thumbnail in single view, that shows zoomed part of image (navigation).
+
+# Unsorted
+* Write install/config script.
+* Allow config path to be set during compile time.
 * collectiond should update mobs via mediad.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
-
-# Unsorted
 * better javascript management for color tag dropdown. Remove global
   js func.
-* editd, remove histogram websocket. Calculate histogram in ui as of
-  collectiond.
 * Export pictures.
-* Thumbnail in single view, that shows zoomed part of image (navigation).
-* zoom/pan in development view
 * Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
@@ -33,7 +33,7 @@
   dev and coll view.
 * libraw to use lcms on sparc.
 * add size to min
-* add min to proxy
+* add min for proxies.
 * When navigating from dev to coll, expand list and show last state.
 * Canvas in editd sometimes contains a non-used line in the top (white
   colored). Can be seen for image: IMG_0259.CR2
@@ -79,3 +79,5 @@
 * ~~show info on images with development settings.~~
 * ~~Update collection table in UI when an image's rating/color is updated.~~
 * ~~show num files in collection list.~~
+* ~~editd, remove histogram websocket. Calculate histogram in ui as of
+  collectiond.~~

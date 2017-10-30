@@ -372,7 +372,7 @@ function selectMob(id, cell) {
     /* Get the img element */
     var imgElem = cell.childNodes[0].childNodes[0];
 
-    calculateHistogram(imgElem);
+    renderHistogram(imgElem);
     loadExif(id);
     selectedMobId = id;
 }
@@ -641,113 +641,20 @@ function closeSingleView() {
  * Create an offscreen canvas and draw the image. Extract the pixel
  * data and calculate lum, r, g, b histograms.
  */
-function calculateHistogram(img) {
+function renderHistogram(img) {
     var canvas = document.createElement('canvas');
-    var pl = [];
-    var pr = [];
-    var pg = [];
-    var pb = [];
-    var histLum = [];
-    var histRed = [];
-    var histGreen = [];
-    var histBlue = [];
-    var histSum = 0;
-    var imgData = null;
-    var pixels = null;
-    var max = 0;
-
-    /* Reset histograms */
-    for (i = 0; i < 256; i++) {
-        histLum[i] = 0;
-        histRed[i] = 0;
-        histGreen[i] = 0;
-        histBlue[i] = 0;
-    }
 
     canvas.width = img.width;
     canvas.height = img.height;
-    canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
-    imgData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-    pixels = imgData.data;
 
-    for(i = 0; i < pixels.length; i += 4) {
-        var red = pixels[i];
-        var green = pixels[i+1];
-        var blue = pixels[i+2];
-        /* Omit alpha */
+    /* Fill canvas with data */
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    var hist = calculateHistogram(canvas);
 
-        var lum = red * 0.2126 + green * 0.7152 + blue * 0.0722;
-
-        histLum[Math.floor(lum)] += 1;
-        histRed[red] += 1;
-        histGreen[green] += 1;
-        histBlue[blue] += 1;
-    }
-
-    /* Normalize */
-    for (c of histLum) {
-        histSum += c;
-        if (c > max) {
-            max = c;
-        }
-    }
-    for (c of histRed) {
-        histSum += c;
-        if (c > max) {
-            max = c;
-        }
-    }
-    for (c of histGreen) {
-        histSum += c;
-        if (c > max) {
-            max = c;
-        }
-    }
-    for (c of histBlue) {
-        histSum += c;
-        if (c > max) {
-            max = c;
-        }
-    }
-    var histMu = histSum / 1024;
-    var histLimit = histMu * 13.0;
-    if (histLimit < max) {
-        max = histLimit;
-    }
-
-    for (i = 0; i < histLum.length; i++) {
-        var nl = histLum[i] < histLimit ? histLum[i]: histLimit;
-        var nr = histRed[i] < histLimit ? histRed[i]: histLimit;
-        var ng = histGreen[i] < histLimit ? histGreen[i]: histLimit;
-        var nb = histBlue[i] < histLimit ? histBlue[i]: histLimit;
-
-        nl = (nl / histLimit) * histYMax;
-        nr = (nr / histLimit) * histYMax;
-        ng = (nb / histLimit) * histYMax;
-        nb = (ng / histLimit) * histYMax;
-
-        pl[i] = {
-            x: i,
-            y: nl
-        };
-        pr[i] = {
-            x: i,
-            y: nr
-        };
-        pg[i] = {
-            x: i,
-            y: ng
-        };
-        pb[i] = {
-            x: i,
-            y: nb
-        };
-    }
-
-    histDataL.data = pl;
-    histDataR.data = pr;
-    histDataG.data = pg;
-    histDataB.data = pb;
+    histDataL.data = hist.pl;
+    histDataR.data = hist.pr;
+    histDataG.data = hist.pg;
+    histDataB.data = hist.pb;
     histChart.update();
 }
 

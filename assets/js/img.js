@@ -193,10 +193,9 @@ window.onresize = function(evt) {
 
 window.addEventListener("load", function(evt) {
     var wsCmd;
-    var wsHist;
     var wsImg;
     /* Sync in a hackish way */
-    var wsSync = 3;
+    var wsSync = 2;
 
     pieInitEdit();
 
@@ -211,22 +210,11 @@ window.addEventListener("load", function(evt) {
 
     wsCmd = new WebSocket(getWsUrl(), "pie-cmd");
     wsCmd.binaryType = "arraybuffer";
-    wsHist = new WebSocket(getWsUrl(), "pie-hist");
-    wsHist.binaryType = "arraybuffer";
     wsImg = new WebSocket(getWsUrl(), "pie-img");
     wsImg.binaryType = "arraybuffer";
 
     wsCmd.onopen = function(evt) {
         console.log("Opening command websocket..." + wsSync);
-        wsSync = wsSync - 1;
-
-        if (wsSync == 0) {
-            wsLoadImage(wsCmd);
-        }
-    }
-
-    wsHist.onopen = function(evt) {
-        console.log("Opening metadata websocket..." + wsSync);
         wsSync = wsSync - 1;
 
         if (wsSync == 0) {
@@ -309,67 +297,18 @@ window.addEventListener("load", function(evt) {
             dur = now - wsCmd.pieStartTs;
             wsCmd.pieStartTs = now;
             console.log("Draw image in " + dur + "ms");
-        }
-    }
 
-    wsHist.onmessage = function(evt) {
-        var h = JSON.parse(evt.data);
-        var max = 0;
-        var pl = [];
-        var pr = [];
-        var pg = [];
-        var pb = [];
-        var i = 0;
+            now = Date.now();
+            var hist = calculateHistogram(c);
+            dur = Date.now() - now;
+            console.log("Calculate histogram in " + dur + "ms");
 
-        for (c of h.l) {
-            if (c > max) {
-                max = c;
-            }
+            histDataL.data = hist.pl;
+            histDataR.data = hist.pr;
+            histDataG.data = hist.pg;
+            histDataB.data = hist.pb;
+            histChart.update();
         }
-        for (c of h.r) {
-            if (c > max) {
-                max = c;
-            }
-        }
-        for (c of h.g) {
-            if (c > max) {
-                max = c;
-            }
-        }
-        for (c of h.b) {
-            if (c > max) {
-                max = c;
-            }
-        }
-        for (i = 0; i < h.l.length; i++) {
-            var nl = (h.l[i] / max) * histYMax;
-            var nr = (h.r[i] / max) * histYMax;
-            var ng = (h.g[i] / max) * histYMax;
-            var nb = (h.b[i] / max) * histYMax;
-
-            pl[i] = {
-                x: i,
-                y: nl
-            };
-            pr[i] = {
-                x: i,
-                y: nr
-            };
-            pg[i] = {
-                x: i,
-                y: ng
-            };
-            pb[i] = {
-                x: i,
-                y: nb
-            };
-        }
-
-        histDataL.data = pl;
-        histDataR.data = pr;
-        histDataG.data = pg;
-        histDataB.data = pb;
-        histChart.update();
     }
 
     /*

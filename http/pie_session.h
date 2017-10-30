@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -16,7 +16,6 @@
 
 #define PIE_SESS_TOKEN_LEN 41 /* Token is 40 chars, add one for null */
 #define PIE_TX_IMG  0x1
-#define PIE_TX_HIST 0x2
 
 #include "../lib/timing.h"
 
