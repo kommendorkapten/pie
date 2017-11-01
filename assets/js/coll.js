@@ -69,6 +69,11 @@ var MOB_COLOR_RED = 1;
 var MOB_COLOR_GREEN = 2;
 var MOB_COLOR_BLUE = 3;
 var MOB_COLOR_YELLOW = 4;
+var exifRotationClass = {
+    3: 'rotate180',
+    6: 'rotate90',
+    8: 'rotate270',
+};
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -273,20 +278,9 @@ function renderCollection(coll, options) {
 
         innerHtml += newCell;
         innerHtml += div;
-
-        switch(i.mob.orientation) {
-        case 3: /* image is rotated 180 cw */
-            innerHtml += "<img class=\"rotate180\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-            break;
-        case 6:/* image is rotated 270 cw */
-            innerHtml += "<img class=\"rotate90\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-            break;
-        case 8: /* image is rotated 90 cw */
-            innerHtml += "<img class=\"rotate270\" width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-            break;
-        default:
-            innerHtml += "<img width=\"" + thumb_size + "\" src=\"thumb/" + i.id + ".jpg\">";
-        }
+	innerHtml += '<img class="' + (exifRotationClass[i.mob.orientation] || '') +
+	    '" width="' + thumb_size +
+	    '" src="thumb/' + i.id + '">';
 
         switch (i.mob.color) {
         case MOB_COLOR_RED:
