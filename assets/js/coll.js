@@ -280,7 +280,7 @@ function renderCollection(coll, options) {
         innerHtml += div;
 	innerHtml += '<img class="' + (exifRotationClass[i.mob.orientation] || '') +
 	    '" width="' + thumb_size +
-	    '" src="thumb/' + i.id + '">';
+	    '" src="thumb/' + i.id + '.jpg">';
 
         switch (i.mob.color) {
         case MOB_COLOR_RED:
@@ -591,12 +591,6 @@ function updateSingleView(mobId) {
             offsetX = (canvas.width - newX) / 2;
         }
 
-        /*
-        console.log("picture dim: " + x + ":" + y);
-        console.log("canvas dim: " + canvas.width + ":" + canvas.height);
-        console.log("picture dim in canvas " + Math.ceil(canvas.height * ratio) + ":" + canvas.height);
-        console.log("Offset: " + offsetX + ":" + offsetY);
-        */
         switch (mob.orientation) {
         case 1: /* 0 */
             ctx.transform(scale, 0,
