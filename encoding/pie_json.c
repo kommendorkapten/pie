@@ -353,18 +353,18 @@ size_t pie_enc_json_exif(char* buf,
         bw += snprintf(buf + bw, len - bw, "\"x\":%d,", ped->ped_x_dim);
         bw += snprintf(buf + bw, len - bw, "\"y\":%d,", ped->ped_y_dim);
         bw += snprintf(buf + bw, len - bw, "\"iso\":%d,", ped->ped_iso);
-        bw += snprintf(buf + bw, len - bw, "\"gamma\":\"%d\",", ped->ped_gamma);
-        bw += snprintf(buf + bw, len - bw, "\"white_point\":\"%d\",", ped->ped_white_point);
-        bw += snprintf(buf + bw, len - bw, "\"orientation\":\"%d\",", ped->ped_orientation);
+        bw += snprintf(buf + bw, len - bw, "\"gamma\":%d,", ped->ped_gamma);
+        bw += snprintf(buf + bw, len - bw, "\"white_point\":%d,", ped->ped_white_point);
+        bw += snprintf(buf + bw, len - bw, "\"orientation\":%d,", ped->ped_orientation);
         bw += snprintf(buf + bw, len - bw, "\"focal_len\":%d,", ped->ped_focal_len);
-        bw += snprintf(buf + bw, len - bw, "\"fnumber\":\"%d\",", ped->ped_fnumber);
-        bw += snprintf(buf + bw, len - bw, "\"exposure_bias\":\"%d\",", ped->ped_exposure_bias);
-        bw += snprintf(buf + bw, len - bw, "\"white_balance\":\"%d\",", ped->ped_white_balance);
-        bw += snprintf(buf + bw, len - bw, "\"exposure_prog\":\"%d\",", ped->ped_exposure_prog);
-        bw += snprintf(buf + bw, len - bw, "\"metering_mode\":\"%d\",", ped->ped_metering_mode);
-        bw += snprintf(buf + bw, len - bw, "\"flash\":\"%d\",", ped->ped_flash);
-        bw += snprintf(buf + bw, len - bw, "\"exposure_mode\":\"%d\",", ped->ped_exposure_mode);
-        bw += snprintf(buf + bw, len - bw, "\"color_space\":\"%d\"}", ped->ped_color_space);
+        bw += snprintf(buf + bw, len - bw, "\"fnumber\":%d,", ped->ped_fnumber);
+        bw += snprintf(buf + bw, len - bw, "\"exposure_bias\":%d,", ped->ped_exposure_bias);
+        bw += snprintf(buf + bw, len - bw, "\"white_balance\":%d,", ped->ped_white_balance);
+        bw += snprintf(buf + bw, len - bw, "\"exposure_prog\":%d,", ped->ped_exposure_prog);
+        bw += snprintf(buf + bw, len - bw, "\"metering_mode\":%d,", ped->ped_metering_mode);
+        bw += snprintf(buf + bw, len - bw, "\"flash\":%d,", ped->ped_flash);
+        bw += snprintf(buf + bw, len - bw, "\"exposure_mode\":%d,", ped->ped_exposure_mode);
+        bw += snprintf(buf + bw, len - bw, "\"color_space\":%d}", ped->ped_color_space);
 
         /* Remove any control characters */
         for (int i = 0; i < bw; i++)
