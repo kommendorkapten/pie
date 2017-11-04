@@ -236,6 +236,9 @@ static int cb_http(struct lws* wsi,
         const char* p;
         struct pie_ctx_http* ctx = user;
         const char* mimetype;
+        /* current header position */
+        unsigned char* hp = resp_headers;
+        /* total header length */
         int hn = 0;
         int ret = 0;
         /* Set to true if callback should attempt to keep the connection
@@ -365,6 +368,18 @@ static int cb_http(struct lws* wsi,
                                  "%s%s",
                                  cfg.proxy_stg->mnt_path,
                                  req_url + 6);
+
+                        /* Add CORS headers. Proxy image is used by editd*/
+                        if (lws_add_http_header_by_name(wsi,
+                                                        (unsigned char*)"Access-Control-Allow-Origin:",
+                                                        (unsigned char*)"*",
+                                                        1,
+                                                        &hp,
+                                                        resp_headers + 256))
+                        {
+                                PIE_ERR("Can not write CORS header");
+                        }
+
                 }
 
                 /* Catch all static file */
@@ -394,7 +409,15 @@ static int cb_http(struct lws* wsi,
                         goto keepalive;
                 }
 
-                /* Serve file async */
+                hn = hp - resp_headers;
+                if (hn > 0)
+                {
+                        /* Serve file async */
+                        if (lws_finalize_http_header(wsi, &hp, resp_headers + 256))
+                        {
+                                PIE_ERR("Can not finalize headers");
+                        }
+                }
                 int n = lws_serve_http_file(wsi,
                                             file_url,
                                             mimetype,
