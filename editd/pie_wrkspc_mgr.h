@@ -17,6 +17,7 @@
 #include <sqlite3.h>
 #include "../pie_types.h"
 #include "../pie_id.h"
+#include "../dm/pie_exif_data.h"
 
 struct pie_wrkspc_mgr;
 
@@ -31,6 +32,7 @@ struct pie_img_workspace
         struct pie_bitmap_f32rgb proxy;
         /* Downsampled and rendered proxy image */
         struct pie_bitmap_f32rgb proxy_out;
+        struct pie_exif_data exif;
 };
 
 /**
@@ -53,6 +55,7 @@ extern struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr*,
 
 /**
  * Return an image workspace.
+ * This does not free any thing - only marks it as available for reuse.
  * @param the manager.
  * @param the workspace to release.
  * @return void.

@@ -244,6 +244,19 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 mgr->cache[pos].flags = FLAG_ACTIVE;
                 mgr->cache[pos].wrkspc = wrkspc;
                 mgr->cache[pos].ts = tv.tv_sec;
+
+                /* Load exif data */
+                wrkspc->exif.ped_mob_id = id;
+                if (pie_exif_data_read(mgr->db,
+                                       &wrkspc->exif))
+                {
+                        PIE_ERR("Could not load exif data for MOB %ld", id);
+                }
+                else
+                {
+                        PIE_LOG("Loaded exif data for MOB %ld", id);
+                }
+
                 PIE_TRACE("Create: %ld at pos %d",
                           mgr->cache[pos].wrkspc->mob_id,
                           pos);
@@ -285,7 +298,7 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
 
                         wrkspc = mgr->cache[i].wrkspc;
                         pie_bm_free_f32(&wrkspc->raw);
-                        /* make sure that proxies are allocated */
+                        /* make sure that proxies are deallocated */
                         if (wrkspc->proxy.c_red)
                         {
                                 pie_bm_free_f32(&wrkspc->proxy);
@@ -294,6 +307,7 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
                         {
                                 pie_bm_free_f32(&wrkspc->proxy_out);
                         }
+                        pie_exif_data_release(&wrkspc->exif);
                         free(wrkspc);
                 }
         }

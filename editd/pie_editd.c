@@ -39,6 +39,7 @@
 #include "../lib/s_queue.h"
 #include "../encoding/pie_json.h"
 #include "../dm/pie_dev_params.h"
+#include "../exif/pie_exif.h"
 
 struct config
 {
@@ -407,6 +408,16 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                   proxy_h,
                   msg->wrkspc->raw.width,
                   msg->wrkspc->raw.height);
+
+        switch (msg->wrkspc->exif.ped_orientation)
+        {
+        case PIE_EXIF_ORIENTATION_CW90:
+        case PIE_EXIF_ORIENTATION_CW270:
+                PIE_LOG("Image is in portrait orientation.");
+                int tmp = proxy_w;
+                proxy_w = proxy_h;
+                proxy_h = tmp;
+        }
 
         if (proxy_w < msg->wrkspc->raw.width ||
             proxy_h < msg->wrkspc->raw.height)
