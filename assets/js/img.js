@@ -49,6 +49,7 @@ var histDataB = {
     }]
 };
 var sliderTimeout = 200;
+var exif = null;
 
 function getWsUrl(){
     var pcol;
@@ -87,7 +88,11 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function wsLoadImage(ws) {
+function loadImage(ws) {
+    var colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
+    var devpClient = new XMLHttpRequest();
+    var exifClient = new XMLHttpRequest();
+    var proxyClient = new XMLHttpRequest();
     var img = getParameterByName('img');
     var c = document.getElementById("img_canvas");
 
@@ -97,6 +102,56 @@ function wsLoadImage(ws) {
 
     ws.pieStartTs = Date.now();
     ws.send("LOAD " + img + " " + c.width + " " + c.height);
+
+    /* Load development settings */
+    devpClient.onreadystatechange = function() {
+        if (devpClient.readyState == XMLHttpRequest.DONE) {
+            if (devpClient.status == 200) {
+                var settings = JSON.parse(devpClient.responseText);
+
+                // Settings are scaled with devSetScale
+                settings.colort = Math.round(settings.colort / devSetScale);
+                settings.tint = Math.round(settings.tint / devSetScale);
+                settings.expos = Math.round(settings.expos / devSetScale);
+                settings.contr = Math.round(settings.contr / devSetScale);
+                settings.highl = Math.round(settings.highl / devSetScale);
+                settings.shado = Math.round(settings.shado / devSetScale);
+                settings.white = Math.round(settings.white / devSetScale);
+                settings.black = Math.round(settings.black / devSetScale);
+                settings.clarity.amount = Math.round(settings.clarity.amount / devSetScale);
+                settings.clarity.rad    = Math.round(settings.clarity.rad    / devSetScale);
+                settings.clarity.thresh = Math.round(settings.clarity.thresh / devSetScale);
+                settings.vibra = Math.round(settings.vibra / devSetScale);
+                settings.satur = Math.round(settings.satur / devSetScale);
+                settings.rot = Math.round(settings.rot / devSetScale);
+                settings.sharp.amount = Math.round(settings.sharp.amount / devSetScale);
+                settings.sharp.rad    = Math.round(settings.sharp.rad    / devSetScale);
+                settings.sharp.thresh = Math.round(settings.sharp.thresh / devSetScale);
+
+                updateDevParams(settings);
+            }
+        }
+    };
+
+    exifClient.onreadystatechange = function() {
+        if (exifClient.readyState == XMLHttpRequest.DONE) {
+            if (exifClient.status == 200) {
+                var table = document.getElementById("meta_data_tbl");
+
+                exif = JSON.parse(exifClient.responseText);
+
+                table.rows[0].cells[0].innerHTML = "ISO " + exif.iso;
+                table.rows[0].cells[1].innerHTML = exif.focal_len + " mm";
+                table.rows[0].cells[2].innerHTML = "f/" + (exif.fnumber / 10);
+                table.rows[0].cells[3].innerHTML = exif.exposure_time + " sec";
+            }
+        }
+    }
+
+    devpClient.open("GET", colldUrl + "/devparams/" + img);
+    devpClient.send();
+    exifClient.open("GET", colldUrl + "/exif/" + img);
+    exifClient.send();
 
     return true;
 }
@@ -122,6 +177,7 @@ function pieInitEdit() {
         }
     }
 
+    console.log("Set img_canvas to " + w + "x" + h);
     c.width = w;
     c.height = h;
 }
@@ -173,6 +229,87 @@ function updateDevParams(params) {
     document.getElementById("in_sharp_t").value = params.sharp.thresh;
 }
 
+function renderImage(bm) {
+    var c = document.getElementById("img_canvas");
+    var offsetX;
+    var offsetY;
+    var ctx = c.getContext("2d");
+    var now = Date.now();
+    var dur;
+    var scale = 1;
+    var ratio = bm.width / bm.height;
+    var w = bm.width;
+    var h = bm.height;
+
+    console.log("Image dimension: " + bm.width + "x" + bm.height);
+    console.log("Ctx dimension: " + c.width + "x" + c.height);
+
+    /* When calculating scaling, the presented orientation
+       must be used. */
+    if (exif.orientation == 6 ||
+        exif.orientation == 8) {
+        var tmp = w;
+        w = h;
+        h = tmp;
+    }
+
+    if (w > c.width) {
+        scale = c.width / w;
+    }
+
+    if (h * scale > c.height) {
+        scale = c.height / h;
+    }
+
+    offsetX = (c.width - w * scale) / 2;
+    offsetY = (c.height - h * scale) / 2;
+
+    /* Rotate image */
+    switch(exif.orientation) {
+    case 1: /* 0 */
+        ctx.transform(scale, 0,
+                      0, scale,
+                      offsetX, offsetY);
+        break;
+    case 3: /* 180 */
+        console.log("rotate 3");
+        ctx.transform(-scale, 0,
+                      0, -scale,
+                      offsetX + scale * bm.width, offsetY + scale * bm.height);
+        break;
+    case 6: /* 270 */
+        ctx.transform(0, scale,
+                      -scale, 0,
+                      offsetX + scale * bm.height, offsetY);
+        break;
+    case 8: /* 90 */
+        ctx.transform(0, -scale,
+                      scale, 0,
+                      offsetX, offsetY + scale * bm.width);
+        break;
+    }
+
+    createImageBitmap(bm)
+        .then(img => {
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            dur = Date.now() - now;
+            console.log("Draw image in " + dur + "ms");
+
+            now = Date.now();
+            var hist = calculateHistogram(c);
+            dur = Date.now() - now;
+            console.log("Calculate histogram in " + dur + "ms");
+
+            histDataL.data = hist.pl;
+            histDataR.data = hist.pr;
+            histDataG.data = hist.pg;
+            histDataB.data = hist.pb;
+            histChart.update();
+        });
+
+    //ctx.putImageData(bm, x, y);
+}
+
 window.onresize = function(evt) {
     var w = window.innerWidth;
     var c = document.getElementById("img_canvas");
@@ -199,6 +336,17 @@ window.addEventListener("load", function(evt) {
 
     pieInitEdit();
 
+
+    /* Configure hosts */
+    var url = window.location.href.split("/");
+    PROTO = url[0];
+    if (COLLD_HOST == null) {
+        COLLD_HOST = url[2].split(":")[0];
+    }
+    if (EDITD_HOST == null) {
+        EDITD_HOST = url[2].split(":")[0];
+    }
+
     /* Determine endianess */
     var b = new ArrayBuffer(4);
     var a = new Uint32Array(b);
@@ -218,7 +366,7 @@ window.addEventListener("load", function(evt) {
         wsSync = wsSync - 1;
 
         if (wsSync == 0) {
-            wsLoadImage(wsCmd);
+            loadImage(wsCmd);
         }
     }
 
@@ -227,7 +375,7 @@ window.addEventListener("load", function(evt) {
         wsSync = wsSync - 1;
 
         if (wsSync == 0) {
-            wsLoadImage(wsCmd);
+            loadImage(wsCmd);
         }
     }
 
@@ -245,7 +393,7 @@ window.addEventListener("load", function(evt) {
     }
 
     wsImg.onmessage = function(evt) {
-        var now = Date.now()
+        var now = Date.now();
         var dur = now - wsCmd.pieStartTs;
 
         if (typeof evt.data === "string") {
@@ -254,7 +402,7 @@ window.addEventListener("load", function(evt) {
             var le = true;
             var w;
             var h;
-            var t;
+            var msgType;
             var server_dur;
             var tx;
 
@@ -267,12 +415,10 @@ window.addEventListener("load", function(evt) {
 
             /* width and height are in network order */
             server_dur = new DataView(evt.data, 0, 4).getUint32(0, false);
-            t = new DataView(evt.data, 4, 4).getUint32(0, false);
+            msgType = new DataView(evt.data, 4, 4).getUint32(0, false);
             w = new DataView(evt.data, 8, 4).getUint32(0, false);
             h = new DataView(evt.data, 12, 4).getUint32(0, false);
 
-            /* Keep start point to measure draw time */
-            wsCmd.pieStartTs = now;
 
             console.log("Server duration: " + server_dur + "ms");
             console.log("RT in " + dur + "ms");
@@ -281,33 +427,14 @@ window.addEventListener("load", function(evt) {
             console.log("Estimaged tx: " + tx + "ms for " + mbs + "MiB");
             mbs = mbs * 1000.0 / tx;
             console.log("Estimaged bw " + mbs + "MiB/s");
+            console.log("Type: " + msgType + " width: " + w + " height:" + h);
 
             var pixels = new Uint8ClampedArray(evt.data, 16);
             var bm = new ImageData(pixels, w, h);
-
-            console.log("Type: " + t + " width: " + w + " height:" + h);
-
-            /* Update canvas */
-            var c = document.getElementById("img_canvas");
-            var x = (c.width - w) / 2;
-            var y = (c.height - h) / 2;
-            var ctx = c.getContext("2d");
-            ctx.putImageData(bm, x, y);
-            now = Date.now();
-            dur = now - wsCmd.pieStartTs;
-            wsCmd.pieStartTs = now;
-            console.log("Draw image in " + dur + "ms");
-
-            now = Date.now();
-            var hist = calculateHistogram(c);
             dur = Date.now() - now;
-            console.log("Calculate histogram in " + dur + "ms");
+            console.log("Unpacked image in " + dur + "ms");
 
-            histDataL.data = hist.pl;
-            histDataR.data = hist.pr;
-            histDataG.data = hist.pg;
-            histDataB.data = hist.pb;
-            histChart.update();
+            renderImage(bm);
         }
     }
 
@@ -1305,54 +1432,6 @@ window.addEventListener("load", function(evt) {
             }
         }
     });
-
-    // Configure hosts
-    var url = window.location.href.split("/");
-    PROTO = url[0];
-    if (COLLD_HOST == null) {
-        COLLD_HOST = url[2].split(":")[0];
-    }
-    if (EDITD_HOST == null) {
-        EDITD_HOST = url[2].split(":")[0];
-    }
-
-    // Load development settings
-    var devpClient = new XMLHttpRequest();
-    var img = getParameterByName('img');
-    devpClient.onreadystatechange = function() {
-        if (devpClient.readyState == XMLHttpRequest.DONE) {
-            if (devpClient.status == 200) {
-                var settings = JSON.parse(devpClient.responseText);
-
-                // Settings are scaled with devSetScale
-                settings.colort = Math.round(settings.colort / devSetScale);
-                settings.tint = Math.round(settings.tint / devSetScale);
-                settings.expos = Math.round(settings.expos / devSetScale);
-                settings.contr = Math.round(settings.contr / devSetScale);
-                settings.highl = Math.round(settings.highl / devSetScale);
-                settings.shado = Math.round(settings.shado / devSetScale);
-                settings.white = Math.round(settings.white / devSetScale);
-                settings.black = Math.round(settings.black / devSetScale);
-                settings.clarity.amount = Math.round(settings.clarity.amount / devSetScale);
-                settings.clarity.rad    = Math.round(settings.clarity.rad    / devSetScale);
-                settings.clarity.thresh = Math.round(settings.clarity.thresh / devSetScale);
-                settings.vibra = Math.round(settings.vibra / devSetScale);
-                settings.satur = Math.round(settings.satur / devSetScale);
-                settings.rot = Math.round(settings.rot / devSetScale);
-                settings.sharp.amount = Math.round(settings.sharp.amount / devSetScale);
-                settings.sharp.rad    = Math.round(settings.sharp.rad    / devSetScale);
-                settings.sharp.thresh = Math.round(settings.sharp.thresh / devSetScale);
-
-                updateDevParams(settings);
-            }
-        }
-    };
-
-    var devpUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
-    devpUrl += "/devparams/" + img;
-    console.log(devpUrl);
-    devpClient.open("GET", devpUrl, true);
-    devpClient.send();
 });
 
 
