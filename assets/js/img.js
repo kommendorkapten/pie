@@ -206,12 +206,23 @@ function pieInitEdit() {
             zoomMode.drag = true;
             zoomMode.startX = event.pageX;
             zoomMode.startY = event.pageY;
+            renderImage(fullsizeProxy);
         }
     });
 
     c.addEventListener('mouseup', function(event) {
         if (zoomMode.enabled) {
             zoomMode.drag = false;
+
+            /* in canvas origo is upper left
+               in bitmap space origo is lower left */
+            setViewport(wsCmd,
+                        -zoomMode.dx,
+                        -zoomMode.dy,
+                        -(zoomMode.dx - c.width),
+                        -(zoomMode.dy - c.height),
+                        c.width,
+                        c.height);
         }
     });
 
@@ -284,19 +295,12 @@ function renderImage(bm) {
     var ratio = bm.width / bm.height;
     var w = bm.width;
     var h = bm.height;
-    var rotate = false;
+
+    /* reset canvas */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     console.log("Image dimension: " + bm.width + "x" + bm.height);
     console.log("Ctx dimension: " + c.width + "x" + c.height);
-
-    /* Rotate image if:
-     * 1) we are in zoom and dragging (ie usng proxy image)
-     * 2) we are looking at a downsampled raw image */
-    if (zoomMode.enabled && zoomMode.dragging) {
-        rotate = true;
-    } else if (!zoomMode.enabled) {
-        rotate = true;
-    }
 
     /* When calculating scaling, the presented orientation
        must be used. */
@@ -343,38 +347,39 @@ function renderImage(bm) {
         offsetY = (c.height - h * scale) / 2;
     }
 
+    /* The entier canvas is not going to be drawn. Clear it first */
+    if (scale < 1.0) {
+        ctx.clearRect(0, 0, c.width, c.height);
+    }
+
     console.log("offset x: " + offsetX + " y: " + offsetY);
     console.log("Scale: " + scale);
-    /* reset transformation */
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    if (rotate) {
-        switch(exif.orientation) {
-        case 1: /* 0 */
-            console.log("rotate 0");
-            ctx.transform(scale, 0,
-                          0, scale,
-                          offsetX, offsetY);
-            break;
-        case 3: /* 180 */
-            console.log("rotate 3");
-            ctx.transform(-scale, 0,
-                          0, -scale,
-                          offsetX + scale * bm.width, offsetY + scale * bm.height);
-            break;
-        case 6: /* 270 */
-            console.log("rotate 6");
-            ctx.transform(0, scale,
-                          -scale, 0,
-                          offsetX + scale * bm.height, offsetY);
-            break;
-        case 8: /* 90 */
-            console.log("rotate 8");
-            ctx.transform(0, -scale,
-                          scale, 0,
-                          offsetX, offsetY + scale * bm.width);
-            break;
-        }
+    switch(exif.orientation) {
+    case 1: /* 0 */
+        console.log("rotate 0");
+        ctx.transform(scale, 0,
+                      0, scale,
+                      offsetX, offsetY);
+        break;
+    case 3: /* 180 */
+        console.log("rotate 3");
+        ctx.transform(-scale, 0,
+                      0, -scale,
+                      offsetX + scale * bm.width, offsetY + scale * bm.height);
+        break;
+    case 6: /* 270 */
+        console.log("rotate 6");
+        ctx.transform(0, scale,
+                      -scale, 0,
+                      offsetX + scale * bm.height, offsetY);
+        break;
+    case 8: /* 90 */
+        console.log("rotate 8");
+        ctx.transform(0, -scale,
+                      scale, 0,
+                      offsetX, offsetY + scale * bm.width);
+        break;
     }
 
     if (zoomMode.enabled && zoomMode.drag) {
@@ -1591,11 +1596,13 @@ document.onkeydown = function(evt) {
         } else {
             zoomMode.enabled = true;
 
+            /* in canvas origo is upper left
+               in bitmap space origo is lower left */
             setViewport(wsCmd,
-                        zoomMode.dx,
-                        zoomMode.dy,
-                        zoomMode.dx + c.width,
-                        zoomMode.dy + c.height,
+                        -zoomMode.dx,
+                        -zoomMode.dy,
+                        -(zoomMode.dx - c.width),
+                        -(zoomMode.dy - c.height),
                         c.width,
                         c.height);
         }

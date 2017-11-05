@@ -571,28 +571,44 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         int y1 = msg->i4;
         int t_w = msg->i5;
         int t_h = msg->i6;
-        int new_proxy = 0;
         int len;
         int res;
         float scale;
+        char new_proxy = 0;
+        char rotate_viewport = 1;
 
         if (x1 < 0 || y1 < 0)
         {
                 /* full image is requested */
                 x1 = raw->width;
                 y1 = raw->height;
+                rotate_viewport = 0;
+        }
 
-                /* Compensate for any rotation */
-                switch (msg->wrkspc->exif.ped_orientation)
+        /* Compensate for any rotation */
+        switch (msg->wrkspc->exif.ped_orientation)
+        {
+        case PIE_EXIF_ORIENTATION_CW90:
+        case PIE_EXIF_ORIENTATION_CW270:
+                PIE_LOG("Image is in portrait orientation.");
+                int tmp;
+
+                if (rotate_viewport)
                 {
-                case PIE_EXIF_ORIENTATION_CW90:
-                case PIE_EXIF_ORIENTATION_CW270:
-                        PIE_LOG("Image is in portrait orientation.");
-                        int tmp = t_w;
+                        tmp = t_w;
                         t_w = t_h;
                         t_h = tmp;
                 }
+
+                tmp = x0;
+                x0 = y0;
+                y0 = tmp;
+
+                tmp = x1;
+                x1 = y1;
+                y1 = tmp;
         }
+
         scale = (float)t_w / (float)(x1 - x0);
 
         PIE_DEBUG("[%s]Set viewport to (%d, %d) (%d, %d) to target size %d x %d (scale: %f)",
@@ -610,7 +626,8 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
                 /* custom scale is not yet supported. */
                 pie_bm_free_f32(proxy);
                 create_proxy(proxy, raw, t_w, t_h);
-                if (t_w != proxy_out->width)
+                if (t_w != proxy_out->width ||
+                    t_h != proxy_out->height)
                 {
                         PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
                                 proxy->width,
@@ -629,7 +646,8 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         }
         else
         {
-                if (t_w != proxy_out->width)
+                if (t_w != proxy_out->width ||
+                    t_h != proxy_out->height)
                 {
                         PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
                                 t_w,
