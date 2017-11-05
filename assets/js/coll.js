@@ -523,6 +523,10 @@ function viewSingleMob(mobId) {
     updateSingleView(mobId);
 }
 
+/* This implementation is somewhat broken. The image
+   is reloaded every time, and something makes the
+   ctx's transform be reset which makes it work.
+   Otherwise the the transformations would accumulate */
 function updateSingleView(mobId) {
     var modal = document.getElementById("view-modal");
     if (modal.style.display == "none") {
