@@ -37,7 +37,7 @@
 
 struct entry
 {
-        struct pie_img_workspace* wrkspc;
+        struct pie_editd_workspace* wrkspc;
         time_t ts;
         unsigned int flags;
 };
@@ -106,10 +106,10 @@ struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3* db, int cap)
         return mgr;
 }
 
-struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
-                                                 pie_id id)
+struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
+                                                   pie_id id)
 {
-        struct pie_img_workspace* wrkspc = NULL;
+        struct pie_editd_workspace* wrkspc = NULL;
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
@@ -209,12 +209,12 @@ struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                           min->min_id,
                           id);
 
-                wrkspc = malloc(sizeof(struct pie_img_workspace));
+                wrkspc = malloc(sizeof(struct pie_editd_workspace));
                 if (wrkspc == NULL)
                 {
                         goto done;
                 }
-                memset(wrkspc, 0, sizeof(struct pie_img_workspace));
+                memset(wrkspc, 0, sizeof(struct pie_editd_workspace));
 
                 /* Accessing mgr->storages[min->min_stg_id] is safe.
                    pie_stg_min_for_mob verifies storage is mounted. */
@@ -272,7 +272,7 @@ done:
 }
 
 void pie_wrkspc_mgr_release(struct pie_wrkspc_mgr* mgr,
-                            struct pie_img_workspace* wrkspc)
+                            struct pie_editd_workspace* wrkspc)
 {
         for (int i = 0; i < mgr->cap; i++)
         {
@@ -292,7 +292,7 @@ void pie_wrkspc_mgr_destroy(struct pie_wrkspc_mgr* mgr)
         {
                 if (mgr->cache[i].flags != FLAG_FREE)
                 {
-                        struct pie_img_workspace* wrkspc;
+                        struct pie_editd_workspace* wrkspc;
 
                         PIE_TRACE("%ld", mgr->cache[i].wrkspc->mob_id);
 

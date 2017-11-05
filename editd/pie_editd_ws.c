@@ -220,6 +220,13 @@ int pie_editd_ws_service(void)
                         lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_IMG]);
                         break;
+                case PIE_MSG_NEW_PROXY_DIM:
+                        free(session->rgba);
+                        session->rgba = NULL;
+                        session->tx_ready = PIE_TX_IMG;
+                        lws_callback_on_writable_all_protocol(server->context,
+                                                              &protocols[PIE_PROTO_IMG]);
+                        break;
                 default:
                         PIE_WARN("[%s] invalid message: %d",
                                  resp->token,

@@ -379,7 +379,6 @@ static int cb_http(struct lws* wsi,
                         {
                                 PIE_ERR("Can not write CORS header");
                         }
-
                 }
 
                 /* Catch all static file */

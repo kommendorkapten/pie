@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -16,7 +16,7 @@
 
 #include "../lib/timing.h"
 
-struct pie_img_workspace;
+struct pie_editd_workspace;
 
 /**
  * Pie message semantics over channels are:
@@ -33,7 +33,9 @@ enum pie_msg_type
         PIE_MSG_INVALID,
         PIE_MSG_LOAD,
         PIE_MSG_LOAD_DONE,
+        PIE_MSG_VIEWPORT,
         PIE_MSG_RENDER_DONE,
+        PIE_MSG_NEW_PROXY_DIM,
         PIE_MSG_SET_COLOR_TEMP,
         PIE_MSG_SET_TINT,
         PIE_MSG_SET_EXSPOSURE,
@@ -47,7 +49,7 @@ enum pie_msg_type
         PIE_MSG_SET_SATURATION,
         PIE_MSG_SET_ROTATE,
         PIE_MSG_SET_SHARP,
-        
+
         /* Always last */
         PIE_MSG_COUNT
 };
@@ -59,14 +61,17 @@ struct pie_msg
         /* A general token, can contain a null terminated,
            hex encoded sha1 sum */
         char token[PIE_MSG_TOKEN_LEN];
-        struct pie_img_workspace* wrkspc;
+        struct pie_editd_workspace* wrkspc;
         struct timing t;
         float f1;
         float f2;
         float f3;
         int i1;
         int i2;
-        int i3;        
+        int i3;
+        int i4;
+        int i5;
+        int i6;
 };
 
 /**

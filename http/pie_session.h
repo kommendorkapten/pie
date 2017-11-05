@@ -20,7 +20,7 @@
 #include "../lib/timing.h"
 
 struct pie_sess_mgr;
-struct pie_img_workspace;
+struct pie_editd_workspace;
 
 /**
  * Represents a session.
@@ -32,7 +32,7 @@ struct pie_img_workspace;
 struct pie_sess
 {
         char token[PIE_SESS_TOKEN_LEN];
-        struct pie_img_workspace* wrkspc;
+        struct pie_editd_workspace* wrkspc;
         unsigned char* rgba;
         /* Used for duration measurement, set by cb_cmd */
         struct timing t;

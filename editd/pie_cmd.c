@@ -102,6 +102,62 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                           msg->i1,
                           msg->i2);
         }
+        else if (strcmp(t, "VIEWP") == 0)
+        {
+                /* VIEWP x0, y0, x1, y1, w, h */
+                int val[6];
+
+                for (int i = 0; i < 6; i++)
+                {
+                        if (t = strtok_r(NULL, " ", &lasts), t == NULL)
+                        {
+                                PIE_WARN("[%s] not a valid command '%'s",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                        char* p;
+                        long v = strtol(t, &p, 10);
+
+                        if (t != p)
+                        {
+                                val[i] = (int)v;
+                        }
+                        else
+                        {
+                                PIE_WARN("[%s] invalid argument found '%s'",
+                                         msg->token,
+                                         data);
+                                return -1;
+                        }
+                }
+
+                /* Only end coordinates may be negative */
+                if (val[0] < 0 || val[1] < 0 || val[4] < 0 || val[5] < 0)
+                {
+                        PIE_WARN("[%s] invalid argument found '%s'",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+
+                msg->i1 = val[0];
+                msg->i2 = val[1];
+                msg->i3 = val[2];
+                msg->i4 = val[3];
+                msg->i5 = val[4];
+                msg->i6 = val[5];
+
+                msg->type = PIE_MSG_VIEWPORT;
+                PIE_DEBUG("[%s] Set viewport: (%d, %d) (%d, %d) to (%d, %d)",
+                          msg->token,
+                          msg->i1,
+                          msg->i2,
+                          msg->i3,
+                          msg->i4,
+                          msg->i5,
+                          msg->i6);
+        }
         else if (strcmp(t, "COLORT") == 0)
         {
                 /* COLORT {val}

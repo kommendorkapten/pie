@@ -83,6 +83,14 @@ static void* i_handler(void*);
 static enum pie_msg_type cb_msg_load(struct pie_msg*);
 
 /**
+ * Callback. Updates the chosen viewport.
+ * @param message with new viewport coordinaes.
+ * @return if the message should be retransmit, the new msg type.
+ *         if message should be dropped, PIE_INVALID_MSG.
+ */
+static enum pie_msg_type cb_msg_viewp(struct pie_msg*);
+
+/**
  * Callback. Update an image and renders the image.
  * @param message to acton.
  * @return if the message should be retransmit, the new msg type,
@@ -97,6 +105,19 @@ static enum pie_msg_type cb_msg_render(struct pie_msg*);
  * @return void.
  */
 static void store_settings(pie_id, const struct pie_dev_settings*);
+
+/**
+ * Create and downsample a proxy.
+ * @param the target bitmap. Must be unallocated.
+ * @param source bitmap.
+ * @param requested proxy max width.
+ * @param requested proxy max height.
+ * @return void
+ */
+static void create_proxy(struct pie_bitmap_f32rgb*,
+                         struct pie_bitmap_f32rgb*,
+                         int,
+                         int);
 
 int main(void)
 {
@@ -281,6 +302,9 @@ static void* ev_loop(void* a)
                         case PIE_MSG_LOAD:
                                 new = cb_msg_load(cmd);
                                 break;
+                        case PIE_MSG_VIEWPORT:
+                                new = cb_msg_viewp(cmd);
+                                break;
                         case PIE_MSG_SET_COLOR_TEMP:
                         case PIE_MSG_SET_TINT:
                         case PIE_MSG_SET_EXSPOSURE:
@@ -367,6 +391,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         struct pie_dev_params settings_json;
         struct timing t;
         struct timing t_l;
+        struct pie_bitmap_f32rgb* raw;
+        struct pie_bitmap_f32rgb* proxy;
+        struct pie_bitmap_f32rgb* proxy_out;
         pie_id id;
         int len;
         int res;
@@ -398,16 +425,20 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 return PIE_MSG_INVALID;
         }
 
+        raw = &msg->wrkspc->raw;
+        proxy = &msg->wrkspc->proxy;
+        proxy_out = &msg->wrkspc->proxy_out;
+
         /* Init proxies */
-        stride = msg->wrkspc->raw.row_stride;
+        stride = raw->row_stride;
         proxy_w = msg->i1;
         proxy_h = msg->i2;
         PIE_DEBUG("[%s] Request proxy [%d, %d] for image [%d, %d]",
                   msg->token,
                   proxy_w,
                   proxy_h,
-                  msg->wrkspc->raw.width,
-                  msg->wrkspc->raw.height);
+                  raw->width,
+                  raw->height);
 
         switch (msg->wrkspc->exif.ped_orientation)
         {
@@ -419,8 +450,8 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 proxy_h = tmp;
         }
 
-        if (proxy_w < msg->wrkspc->raw.width ||
-            proxy_h < msg->wrkspc->raw.height)
+        if (proxy_w < raw->width ||
+            proxy_h < raw->height)
         {
                 PIE_DEBUG("[%s] Downsampling needed", msg->token);
                 downsample = 1;
@@ -428,13 +459,13 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         else
         {
                 /* Do not do any up sampling */
-                if (proxy_w > msg->wrkspc->raw.width)
+                if (proxy_w > raw->width)
                 {
-                        proxy_w = msg->wrkspc->raw.width;
+                        proxy_w = raw->width;
                 }
-                if (proxy_h > msg->wrkspc->raw.height)
+                if (proxy_h > raw->height)
                 {
-                        proxy_h = msg->wrkspc->raw.height;
+                        proxy_h = raw->height;
                 }
                 PIE_DEBUG("[%s] Image smaller than proxy, new proxy size [%d, %d]",
                           msg->token,
@@ -445,67 +476,35 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         /* Allocate proxy images */
         if (downsample)
         {
-                struct pie_unsharp_param up = {
-                        .amount = 0.5f,
-                        .radius = 0.5f,
-                        .threshold = 2.0f
-                };
-
-                timing_start(&t);
-                res = pie_bm_dwn_smpl(&msg->wrkspc->proxy,
-                                      &msg->wrkspc->raw,
-                                      proxy_w,
-                                      proxy_h);
-                if (res)
-                {
-                        abort();
-                }
-                PIE_DEBUG("[%s] Downsampled proxy in %ldusec",
-                          msg->token,
-                          timing_dur_usec(&t));
-
-                /* Add some sharpening to mitigate any blur created
-                   during downsampling. */
-                timing_start(&t);
-                res = pie_alg_unsharp(msg->wrkspc->proxy.c_red,
-                                      msg->wrkspc->proxy.c_green,
-                                      msg->wrkspc->proxy.c_blue,
-                                      &up,
-                                      msg->wrkspc->proxy.width,
-                                      msg->wrkspc->proxy.height,
-                                      msg->wrkspc->proxy.row_stride);
-                if (res)
-                {
-                        abort();
-                }
-                PIE_DEBUG("[%s] Added post-downsampling sharpening in %ldusec",
-                          msg->token,
-                          timing_dur_usec(&t));
+                create_proxy(proxy,
+                             raw,
+                             proxy_w,
+                             proxy_h);
         }
         else
         {
-                msg->wrkspc->proxy.width = proxy_w;
-                msg->wrkspc->proxy.height = proxy_h;
-                msg->wrkspc->proxy.color_type = PIE_COLOR_TYPE_RGB;
-                pie_bm_alloc_f32(&msg->wrkspc->proxy);
+                proxy->width = proxy_w;
+                proxy->height = proxy_h;
+                proxy->color_type = PIE_COLOR_TYPE_RGB;
+                pie_bm_alloc_f32(proxy);
                 /* Copy raw to proxy */
                 len = (int)(proxy_h * stride * sizeof(float));
-                memcpy(msg->wrkspc->proxy.c_red, msg->wrkspc->raw.c_red, len);
-                memcpy(msg->wrkspc->proxy.c_green, msg->wrkspc->raw.c_green, len);
-                memcpy(msg->wrkspc->proxy.c_blue, msg->wrkspc->raw.c_blue, len);
+                memcpy(proxy->c_red, raw->c_red, len);
+                memcpy(proxy->c_green, raw->c_green, len);
+                memcpy(proxy->c_blue, raw->c_blue, len);
         }
 
         /* Create a working copy of the proxy for editing */
-        msg->wrkspc->proxy_out.width = msg->wrkspc->proxy.width;
-        msg->wrkspc->proxy_out.height = msg->wrkspc->proxy.height;
-        msg->wrkspc->proxy_out.color_type = PIE_COLOR_TYPE_RGB;
-        pie_bm_alloc_f32(&msg->wrkspc->proxy_out);
+        proxy_out->width = proxy->width;
+        proxy_out->height = proxy->height;
+        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+        pie_bm_alloc_f32(proxy_out);
 
         /* Copy proxy to proxy out */
-        len = (int)(msg->wrkspc->proxy.height * msg->wrkspc->proxy.row_stride * sizeof(float));
-        memcpy(msg->wrkspc->proxy_out.c_red, msg->wrkspc->proxy.c_red, len);
-        memcpy(msg->wrkspc->proxy_out.c_green, msg->wrkspc->proxy.c_green, len);
-        memcpy(msg->wrkspc->proxy_out.c_blue, msg->wrkspc->proxy.c_blue, len);
+        len = (int)(proxy->height * proxy->row_stride * sizeof(float));
+        memcpy(proxy_out->c_red, proxy->c_red, len);
+        memcpy(proxy_out->c_green, proxy->c_green, len);
+        memcpy(proxy_out->c_blue, proxy->c_blue, len);
 
         /* Load stored development settings */
         settings_json.pdp_mob_id = id;
@@ -541,12 +540,12 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         if (clear_settings)
         {
                 pie_dev_init_settings(&msg->wrkspc->settings,
-                                      msg->wrkspc->proxy.width,
-                                      msg->wrkspc->proxy.height);
+                                      proxy->width,
+                                      proxy->height);
         }
 
         /* Call render */
-        res = pie_dev_render(&msg->wrkspc->proxy_out,
+        res = pie_dev_render(proxy_out,
                              NULL,
                              &msg->wrkspc->settings);
         assert(res == 0);
@@ -554,11 +553,138 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
                   msg->token,
-                  msg->wrkspc->proxy.width,
-                  msg->wrkspc->proxy.height,
+                  proxy->width,
+                  proxy->height,
                   timing_dur_usec(&t_l));
 
         return PIE_MSG_LOAD_DONE;
+}
+
+static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
+{
+        struct pie_bitmap_f32rgb* raw = &msg->wrkspc->raw;
+        struct pie_bitmap_f32rgb* proxy = &msg->wrkspc->proxy;
+        struct pie_bitmap_f32rgb* proxy_out = &msg->wrkspc->proxy_out;
+        int x0 = msg->i1;
+        int y0 = msg->i2;
+        int x1 = msg->i3;
+        int y1 = msg->i4;
+        int t_w = msg->i5;
+        int t_h = msg->i6;
+        int new_proxy = 0;
+        int len;
+        int res;
+        float scale;
+
+        if (x1 < 0 || y1 < 0)
+        {
+                /* full image is requested */
+                x1 = raw->width;
+                y1 = raw->height;
+
+                /* Compensate for any rotation */
+                switch (msg->wrkspc->exif.ped_orientation)
+                {
+                case PIE_EXIF_ORIENTATION_CW90:
+                case PIE_EXIF_ORIENTATION_CW270:
+                        PIE_LOG("Image is in portrait orientation.");
+                        int tmp = t_w;
+                        t_w = t_h;
+                        t_h = tmp;
+                }
+        }
+        scale = (float)t_w / (float)(x1 - x0);
+
+        PIE_DEBUG("[%s]Set viewport to (%d, %d) (%d, %d) to target size %d x %d (scale: %f)",
+                  msg->token,
+                  x0,
+                  y0,
+                  x1,
+                  y1,
+                  t_w,
+                  t_h,
+                  scale);
+
+        if (scale < 1.00000f)
+        {
+                /* custom scale is not yet supported. */
+                pie_bm_free_f32(proxy);
+                create_proxy(proxy, raw, t_w, t_h);
+                if (t_w != proxy_out->width)
+                {
+                        PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
+                                proxy->width,
+                                proxy->height,
+                                proxy_out->width,
+                                proxy_out->height);
+                        new_proxy = 1;
+                        /* Reallocate proxy out */
+                        pie_bm_free_f32(proxy_out);
+
+                        proxy_out->width = proxy->width;
+                        proxy_out->height = proxy->height;
+                        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+                        pie_bm_alloc_f32(proxy_out);
+                }
+        }
+        else
+        {
+                if (t_w != proxy_out->width)
+                {
+                        PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
+                                t_w,
+                                t_h,
+                                proxy_out->width,
+                                proxy_out->height);
+                        new_proxy = 1;
+
+                        /* reallocate proxies */
+                        pie_bm_free_f32(proxy);
+                        pie_bm_free_f32(proxy_out);
+
+                        proxy->width = t_w;
+                        proxy->height = t_h;
+                        proxy->color_type = PIE_COLOR_TYPE_RGB;
+                        proxy_out->width = t_w;
+                        proxy_out->height = t_h;
+                        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+
+                        pie_bm_alloc_f32(proxy);
+                        pie_bm_alloc_f32(proxy_out);
+                }
+
+                len = t_w * sizeof(float);
+                /* Copy a non scaled portion */
+                for (int i = 0; i < t_h; i++)
+                {
+                        memcpy(proxy->c_red + i * proxy->row_stride,
+                               raw->c_red + (i + y0) * raw->row_stride + x0,
+                               len);
+                        memcpy(proxy->c_green + i * proxy->row_stride,
+                               raw->c_green + (i + y0) * raw->row_stride + x0,
+                               len);
+                        memcpy(proxy->c_blue + i * proxy->row_stride,
+                               raw->c_blue + (i + y0) * raw->row_stride + x0,
+                               len);
+                }
+        }
+
+        /* Copy proxy to proxy out */
+        len = (int)(proxy->height * proxy->row_stride * sizeof(float));
+        memcpy(proxy_out->c_red, proxy->c_red, len);
+        memcpy(proxy_out->c_green, proxy->c_green, len);
+        memcpy(proxy_out->c_blue, proxy->c_blue, len);
+
+        res = pie_dev_render(proxy_out,
+                             NULL,
+                             &msg->wrkspc->settings);
+        assert(res == 0);
+
+        if (new_proxy)
+        {
+                return PIE_MSG_NEW_PROXY_DIM;
+        }
+        return PIE_MSG_RENDER_DONE;
 }
 
 static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
@@ -851,4 +977,44 @@ static void store_settings(pie_id mob_id,
         {
                 PIE_ERR("Failed to store new development settings");
         }
+}
+
+static void create_proxy(struct pie_bitmap_f32rgb* tgt,
+                         struct pie_bitmap_f32rgb* src,
+                         int w,
+                         int h)
+{
+        struct timing t;
+        struct pie_unsharp_param up = {
+                .amount = 0.5f,
+                .radius = 0.5f,
+                .threshold = 2.0f
+        };
+        int res;
+
+        timing_start(&t);
+        res = pie_bm_dwn_smpl(tgt, src, w, h);
+        if (res)
+        {
+                abort();
+        }
+        PIE_DEBUG("Downsampled proxy in %ldusec",
+                  timing_dur_usec(&t));
+
+        /* Add some sharpening to mitigate any blur created
+           during downsampling. */
+        timing_start(&t);
+        res = pie_alg_unsharp(tgt->c_red,
+                              tgt->c_green,
+                              tgt->c_blue,
+                              &up,
+                              tgt->width,
+                              tgt->height,
+                              tgt->row_stride);
+        if (res)
+        {
+                abort();
+        }
+        PIE_DEBUG("Added post-downsampling sharpening in %ldusec",
+                  timing_dur_usec(&t));
 }

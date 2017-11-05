@@ -22,7 +22,7 @@
 struct pie_wrkspc_mgr;
 
 /* The main workspace for an image being open in editd. */
-struct pie_img_workspace
+struct pie_editd_workspace
 {
         pie_id mob_id;
         struct pie_dev_settings settings;
@@ -50,7 +50,7 @@ extern struct pie_wrkspc_mgr* pie_wrkspc_mgr_create(sqlite3*, int);
  * @param mob to load.
  * @return an image workspace, or NULL if cache is full.
  */
-extern struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr*,
+extern struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr*,
                                                         pie_id);
 
 /**
@@ -61,7 +61,7 @@ extern struct pie_img_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr*,
  * @return void.
  */
 extern void pie_wrkspc_mgr_release(struct pie_wrkspc_mgr*,
-                                   struct pie_img_workspace*);
+                                   struct pie_editd_workspace*);
 
 /**
  * Destroy a manager. This will free any created workspaces.
