@@ -104,7 +104,9 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         }
         else if (strcmp(t, "VIEWP") == 0)
         {
-                /* VIEWP x0, y0, x1, y1, w, h */
+                /* VIEWP x0, y0, x1, y1, w, h
+                   Coordinates are in the image's oriented space. Not in the
+                   image's physical space. */
                 int val[6];
 
                 for (int i = 0; i < 6; i++)

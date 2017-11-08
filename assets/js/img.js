@@ -18,6 +18,7 @@ var zoomMode = {
     "startY": 0,
     "dx": 0,
     "dy": 0,
+    "moved": false,
 };
 var histDataL = {
     borderColor: "rgba(200, 200, 200, 0.5)",
@@ -62,6 +63,8 @@ var histDataB = {
 var sliderTimeout = 200;
 var exif = null;
 var fullsizeProxy = null;
+/* the bitmap received from the server */
+var bm = null;
 
 function getWsUrl(){
     var pcol;
@@ -206,6 +209,7 @@ function pieInitEdit() {
             zoomMode.drag = true;
             zoomMode.startX = event.pageX;
             zoomMode.startY = event.pageY;
+            zoomMode.moved = false;
             renderImage(fullsizeProxy);
         }
     });
@@ -214,15 +218,21 @@ function pieInitEdit() {
         if (zoomMode.enabled) {
             zoomMode.drag = false;
 
-            /* in canvas origo is upper left
-               in bitmap space origo is lower left */
-            setViewport(wsCmd,
-                        -zoomMode.dx,
-                        -zoomMode.dy,
-                        -(zoomMode.dx - c.width),
-                        -(zoomMode.dy - c.height),
-                        c.width,
-                        c.height);
+            if (zoomMode.moved) {
+                /* dx and dy are the coordinate transformations.
+                   they must be inverted to get the correct coordinaes
+                   in the source image. */
+                setViewport(wsCmd,
+                            -zoomMode.dx,
+                            -zoomMode.dy,
+                            -(zoomMode.dx - c.width),
+                            -(zoomMode.dy - c.height),
+                            c.width,
+                            c.height);
+            } else {
+                renderImage(bm);
+            }
+
         }
     });
 
@@ -233,6 +243,7 @@ function pieInitEdit() {
             renderImage(fullsizeProxy);
             zoomMode.startX = event.pageX;
             zoomMode.startY = event.pageY;
+            zoomMode.moved = true;
         }
     });
 }
@@ -295,12 +306,10 @@ function renderImage(bm) {
     var ratio = bm.width / bm.height;
     var w = bm.width;
     var h = bm.height;
+    var clearRect = false;
 
     /* reset canvas */
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    console.log("Image dimension: " + bm.width + "x" + bm.height);
-    console.log("Ctx dimension: " + c.width + "x" + c.height);
 
     /* When calculating scaling, the presented orientation
        must be used. */
@@ -319,6 +328,10 @@ function renderImage(bm) {
         scale = c.height / h;
     }
 
+    if ((w < c.width) || (h < c.height)) {
+        clearRect = true;
+    }
+
     if (zoomMode.enabled && zoomMode.drag) {
         scale = 1;
         var lim;
@@ -332,7 +345,6 @@ function renderImage(bm) {
             zoomMode.dx = lim;
         }
         offsetX = zoomMode.dx;
-        console.log("zm dx: " + offsetX);
 
         lim = h - c.height;
         lim = - lim;
@@ -348,34 +360,27 @@ function renderImage(bm) {
     }
 
     /* The entier canvas is not going to be drawn. Clear it first */
-    if (scale < 1.0) {
+    if (clearRect) {
         ctx.clearRect(0, 0, c.width, c.height);
     }
 
-    console.log("offset x: " + offsetX + " y: " + offsetY);
-    console.log("Scale: " + scale);
-
     switch(exif.orientation) {
     case 1: /* 0 */
-        console.log("rotate 0");
         ctx.transform(scale, 0,
                       0, scale,
                       offsetX, offsetY);
         break;
     case 3: /* 180 */
-        console.log("rotate 3");
         ctx.transform(-scale, 0,
                       0, -scale,
                       offsetX + scale * bm.width, offsetY + scale * bm.height);
         break;
     case 6: /* 270 */
-        console.log("rotate 6");
         ctx.transform(0, scale,
                       -scale, 0,
                       offsetX + scale * bm.height, offsetY);
         break;
     case 8: /* 90 */
-        console.log("rotate 8");
         ctx.transform(0, -scale,
                       scale, 0,
                       offsetX, offsetY + scale * bm.width);
@@ -402,7 +407,6 @@ function renderImage(bm) {
                 histDataB.data = hist.pb;
                 histChart.update();
             });
-        console.log("draw imgae");
     }
 }
 
@@ -523,7 +527,7 @@ window.addEventListener("load", function(evt) {
             console.log("Type: " + msgType + " width: " + w + " height:" + h);
 
             var pixels = new Uint8ClampedArray(evt.data, 16);
-            var bm = new ImageData(pixels, w, h);
+            bm = new ImageData(pixels, w, h);
             dur = Date.now() - now;
             console.log("Unpacked image in " + dur + "ms");
 

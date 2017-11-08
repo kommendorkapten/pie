@@ -575,17 +575,18 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         int res;
         float scale;
         char new_proxy = 0;
-        char rotate_viewport = 1;
 
-        if (x1 < 0 || y1 < 0)
-        {
-                /* full image is requested */
-                x1 = raw->width;
-                y1 = raw->height;
-                rotate_viewport = 0;
-        }
+        PIE_DEBUG("[%s]Requested viewport to (%d, %d) (%d, %d) to target size %d x %d",
+                  msg->token,
+                  x0,
+                  y0,
+                  x1,
+                  y1,
+                  t_w,
+                  t_h);
 
-        /* Compensate for any rotation */
+        /* Compensate for any rotation. Coordinates are provided in the
+           image's oriented space. Not the image's physical space. */
         switch (msg->wrkspc->exif.ped_orientation)
         {
         case PIE_EXIF_ORIENTATION_CW90:
@@ -593,12 +594,9 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
                 PIE_LOG("Image is in portrait orientation.");
                 int tmp;
 
-                if (rotate_viewport)
-                {
-                        tmp = t_w;
-                        t_w = t_h;
-                        t_h = tmp;
-                }
+                tmp = t_w;
+                t_w = t_h;
+                t_h = tmp;
 
                 tmp = x0;
                 x0 = y0;
@@ -607,11 +605,37 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
                 tmp = x1;
                 x1 = y1;
                 y1 = tmp;
+
+        }
+
+        /* Validate arguments */
+        if (x0 < 0)
+        {
+                x0 = 0;
+        }
+        if (y0 < 0)
+        {
+                y0 = 0;
+        }
+        if (x1 > raw->width)
+        {
+                x1 = raw->width;
+        }
+        if (y1 > raw->height)
+        {
+                y1 = raw->height;
+        }
+
+        if (x1 < 0 || y1 < 0)
+        {
+                /* full image is requested */
+                x1 = raw->width;
+                y1 = raw->height;
         }
 
         scale = (float)t_w / (float)(x1 - x0);
 
-        PIE_DEBUG("[%s]Set viewport to (%d, %d) (%d, %d) to target size %d x %d (scale: %f)",
+        PIE_DEBUG("[%s]Image space viewport to (%d, %d) (%d, %d) to target size %d x %d (scale: %f)",
                   msg->token,
                   x0,
                   y0,
@@ -626,8 +650,8 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
                 /* custom scale is not yet supported. */
                 pie_bm_free_f32(proxy);
                 create_proxy(proxy, raw, t_w, t_h);
-                if (t_w != proxy_out->width ||
-                    t_h != proxy_out->height)
+                if (t_w != proxy->width ||
+                    t_h != proxy->height)
                 {
                         PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
                                 proxy->width,
@@ -646,8 +670,8 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         }
         else
         {
-                if (t_w != proxy_out->width ||
-                    t_h != proxy_out->height)
+                if (t_w != proxy->width ||
+                    t_h != proxy->height)
                 {
                         PIE_LOG("Reallocating proxies to (%dx%d), was (%dx%d)",
                                 t_w,
@@ -673,6 +697,23 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
 
                 len = t_w * sizeof(float);
                 /* Copy a non scaled portion */
+                int start, stop;
+                switch (msg->wrkspc->exif.ped_orientation)
+                {
+                case PIE_EXIF_ORIENTATION_CW90:
+                        x0 = raw->width - t_w - x0;
+                        break;
+                case PIE_EXIF_ORIENTATION_CW180:
+                        x0 = raw->width - t_w - x0;
+                        y0 = raw->height - t_h - y0;
+                        break;
+                case PIE_EXIF_ORIENTATION_CW270:
+                        y0 = raw->height - t_h - y0;
+                        break;
+                }
+
+                assert(x0 + t_w <= raw->width);
+                assert(y0 + t_h <= raw->height);
                 for (int i = 0; i < t_h; i++)
                 {
                         memcpy(proxy->c_red + i * proxy->row_stride,
