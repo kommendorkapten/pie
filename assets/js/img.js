@@ -107,7 +107,6 @@ function loadImage(ws) {
     var colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
     var devpClient = new XMLHttpRequest();
     var exifClient = new XMLHttpRequest();
-    var proxyClient = new XMLHttpRequest();
     var img = getParameterByName('img');
     var c = document.getElementById("img_canvas");
 
@@ -183,7 +182,7 @@ function pieInitEdit() {
     var c = document.getElementById("img_canvas");
     var h;
 
-    w = w - 282 - 50; // edit pane and margin
+    w = w - 2 * 282 - 50; // edit pane and margin
 
     if (w < 640) {
         w = 640;
@@ -241,6 +240,7 @@ function pieInitEdit() {
             zoomMode.dx += (event.pageX - zoomMode.startX);
             zoomMode.dy += (event.pageY - zoomMode.startY);
             renderImage(fullsizeProxy);
+            updateImgNavigation(fullsizeProxy);
             zoomMode.startX = event.pageX;
             zoomMode.startY = event.pageY;
             zoomMode.moved = true;
@@ -410,6 +410,92 @@ function renderImage(bm) {
     }
 }
 
+function updateImgNavigation(img) {
+    var c = document.getElementById("img_nav_canvas");
+    var ctx = c.getContext("2d");
+    var w = img.width;
+    var h = img.height;
+    var clearRect = false;
+    var offsetX = 0;
+    var offsetY = 0;
+
+    /* reset canvas */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    if (exif.orientation == 6 ||
+        exif.orientation == 8) {
+        var tmp = w;
+        w = h;
+        h = tmp;
+    } else {
+        /* Some weird artifacts show up to the left and right of the image,
+           add some extra width to hide them. Brilliant sollution... */
+        w += 4;
+    }
+
+    if (w > c.width) {
+        scale = c.width / w;
+    }
+
+    if (h * scale > c.height) {
+        scale = c.height / h;
+    }
+
+    if ((w < c.width) || (h < c.height)) {
+        clearRect = true;
+    }
+
+    offsetX = (c.width - w * scale) / 2;
+    offsetY = (c.height - h * scale) / 2;
+
+    if (clearRect) {
+        ctx.clearRect(0, 0, c.width, c.height);
+    }
+
+    switch(exif.orientation) {
+    case 1: /* 0 */
+        ctx.transform(scale, 0,
+                      0, scale,
+                      offsetX, offsetY);
+        break;
+    case 3: /* 180 */
+        ctx.transform(-scale, 0,
+                      0, -scale,
+                      offsetX + scale * img.width, offsetY + scale * img.height);
+        break;
+    case 6: /* 270 */
+        ctx.transform(0, scale,
+                      -scale, 0,
+                      offsetX + scale * img.height, offsetY);
+        break;
+    case 8: /* 90 */
+        ctx.transform(0, -scale,
+                      scale, 0,
+                      offsetX, offsetY + scale * img.width);
+        break;
+    }
+
+    ctx.drawImage(img, 0, 0, img.width, img.height);
+
+    /* Reset before drawing nav rectangle */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.strokeStyle = "white";
+    if (zoomMode.enabled) {
+        var ic = document.getElementById("img_canvas");
+        var rx = -(zoomMode.dx * scale);
+        var ry = -(zoomMode.dy * scale);
+        var rw = ic.width * scale;
+        var rh = ic.height * scale;
+
+        ctx.strokeRect(offsetX + rx, offsetY + ry, rw, rh);
+    } else {
+        w *= scale;
+        h *= scale;
+
+        ctx.strokeRect(offsetX, offsetY, w, h);
+    }
+}
+
 window.onresize = function(evt) {
     var w = window.innerWidth;
     var c = document.getElementById("img_canvas");
@@ -538,9 +624,11 @@ window.addEventListener("load", function(evt) {
             var url = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
 
             url += "/proxy/" + img + ".jpg";
+            console.log("Get proxy " + url);
             imgHolder.onload = function() {
                 /* Save for later use */
                 fullsizeProxy = this;
+                updateImgNavigation(fullsizeProxy);
             }
             imgHolder.setAttribute('src', url);
         }

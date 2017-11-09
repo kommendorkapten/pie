@@ -11,12 +11,38 @@
   </head>
   <body>
     <div class="container">
+      <!-- Left pane -->
+      <div class="fixed-edit-pane">
+        <div class="center">
+          <div class="edit-meta">
+            <div style="margin-left:5px; margin-right:5px;">
+              <canvas id="img_nav_canvas" width="265" height="150"
+                      style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
+              </canvas>
+            </div>
+            <table class="edit-meta-text">
+              <tr>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="spacing-20">
+      </div>
+
+      <!-- Main canvas -->
       <div class="flex-item">
         <!-- ratio is 3:2 -->
         <canvas id="img_canvas" width="640" height="427"
                 style="border:1px solid #000000;">
         </canvas>
       </div>
+
+      <div class="spacing-20">
+      </div>
+
+      <!-- Right pane -->
       <div class="fixed-edit-pane">
         <div class="center">
           <div class="edit-meta">

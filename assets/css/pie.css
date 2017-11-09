@@ -23,6 +23,11 @@ canvas {
     width:      280px;
 }
 
+.spacing-20 {
+    text-align: center;
+    width:      20px;
+}
+
 .fixed-collection-list-pane {
     text-align: left;
     width:      280px;

@@ -1,8 +1,9 @@
 # In progress
+* zoom/pan in dev, fix bug with pixmap not being reload from ws before
+  drag starts, causes reset of drag.
 
 # Sorted
-* zoom/pan in development view
-* Thumbnail in single view, that shows zoomed part of image (navigation).
+* rating images same height as color button and devp image.
 
 # Unsorted
 * Write install/config script.
@@ -81,3 +82,6 @@
 * ~~show num files in collection list.~~
 * ~~editd, remove histogram websocket. Calculate histogram in ui as of
   collectiond.~~
+* ~~editd, loading an image should respect the orientation.~~
+* ~~zoom/pan in development view~~
+* ~~Thumbnail in development view, that shows zoomed part of image (navigation).~~
