@@ -7,6 +7,7 @@ var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
 var selectedCollection = {};
+var activeAssets = [];
 var zoomMode = {
     "enabled": false,
     "mode": "center",
@@ -74,6 +75,7 @@ var exifRotationClass = {
     6: 'rotate90',
     8: 'rotate270',
 };
+var fullsizeProxy = null;
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -164,7 +166,7 @@ function renderCollection(coll, options) {
         return;
     }
 
-    var assets = [];
+    activeAssets = [];
 
     for (asset of coll.assets) {
         var keep = false;
@@ -210,12 +212,12 @@ function renderCollection(coll, options) {
         }
 
         if (keep) {
-            assets.push(asset);
+            activeAssets.push(asset);
         }
     }
 
     /* Sort */
-    assets.sort(function(a, b) {
+    activeAssets.sort(function(a, b) {
         var va;
         var vb;
         var ret;
@@ -270,7 +272,7 @@ function renderCollection(coll, options) {
 
     columns = Math.floor(img_x / (thumb_size + 28));
     innerHtml += newRow
-    for (i of assets) {
+    for (i of activeAssets) {
         var cellId = "grid-cell-mob-" + i.id;
         mobCache[i.id] = i.mob;
         var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
@@ -377,13 +379,9 @@ function navigateMob(direction) {
         return;
     }
 
-    if (!("assets" in selectedCollection)) {
-        return;
-    }
-
     var currMob = -1;
-    for (i = 0; i < selectedCollection.assets.length; i++) {
-        if (selectedMobId == selectedCollection.assets[i].id) {
+    for (i = 0; i < activeAssets.length; i++) {
+        if (selectedMobId == activeAssets[i].id) {
             currMob = i;
             break;
         }
@@ -414,9 +412,9 @@ function navigateMob(direction) {
         break;
     }
 
-    newMob = Math.min(selectedCollection.assets.length - 1, newMob);
+    newMob = Math.min(activeAssets.length - 1, newMob);
     newMob = Math.max(0, newMob);
-    var mobId = selectedCollection.assets[newMob].id;
+    var mobId = activeAssets[newMob].id;
 
     if (currMob == newMob) {
         return;
@@ -529,6 +527,10 @@ function viewSingleMob(mobId) {
    Otherwise the the transformations would accumulate */
 function updateSingleView(mobId) {
     var modal = document.getElementById("view-modal");
+
+    if (!modal.style.display) {
+        return;
+    }
     if (modal.style.display == "none") {
         return;
     }
@@ -545,6 +547,13 @@ function updateSingleView(mobId) {
         var offsetX = 0;
         var offsetY = 0;
         var ratio = x / y;
+
+        fullsizeProxy = this;
+        var exif = exifCache[mobId];
+        updateImgNavigation(document.getElementById("img_nav_canvas"),
+                            fullsizeProxy,
+                            exif,
+                            canvas);
 
         /* This may cause problem with down sampling, if so, perform it in
            steps to trigger "larger" down sampling matrix. */
@@ -1015,6 +1024,10 @@ window.addEventListener("load", function(evt) {
             zoomMode.dx += (event.pageX - zoomMode.startX);
             zoomMode.dy += (event.pageY - zoomMode.startY);
             updateSingleView(selectedMobId);
+            updateImgNavigation(document.getElementById("img_nav_canvas"),
+                                fullsizeProxy,
+                                exifCache[selectedMobId],
+                                siCanvas);
             zoomMode.startX = event.pageX;
             zoomMode.startY = event.pageY;
         }
@@ -1058,7 +1071,6 @@ window.onclick = function(event) {
 document.onkeydown = function(evt) {
     evt = evt || window.event;
 
-    console.log("Captured key code: " + evt.keyCode);
     switch (evt.keyCode) {
     case 27:
         console.log("esc");

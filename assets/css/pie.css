@@ -299,11 +299,9 @@ li.collapsibleListClosed{
 }
 
 .coll-modal-content {
-    margin: auto;
-    display: block;
     width: 80%;
     max-width: 90%;
-    border: 1px solid #FF0000;
+    border: 0px solid #FF0000;
 }
 
 /* Animation */
