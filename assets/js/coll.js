@@ -24,6 +24,7 @@ var NAV_UP = 38;
 var NAV_RIGHT = 39;
 var NAV_DOWN = 40;
 var histChart;
+var histChartSingle;
 var histYMax = 255;
 var histDataL = {
     borderColor: "rgba(200, 200, 200, 0.5)",
@@ -135,7 +136,7 @@ function getCollectionModifiers() {
     return options;
 }
 
-function loadCollection(collectionId) {
+function loadCollection(collectionId, mobId) {
     var xmlhttp = new XMLHttpRequest();
 
     xmlhttp.onreadystatechange = function() {
@@ -145,6 +146,10 @@ function loadCollection(collectionId) {
                var options = getCollectionModifiers();
 
                selectedCollection = coll;
+
+               if (mobId != null && mobId != "") {
+                   options.mobId = mobId
+               }
 
                renderCollection(selectedCollection, options);
            } else if (xmlhttp.status == 400) {
@@ -353,7 +358,7 @@ function colorDropdToggle(id) {
     }
 }
 
-function selectMob(id, cell) {
+function selectMob(id, cell=null) {
     /* Clear selected item */
     var collTable = document.getElementById("coll-grid-table");
 
@@ -470,9 +475,11 @@ function mobColorString(color) {
 }
 
 function renderExif(exif) {
-    var table = document.getElementById("meta_data_tbl_top");
+    var table;
     var mob = mobCache[exif.id];
 
+    /* Update first table in grid view */
+    table = document.getElementById("meta_data_tbl_top");
     table.rows[0].cells[0].innerHTML = "ISO " + exif.iso;
     table.rows[0].cells[1].innerHTML = exif.focal_len + " mm";
     table.rows[0].cells[2].innerHTML = "f/" + (exif.fnumber / 10);
@@ -493,6 +500,41 @@ function renderExif(exif) {
     table.rows[0].cells[1].innerHTML = exif.date;
 
     table = document.getElementById("meta_data_tbl_5");
+    table.rows[0].cells[1].innerHTML = exif.x + " x " + exif.y;
+    table.rows[1].cells[1].innerHTML = exif.exposure_time + " sec at f/" + (exif.fnumber / 10);
+    table.rows[2].cells[1].innerHTML = exif.focal_len + " mm";
+    table.rows[3].cells[1].innerHTML = exif.iso;
+    if (exif.flash & 0x1) {
+        table.rows[4].cells[1].innerHTML = "Fired";
+    } else {
+        table.rows[4].cells[1].innerHTML = "Did not fire";
+    }
+    table.rows[5].cells[1].innerHTML = exif.make;
+    table.rows[6].cells[1].innerHTML = exif.model;
+    table.rows[7].cells[1].innerHTML = exif.lens;
+
+    /* Update first table in single image view */
+    table = document.getElementById("meta_data_tbl_top_single");
+    table.rows[0].cells[0].innerHTML = "ISO " + exif.iso;
+    table.rows[0].cells[1].innerHTML = exif.focal_len + " mm";
+    table.rows[0].cells[2].innerHTML = "f/" + (exif.fnumber / 10);
+    table.rows[0].cells[3].innerHTML = exif.exposure_time + " sec";
+
+    table = document.getElementById("meta_data_tbl_1_single");
+    table.rows[0].cells[1].innerHTML = mob.name;
+
+    table = document.getElementById("meta_data_tbl_2_single");
+    table.rows[0].cells[1].innerHTML = exif.copyright;
+    table.rows[1].cells[1].innerHTML = exif.artist;
+
+    table = document.getElementById("meta_data_tbl_3_single");
+    table.rows[0].cells[1].innerHTML = mob.rating + "/5";
+    table.rows[1].cells[1].innerHTML = mobColorString(mob.color);
+
+    table = document.getElementById("meta_data_tbl_4_single");
+    table.rows[0].cells[1].innerHTML = exif.date;
+
+    table = document.getElementById("meta_data_tbl_5_single");
     table.rows[0].cells[1].innerHTML = exif.x + " x " + exif.y;
     table.rows[1].cells[1].innerHTML = exif.exposure_time + " sec at f/" + (exif.fnumber / 10);
     table.rows[2].cells[1].innerHTML = exif.focal_len + " mm";
@@ -657,6 +699,7 @@ function renderHistogram(img) {
     histDataG.data = hist.pg;
     histDataB.data = hist.pb;
     histChart.update();
+    histChartSingle.update();
 }
 
 function rateMob(mobId, rate) {
@@ -685,15 +728,13 @@ function rateMob(mobId, rate) {
     }
 }
 
-function filterRate(rate) {
+function updateUiFilterRate(rate) {
     var btnGrp = document.getElementById("rate-btn-grp");
     /*
       button layout: 1, 3, 5, 7, 9
       rating:        5, 4, 3, 2, 1
     */
 
-    /* save state */
-    globalFilterRate = rate;
 
     /* reset */
     for (i = 1; i < 10; i += 2) {
@@ -713,21 +754,26 @@ function filterRate(rate) {
     for (i = rate + 1; i < 10; i += 2) {
         btnGrp.childNodes[i].classList.add("selected");
     }
+}
+
+function filterRate(rate) {
+    /* save state */
+    globalFilterRate = rate;
+
+    updateUiFilterRate(rate);
 
     /* update view */
     var options = getCollectionModifiers();
     renderCollection(selectedCollection, options);
 }
 
-function filterColor(color) {
+function updateUiFilterColor(color) {
     var btnGrp = document.getElementById("color-btn-grp");
     /*
       button layout: 1, 3, 5, 7, 9
       rating:        r, g, b, y, none
       values:        1, 2, 3, 4, 0
     */
-
-    globalFilterColor = color;
 
     for (i = 1; i < 10; i += 2) {
         btnGrp.childNodes[i].style.border = "3px solid #686868";
@@ -745,6 +791,12 @@ function filterColor(color) {
     color += 1;
 
     btnGrp.childNodes[color].style.border = "0px";
+}
+
+function filterColor(color) {
+    globalFilterColor = color;
+
+    updateUiFilterColor(color);
 
     /* update view */
     var options = getCollectionModifiers();
@@ -856,11 +908,67 @@ function updateCounts(coll) {
 
 window.addEventListener("load", function(evt) {
     var id = getParameterByName("id")
+    var rate = getParameterByName("rate");
+    var color = getParameterByName("color");
     var xmlhttp = new XMLHttpRequest();
+
+    /* Load filter */
+    if (rate != null && rate != "") {
+        rate = parseInt(rate);
+        if (rate < 6 && rate > 0) {
+            globalFilterRate = rate;
+            updateUiFilterRate(rate);
+        }
+    }
+    if (color != null && color != "") {
+        color = parseInt(color);
+        if (color < 5 && color > 0) {
+            globalFilterColor = color;
+            updateUiFilterColor(color);
+        }
+    }
 
     /* Prepare histogram */
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
+    var histCanvasSingle = document.getElementById("hist_canvas_single").getContext("2d");
+
     histChart = new Chart(histCanvas, {
+    type: 'line',
+        data: {
+            datasets: [
+                histDataL,
+                histDataR,
+                histDataG,
+                histDataB
+            ]
+        },
+        options: {
+            legend: {
+                display: false
+            },
+            responsive: false,
+            scales: {
+                xAxes: [{
+                    type: 'linear',
+                    position: 'bottom',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: 255
+                    }
+                }],
+                yAxes: [{
+                    type: 'linear',
+                    display: false,
+                    ticks: {
+                        min: 0,
+                        max: histYMax
+                    }
+                }]
+            }
+        }
+    });
+    histChartSingle = new Chart(histCanvasSingle, {
     type: 'line',
         data: {
             datasets: [
@@ -996,6 +1104,7 @@ window.addEventListener("load", function(evt) {
                 collUl.innerHTML = innerHtml;
                 /* Initialize the list */
                 CollapsibleLists.apply();
+                CollapsibleLists.toggle(collUl.children[0]);
             } else {
                 console.log("Error");
                 console.log(xmlhttp);
@@ -1036,11 +1145,6 @@ window.addEventListener("load", function(evt) {
     xmlhttp.open("GET", "collection/", true);
     xmlhttp.send();
 
-    /* Load collection if present */
-    if (id) {
-        loadCollection(id);
-    }
-
     /* Configure hosts */
     var url = window.location.href.split("/");
     PROTO = url[0];
@@ -1052,8 +1156,10 @@ window.addEventListener("load", function(evt) {
     }
 
     var col = getParameterByName('col');
+    var mob = getParameterByName("mob");
+
     if (col != null && col != "") {
-        loadCollection(col);
+        loadCollection(col, mob);
     }
 });
 
@@ -1102,7 +1208,13 @@ document.onkeydown = function(evt) {
         coloriseMob(selectedMobId, color);
         break;
     case 68: /* d */
-        var newUrl = PROTO + "//" + EDITD_HOST + ":" + EDITD_PORT + "/?img=" + selectedMobId + "&col=" + selectedCollection.id;
+        var newUrl = PROTO + "//" + EDITD_HOST + ":" + EDITD_PORT;
+
+        newUrl += "/?mob=" + selectedMobId;
+        newUrl += "&col=" + selectedCollection.id;
+        newUrl += "&rate=" + globalFilterRate;
+        newUrl += "&color=" + globalFilterColor;
+
         window.location.replace(newUrl);
         break;
     case 69: /* e */

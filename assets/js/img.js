@@ -107,7 +107,7 @@ function loadImage(ws) {
     var colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
     var devpClient = new XMLHttpRequest();
     var exifClient = new XMLHttpRequest();
-    var img = getParameterByName('img');
+    var img = getParameterByName("mob");
     var c = document.getElementById("img_canvas");
 
     if (!img) {
@@ -332,7 +332,11 @@ function renderImage(bm) {
     }
 
     if ((w < c.width) || (h < c.height)) {
-        clearRect = true;
+        /* Require some change */
+        if (c.width - w > 5 ||
+            c.height - h > 5) {
+            clearRect = true;
+        }
     }
 
     if (zoomMode.enabled && zoomMode.drag) {
@@ -537,7 +541,7 @@ window.addEventListener("load", function(evt) {
 
             renderImage(bm);
             /* load fullsize jpeg */
-            var img = getParameterByName('img');
+            var img = getParameterByName("mob");
             var imgHolder = new Image();
             var url = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
 
@@ -1555,7 +1559,6 @@ window.addEventListener("load", function(evt) {
 document.onkeydown = function(evt) {
     evt = evt || window.event;
 
-    console.log("Captured key code: " + evt.keyCode);
     switch (evt.keyCode) {
     case 27:
         console.log("esc");
@@ -1585,11 +1588,24 @@ document.onkeydown = function(evt) {
         console.log("color yo");
         break;
     case 71: /* g */
-        var col = getParameterByName('col');
+        var col = getParameterByName("col");
+        var mob = getParameterByName("mob");
+        var rate = getParameterByName("rate");
+        var color = getParameterByName("color");
         var newUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT + "/";
 
+        /* MOB should always be provided */
+        if (mob != null && mob != "") {
+            newUrl += "?mob=" + mob;
+        }
         if (col != null && col != "") {
-            newUrl += "?col=" + col;
+            newUrl += "&col=" + col;
+        }
+        if (rate != null && rate != "") {
+            newUrl += "&rate=" + rate;
+        }
+        if (color != null && color != "") {
+            newUrl += "&color=" + color;
         }
         window.location.replace(newUrl);
         break;

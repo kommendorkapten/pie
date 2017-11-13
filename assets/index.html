@@ -8,7 +8,7 @@
     <script type="text/javascript" charset="utf-8"
             src="js/coll.js"></script>
     <script type="text/javascript" charset="utf-8"
-            src="js/CollapsibleLists.js"></script>
+            src="js/CollapsibleLists.src.js"></script>
     <link rel="stylesheet" href="css/pie.css">
   </head>
   <body>
@@ -18,6 +18,15 @@
       <div id="view-modal" class="coll-modal">
         <div class="container">
 
+          <div class="spacing-20">
+          </div>
+
+          <canvas id="single-image-view"
+                  class="coll-modal-content"></canvas>
+
+          <div class="spacing-20">
+          </div>
+
           <div class="fixed-edit-pane">
             <div class="center">
               <div class="edit-meta">
@@ -26,22 +35,113 @@
                           style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
                   </canvas>
                 </div>
-                <table class="edit-meta-text">
-                  <tr>
-                  </tr>
-                </table>
+
+              <div style="margin-left:5px; margin-right:5px;">
+                <canvas id="hist_canvas_single" width="265" height="150"
+                        style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
+                </canvas>
+                </div>
+
+              <table id="meta_data_tbl_top_single" class="edit-meta-text meta-data-table">
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td style="text-align: right;"></td>
+                  <td style="text-align: right;"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_1_single" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Filename</td>
+                  <td class="text-bright">abc.jpg</td>
+                </tr>
+                <tr>
+                  <td>Collection</td>
+                  <td class="text-bright">test_exif7</td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_2_single" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Copyright</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Artist</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_3_single" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Rating</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Color</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_4_single" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Capture time</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
+              <table id="meta_data_tbl_5_single" class="edit-meta-text meta-data-table">
+                <colgroup>
+                  <col span="1" style="width: 40%;">
+                  <col span="1" style="width: 60%;">
+                </colgroup>
+                <tr>
+                  <td>Dimension</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Exposure</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Focal len</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>ISO Speed Rating</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Flash</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Make</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Model</td>
+                  <td class="text-bright"></td>
+                </tr>
+                <tr>
+                  <td>Lens</td>
+                  <td class="text-bright"></td>
+                </tr>
+              </table>
               </div>
             </div>
-          </div>
-
-
-          <div class="spacing-20">
-          </div>
-
-          <canvas id="single-image-view"
-                  class="coll-modal-content"></canvas>
-
-          <div class="spacing-20">
           </div>
 
         </div>

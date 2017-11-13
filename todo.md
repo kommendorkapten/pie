@@ -1,19 +1,25 @@
 # In progress
-* zoom/pan in dev, fix bug with pixmap not being reload from ws before
-  drag starts, causes reset of drag.
+* Auto expand coll from query param in coll view.
+* Images created via libraw has blownout highlights.
+* editd, when zoomed in histogram is updated based on zoomed image.
 
 # Sorted
-* rating images same height as color button and devp image.
+* Allow creation of new collections from web ui.
+* collectiond should update mobs via mediad.
+* Move images between collections (rename(2), EXDEV (different file
+  sys)).
+* When navigating from dev to coll, expand list and show last state.
 
 # Unsorted
+* zoom/pan in dev, fix bug with pixmap not being reload from ws before
+  drag starts, causes reset of drag.
 * Write install/config script.
 * Allow config path to be set during compile time.
-* collectiond should update mobs via mediad.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
 * better javascript management for color tag dropdown. Remove global
   js func.
-* Export pictures.
+* Export pictures (new storage type).
 * Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
@@ -22,9 +28,6 @@
   stored in the database may be for the wrong resolution.
 * handle file name collisions during import.
 * Update proxy and thumb with any adjustments from editd.
-* Auto expand top collection.
-* Move images between collections (rename(2), EXDEV (different file
-  sys)).
 * Load collection in editd.
 * Black adjustment is quite simple, pure linear for both +/-. For
   lightening blacks a non-linear method should be used.
@@ -35,11 +38,12 @@
 * libraw to use lcms on sparc.
 * add size to min
 * add min for proxies.
-* When navigating from dev to coll, expand list and show last state.
 * Canvas in editd sometimes contains a non-used line in the top (white
   colored). Can be seen for image: IMG_0259.CR2
 * Exif parsing, shutter speed greater than 1s
 * Downsample yields weird results when scale factor is close to 1.
+* modify alg_contr to use same function call parameters as rest.
+  extend with per alg struct to only allow a single val to be provided.
 
 # Performance:
 * Memory leak check
@@ -85,3 +89,5 @@
 * ~~editd, loading an image should respect the orientation.~~
 * ~~zoom/pan in development view~~
 * ~~Thumbnail in development view, that shows zoomed part of image (navigation).~~
+* ~~Auto expand top collection.~~
+* ~~save filter param in url, useful when switch from dev -> coll.~~
