@@ -1021,7 +1021,6 @@ window.addEventListener("load", function(evt) {
 
     siCanvas.addEventListener('mousemove', function(event) {
         if (zoomMode.enabled && zoomMode.drag){
-
             zoomMode.dx += (event.pageX - zoomMode.startX);
             zoomMode.dy += (event.pageY - zoomMode.startY);
             updateSingleView(selectedMobId);
