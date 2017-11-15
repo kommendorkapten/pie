@@ -111,36 +111,6 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                            img->row_stride);
         PIE_DEBUG("Render color temp:        %8ldusec", timing_dur_usec(&t2));
 
-        /* E X P O S U R E */
-        timing_start(&t2);
-        pie_alg_expos(img->c_red,
-                      img->c_green,
-                      img->c_blue,
-                      s->exposure,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        PIE_DEBUG("Render exposure:          %8ldusec", timing_dur_usec(&t2));
-
-        /* C O N T R A S T */
-        timing_start(&t2);
-        pie_alg_contr(img->c_red,
-                      s->contrast,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        pie_alg_contr(img->c_green,
-                      s->contrast,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        pie_alg_contr(img->c_blue,
-                      s->contrast,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        PIE_DEBUG("Render contrast:          %8ldusec", timing_dur_usec(&t2));
-
         /* H I G H L I G H T S */
         timing_start(&t2);
         pie_alg_highl(img->c_red,
@@ -184,6 +154,36 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                       img->height,
                       img->row_stride);
         PIE_DEBUG("Render black:             %8ldusec", timing_dur_usec(&t2));
+
+        /* E X P O S U R E */
+        timing_start(&t2);
+        pie_alg_expos(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      s->exposure,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render exposure:          %8ldusec", timing_dur_usec(&t2));
+
+        /* C O N T R A S T */
+        timing_start(&t2);
+        pie_alg_contr(img->c_red,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        pie_alg_contr(img->c_green,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        pie_alg_contr(img->c_blue,
+                      s->contrast,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("Render contrast:          %8ldusec", timing_dur_usec(&t2));
 
         /* C L A R I T Y */
         timing_start(&t2);
