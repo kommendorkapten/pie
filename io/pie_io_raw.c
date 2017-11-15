@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -35,9 +35,21 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
 
         /* Prepare image reading */
         lrd->params.output_bps = 16;
+        lrd->params.use_camera_matrix = 1;
         lrd->params.use_camera_wb = 1;
         lrd->params.user_flip = 0;
+        lrd->params.med_passes = 0; /* med 3x3 after interpolation */
         lrd->params.output_color = 1; /* sRGB */
+        lrd->params.no_auto_bright = 0;
+        lrd->params.highlight = 5; /* blend in high lights */
+        /* lrd->params.auto_bright_thr = 0.00003f; 0.001 to 0.00003 */
+        lrd->params.fbdd_noiserd = 0;
+
+        /* exposure correction */
+        lrd->params.exp_correc = 1;
+        lrd->params.exp_shift = 2.5f; /* 0.25 = 2stop dark, 8 = 3 stop light */
+        lrd->params.exp_preser = 1.0f; /* 0 - 1.0 */
+
         lrd->params.user_qual = 2;
         /* user_qual 0 - linear interpolation
                      1 - VNG interpolation
@@ -46,6 +58,10 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                      4 - DCB interpolation
                     11 - DHT interpolation <--- Best performance 2x slower
         */
+
+        /* Gamma, set sRGB */
+        lrd->params.gamm[0] = 1.0 / 2.4f;
+        lrd->params.gamm[1] = 12.92f;
 
         /* Load any options */
         if (opts)
@@ -59,7 +75,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                         break;
                 }
         }
-        
+
         ret = libraw_open_file(lrd, path);
         if (ret)
         {
@@ -84,7 +100,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                 PIE_ERR("libraw_unpack");
                 ret = PIE_IO_INTERNAL_ERR;
                 goto done;
-        }        
+        }
         if (libraw_dcraw_process(lrd))
         {
                 PIE_ERR("libraw_dcraw_process");
@@ -121,7 +137,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         }
         libraw_dcraw_clear_mem(mem_img);
         ret = 0;
-        
+
 done:
         libraw_close(lrd);
         return ret;
