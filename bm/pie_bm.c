@@ -401,17 +401,17 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
         {
                 if (max_h > 0)
                 {
-                        // Both are provided, chose the smallest.
-                        // Start with height.
+                        /* Both are provided, chose the smallest.
+                         * Start with height. */
                         new_h = max_h;
                         if ((int)((float)new_h * ratio) <= max_w)
                         {
-                                // new width fits inside provided box.
+                                /* new width fits inside provided box. */
                                 new_w = (int)((float)new_h * ratio);
                         }
                         else
                         {
-                                // New width is "tighter"
+                                /* New width is "tighter" */
                                 new_w = max_w;
                                 new_h = (int)((float)new_w / ratio);
                         }
@@ -446,7 +446,7 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
         PIE_DEBUG("Step is %f", step);
         radius = (int)(step + 1.0f);
 
-        // Only deal with odd values for the radius
+        /* Only deal with odd values for the radius. */
         if ((radius & 0x1) == 0)
         {
                 radius++;
@@ -465,6 +465,7 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
 #endif
         for (int y = 0; y < dst->height; y++)
         {
+		/* Test with rounding here */
                 int sy = (int)((float)y * step);
 
                 if (sy >= src->height)
@@ -474,6 +475,7 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
 
                 for (int x = 0; x < dst->width; x++)
                 {
+			/* Test with rounding here */
                         int sx = (int)((float)x * step);
 
                         if (sx >= src->width)
