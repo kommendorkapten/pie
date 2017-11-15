@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -22,7 +22,7 @@
 #include <assert.h>
 #include "pie_contr.h"
 
-/* 
+/*
  * c is amount of contrast int [0, 2]
  * c [0, 1] less contrast
  * c [1,+] more contrast
@@ -59,7 +59,7 @@ void pie_alg_contr(float* img,
 #else
         int stop = 0;
 #endif
-        
+
         assert(c >= 0.0f);
         assert(c <= 2.0f);
 
@@ -90,7 +90,7 @@ void pie_alg_contr(float* img,
                 }
 
 #elif _HAS_SSE42
-                
+
                 for (int x = 0; x < stop; x += 4)
                 {
                         __m128 data;
@@ -132,12 +132,12 @@ void pie_alg_contr(float* img,
                         /* Min 0.0 */
                         cmpv = vec_cmplt(datav, zerov);
                         datav = vec_sel(datav, zerov, cmpv);
-        
+
                         vec_st(datav, p, img);
                 }
 
 #endif
-                
+
                 for (int x = stop; x < w; x++)
                 {
                         float* p = img + y * stride + x;
@@ -147,7 +147,7 @@ void pie_alg_contr(float* img,
                         if (*p > 1.0f)
                         {
                                 *p = 1.0f;
-                        } 
+                        }
                         else if (*p < 0.0f)
                         {
                                 *p = 0.0f;
