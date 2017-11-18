@@ -1,3 +1,5 @@
+'use strict';
+
 var COLLD_PORT = 8081;
 var EDITD_PORT = 8080;
 var COLLD_HOST = null;
@@ -487,7 +489,7 @@ window.addEventListener("load", function(evt) {
 
     wsCmd.onclose = function(evt) {
         console.log("Closing websocket...");
-        ws = null;
+        wsCmd = null;
     }
 
     wsCmd.onerror = function(evt) {

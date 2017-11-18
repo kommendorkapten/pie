@@ -1,3 +1,5 @@
+'use strict';
+
 var COLLD_PORT = 8081;
 var EDITD_PORT = 8080;
 var COLLD_HOST = null;
@@ -173,7 +175,7 @@ function renderCollection(coll, options) {
 
     activeAssets = [];
 
-    for (asset of coll.assets) {
+    for (let asset of coll.assets) {
         var keep = false;
 
         /* Color */
@@ -277,7 +279,7 @@ function renderCollection(coll, options) {
 
     columns = Math.floor(img_x / (thumb_size + 28));
     innerHtml += newRow
-    for (i of activeAssets) {
+    for (let i of activeAssets) {
         var cellId = "grid-cell-mob-" + i.id;
         mobCache[i.id] = i.mob;
         var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
@@ -362,8 +364,8 @@ function selectMob(id, cell=null) {
     /* Clear selected item */
     var collTable = document.getElementById("coll-grid-table");
 
-    for (row of collTable.rows) {
-        for (column of row.cells) {
+    for (let row of collTable.rows) {
+        for (let column of row.cells) {
             column.className = "grid-view-table-td";
         }
     }
@@ -385,7 +387,7 @@ function navigateMob(direction) {
     }
 
     var currMob = -1;
-    for (i = 0; i < activeAssets.length; i++) {
+    for (let i = 0; i < activeAssets.length; i++) {
         if (selectedMobId == activeAssets[i].id) {
             currMob = i;
             break;
@@ -1025,7 +1027,7 @@ window.addEventListener("load", function(evt) {
                 coll_tree["count"] = coll[0].count;
                 coll_tree["children"] = {};
 
-                for (i of coll) {
+                for (let i of coll) {
                     if (i.path == "/") {
                         continue;
                     }
@@ -1033,7 +1035,7 @@ window.addEventListener("load", function(evt) {
                     var comps = i.path.split("/");
                     var root = coll_tree;
 
-                    for (c of comps) {
+                    for (let c of comps) {
                         if (c.length == 0) {
                             continue;
                         }
@@ -1094,7 +1096,7 @@ window.addEventListener("load", function(evt) {
                         stack.push({
                             "closeUl": true,
                         });
-                        for (i = childs.length - 1; i >= 0; i--) {
+                        for (let i = childs.length - 1; i >= 0; i--) {
                             stack.push(node.children[childs[i]]);
                         }
                     }
