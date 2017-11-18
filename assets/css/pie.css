@@ -447,11 +447,11 @@ li.collapsibleListClosed{
 }
 
 .color-btn.green {
-    background-color: 57c160;
+    background-color: #57c160;
 }
 
 .color-btn.blue {
-    background-color: 5d88de;
+    background-color: #5d88de;
 }
 
 .color-btn.yellow {
@@ -592,4 +592,12 @@ li.collapsibleListClosed{
    -webkit-border-radius: 5px;
    -moz-border-radius: 5px;
    border-radius: 5px;
+}
+
+.dark {
+    background-color:#434343;
+}
+
+.vert-middle {
+    vertical-align: middle;
 }

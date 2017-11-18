@@ -62,11 +62,21 @@ var histDataB = {
         y: 0
     }]
 };
-var sliderTimeout = 200;
-var exif = null;
-var fullsizeProxy = null;
+let sliderTimeout = 200;
+let exif = null;
+let fullsizeProxy = null;
 /* the bitmap received from the server */
-var bm = null;
+let bm = null;
+let curves = null;
+let curveControlPoints = [defaultControlPoints(),
+                          defaultControlPoints(),
+                          defaultControlPoints(),
+                          defaultControlPoints()];
+let curveColors = ["#a9a9a9", "#e05b5d", "#57c160", "#5d88de"];
+let CURVE_LUM = 0;
+let CURVE_RED = 1;
+let CURVE_GREEN = 2;
+let CURVE_BLUE = 3;
 
 function getWsUrl(){
     var pcol;
@@ -170,6 +180,26 @@ function loadImage(ws) {
     exifClient.send();
 
     return true;
+}
+
+function changeChannelCurve() {
+    var channelSelect = document.getElementById("channel-curve-select");
+    var channel = parseInt(channelSelect.options[channelSelect.selectedIndex].value);
+
+    curveControlPoints[curves.selectedChannel] = curves.controlPoints;
+    curves.controlPoints = curveControlPoints[channel];
+    curves.selectedChannel = channel;
+    curves.color = curveColors[channel];
+    curves.render();
+}
+
+function persistCurve() {
+    if (curves.timeO) {
+        clearTimeout(curves.timeO);
+    }
+    curves.timeO = setTimeout(function(){
+        console.log(curves.controlPoints);
+    }, sliderTimeout);
 }
 
 function setViewport(ws, x0, y0, x1, y1, w, h) {
@@ -1555,8 +1585,12 @@ window.addEventListener("load", function(evt) {
             }
         }
     });
-});
 
+    curves = new Curve(document.getElementById("curve_canvas"),
+                       curveColors[0],
+                       persistCurve);
+    curves.selectedChannel = 0;
+});
 
 document.onkeydown = function(evt) {
     evt = evt || window.event;

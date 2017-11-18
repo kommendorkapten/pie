@@ -6,6 +6,8 @@
     <script type="text/javascript" charset="utf-8"
             src="js/hist.js"></script>
     <script type="text/javascript" charset="utf-8"
+            src="js/curve.js"></script>
+    <script type="text/javascript" charset="utf-8"
             src="js/img.js"></script>
     <link rel="stylesheet" href="css/pie.css">
   </head>
@@ -256,6 +258,28 @@
               </tr>
             </table>
           </div>
+
+          <!-- curves -->
+          <div class="edit-meta">
+            <div style="margin-left:5px; margin-right:5px;">
+              <canvas id="curve_canvas" width="200" height="200"
+                      style="border:1px solid #000000;margin-top:5px; background-color:#434343;">
+              </canvas>
+            </div>
+            <div class="edit-meta-text edit-meta-text-marker header-grp">
+              Channel:
+              <div class="coll-select-small semi-square dark vert-middle">
+                <select id="channel-curve-select"
+                        onchange="changeChannelCurve();">
+                  <option selected="selected" value="0">All</option>
+                  <option value="1">Red</option>
+                  <option value="2">Green</option>
+                  <option value="3">Blue</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -13,9 +13,8 @@
 
 'use strict';
 
-function Curve(canvas, color) {
-    this.canvas = canvas;
-    this.controlPoints = [
+function defaultControlPoints() {
+    let points =  [
         {
             'x': -0.2, 'y': -0.2
         },
@@ -29,11 +28,19 @@ function Curve(canvas, color) {
             'x': 1.2, 'y': 1.2
         },
     ];
+
+    return points;
+}
+
+function Curve(canvas, color, callback = null) {
+    this.canvas = canvas;
+    this.controlPoints = defaultControlPoints();
     this.linePoints = [];
     this.color = color;
     this.w = canvas.width;
     this.h = canvas.height;
     this.selectedPoint = null;
+    this.callback = callback;
 
     if (this.color == null || this.color == "") {
         this.color = "black";
@@ -82,10 +89,15 @@ function Curve(canvas, color) {
             let keep = p != cp;
 
             if (!keep) {
-                if (i == 0 ||
-                    i == 1 ||
-                    i == len - 2 ||
-                    i == len -1) {
+                if (i == 0 || i == len - 1) {
+                    keep = true;
+                } else if (i == 1) {
+                    p.x = 0.0;
+                    p.y = 0.0;
+                    keep = true;
+                } else if (i == len - 2) {
+                    p.x = 1.0;
+                    p.y = 1.0;
                     keep = true;
                 }
             }
@@ -233,7 +245,6 @@ function Curve(canvas, color) {
 
         return cp;
     };
-
     this.render();
 };
 
@@ -333,6 +344,10 @@ function setupCurveListeners(curve, canvas) {
 
             curve.moveControlPoint(curve.selectedPoint, np);
             curve.render();
+
+            if (curve.callback != null) {
+                curve.callback();
+            }
         }
     });
 }
@@ -413,9 +428,3 @@ function pieCmTj(ti, pi, pj) {
 
     return res;
 }
-
-window.addEventListener("load", function(evt) {
-    var crvCanvas = document.getElementById("curve_canvas");
-    let curve = new Curve(crvCanvas, "#57c160");
-
-});
