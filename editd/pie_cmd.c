@@ -523,7 +523,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         else if (strcmp(t, "SHARP") == 0)
         {
                 /* SHARP amount radius threshold
-                   amount    = [0, 100]
+                   amount    = [0, 300]
                    radius    = [0, 100]
                    threshold = [0, 20] */
                 char* p;
