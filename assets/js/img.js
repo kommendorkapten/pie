@@ -78,6 +78,177 @@ let CURVE_RED = 1;
 let CURVE_GREEN = 2;
 let CURVE_BLUE = 3;
 
+function ISController(input, slider, options, callback = null) {
+
+    slider.oninput = function(evt) {
+        let targ = null;
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+
+        input.value = targ.value / options.scale;
+
+        if (targ.iscTimer) {
+            clearTimeout(targ.iscTimer);
+        }
+        targ.iscTimer = setTimeout(function() {
+            callback(targ.value);
+        }, 200);
+
+        return true;
+    };
+
+    input.onchange = function(evt) {
+        let targ = null;
+
+
+        if (evt.target) {
+            targ = evt.target;
+        } else {
+            targ = evt.srcElement;
+        }
+
+        if (isNaN(targ.value)) {
+            targ.value = 0;
+        } else if (targ.value > options.max) {
+            targ.value = options.max;
+        } else if (targ.value < options.min) {
+            targ.value = options.min;
+        }
+
+        let realVal = targ.value * options.scale;
+        slider.value = realVal;
+        callback(realVal);
+    };
+
+    input.onkeydown = function(evt) {
+        /* Only allow 0-9 - */
+        /* ASCII 0-9 is 48 to 57 */
+        /* - 189 or 173 */
+        /* . 190 */
+        /* arrows left right 37 39 */
+        /* backspace (8) delete (46) and enter (13)*/
+        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+
+        if (valid.indexOf(evt.keyCode) !== -1) {
+            return;
+        }
+
+        if (evt.keyCode > 47 && evt.keyCode < 58) {
+            return;
+        }
+
+        evt.preventDefault();
+    };
+}
+
+function ControlProxy(wsImg, wsCmd) {
+    /* Sync in a hackish way */
+    let wsSync = 2;
+
+    wsCmd.onopen = function(evt) {
+        console.log("Opening command websocket..." + wsSync);
+        wsSync = wsSync - 1;
+
+        if (wsSync == 0) {
+            loadImage(wsCmd);
+        }
+    }
+
+    wsImg.onopen = function(evt) {
+        console.log("Opening image websocket..." + wsSync);
+        wsSync = wsSync - 1;
+
+        if (wsSync == 0) {
+            loadImage(wsCmd);
+        }
+    }
+
+    wsCmd.onclose = function(evt) {
+        console.log("Closing websocket...");
+        wsCmd = null;
+    }
+
+    wsCmd.onerror = function(evt) {
+        console.log("ERROR: " + evt.data);
+    }
+
+    wsCmd.onmessage = function(evt) {
+        console.log("ERROR: " + evt);
+    }
+
+    wsImg.onmessage = function(evt) {
+        let now = Date.now();
+        let dur = now - wsCmd.pieStartTs;
+
+        if (typeof evt.data === "string") {
+            conslog.log("ERROR: Got data: " + evt.data);
+            return;
+        }
+
+        let le = true;
+        let w;
+        let h;
+        let msgType;
+        let server_dur;
+        let tx;
+
+        /* Data arrives as :
+           0:3 duration in milli seconds
+           4:7 type of message
+           8:11 width (uint32, network order)
+           12:15 height (uint32, network order)
+           16:  rgba */
+
+        /* width and height are in network order */
+        server_dur = new DataView(evt.data, 0, 4).getUint32(0, false);
+        msgType = new DataView(evt.data, 4, 4).getUint32(0, false);
+        w = new DataView(evt.data, 8, 4).getUint32(0, false);
+        h = new DataView(evt.data, 12, 4).getUint32(0, false);
+
+        console.log("Server duration: " + server_dur + "ms");
+        console.log("RT in " + dur + "ms");
+        tx = dur - server_dur;
+        let mbs = evt.data.byteLength / (1024.0 * 1024.0);
+        console.log("Estimaged tx: " + tx + "ms for " + mbs + "MiB");
+        mbs = mbs * 1000.0 / tx;
+        console.log("Estimaged bw " + mbs + "MiB/s");
+        console.log("Type: " + msgType + " width: " + w + " height:" + h);
+
+        let pixels = new Uint8ClampedArray(evt.data, 16);
+        bm = new ImageData(pixels, w, h);
+        dur = Date.now() - now;
+        console.log("Unpacked image in " + dur + "ms");
+
+        renderImage(bm);
+        /* load fullsize jpeg */
+        let img = getParameterByName("mob");
+        let imgHolder = new Image();
+        let url = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
+
+        url += "/proxy/" + img + ".jpg";
+        console.log("Get proxy " + url);
+        imgHolder.onload = function() {
+            /* Save for later use */
+            fullsizeProxy = this;
+            updateImgNavigation(document.getElementById("img_nav_canvas"),
+                                fullsizeProxy,
+                                exif,
+                                document.getElementById("img_canvas"));
+        }
+        imgHolder.setAttribute('src', url);
+    };
+
+    this.send = function (cmd) {
+        wsCmd.pieStartTs = Date.now();
+        wsCmd.send(cmd);
+    };
+}
+
+
 function getWsUrl(){
     var pcol;
     var u = document.URL;
@@ -469,8 +640,7 @@ window.onresize = function(evt) {
 }
 
 window.addEventListener("load", function(evt) {
-    /* Sync in a hackish way */
-    var wsSync = 2;
+    let ctlProxy = null;
 
     pieInitEdit();
 
@@ -499,1054 +669,95 @@ window.addEventListener("load", function(evt) {
     wsImg = new WebSocket(getWsUrl(), "pie-img");
     wsImg.binaryType = "arraybuffer";
 
-    wsCmd.onopen = function(evt) {
-        console.log("Opening command websocket..." + wsSync);
-        wsSync = wsSync - 1;
-
-        if (wsSync == 0) {
-            loadImage(wsCmd);
-        }
-    }
-
-    wsImg.onopen = function(evt) {
-        console.log("Opening image websocket..." + wsSync);
-        wsSync = wsSync - 1;
-
-        if (wsSync == 0) {
-            loadImage(wsCmd);
-        }
-    }
-
-    wsCmd.onclose = function(evt) {
-        console.log("Closing websocket...");
-        wsCmd = null;
-    }
-
-    wsCmd.onerror = function(evt) {
-        console.log("ERROR: " + evt.data);
-    }
-
-    wsCmd.onmessage = function(evt) {
-        console.log("ERROR: " + evt);
-    }
-
-    wsImg.onmessage = function(evt) {
-        var now = Date.now();
-        var dur = now - wsCmd.pieStartTs;
-
-        if (typeof evt.data === "string") {
-            conslog.log("ERROR: Got data: " + evt.data);
-        } else {
-            var le = true;
-            var w;
-            var h;
-            var msgType;
-            var server_dur;
-            var tx;
-
-            /* Data arrives as :
-               0:3 duration in milli seconds
-               4:7 type of message
-               8:11 width (uint32, network order)
-               12:15 height (uint32, network order)
-               16:  rgba */
-
-            /* width and height are in network order */
-            server_dur = new DataView(evt.data, 0, 4).getUint32(0, false);
-            msgType = new DataView(evt.data, 4, 4).getUint32(0, false);
-            w = new DataView(evt.data, 8, 4).getUint32(0, false);
-            h = new DataView(evt.data, 12, 4).getUint32(0, false);
-
-            console.log("Server duration: " + server_dur + "ms");
-            console.log("RT in " + dur + "ms");
-            tx = dur - server_dur;
-            var mbs = evt.data.byteLength / (1024.0 * 1024.0);
-            console.log("Estimaged tx: " + tx + "ms for " + mbs + "MiB");
-            mbs = mbs * 1000.0 / tx;
-            console.log("Estimaged bw " + mbs + "MiB/s");
-            console.log("Type: " + msgType + " width: " + w + " height:" + h);
-
-            var pixels = new Uint8ClampedArray(evt.data, 16);
-            bm = new ImageData(pixels, w, h);
-            dur = Date.now() - now;
-            console.log("Unpacked image in " + dur + "ms");
-
-            renderImage(bm);
-            /* load fullsize jpeg */
-            var img = getParameterByName("mob");
-            var imgHolder = new Image();
-            var url = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
-
-            url += "/proxy/" + img + ".jpg";
-            console.log("Get proxy " + url);
-            imgHolder.onload = function() {
-                /* Save for later use */
-                fullsizeProxy = this;
-                updateImgNavigation(document.getElementById("img_nav_canvas"),
-                                    fullsizeProxy,
-                                    exif,
-                                    document.getElementById("img_canvas"));
-            }
-            imgHolder.setAttribute('src', url);
-        }
-    }
+    ctlProxy = new ControlProxy(wsImg, wsCmd);
 
     /*
      * I N P U T   S L I D E R S
      */
-    document.getElementById("sl_colortemp").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_colortemp").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("COLORT " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_tint").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_tint").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("TINT " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_exposure").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_exposure").value=targ.value / 10.0;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("EXPOS " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_contrast").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_contrast").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("CONTR " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_highlights").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_highlights").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("HIGHL " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_shadows").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_shadows").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SHADO " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_white").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_white").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("WHITE " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_black").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_black").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("BLACK " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_clarity").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_clarity").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("CLARI " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_vibrance").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_vibrance").value = targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("VIBRA " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_saturation").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_saturation").value = targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SATUR " + targ.value);
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_sharp_a").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_sharp_a").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            var a = document.getElementById("sl_sharp_a").value;
-            var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_sharp_r").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_sharp_r").value=targ.value / 10.0;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            var a = document.getElementById("sl_sharp_a").value;
-            var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    document.getElementById("sl_sharp_t").oninput = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        document.getElementById("in_sharp_t").value=targ.value;
-
-        if (targ.wsCall) {
-            clearTimeout(targ.wsCall);
-        }
-        targ.wsCall = setTimeout(function(){
-            var a = document.getElementById("sl_sharp_a").value;
-            var r = document.getElementById("sl_sharp_r").value;
-            var t = document.getElementById("sl_sharp_t").value;
-            wsCmd.pieStartTs = Date.now();
-            wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-        }, sliderTimeout);
-
-        return true;
-    };
-
-    /*
-     * I N P U T   V A L I D A T O R S
-     */
-    document.getElementById("in_colortemp").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_tint").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_exposure").onkeydown = function(evt) {
-        /* Only allow 0-9 - */
-        /* ASCII 0-9 is 48 to 57 */
-        /* - 189 or 173*/
-        /* . 190 */
-        /* arrows left right 37 39 */
-        /* backspace (8) delete (46) and enter (13)*/
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_contrast").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_highlights").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_shadows").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_white").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_black").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_clarity").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_vibrance").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_saturation").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_sharp_a").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_sharp_r").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    document.getElementById("in_sharp_t").onkeydown = function(evt) {
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
-
-        if (valid.indexOf(evt.keyCode) !== -1) {
-            return;
-        }
-
-        if (evt.keyCode > 47 && evt.keyCode < 58) {
-            return;
-        }
-
-        evt.preventDefault();
-    };
-
-    /*
-     * M A P   I N P U T   T O   S L I D E R S
-     */
-    document.getElementById("in_colortemp").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 30) {
-            targ.value = 30;
-        } else if (targ.value < -30) {
-            targ.value = -30;
-        }
-
-        document.getElementById("sl_colortemp").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("COLORT " + targ.value);
-    };
-
-    document.getElementById("in_tint").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 30) {
-            targ.value = 30;
-        } else if (targ.value < -30) {
-            targ.value = -30;
-        }
-
-        document.getElementById("sl_tint").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("TINT " + targ.value);
-    };
-
-    document.getElementById("in_exposure").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 5) {
-            targ.value = 5;
-        } else if (targ.value < -5) {
-            targ.value = -5;
-        }
-
-        document.getElementById("sl_exposure").value=targ.value * 10;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("EXPOS " + Math.ceil(targ.value * 10));
-    };
-
-    document.getElementById("in_contrast").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_contrast").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("CONTR " + targ.value);
-    };
-
-    document.getElementById("in_highlights").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_highlights").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("HIGHL " + targ.value);
-    };
-
-    document.getElementById("in_shadows").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_shadows").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("SHADO " + targ.value);
-    };
-
-    document.getElementById("in_white").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_white").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("WHITE " + targ.value);
-    };
-
-    document.getElementById("in_black").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_black").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("BLACK " + targ.value);
-    };
-
-    document.getElementById("in_clarity").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_clarity").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("CLARI " + targ.value);
-    };
-
-    document.getElementById("in_vibrance").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_vibrance").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("VIBRA " + targ.value);
-    };
-
-    document.getElementById("in_saturation").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 100) {
-            targ.value = 100;
-        } else if (targ.value < -100) {
-            targ.value = -100;
-        }
-
-        document.getElementById("sl_saturation").value=targ.value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("SATUR " + targ.value);
-    };
-
-    document.getElementById("in_sharp_a").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 300) {
-            targ.value = 300;
-        } else if (targ.value < 0) {
-            targ.value = -0;
-        }
-
-        document.getElementById("sl_sharp_a").value=targ.value;
-        var a = document.getElementById("sl_sharp_a").value;
-        var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-    };
-
-    document.getElementById("in_sharp_r").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 10) {
-            targ.value = 10;
-        } else if (targ.value < 0.1) {
-            targ.value = 0.1;
-        }
-
-        document.getElementById("sl_sharp_r").value=targ.value * 10;
-        var a = document.getElementById("sl_sharp_a").value;
-        var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-    };
-
-    document.getElementById("in_sharp_t").onchange = function(evt) {
-        var targ;
-
-        if (!wsCmd) {
-            return false;
-        }
-
-        if (evt.target) {
-            targ = evt.target;
-        } else {
-            targ = evt.srcElement;
-        }
-
-        if (isNaN(targ.value)) {
-            targ.value = 0;
-        } else if (targ.value > 20) {
-            targ.value = 20;
-        } else if (targ.value < 0) {
-            targ.value = 0;
-        }
-
-        document.getElementById("sl_sharp_t").value=targ.value;
-        var a = document.getElementById("sl_sharp_a").value;
-        var r = document.getElementById("sl_sharp_r").value;
-        var t = document.getElementById("sl_sharp_t").value;
-        wsCmd.pieStartTs = Date.now();
-        wsCmd.send("SHARP " + a + " " + r + " " + t + " ");
-    };
+    new ISController(document.getElementById("in_colortemp"),
+                     document.getElementById("sl_colortemp"),
+                     {'max': 30, 'min': -30, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("COLORT " + val);
+                     });
+    new ISController(document.getElementById("in_tint"),
+                     document.getElementById("sl_tint"),
+                     {'max': 30, 'min': -30, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("TINT " + val);
+                     });
+    new ISController(document.getElementById("in_exposure"),
+                     document.getElementById("sl_exposure"),
+                     {'max': 50, 'min': -50, 'scale': 10,},
+                     function (val) {
+                         ctlProxy.send("EXPOS " + val);
+                     });
+    new ISController(document.getElementById("in_contrast"),
+                     document.getElementById("sl_contrast"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("CONTR " + val);
+                     });
+    new ISController(document.getElementById("in_highlights"),
+                     document.getElementById("sl_highlights"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("HIGHL " + val);
+                     });
+    new ISController(document.getElementById("in_shadows"),
+                     document.getElementById("sl_shadows"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("SHADO " + val);
+                     });
+    new ISController(document.getElementById("in_white"),
+                     document.getElementById("sl_white"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("WHITE " + val);
+                     });
+    new ISController(document.getElementById("in_black"),
+                     document.getElementById("sl_black"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("BLACK " + val);
+                     });
+    new ISController(document.getElementById("in_clarity"),
+                     document.getElementById("sl_clarity"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("CLARI " + val);
+                     });
+    new ISController(document.getElementById("in_vibrance"),
+                     document.getElementById("sl_vibrance"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("VIBRA " + val);
+                     });
+    new ISController(document.getElementById("in_saturation"),
+                     document.getElementById("sl_saturation"),
+                     {'max': 100, 'min': -100, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("SATUR " + val);
+                     });
+    new ISController(document.getElementById("in_sharp_a"),
+                     document.getElementById("sl_sharp_a"),
+                     {'max': 300, 'min': 0, 'scale': 1,},
+                     function (val) {
+                         ctlProxy.send("SHARP " + val);
+                     });
+    new ISController(document.getElementById("in_sharp_r"),
+                     document.getElementById("sl_sharp_r"),
+                     {'max': 10, 'min': 0.1, 'scale': 10.0,},
+                     function (val) {
+                         ctlProxy.send("SHARP " + val);
+                     });
+    new ISController(document.getElementById("in_sharp_t"),
+                     document.getElementById("sl_sharp_t"),
+                     {'max': 20, 'min': 0, 'scale': 0,},
+                     function (val) {
+                         ctlProxy.send("SHARP " + val);
+                     });
 
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
     histChart = new Chart(histCanvas, {
