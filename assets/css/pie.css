@@ -598,6 +598,10 @@ li.collapsibleListClosed{
     background-color:#434343;
 }
 
-.vert-middle {
-    vertical-align: middle;
+.channel-info {
+    display: -webkit-flex;
+    display: flex;
+    margin: 10px;
+    line-height: 20px;
+    user-select: none;
 }
