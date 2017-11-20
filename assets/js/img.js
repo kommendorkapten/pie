@@ -77,6 +77,7 @@ let CURVE_LUM = 0;
 let CURVE_RED = 1;
 let CURVE_GREEN = 2;
 let CURVE_BLUE = 3;
+let devParams = null;
 
 function ISController(input, slider, options, callback = null) {
 
@@ -248,7 +249,6 @@ function ControlProxy(wsImg, wsCmd) {
     };
 }
 
-
 function getWsUrl(){
     var pcol;
     var u = document.URL;
@@ -304,28 +304,28 @@ function loadImage(ws) {
     devpClient.onreadystatechange = function() {
         if (devpClient.readyState == XMLHttpRequest.DONE) {
             if (devpClient.status == 200) {
-                var settings = JSON.parse(devpClient.responseText);
+                devParams = JSON.parse(devpClient.responseText);
 
                 // Settings are scaled with devSetScale
-                settings.colort = Math.round(settings.colort / devSetScale);
-                settings.tint = Math.round(settings.tint / devSetScale);
-                settings.expos = Math.round(settings.expos / devSetScale);
-                settings.contr = Math.round(settings.contr / devSetScale);
-                settings.highl = Math.round(settings.highl / devSetScale);
-                settings.shado = Math.round(settings.shado / devSetScale);
-                settings.white = Math.round(settings.white / devSetScale);
-                settings.black = Math.round(settings.black / devSetScale);
-                settings.clarity.amount = Math.round(settings.clarity.amount / devSetScale);
-                settings.clarity.rad    = Math.round(settings.clarity.rad    / devSetScale);
-                settings.clarity.thresh = Math.round(settings.clarity.thresh / devSetScale);
-                settings.vibra = Math.round(settings.vibra / devSetScale);
-                settings.satur = Math.round(settings.satur / devSetScale);
-                settings.rot = Math.round(settings.rot / devSetScale);
-                settings.sharp.amount = Math.round(settings.sharp.amount / devSetScale);
-                settings.sharp.rad    = Math.round(settings.sharp.rad    / devSetScale);
-                settings.sharp.thresh = Math.round(settings.sharp.thresh / devSetScale);
+                devParams.colort = Math.round(devParams.colort / devSetScale);
+                devParams.tint = Math.round(devParams.tint / devSetScale);
+                devParams.expos = Math.round(devParams.expos / devSetScale);
+                devParams.contr = Math.round(devParams.contr / devSetScale);
+                devParams.highl = Math.round(devParams.highl / devSetScale);
+                devParams.shado = Math.round(devParams.shado / devSetScale);
+                devParams.white = Math.round(devParams.white / devSetScale);
+                devParams.black = Math.round(devParams.black / devSetScale);
+                devParams.clarity.amount = Math.round(devParams.clarity.amount / devSetScale);
+                devParams.clarity.rad    = Math.round(devParams.clarity.rad    / devSetScale);
+                devParams.clarity.thresh = Math.round(devParams.clarity.thresh / devSetScale);
+                devParams.vibra = Math.round(devParams.vibra / devSetScale);
+                devParams.satur = Math.round(devParams.satur / devSetScale);
+                devParams.rot = Math.round(devParams.rot / devSetScale);
+                devParams.sharp.amount = Math.round(devParams.sharp.amount / devSetScale);
+                devParams.sharp.rad    = Math.round(devParams.sharp.rad    / devSetScale);
+                devParams.sharp.thresh = Math.round(devParams.sharp.thresh / devSetScale);
 
-                updateDevParams(settings);
+                updateDevParams(devParams);
             }
         }
     };
@@ -620,7 +620,6 @@ function renderImage(bm) {
     }
 }
 
-
 window.onresize = function(evt) {
     var w = window.innerWidth;
     var c = document.getElementById("img_canvas");
@@ -679,84 +678,111 @@ window.addEventListener("load", function(evt) {
                      {'max': 30, 'min': -30, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("COLORT " + val);
+                         devParams.colort = val;
                      });
     new ISController(document.getElementById("in_tint"),
                      document.getElementById("sl_tint"),
                      {'max': 30, 'min': -30, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("TINT " + val);
+                         devParams.tint = val;
                      });
     new ISController(document.getElementById("in_exposure"),
                      document.getElementById("sl_exposure"),
                      {'max': 50, 'min': -50, 'scale': 10,},
                      function (val) {
                          ctlProxy.send("EXPOS " + val);
+                         devParams.expos = val;
                      });
     new ISController(document.getElementById("in_contrast"),
                      document.getElementById("sl_contrast"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("CONTR " + val);
+                         devParams.contr = val;
                      });
     new ISController(document.getElementById("in_highlights"),
                      document.getElementById("sl_highlights"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("HIGHL " + val);
+                         devParams.highl = val;
                      });
     new ISController(document.getElementById("in_shadows"),
                      document.getElementById("sl_shadows"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("SHADO " + val);
+                         devParams.shado = val;
                      });
     new ISController(document.getElementById("in_white"),
                      document.getElementById("sl_white"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("WHITE " + val);
+                         devParams.white = val;
                      });
     new ISController(document.getElementById("in_black"),
                      document.getElementById("sl_black"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("BLACK " + val);
+                         devParams.black = val;
                      });
     new ISController(document.getElementById("in_clarity"),
                      document.getElementById("sl_clarity"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("CLARI " + val);
+                         devParams.clarity.amount = val;
                      });
     new ISController(document.getElementById("in_vibrance"),
                      document.getElementById("sl_vibrance"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("VIBRA " + val);
+                         devParams.vibra = val;
                      });
     new ISController(document.getElementById("in_saturation"),
                      document.getElementById("sl_saturation"),
                      {'max': 100, 'min': -100, 'scale': 1,},
                      function (val) {
                          ctlProxy.send("SATUR " + val);
+                         devParams.satur = val;
                      });
     new ISController(document.getElementById("in_sharp_a"),
                      document.getElementById("sl_sharp_a"),
                      {'max': 300, 'min': 0, 'scale': 1,},
                      function (val) {
-                         ctlProxy.send("SHARP " + val);
+                         devParams.sharp.amount = val;
+
+                         let cmd = "SHARP " + devParams.sharp.amount + " " +
+                             devParams.sharp.rad + " " +
+                             devParams.sharp.thresh;
+
+                         ctlProxy.send(cmd);
                      });
     new ISController(document.getElementById("in_sharp_r"),
                      document.getElementById("sl_sharp_r"),
                      {'max': 10, 'min': 0.1, 'scale': 10.0,},
                      function (val) {
-                         ctlProxy.send("SHARP " + val);
+                         devParams.sharp.rad = val;
+
+                         let cmd = "SHARP " + devParams.sharp.amount + " " +
+                             devParams.sharp.rad + " " +
+                             devParams.sharp.thresh;
+                         ctlProxy.send(cmd);
                      });
     new ISController(document.getElementById("in_sharp_t"),
                      document.getElementById("sl_sharp_t"),
-                     {'max': 20, 'min': 0, 'scale': 0,},
+                     {'max': 20, 'min': 0, 'scale': 1,},
                      function (val) {
-                         ctlProxy.send("SHARP " + val);
+                         devParams.sharp.thresh = val;
+
+                         let cmd = "SHARP " + devParams.sharp.amount + " " +
+                             devParams.sharp.rad + " " +
+                             devParams.sharp.thresh;
+                         ctlProxy.send(cmd);
                      });
 
     var histCanvas = document.getElementById("hist_canvas").getContext("2d");
