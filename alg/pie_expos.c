@@ -6,23 +6,19 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
 #include <assert.h>
-#include "../math/pie_catmull.h"
 #include "pie_curve.h"
 #include "pie_expos.h"
 
-#define GAMMA_C   2.33f     
-#define SEGMENT_LEN 150
-/* No use to have LUT larger than the curve, 2 * SEGMENT LEN */
-#define LUT_SIZE  (2 * SEGMENT_LEN)
+#define GAMMA_C   2.33f
 #define CURVE_LEN 5
 
-/* Centripetal Catmull-Rom spline parameters for curves matching 
+/* Centripetal Catmull-Rom spline parameters for curves matching
    the desired exposure levels */
 static struct pie_point_2d em0[CURVE_LEN] =
 {
@@ -140,82 +136,16 @@ void pie_alg_expos(float* restrict r,
                    float* restrict g,
                    float* restrict b,
                    float e,
-                   int width,
-                   int height,
+                   int w,
+                   int h,
                    int stride)
 {
         struct pie_point_2d p[CURVE_LEN];
-        struct pie_point_2d c[LUT_SIZE];
-        float lut[LUT_SIZE];
-        const float scale = LUT_SIZE - 1.0f;        
 
         /* Create curve */
         pie_alg_expos_curve(p, e);
-        pie_mth_catm_rom_chain(c, p, CURVE_LEN, SEGMENT_LEN);
-
-        for (int i = 0; i < LUT_SIZE; i++)
-        {
-                float out;
-                int ret;
-
-                ret = pie_alg_curve_get(&out,
-                                        &c[0],
-                                        (float)i / scale,
-                                        LUT_SIZE);
-                assert(ret == 0);
-                lut[i] = out;
-        }
-
-        /* Takes "long" time */
-        for (int y = 0; y < height; y++)
-        {
-#ifdef __powerpc__
-                int rem = width % 4;
-                int stop = width - rem;
-#else
-                int stop = 0;
-#endif
-
-#ifdef __powerpc__
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-
-                        r[p]   = lut[(int)(r[p] * scale)];
-                        r[p+1] = lut[(int)(r[p+1] * scale)];
-                        r[p+2] = lut[(int)(r[p+2] * scale)];
-                        r[p+3] = lut[(int)(r[p+3] * scale)];
-                }
-
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-                        
-                        g[p]   = lut[(int)(g[p] * scale)];
-                        g[p+1] = lut[(int)(g[p+1] * scale)];
-                        g[p+2] = lut[(int)(g[p+2] * scale)];
-                        g[p+3] = lut[(int)(g[p+3] * scale)];
-                }
-
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-                        
-                        b[p]   = lut[(int)(b[p] * scale)];
-                        b[p+1] = lut[(int)(b[p+1] * scale)];
-                        b[p+2] = lut[(int)(b[p+2] * scale)];
-                        b[p+3] = lut[(int)(b[p+3] * scale)];
-                }                        
-#endif
-                for (int x = stop; x < width; x++)
-                {
-                        int p = y * stride + x;
-
-                        r[p] = lut[(int)(r[p] * scale)];
-                        g[p] = lut[(int)(g[p] * scale)];
-                        b[p] = lut[(int)(b[p] * scale)];
-                }
-        }
+        /* apply curve */
+        pie_alg_curve(r, g, b, PIE_CHANNEL_LUM, p, CURVE_LEN, w, h, stride);
 }
 
 /*
@@ -246,14 +176,14 @@ void pie_alg_expos_curve(struct pie_point_2d o[CURVE_LEN], float e)
                         beg = &em2[0];
                         end = &em1[0];
 
-                        phi = e + 2.0f;                        
+                        phi = e + 2.0f;
                 }
                 else if (e >= -3.0f)
                 {
                         beg = &em3[0];
                         end = &em2[0];
 
-                        phi = e + 3.0f;                        
+                        phi = e + 3.0f;
                 }
                 else if (e >= -4.0f)
                 {
@@ -268,7 +198,7 @@ void pie_alg_expos_curve(struct pie_point_2d o[CURVE_LEN], float e)
                         end = &em4[0];
 
                         phi = e + 5.0f;
-                }                
+                }
         }
         else
         {
@@ -306,7 +236,7 @@ void pie_alg_expos_curve(struct pie_point_2d o[CURVE_LEN], float e)
                         end = &ep5[0];
 
                         phi = e - 4.0f;
-                }                                
+                }
         }
 
         /* Linear interpolation */

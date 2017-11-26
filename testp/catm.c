@@ -24,7 +24,7 @@ int main(void)
         p[4].y = 1.2f;
 
         /* test */
-        pie_alg_expos_curve(p, 0.0f);        
+        pie_alg_expos_curve(p, 0.0f);
         pie_mth_catm_rom_chain(o, p, 5, NUM_P);
 
 #if 1
@@ -41,7 +41,7 @@ int main(void)
 #endif
 
         memset(out, -1, 256 * sizeof(int));
-        
+
         /* Merge */
         for (int i = 0; i < (2 * NUM_P); i ++)
         {
@@ -63,11 +63,13 @@ int main(void)
         }
 #endif
 
+#if 0
         pie_alg_expos_curve(p, -0.1f);
         for (int i = 0; i < 5; i++)
         {
                 printf("%f %f\n", p[i].x, p[i].y);
         }
-        
+#endif
+
         return 0;
 }

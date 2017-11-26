@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -16,11 +16,8 @@
 #include "../math/pie_catmull.h"
 #include "pie_curve.h"
 
-#define SEGMENT_LEN 150
 #define CURVE_LEN_M 6
 #define CURVE_LEN_P 7
-/* No use to have LUT larger than the curve, 5 * SEGMENT LEN */
-#define LUT_SIZE  (4 * SEGMENT_LEN)
 
 /**
  * Create an highlight adjustment curve. Used internally by pie_alg_highl.
@@ -37,7 +34,7 @@ static struct pie_point_2d hm0[6] =
         {.x =  0.53725f, .y =  0.53725f},
         {.x =  0.8f,     .y =  0.8f},
         {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  2.0f}        
+        {.x =  2.0f,     .y =  2.0f}
 };
 
 static struct pie_point_2d hm50[6] =
@@ -90,89 +87,24 @@ static struct pie_point_2d hp100[7] =
         {.x =  0.6f,     .y =  0.7f},
         {.x =  0.8f,     .y =  0.94f},
         {.x =  1.0f,     .y =  1.0f},
-        {.x =  2.0f,     .y =  1.0f}        
+        {.x =  2.0f,     .y =  1.0f}
 };
 
 void pie_alg_highl(float* restrict r,
                    float* restrict g,
                    float* restrict b,
                    float e,
-                   int width,
-                   int height,
+                   int w,
+                   int h,
                    int stride)
 {
         struct pie_point_2d p[CURVE_LEN_P];
-        struct pie_point_2d c[LUT_SIZE];
-        float lut[LUT_SIZE];
-        const float scale = LUT_SIZE - 1.0f;
         int len;
 
         /* Create curve */
         len = pie_alg_highl_curve(p, e);
-        pie_mth_catm_rom_chain(c, p, len, SEGMENT_LEN);
-
-        for (int i = 0; i < LUT_SIZE; i++)
-        {
-                float out;
-                int ret;
-
-                ret = pie_alg_curve_get(&out,
-                                        &c[0],
-                                        (float)i / scale,
-                                        (len - 3) * SEGMENT_LEN);
-                assert(ret == 0);
-                lut[i] = out;
-        }
-        
-        for (int y = 0; y < height; y++)
-        {
-#ifdef __powerpc__
-                int rem = width % 4;
-                int stop = width - rem;
-#else
-                int stop = 0;
-#endif
-
-#ifdef __powerpc__
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-
-                        r[p]   = lut[(int)(r[p] * scale)];
-                        r[p+1] = lut[(int)(r[p+1] * scale)];
-                        r[p+2] = lut[(int)(r[p+2] * scale)];
-                        r[p+3] = lut[(int)(r[p+3] * scale)];
-                }
-
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-                        
-                        g[p]   = lut[(int)(g[p] * scale)];
-                        g[p+1] = lut[(int)(g[p+1] * scale)];
-                        g[p+2] = lut[(int)(g[p+2] * scale)];
-                        g[p+3] = lut[(int)(g[p+3] * scale)];
-                }
-
-                for (int x = 0; x < stop; x += 4)
-                {
-                        int p = y * stride + x;
-                        
-                        b[p]   = lut[(int)(b[p] * scale)];
-                        b[p+1] = lut[(int)(b[p+1] * scale)];
-                        b[p+2] = lut[(int)(b[p+2] * scale)];
-                        b[p+3] = lut[(int)(b[p+3] * scale)];
-                }
-#endif
-                for (int x = stop; x < width; x++)
-                {
-                        int p = y * stride + x;
-
-                        r[p] = lut[(int)(r[p] * scale)];
-                        g[p] = lut[(int)(g[p] * scale)];
-                        b[p] = lut[(int)(b[p] * scale)];
-                }
-        }
+        /* apply curve */
+        pie_alg_curve(r, g, b, PIE_CHANNEL_LUM, p, len, w, h, stride);
 }
 
 /*
@@ -206,7 +138,7 @@ static int pie_alg_highl_curve(struct pie_point_2d* o, float e)
                         end = &hm50[0];
 
                         phi = (e + 1.0f) * 2.0f;
-                }                
+                }
         }
         else
         {
@@ -224,7 +156,7 @@ static int pie_alg_highl_curve(struct pie_point_2d* o, float e)
                         end = &hp100[0];
 
                         phi = (e - 0.5f) * 2.0f;
-                }                                
+                }
         }
 
         /* Linear interpolation */

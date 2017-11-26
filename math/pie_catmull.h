@@ -39,7 +39,7 @@ extern void pie_mth_catm_rom(struct pie_point_2d*,
  *        The first point is at index 1, and the last is num points - 2.
  * @param number of points (including control points).
  * @param number of points to draw per segment.
- * @return void
+ * @return void.
  */
 extern void pie_mth_catm_rom_chain(struct pie_point_2d*,
                                    const struct pie_point_2d*,

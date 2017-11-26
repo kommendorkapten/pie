@@ -166,6 +166,9 @@ bin/histinfo: testp/histinfo.c obj/timing.o  obj/pie_bm.o obj/pie_hist.o $(IO_OB
 bin/contr: testp/contr.c obj/pie_contr.o obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
+bin/texp: testp/texp.c obj/pie_bm.o $(IO_OBJS) obj/pie_math.o obj/pie_curve.o obj/pie_expos.o obj/pie_catmull.o obj/pie_highl.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
+
 bin/gauss: testp/gauss.c obj/timing.o $(IO_OBJS) obj/pie_bm.o $(MATH_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
