@@ -11,11 +11,25 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
+#include <string.h>
+#include <ctype.h>
+#include "../pie_types.h"
 #include "../pie_log.h"
 #include "pie_msg.h"
-#include <string.h>
 
 #define MAX_CMD 256
+
+/**
+ * Create a channel from a single ascii character.
+ * l -> PIE_CHANNEL_LUM
+ * r -> PIE_CHANNEL_RED
+ * g -> PIE_CHANNEL_GREEN
+ * b -> PIE_CHANNEL_BLUE
+ * @param ascii character, upper or lower case..
+ * @return the pie channel, or PIE_CHANNEL_INVALID if invalid character
+ * provided.
+ */
+static enum pie_channel pie_atoc(int);
 
 int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
 {
@@ -606,6 +620,42 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                           msg->f2,
                           msg->f3);
         }
+        else if (strcmp(t, "CURVE") == 0)
+        {
+                /* CURVE [l,r,g,b] x,y;(x,y);x,y */
+                enum pie_channel chan;
+
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+
+                chan = pie_atoc(t[0]);
+                if (chan == PIE_CHANNEL_INVALID)
+                {
+                        PIE_WARN("[%s] invalid channel '%s'",
+                                 msg->token,
+                                 t);
+                        return -1;
+                }
+
+                t = strtok_r(NULL, " ", &lasts);
+                if (t == NULL)
+                {
+                        PIE_WARN("[%s] not a valid command '%s'",
+                                 msg->token,
+                                 data);
+                        return -1;
+                }
+
+                strncpy(msg->buf, t, PIE_MSG_BUF_LEN);
+                msg->type = PIE_MSG_SET_CURVE;
+                msg->i1 = chan;
+        }
         else
         {
                 PIE_WARN("[%s] unknown command '%s'\n",
@@ -615,4 +665,30 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
         }
 
         return 0;
+}
+
+static enum pie_channel pie_atoc(int c)
+{
+        enum pie_channel chan;
+
+        switch (tolower(c))
+        {
+        case 'l':
+                chan = PIE_CHANNEL_LUM;
+                break;
+        case 'r':
+                chan = PIE_CHANNEL_RED;
+                break;
+        case 'g':
+                chan = PIE_CHANNEL_GREEN;
+                break;
+        case 'b':
+                chan = PIE_CHANNEL_BLUE;
+                break;
+        default:
+                chan = PIE_CHANNEL_INVALID;
+                break;
+        }
+
+        return chan;
 }

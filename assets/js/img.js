@@ -1,18 +1,19 @@
 'use strict';
 
-var COLLD_PORT = 8081;
-var EDITD_PORT = 8080;
-var COLLD_HOST = null;
-var EDITD_HOST = null;
-var PROTO = null;
-var wsCmd = null;
-var wsImg = null;
-var histChart;
-var lowerPaneHeight = 220;
-var histYMax = 255;
-var bigEndian = 1;
-var devSetScale = 10000.0;
-var zoomMode = {
+let COLLD_PORT = 8081;
+let EDITD_PORT = 8080;
+let COLLD_HOST = null;
+let EDITD_HOST = null;
+let PROTO = null;
+let wsCmd = null;
+let wsImg = null;
+let ctlProxy = null;
+let histChart;
+let lowerPaneHeight = 220;
+let histYMax = 255;
+let bigEndian = 1;
+let devSetScale = 10000.0;
+let zoomMode = {
     "enabled": false,
     "mode": "center",
     "drag": false,
@@ -22,7 +23,7 @@ var zoomMode = {
     "dy": 0,
     "moved": false,
 };
-var histDataL = {
+let histDataL = {
     borderColor: "rgba(200, 200, 200, 0.5)",
     backgroundColor: "rgba(200, 200, 200, 0.7)",
     pointRadius: 0,
@@ -32,7 +33,7 @@ var histDataL = {
         y: 0
     }]
 };
-var histDataR = {
+let histDataR = {
     borderColor: "rgba(255, 0, 0, 0.5)",
     backgroundColor: "rgba(255, 0, 0, 0.4)",
     pointRadius: 0,
@@ -42,7 +43,7 @@ var histDataR = {
         y: 0
     }]
 };
-var histDataG = {
+let histDataG = {
     borderColor: "rgba(0, 255, 0, 0.5)",
     backgroundColor: "rgba(0, 255, 0, 0.4)",
     pointRadius: 0,
@@ -52,7 +53,7 @@ var histDataG = {
         y: 0
     }]
 };
-var histDataB = {
+let histDataB = {
     borderColor: "rgba(0, 0, 255, 0.5)",
     backgroundColor: "rgba(0, 0, 255, 0.4)",
     pointRadius: 0,
@@ -132,7 +133,7 @@ function ISController(input, slider, options, callback = null) {
         /* . 190 */
         /* arrows left right 37 39 */
         /* backspace (8) delete (46) and enter (13)*/
-        var valid = [8, 13, 37, 39, 46, 173, 189, 190];
+        let valid = [8, 13, 37, 39, 46, 173, 189, 190];
 
         if (valid.indexOf(evt.keyCode) !== -1) {
             return;
@@ -244,14 +245,21 @@ function ControlProxy(wsImg, wsCmd) {
     };
 
     this.send = function (cmd) {
+        console.log(cmd);
         wsCmd.pieStartTs = Date.now();
         wsCmd.send(cmd);
+    };
+
+    this.setViewport = function(x0, y0, x1, y1, w, h) {
+        let cmd = "VIEWP " + x0 + " " + y0 + " " + x1 + " " + y1 + " " + w + " " + h;
+
+        this.send(cmd);
     };
 }
 
 function getWsUrl(){
-    var pcol;
-    var u = document.URL;
+    let pcol;
+    let u = document.URL;
 
     /*
      * We open the websocket encrypted if this page came on an
@@ -279,7 +287,7 @@ function getParameterByName(name, url) {
       url = window.location.href;
     }
     name = name.replace(/[\[\]]/g, "\\$&");
-    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+    let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
         results = regex.exec(url);
     if (!results) return null;
     if (!results[2]) return '';
@@ -287,11 +295,11 @@ function getParameterByName(name, url) {
 }
 
 function loadImage(ws) {
-    var colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
-    var devpClient = new XMLHttpRequest();
-    var exifClient = new XMLHttpRequest();
-    var img = getParameterByName("mob");
-    var c = document.getElementById("img_canvas");
+    let colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
+    let devpClient = new XMLHttpRequest();
+    let exifClient = new XMLHttpRequest();
+    let img = getParameterByName("mob");
+    let c = document.getElementById("img_canvas");
 
     if (!img) {
         return false;
@@ -333,7 +341,7 @@ function loadImage(ws) {
     exifClient.onreadystatechange = function() {
         if (exifClient.readyState == XMLHttpRequest.DONE) {
             if (exifClient.status == 200) {
-                var table = document.getElementById("meta_data_tbl");
+                let table = document.getElementById("meta_data_tbl");
 
                 exif = JSON.parse(exifClient.responseText);
 
@@ -354,8 +362,8 @@ function loadImage(ws) {
 }
 
 function changeChannelCurve() {
-    var channelSelect = document.getElementById("channel-curve-select");
-    var channel = parseInt(channelSelect.options[channelSelect.selectedIndex].value);
+    let channelSelect = document.getElementById("channel-curve-select");
+    let channel = parseInt(channelSelect.options[channelSelect.selectedIndex].value);
 
     curveControlPoints[curves.selectedChannel] = curves.controlPoints;
     curves.controlPoints = curveControlPoints[channel];
@@ -369,21 +377,41 @@ function persistCurve() {
         clearTimeout(curves.timeO);
     }
     curves.timeO = setTimeout(function(){
-        console.log(curves.controlPoints);
+        let cmd = "CURVE ";
+
+        switch (curves.selectedChannel) {
+        case CURVE_LUM:
+            cmd += "l ";
+            break
+        case CURVE_RED:
+            cmd += "r ";
+            break
+        case CURVE_GREEN:
+            cmd += "g ";
+            break
+        case CURVE_BLUE:
+            cmd += "b ";
+            break
+        };
+
+        let first = true;
+        for (let p of curves.controlPoints) {
+            if (first) {
+                first = false;
+            } else {
+                cmd += ";";
+            }
+            cmd += Math.round(p.x * 1000) + "," + Math.round(p.y * 1000);
+        }
+
+        ctlProxy.send(cmd);
     }, sliderTimeout);
 }
 
-function setViewport(ws, x0, y0, x1, y1, w, h) {
-    var cmd = "VIEWP " + x0 + " " + y0 + " " + x1 + " " + y1 + " " + w + " " + h;
-
-    ws.pieStartTs = Date.now();
-    ws.send(cmd);
-}
-
 function pieInitEdit() {
-    var w = window.innerWidth;
-    var c = document.getElementById("img_canvas");
-    var h;
+    let w = window.innerWidth;
+    let c = document.getElementById("img_canvas");
+    let h;
 
     w = w - 2 * 282 - 50; // edit pane and margin
 
@@ -424,13 +452,12 @@ function pieInitEdit() {
                 /* dx and dy are the coordinate transformations.
                    they must be inverted to get the correct coordinaes
                    in the source image. */
-                setViewport(wsCmd,
-                            -zoomMode.dx,
-                            -zoomMode.dy,
-                            -(zoomMode.dx - c.width),
-                            -(zoomMode.dy - c.height),
-                            c.width,
-                            c.height);
+                ctlProxy.setViewport(-zoomMode.dx,
+                                     -zoomMode.dy,
+                                     -(zoomMode.dx - c.width),
+                                     -(zoomMode.dy - c.height),
+                                     c.width,
+                                     c.height);
             } else {
                 renderImage(bm);
             }
@@ -502,17 +529,17 @@ function updateDevParams(params) {
 }
 
 function renderImage(bm) {
-    var c = document.getElementById("img_canvas");
-    var offsetX = 0;
-    var offsetY = 0;
-    var ctx = c.getContext("2d");
-    var now = Date.now();
-    var dur;
-    var scale = 1;
-    var ratio = bm.width / bm.height;
-    var w = bm.width;
-    var h = bm.height;
-    var clearRect = false;
+    let c = document.getElementById("img_canvas");
+    let offsetX = 0;
+    let offsetY = 0;
+    let ctx = c.getContext("2d");
+    let now = Date.now();
+    let dur;
+    let scale = 1;
+    let ratio = bm.width / bm.height;
+    let w = bm.width;
+    let h = bm.height;
+    let clearRect = false;
 
     /* reset canvas */
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -521,7 +548,7 @@ function renderImage(bm) {
        must be used. */
     if (exif.orientation == 6 ||
         exif.orientation == 8) {
-        var tmp = w;
+        let tmp = w;
         w = h;
         h = tmp;
     }
@@ -544,7 +571,7 @@ function renderImage(bm) {
 
     if (zoomMode.enabled && zoomMode.drag) {
         scale = 1;
-        var lim;
+        let lim;
 
         lim = w - c.width;
         lim = -lim;
@@ -607,7 +634,7 @@ function renderImage(bm) {
                 console.log("Draw image in " + dur + "ms");
 
                 now = Date.now();
-                var hist = calculateHistogram(c);
+                let hist = calculateHistogram(c);
                 dur = Date.now() - now;
                 console.log("Calculate histogram in " + dur + "ms");
 
@@ -621,9 +648,9 @@ function renderImage(bm) {
 }
 
 window.onresize = function(evt) {
-    var w = window.innerWidth;
-    var c = document.getElementById("img_canvas");
-    var h;
+    let w = window.innerWidth;
+    let c = document.getElementById("img_canvas");
+    let h;
 
     w = w - 282 - 50; // edit pane and margin
 
@@ -639,13 +666,11 @@ window.onresize = function(evt) {
 }
 
 window.addEventListener("load", function(evt) {
-    let ctlProxy = null;
-
     pieInitEdit();
 
 
     /* Configure hosts */
-    var url = window.location.href.split("/");
+    let url = window.location.href.split("/");
     PROTO = url[0];
     if (COLLD_HOST == null) {
         COLLD_HOST = url[2].split(":")[0];
@@ -655,9 +680,9 @@ window.addEventListener("load", function(evt) {
     }
 
     /* Determine endianess */
-    var b = new ArrayBuffer(4);
-    var a = new Uint32Array(b);
-    var c = new Uint8Array(b);
+    let b = new ArrayBuffer(4);
+    let a = new Uint32Array(b);
+    let c = new Uint8Array(b);
     a[0] = 0xcafebabe;
     if (c[0] == 0xbe) {
         bigEndian = 0;
@@ -785,7 +810,7 @@ window.addEventListener("load", function(evt) {
                          ctlProxy.send(cmd);
                      });
 
-    var histCanvas = document.getElementById("hist_canvas").getContext("2d");
+    let histCanvas = document.getElementById("hist_canvas").getContext("2d");
     histChart = new Chart(histCanvas, {
         type: 'line',
         data: {
@@ -861,11 +886,11 @@ document.onkeydown = function(evt) {
         console.log("color yo");
         break;
     case 71: /* g */
-        var col = getParameterByName("col");
-        var mob = getParameterByName("mob");
-        var rate = getParameterByName("rate");
-        var color = getParameterByName("color");
-        var newUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT + "/";
+        let col = getParameterByName("col");
+        let mob = getParameterByName("mob");
+        let rate = getParameterByName("rate");
+        let color = getParameterByName("color");
+        let newUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT + "/";
 
         /* MOB should always be provided */
         if (mob != null && mob != "") {
@@ -882,31 +907,29 @@ document.onkeydown = function(evt) {
         }
         window.location.replace(newUrl);
         break;
-    case 90:
-        var c = document.getElementById("img_canvas");
+    case 90: /* z */
+        let c = document.getElementById("img_canvas");
 
         if (zoomMode.enabled) {
             zoomMode.enabled = false;
 
-            setViewport(wsCmd,
-                        0,
-                        0,
-                        -1,
-                        -1,
-                        c.width,
-                        c.height);
+            ctlProxy.setViewport(0,
+                                 0,
+                                 -1,
+                                 -1,
+                                 c.width,
+                                 c.height);
         } else {
             zoomMode.enabled = true;
 
             /* in canvas origo is upper left
                in bitmap space origo is lower left */
-            setViewport(wsCmd,
-                        -zoomMode.dx,
-                        -zoomMode.dy,
-                        -(zoomMode.dx - c.width),
-                        -(zoomMode.dy - c.height),
-                        c.width,
-                        c.height);
+            ctlProxy.setViewport(-zoomMode.dx,
+                                 -zoomMode.dy,
+                                 -(zoomMode.dx - c.width),
+                                 -(zoomMode.dy - c.height),
+                                 c.width,
+                                 c.height);
         }
         break;
     }

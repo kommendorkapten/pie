@@ -137,6 +137,9 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                 return 2;
         }
 
+        /* reset version */
+        s->version = 0;
+
         for (int i = 0; i < ret - 1; i++)
         {
                 char field[128];

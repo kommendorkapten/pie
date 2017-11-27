@@ -49,6 +49,7 @@ enum pie_msg_type
         PIE_MSG_SET_SATURATION,
         PIE_MSG_SET_ROTATE,
         PIE_MSG_SET_SHARP,
+        PIE_MSG_SET_CURVE,
 
         /* Always last */
         PIE_MSG_COUNT

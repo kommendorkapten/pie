@@ -23,8 +23,12 @@
 #include "../alg/pie_unsharp.h"
 #include "../alg/pie_vibra.h"
 #include "../alg/pie_colort.h"
+#include "../alg/pie_curve.h"
 #include "../lib/timing.h"
 #include "../pie_log.h"
+
+static void pie_curve_set_to_int_fmt(struct pie_curve*);
+static void pie_curve_set_to_can_fmt(struct pie_curve*);
 
 void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
 {
@@ -47,6 +51,24 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
         s->sharpening.radius = 0.1f;
         s->sharpening.threshold = 0.0f;
         s->rotate = 0.0f;
+        pie_dev_init_curve(&s->curve_l);
+        pie_dev_init_curve(&s->curve_r);
+        pie_dev_init_curve(&s->curve_g);
+        pie_dev_init_curve(&s->curve_b);
+        s->version = 1;
+}
+
+void pie_dev_init_curve(struct pie_curve* c)
+{
+        c->num_p = 4;
+        c->cntl_p[0].x = -0.3f;
+        c->cntl_p[0].y = -0.3f;
+        c->cntl_p[1].x =  0.0f;
+        c->cntl_p[1].y =  0.0f;
+        c->cntl_p[2].x =  1.0f;
+        c->cntl_p[2].y =  1.0f;
+        c->cntl_p[3].x =  1.3f;
+        c->cntl_p[3].y =  1.3f;
 }
 
 void pie_dev_set_to_int_fmt(struct pie_dev_settings* s)
@@ -66,6 +88,22 @@ void pie_dev_set_to_int_fmt(struct pie_dev_settings* s)
         s->sharpening.radius /= 10.0f;
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
+
+        if (s->version > 0)
+        {
+                pie_curve_set_to_int_fmt(&s->curve_l);
+                pie_curve_set_to_int_fmt(&s->curve_r);
+                pie_curve_set_to_int_fmt(&s->curve_g);
+                pie_curve_set_to_int_fmt(&s->curve_b);
+        }
+}
+
+static void pie_curve_set_to_int_fmt(struct pie_curve* c)
+{
+        for (int i = 0; i < c->num_p; i++)
+        {
+                c->cntl_p[i].x /= 100.0f;
+        }
 }
 
 void pie_dev_set_to_can_fmt(struct pie_dev_settings* s)
@@ -87,6 +125,22 @@ void pie_dev_set_to_can_fmt(struct pie_dev_settings* s)
         s->sharpening.radius *= 10.0f;
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
+
+        if (s->version > 0)
+        {
+                pie_curve_set_to_can_fmt(&s->curve_l);
+                pie_curve_set_to_can_fmt(&s->curve_r);
+                pie_curve_set_to_can_fmt(&s->curve_g);
+                pie_curve_set_to_can_fmt(&s->curve_b);
+        }
+}
+
+static void pie_curve_set_to_can_fmt(struct pie_curve* c)
+{
+        for (int i = 0; i < c->num_p; i++)
+        {
+                c->cntl_p[i].x *= 100.0f;
+        }
 }
 
 int pie_dev_render(struct pie_bitmap_f32rgb* img,
@@ -165,6 +219,58 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
                       img->height,
                       img->row_stride);
         PIE_DEBUG("Render exposure:          %8ldusec", timing_dur_usec(&t2));
+
+        /* R G B   C U R V E */
+        timing_start(&t2);
+        pie_alg_curve(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      PIE_CHANNEL_LUM,
+                      s->curve_l.cntl_p,
+                      s->curve_l.num_p,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("RGB Curve:                %8ldusec", timing_dur_usec(&t2));
+
+        /* R   C U R V E */
+        timing_start(&t2);
+        pie_alg_curve(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      PIE_CHANNEL_RED,
+                      s->curve_r.cntl_p,
+                      s->curve_r.num_p,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("R Curve:                  %8ldusec", timing_dur_usec(&t2));
+
+        /* G   C U R V E */
+        timing_start(&t2);
+        pie_alg_curve(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      PIE_CHANNEL_GREEN,
+                      s->curve_g.cntl_p,
+                      s->curve_g.num_p,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("G Curve:                  %8ldusec", timing_dur_usec(&t2));
+
+        /* B   C U R V E */
+        timing_start(&t2);
+        pie_alg_curve(img->c_red,
+                      img->c_green,
+                      img->c_blue,
+                      PIE_CHANNEL_BLUE,
+                      s->curve_b.cntl_p,
+                      s->curve_b.num_p,
+                      img->width,
+                      img->height,
+                      img->row_stride);
+        PIE_DEBUG("B Curve:                  %8ldusec", timing_dur_usec(&t2));
 
         /* C O N T R A S T */
         timing_start(&t2);

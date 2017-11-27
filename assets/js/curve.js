@@ -139,48 +139,67 @@ function Curve(canvas, color, callback = null) {
      */
     this.moveControlPoint = function(cp, np) {
         let len = this.controlPoints.length;
-        let i = 0;
 
-        for (let p of this.controlPoints) {
-            if (p == cp) {
-                /* Do not allow movement of i = 0, len - 1*/
-                if (i == 0 || i == len - 1) {
-                    break;
-                }
+        /* Do not allow movement of edge nodes */
+        for (let i = 1; i < this.controlPoints.length - 1; i++) {
+            let p = this.controlPoints[i];
 
-                /* end points can only move along the axis */
-                if (i == 1) {
-                    if (np.x < 0) {
-                        np.x = 0;
-                    }
-                    if (np.y < 0) {
-                        np.y = 0;
-                    }
-                    if (np.x > np.y) {
-                        np.y = 0;
-                    } else {
-                        np.x = 0;
-                    }
-                } else if (i == len - 2) {
-                    if (np.x > 1.0) {
-                        np.x = 1.0;
-                    }
-                    if (np.y > 1.0) {
-                        np.y = 1.0;
-                    }
-
-                    if (np.x > np.y) {
-                        np.x = 1.0;
-                    } else {
-                        np.y = 1.0;
-                    }
-                }
-
-                p.x = np.x;
-                p.y = np.y;
-
+            if (p != cp) {
+                continue;
             }
-            i++;
+
+            /* end points can only move along the axis */
+            if (i == 1) {
+                console.log(np);
+                if (np.x < 0) {
+                    np.x = 0;
+                }
+                if (np.y < 0) {
+                    np.y = 0;
+                }
+                if (np.x > np.y) {
+                    np.y = 0;
+                } else {
+                    np.x = 0;
+                }
+            } else if (i == len - 2) {
+                if (np.x > 1.0) {
+                    np.x = 1.0;
+                }
+                if (np.y > 1.0) {
+                    np.y = 1.0;
+                }
+
+                if (np.x > np.y) {
+                    np.x = 1.0;
+                } else {
+                    np.y = 1.0;
+                }
+            } else {
+                /* Neighbour points always exist */
+                let prev = this.controlPoints[i-1];
+                let next = this.controlPoints[i+1];
+                /* Do not allow moving a point before/past a neighbouring
+                   point */
+
+                if (np.x < prev.x + 0.05) {
+                    continue;
+                }
+                if (np.x > next.x - 0.05) {
+                    continue;
+                }
+
+                /* Prohibit creating a line that can not be described by a
+                   function (will have multiple outputs for the same input) */
+                if (np.x < 0.15 && np.y > 0.85) {
+                    continue;
+                }
+                if (np.x > 0.85 && np.y < 0.15) {
+                    continue;
+                }
+            }
+            p.x = np.x;
+            p.y = np.y;
         }
 
         this.realignControlPoints();
@@ -328,6 +347,10 @@ function setupCurveListeners(curve, canvas) {
         if (candidate != null) {
             curve.removeControlPoint(candidate);
             curve.render();
+
+            if (curve.callback != null) {
+                curve.callback();
+            }
         }
     });
 

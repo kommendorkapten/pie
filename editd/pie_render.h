@@ -16,6 +16,7 @@
 
 struct pie_bitmap_f32rgb;
 struct pie_dev_settings;
+struct pie_curve;
 
 /**
  * Init settings to default values.
@@ -25,6 +26,13 @@ struct pie_dev_settings;
  * @return void.
  */
 extern void pie_dev_init_settings(struct pie_dev_settings*, int, int);
+
+/**
+ * Init a curve to linear from (0, 0) to (1, 1).
+ * @param pointer to a pie curve struct.
+ * @return void.
+ */
+extern void pie_dev_init_curve(struct pie_curve*);
 
 /**
  * Convert pie_dev_settings to internal format.

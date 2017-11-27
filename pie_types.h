@@ -15,9 +15,11 @@
 #define __PIE_TYPES_H__
 
 #include <stdint.h>
+#include "math/pie_point.h"
 
 #define PIE_HIST_RES 256
 #define PIE_PATH_LEN 256
+#define PIE_CURVE_MAX_CNTL_P 16
 #define PIE_EPOCH 1483228800L /* 20170101T00:00:00Z */
 
 enum pie_color_type
@@ -108,6 +110,12 @@ struct pie_unsharp_param
         float threshold; /* typically from 3 to 20 */
 };
 
+struct pie_curve
+{
+        struct pie_point_2d cntl_p[PIE_CURVE_MAX_CNTL_P];
+        int num_p;
+};
+
 struct pie_dev_settings
 {
        /* [-0.5, 0.5]  def 0 */
@@ -136,6 +144,15 @@ struct pie_dev_settings
         float rotate;
         /* unknown def */
         struct pie_unsharp_param sharpening;
+
+        /* def linear [0 - 1] */
+        struct pie_curve curve_l;
+        struct pie_curve curve_r;
+        struct pie_curve curve_g;
+        struct pie_curve curve_b;
+
+        /* always last */
+        int version;
 };
 
 struct pie_histogram

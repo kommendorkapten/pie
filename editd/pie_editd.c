@@ -119,6 +119,17 @@ static void create_proxy(struct pie_bitmap_f32rgb*,
                          int,
                          int);
 
+/**
+ * Parse control points and store them in the provided curve.
+ * Control points are in the following format:
+ * -587,-343;0,0;588,343;1000,1000;1413,1657
+ * The numbers are real values, scaled with 1000.
+ * @param pointer to curve struct to store the points.
+ * @param null terminated string in correct format.
+ * @return 0 if data was successfully parsed.
+ */
+static int parse_curve_pnts(struct pie_curve*, char*);
+
 int main(void)
 {
         pthread_t thr_ev_loop;
@@ -318,6 +329,7 @@ static void* ev_loop(void* a)
                         case PIE_MSG_SET_SATURATION:
                         case PIE_MSG_SET_ROTATE:
                         case PIE_MSG_SET_SHARP:
+                        case PIE_MSG_SET_CURVE:
                                 new = cb_msg_render(cmd);
                                 break;
                         default:
@@ -401,7 +413,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         int proxy_h;
         int stride;
         int downsample = 0;
-        int clear_settings = 0;
 
         timing_start(&t_l);
 
@@ -506,7 +517,15 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         memcpy(proxy_out->c_green, proxy->c_green, len);
         memcpy(proxy_out->c_blue, proxy->c_blue, len);
 
-        /* Load stored development settings */
+        /* Load stored development settings. First
+           First initialize the settings, as the settings are stored
+           as a JSON string. This way we can be future compatible,
+           if the format stored in the DB is older, only the relevat
+           changes are merged. */
+        pie_dev_init_settings(&msg->wrkspc->settings,
+                              proxy->width,
+                              proxy->height);
+
         settings_json.pdp_mob_id = id;
         res = pie_dev_params_read(pie_cfg_get_db(), &settings_json);
         if (res == 0)
@@ -517,7 +536,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 {
                         PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
-                        clear_settings = 1;
                 }
                 /* Free any resources */
                 pie_dev_params_release(&settings_json);
@@ -525,23 +543,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 /* Convert to internal format */
                 pie_dev_set_to_int_fmt(&msg->wrkspc->settings);
         }
-        else if (res > 0)
-        {
-                /* No settings found */
-                clear_settings = 1;
-        }
-        else
+        else if (res < 0)
         {
                 PIE_ERR("Database error: %d", res);
-                clear_settings = 1;
-
-        }
-
-        if (clear_settings)
-        {
-                pie_dev_init_settings(&msg->wrkspc->settings,
-                                      proxy->width,
-                                      proxy->height);
         }
 
         /* Call render */
@@ -748,7 +752,7 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
 
 static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 {
-        int status = 0;
+        int ok = 0;
         enum pie_msg_type ret_msg = PIE_MSG_INVALID;
 #if 0
         int resample = 0;
@@ -762,7 +766,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid color temp: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -778,7 +782,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid tint: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -794,7 +798,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid exposure: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -810,7 +814,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid contrast: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -826,7 +830,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid highlight: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -842,7 +846,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid shadow: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -858,7 +862,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid white: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -874,7 +878,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid black: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -890,7 +894,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid clarity: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -906,7 +910,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid vibrance: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -922,7 +926,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                         PIE_WARN("[%s] invalid saturation: %f.",
                                  msg->token,
                                  msg->f1);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -936,7 +940,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 PIE_WARN("[%s] Not implemented yet %d.",
                          msg->token,
                          (int)msg->type);
-                status = -1;
+                ok = -1;
                 break;
         case PIE_MSG_SET_SHARP:
                 if (msg->f1 < 0.0f || msg->f1 > 3.0f ||
@@ -948,7 +952,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                  msg->f1,
                                  msg->f2,
                                  msg->f3);
-                        status = -1;
+                        ok = -1;
                 }
                 else
                 {
@@ -962,11 +966,39 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                   msg->wrkspc->settings.sharpening.threshold);
                 }
                 break;
+        case PIE_MSG_SET_CURVE:
+                PIE_DEBUG("Set curve: (%d) %s", msg->i1, msg->buf);
+
+                switch ((enum pie_channel)msg->i1)
+                {
+                case PIE_CHANNEL_LUM:
+                        ok = parse_curve_pnts(&msg->wrkspc->settings.curve_l,
+                                              msg->buf);
+                        break;
+                case PIE_CHANNEL_RED:
+                        ok = parse_curve_pnts(&msg->wrkspc->settings.curve_r,
+                                              msg->buf);
+                        break;
+                case PIE_CHANNEL_GREEN:
+                        ok = parse_curve_pnts(&msg->wrkspc->settings.curve_g,
+                                              msg->buf);
+                        break;
+                case PIE_CHANNEL_BLUE:
+                        ok = parse_curve_pnts(&msg->wrkspc->settings.curve_b,
+                                              msg->buf);
+                        break;
+                default:
+                        PIE_WARN("[%s] Invalid channel: %d.",
+                                 msg->token,
+                                 msg->i1);
+                        ok = -1;
+                }
+                break;
         default:
                 PIE_WARN("[%s] Invalid message: %d.",
                          msg->token,
                          (int)msg->type);
-                status = -1;
+                ok = -1;
         }
 
 #if 0
@@ -981,7 +1013,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
          * following steps:
          * 1 create a new copy of the stored proxy.
          */
-        if (status == 0)
+        if (ok == 0)
         {
                 struct timing t1;
                 struct pie_bitmap_f32rgb* org = &msg->wrkspc->proxy;
@@ -1076,4 +1108,59 @@ static void create_proxy(struct pie_bitmap_f32rgb* tgt,
         }
         PIE_DEBUG("Added post-downsampling sharpening in %ldusec",
                   timing_dur_usec(&t));
+}
+
+static int parse_curve_pnts(struct pie_curve* c, char* msg)
+{
+        char* lasts;
+        char* t;
+        int cnt = 0;
+        int ret = 0;
+
+        t = strtok_r(msg, ";", &lasts);
+        while (t)
+        {
+                char* p;
+                long v;
+
+                PIE_TRACE("Point: %d '%s'", cnt, t);
+                p = strchr(t, ',');
+                if (p == NULL)
+                {
+                        PIE_WARN("Invalid coordinate tuple");
+                        ret = 1;
+                        break;
+                }
+                /* x */
+                v = strtol(t, &p, 10);
+                if (p == t)
+                {
+                        PIE_WARN("Invalid x coordinate");
+                        ret = 1;
+                        break;
+                }
+                c->cntl_p[cnt].x = (float)v/1000.0f;
+
+                /* y */
+                t = p + 1;
+                v = strtol(t, &p, 10);
+                if (p == t)
+                {
+                        PIE_WARN("Invalid y coordinate");
+                        ret = 1;
+                        break;
+                }
+                c->cntl_p[cnt].y = (float)v/1000.0f;
+
+                cnt++;
+                t = strtok_r(NULL, ";", &lasts);
+        };
+        c->num_p = cnt;
+
+        for (int i = 0; i < c->num_p; i++)
+        {
+                PIE_DEBUG("%f: %f", c->cntl_p[i].x, c->cntl_p[i].y);
+        }
+
+        return ret;
 }
