@@ -33,8 +33,9 @@ void pie_alg_curve(float* restrict r,
 {
         struct pie_point_2d* c;
         float* restrict lut;
-        int num_seg = np - 3;
         const float scale = (LUT_SIZE - 1);
+        int num_seg = np - 3;
+        int lp = 1;
 
         lut = malloc(LUT_SIZE * sizeof(float));
         c = malloc(LUT_SIZE * sizeof(struct pie_point_2d));
@@ -44,13 +45,13 @@ void pie_alg_curve(float* restrict r,
         for (int i = 0; i < LUT_SIZE; i++)
         {
                 float out;
-                int ret;
 
-                ret = pie_alg_curve_get(&out,
-                                        &c[0],
-                                        (float)i / scale,
-                                        num_seg * SEGMENT_LEN);
-                assert(ret == 0);
+                lp = pie_alg_curve_get_scan(&out,
+                                            &c[0],
+                                            (float)i / scale,
+                                            num_seg * SEGMENT_LEN,
+                                            lp);
+                assert(lp > 0);
                 lut[i] = out;
         }
 
@@ -240,9 +241,10 @@ int pie_alg_curve_get(float* out,
 int pie_alg_curve_get_scan(float* out,
                            const struct pie_point_2d* p,
                            float x,
-                           int len)
+                           int len,
+                           int start)
 {
-        for (int i = 1; i < len; i++)
+        for (int i = start; i < len; i++)
         {
                 if (x <= p[i].x)
                 {
@@ -253,7 +255,7 @@ int pie_alg_curve_get_scan(float* out,
                         float new = p[i-1].y + phi * dy;
 
                         *out = new;
-                        return 0;
+                        return i;
                 }
         }
 
@@ -261,13 +263,13 @@ int pie_alg_curve_get_scan(float* out,
         if (x > p[len - 1].x)
         {
                 *out = p[len - 1].y;
-                return 0;
+                return len - 1;
         }
 
         PIE_WARN("No curve defined for input %f", x);
         PIE_WARN("Valid range are [%f, %f]", p[0].x, p[len - 1].x);
 
-        return 1;
+        return -1;
 }
 
 void pie_alg_curve_intp(struct pie_point_2d* restrict o,

@@ -64,11 +64,15 @@ extern int pie_alg_curve_get(float*,
  * @param pointer to a sorted (by x) array of points.
  * @param x value to search for.
  * @param number of points
- * @return 0 if value is found.
+ * @param offset to start search at. The povided value is used as
+ *        upper bound. Value has to be > 0.
+ * @return Index of the upper bound matching the searched value.
+ *         Negative if not found.
  */
 extern int pie_alg_curve_get_scan(float*,
                                   const struct pie_point_2d*,
                                   float,
+                                  int,
                                   int);
 
 /**
