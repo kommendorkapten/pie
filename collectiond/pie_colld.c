@@ -408,7 +408,7 @@ static int cb_http(struct lws* wsi,
                         goto keepalive;
                 }
 
-                hn = hp - resp_headers;
+                hn = (int)(hp - resp_headers);
                 if (hn > 0)
                 {
                         /* Serve file async */

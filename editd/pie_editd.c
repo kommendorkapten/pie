@@ -402,7 +402,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         struct pie_dev_params settings_json;
         struct timing t;
-        struct timing t_l;
         struct pie_bitmap_f32rgb* raw;
         struct pie_bitmap_f32rgb* proxy;
         struct pie_bitmap_f32rgb* proxy_out;
@@ -414,7 +413,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         int stride;
         int downsample = 0;
 
-        timing_start(&t_l);
+        timing_start(&t);
 
         if (msg->wrkspc)
         {
@@ -559,7 +558,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                   msg->token,
                   proxy->width,
                   proxy->height,
-                  timing_dur_usec(&t_l));
+                  timing_dur_usec(&t));
 
         return PIE_MSG_LOAD_DONE;
 }
@@ -699,9 +698,8 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
                         pie_bm_alloc_f32(proxy_out);
                 }
 
-                len = t_w * sizeof(float);
+                len = t_w * (int)sizeof(float);
                 /* Copy a non scaled portion */
-                int start, stop;
                 switch (msg->wrkspc->exif.ped_orientation)
                 {
                 case PIE_EXIF_ORIENTATION_CW90:
@@ -967,7 +965,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 }
                 break;
         case PIE_MSG_SET_CURVE:
-                PIE_DEBUG("Set curve: (%d) %s", msg->i1, msg->buf);
+                PIE_TRACE("Set curve: (%d) %s", msg->i1, msg->buf);
 
                 switch ((enum pie_channel)msg->i1)
                 {
@@ -1159,7 +1157,7 @@ static int parse_curve_pnts(struct pie_curve* c, char* msg)
 
         for (int i = 0; i < c->num_p; i++)
         {
-                PIE_DEBUG("%f: %f", c->cntl_p[i].x, c->cntl_p[i].y);
+                PIE_TRACE("%f: %f", c->cntl_p[i].x, c->cntl_p[i].y);
         }
 
         return ret;

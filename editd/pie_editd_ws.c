@@ -341,7 +341,7 @@ static int cb_http(struct lws* wsi,
 			goto keepalive;
 		}
 
-                PIE_LOG("Got url: '%s'", in);
+                PIE_LOG("Got url: '%s'", (char*)in);
                 char* qv = hmap_get(query_params, "img");
                 if (qv)
                 {
@@ -437,7 +437,9 @@ cleanup:
 
                 for (size_t i = 0; i < h_size; i++)
                 {
-                        PIE_LOG("Req params: %s=%s", it[i].key, it[i].data);
+                        PIE_LOG("Req params: %s=%s",
+                                (char*)it[i].key,
+                                (char*)it[i].data);
                         free(it[i].key);
                         free(it[i].data);
                 }

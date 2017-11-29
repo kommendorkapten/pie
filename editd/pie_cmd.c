@@ -127,7 +127,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 {
                         if (t = strtok_r(NULL, " ", &lasts), t == NULL)
                         {
-                                PIE_WARN("[%s] not a valid command '%'s",
+                                PIE_WARN("[%s] not a valid command '%s'",
                                          msg->token,
                                          data);
                                 return -1;

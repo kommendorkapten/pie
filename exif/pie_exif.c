@@ -48,14 +48,14 @@ static int32_t load_exif_int32(const unsigned char*, int);
 
 #if defined (__BYTE_ORDER__)
 # if __BYTE_ORDER__ == 4321
-static int this_endian = EXIF_BYTE_ORDER_MOTOROLA;
+static unsigned int this_endian = EXIF_BYTE_ORDER_MOTOROLA;
 # else
-static int this_endian = EXIF_BYTE_ORDER_INTEL;
+static unsigned int this_endian = EXIF_BYTE_ORDER_INTEL;
 # endif
 #elif defined (__BIG_ENDIAN__)
-static int this_endian = EXIF_BYTE_ORDER_MOTOROLA;
+static unsigned int this_endian = EXIF_BYTE_ORDER_MOTOROLA;
 #elif defined (__SMALL_ENDIAN__)
-static int this_endian = EXIF_BYTE_ORDER_INTEL;
+static unsigned int this_endian = EXIF_BYTE_ORDER_INTEL;
 #else
 # error __BYTE_ORDER__, __BIG_ENDIAN__  or __SMALL_ENDIAN__ not defined
 #endif
@@ -102,11 +102,8 @@ done:
 
 static int pie_exif_load_libexif(struct pie_exif_data* ped, ExifData* ed)
 {
-        char buf[256];
         ExifEntry* entry;
         int swap;
-
-        buf[255] = '\0';
 
         if (this_endian == exif_data_get_byte_order(ed))
         {

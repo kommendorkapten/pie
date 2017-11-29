@@ -18,7 +18,7 @@ int main(int argc, char** argv)
                 printf("Usage lrawtest filename\n");
                 return -1;
         }
-        
+
         lrd = libraw_init(0);
         if (lrd == NULL)
         {
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         //lrd->params.user_qual = 2; // unpack 2.4 process 4.7 This is OpenMP supported
         //lrd->params.user_qual = 3; // unpack 2.4 process 14.0 This is OpenMp supported
         //lrd->params.user_qual = 4; // unpack 2.4 process 16.0
-        
+
         printf("threshold %f\n", lrd->params.threshold);
         printf("auto wb %d\n", lrd->params.use_auto_wb);
         printf("camera wb %d\n", lrd->params.use_camera_wb);
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         printf("dcb iterations %d\n", lrd->params.dcb_iterations);
         printf("dbc enhance %d\n", lrd->params.dcb_enhance_fl);
         printf("fbdd noiserd %d\n", lrd->params.fbdd_noiserd);
-        
+
         /* Inspect params, progress_flags */
 
         timing_start(&t);
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
                 printf("libraw_open_file:failed %d\n", ret);
                 return 1;
         }
-        printf("* libraw_open_file %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_open_file %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
 #if 0
         printf("Make:  %s\n", lrd->idata.make);
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
                 printf("Unpack failed\n");
                 return 1;
         }
-        printf("* libraw_unpack %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_unpack %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
         if (libraw_dcraw_process(lrd))
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
                 printf("dcraw process failed\n");
                 return 1;
         }
-        printf("* libraw_dcraw_process %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_dcraw_process %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
         libraw_processed_image_t* mem_img;
@@ -178,9 +178,9 @@ int main(int argc, char** argv)
         if (mem_img == NULL)
         {
                 printf("dcraw make mem failed\n");
-                return 1;                
+                return 1;
         }
-        printf("* libraw_dcraw_make_mem_image %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_dcraw_make_mem_image %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
         printf("Type: %d (1 jpeg, 2 bitmap)\n", mem_img->type);
         printf("Dim: %d x %d\n", mem_img->width, mem_img->height);
         printf("Colors: %d\n", mem_img->colors);
@@ -208,30 +208,30 @@ int main(int argc, char** argv)
 
                         bm.c_red[p] = ((float)*(unsigned short*)data) / 65535.0f;
                         data += pixel_step;
-                        
+
                         bm.c_green[p] = ((float)*(unsigned short*)data) / 65535.0f;
                         data += pixel_step;
-                        
+
                         bm.c_blue[p] = ((float)*(unsigned short*)data) / 65535.0f;
                         data += pixel_step;
                 }
         }
-        printf("* copy image to pie bm %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
-        
+        printf("* copy image to pie bm %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
+
         timing_start(&t);
         libraw_dcraw_clear_mem(mem_img);
-        printf("* libraw_dcraw_clear_mem %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_dcraw_clear_mem %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
         libraw_close(lrd);
-        printf("* libraw_close %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* libraw_close %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
         pie_bm_conv_bd(&out,
                        PIE_COLOR_16B,
                        &bm,
                        PIE_COLOR_32B);
-        printf("* pie_bm_conv %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
+        printf("* pie_bm_conv %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
         if (pie_io_png_u16rgb_write("out.png", &out))
@@ -239,8 +239,8 @@ int main(int argc, char** argv)
                 printf("write jpg failed\n");
                 return 1;
         }
-        printf("* jpg_u8rgb_write %0.3fs\n", timing_dur_usec(&t) / 1000000.0f);
-        
+        printf("* jpg_u8rgb_write %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
+
         pie_bm_free_f32(&bm);
         pie_bm_free_u16(&out);
         return 0;
@@ -262,7 +262,7 @@ user_qual = 0
 * pie_bm_conv 0.205s
 * jpg_u8rgb_write 1.550s
 
-./bin/lrawtest ~/Documents/Pictures/pie/incoming_raw/FSN_3000.CR2 
+./bin/lrawtest ~/Documents/Pictures/pie/incoming_raw/FSN_3000.CR2
 * libraw_open_file 0.006s
 * libraw_unpack 2.362s
 * libraw_dcraw_process 3.846s
@@ -273,7 +273,7 @@ user_qual = 0
 * pie_bm_conv 0.150s
 * jpg_u8rgb_write 1.021s
 
-user_qual = 2 
+user_qual = 2
 ./bin/lrawtest ~/Documents/Pictures/pie/incoming_raw/FSNF0172.RAF
 * libraw_open_file 0.005s
 * libraw_unpack 0.420s
@@ -285,7 +285,7 @@ user_qual = 2
 * pie_bm_conv 0.199s
 * jpg_u8rgb_write 1.461s
 
-./bin/lrawtest ~/Documents/Pictures/pie/incoming_raw/FSN_3000.CR2 
+./bin/lrawtest ~/Documents/Pictures/pie/incoming_raw/FSN_3000.CR2
 * libraw_open_file 0.005s
 * libraw_unpack 2.371s
 * libraw_dcraw_process 4.739s
@@ -298,7 +298,7 @@ user_qual = 2
 
 openmp: No diff
 
-mac: 
+mac:
 FSNF0172
 * libraw_open_file 0.003s
 * libraw_unpack 0.237s
@@ -323,5 +323,5 @@ FSN_3000
 * libraw_dcraw_process 1.306s
 * libraw_dcraw_make_mem_image 0.173s
 
-    
+
  */

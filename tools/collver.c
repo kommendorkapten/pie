@@ -77,10 +77,7 @@ int main(int argc, char** argv)
                 PIE_WARN("Config image:thumbnail:size not found in config");
                 lval = 256;
         }
-        else
-        {
-                max_thumb = (int)lval;
-        }
+        max_thumb = (int)lval;
 
         if (host = pie_cfg_get_host(-1), host == NULL)
         {
