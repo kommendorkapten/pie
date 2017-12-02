@@ -214,6 +214,29 @@ function Curve(canvas, color, callback = null) {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        /* Draw grid */
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#595959";
+        ctx.setLineDash([3, 5]); /* dash, space pixels */
+        ctx.beginPath();
+        /* x axis */
+        ctx.moveTo(50, 195);
+        ctx.lineTo(50, 5);
+        ctx.moveTo(100, 195);
+        ctx.lineTo(100, 5);
+        ctx.moveTo(150, 195);
+        ctx.lineTo(150, 5);
+        /* y axis */
+        ctx.moveTo(5, 50);
+        ctx.lineTo(195, 50);
+        ctx.moveTo(5, 100);
+        ctx.lineTo(195, 100);
+        ctx.moveTo(5, 150);
+        ctx.lineTo(195, 150);
+        ctx.stroke();
+        ctx.restore();
+
         /* Draw cuve */
         ctx.strokeStyle = this.color;
         ctx.beginPath();
