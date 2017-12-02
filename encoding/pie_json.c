@@ -24,6 +24,13 @@
 
 #define DEV_SET_SCALE 10000.0f
 
+static int pie_ctoa(enum pie_channel);
+static size_t pie_enc_json_curve(char*,
+                                 size_t,
+                                 const struct pie_curve*,
+                                 enum pie_channel,
+                                 int);
+
 /*
 Encode to following structure (without newlines)
 {
@@ -72,43 +79,96 @@ size_t pie_enc_json_settings(char* buf,
 {
         size_t bw = 0;
 
-        bw += snprintf(buf + bw, len - bw, "{\"colort\":%d,",
+        bw += snprintf(buf+bw, len-bw, "{\"colort\":%d,",
                        (int)(d->color_temp * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"tint\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"tint\":%d,",
                        (int)(d->tint * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"expos\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"expos\":%d,",
                        (int)(d->exposure * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"contr\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"contr\":%d,",
                        (int)(d->contrast * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"highl\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"highl\":%d,",
                        (int)(d->highlights * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"shado\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"shado\":%d,",
                        (int)(d->shadows * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"white\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"white\":%d,",
                        (int)(d->white * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"black\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"black\":%d,",
                        (int)(d->black * DEV_SET_SCALE));
 
-        bw += snprintf(buf + bw, len - bw, "\"clarity\":{\"amount\": %d,",
+        bw += snprintf(buf+bw, len-bw, "\"clarity\":{\"amount\": %d,",
                        (int)(d->clarity.amount * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"rad\": %d,",
+        bw += snprintf(buf+bw, len-bw, "\"rad\": %d,",
                        (int)(d->clarity.radius * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"thresh\": %d},",
+        bw += snprintf(buf+bw, len-bw, "\"thresh\": %d},",
                        (int)(d->clarity.threshold * DEV_SET_SCALE));
 
-        bw += snprintf(buf + bw, len - bw, "\"vibra\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"vibra\":%d,",
                        (int)(d->vibrance * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"satur\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"satur\":%d,",
                        (int)(d->saturation * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"rot\":%d,",
+        bw += snprintf(buf+bw, len-bw, "\"rot\":%d,",
                        (int)(d->rotate * DEV_SET_SCALE));
 
-        bw += snprintf(buf + bw, len - bw, "\"sharp\":{\"amount\": %d,",
+        bw += snprintf(buf+bw, len-bw, "\"sharp\":{\"amount\": %d,",
                        (int)(d->sharpening.amount * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"rad\": %d,",
+        bw += snprintf(buf+bw, len-bw, "\"rad\": %d,",
                        (int)(d->sharpening.radius * DEV_SET_SCALE));
-        bw += snprintf(buf + bw, len - bw, "\"thresh\": %d}}",
+        bw += snprintf(buf+bw, len-bw, "\"thresh\": %d},",
                        (int)(d->sharpening.threshold * DEV_SET_SCALE));
+
+        bw += pie_enc_json_curve(buf+bw, len-bw, &d->curve_l, PIE_CHANNEL_RGB, 1);
+        bw += pie_enc_json_curve(buf+bw, len-bw, &d->curve_r, PIE_CHANNEL_RED, 1);
+        bw += pie_enc_json_curve(buf+bw, len-bw, &d->curve_g, PIE_CHANNEL_GREEN, 1);
+        bw += pie_enc_json_curve(buf+bw, len-bw, &d->curve_b, PIE_CHANNEL_BLUE, 0);
+
+        bw += snprintf(buf+bw, len-bw, "}");
+
+        return bw;
+}
+
+static size_t pie_enc_json_curve(char* buf,
+                                 size_t len,
+                                 const struct pie_curve* c,
+                                 enum pie_channel chan,
+                                 int last)
+{
+        size_t bw = 0;
+        int ic = pie_ctoa(chan);
+        int first = 1;
+
+        if (ic == 0)
+        {
+                return bw;
+        }
+
+        bw += snprintf(buf+bw, len-bw, "\"curve_%c\":[", ic);
+
+        for (int i = 0; i < c->num_p; i++)
+        {
+                if (first)
+                {
+                        first = 0;
+                }
+                else
+                {
+                        bw += snprintf(buf+bw, len-bw, ",");
+                }
+
+                bw += snprintf(buf+bw, len-bw, "{\"x\":%d,\"y\":%d}",
+                               (int)(c->cntl_p[i].x * DEV_SET_SCALE),
+                               (int)(c->cntl_p[i].y * DEV_SET_SCALE));
+        }
+
+        if (last)
+        {
+                bw += snprintf(buf+bw, len-bw, "],");
+        }
+        else
+        {
+                bw += snprintf(buf+bw, len-bw, "]");
+        }
+
 
         return bw;
 }
@@ -116,7 +176,7 @@ size_t pie_enc_json_settings(char* buf,
 int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
 {
         jsmn_parser parser;
-        jsmntok_t tokens[64];
+        jsmntok_t tokens[256];
         int ret;
 
         jsmn_init(&parser);
@@ -142,14 +202,30 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
 
         for (int i = 0; i < ret - 1; i++)
         {
-                char field[128];
+#define FIELD_LEN 256
+                char field[FIELD_LEN];
                 char* p = buf + tokens[i + 1].start;
                 int len = tokens[i + 1].end - tokens[i + 1].start;
+
+                if (len > FIELD_LEN)
+                {
+                        PIE_ERR("Field is longer than %d", FIELD_LEN);
+                        continue;
+                }
 
                 memcpy(field, p, len);
                 field[len] = '\0';
 
-                if (pie_enc_jsoneq(buf, tokens + i, "colort") == 0)
+                if (pie_enc_jsoneq(buf, tokens + i, "version") == 0)
+                {
+                        s->version = (int)strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid %s:%s", "version", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "colort") == 0)
                 {
                         s->color_temp = (float)strtol(field, &p, 10) / DEV_SET_SCALE;
                         if (field == p)
@@ -506,4 +582,29 @@ int pie_enc_jsoneq(const char *json, jsmntok_t *tok, const char *s)
                 return 0;
         }
         return -1;
+}
+
+static int pie_ctoa(enum pie_channel channel)
+{
+        int c = 0;
+
+        switch (channel)
+        {
+        case PIE_CHANNEL_RED:
+                c = 'r';
+                break;
+        case PIE_CHANNEL_GREEN:
+                c = 'g';
+                break;
+        case PIE_CHANNEL_BLUE:
+                c = 'b';
+                break;
+        case PIE_CHANNEL_RGB:
+                c = 'l';
+                break;
+        default:
+                break;
+        }
+
+        return c;
 }

@@ -193,7 +193,7 @@ bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS) obj/pie_math
 bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o obj/jsmn.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -lexif
 
-bin/tjson: testp/tjson.c obj/pie_json.o obj/llist.o obj/jsmn.o
+bin/tjson: testp/tjson.c obj/pie_json.o obj/llist.o obj/jsmn.o obj/pie_render.o $(ALG_OBJS) $(MATH_OBJS) obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 bin/test_exif_meta: testp/test_exif_meta.c obj/pie_exif.o obj/pie_exif_data.o obj/pie_cfg.o obj/hmap.o obj/strutil.o obj/pie_storage.o obj/pie_host.o obj/pie_mountpoint.o
