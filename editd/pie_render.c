@@ -34,6 +34,7 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
 {
         int m = w > h ? w : h;
 
+        s->version = 0;
         s->color_temp = 0.0f;
         s->tint = 0.0f;
         s->exposure = 0.0f;
@@ -47,15 +48,14 @@ void pie_dev_init_settings(struct pie_dev_settings* s, int w, int h)
         s->clarity.threshold = 2.0f;
         s->vibrance = 0.0f;
         s->saturation = 1.0f;
-        s->sharpening.amount = 0.0f;
-        s->sharpening.radius = 0.1f;
-        s->sharpening.threshold = 0.0f;
+        s->sharpening.amount = 0.2f;
+        s->sharpening.radius = 1.0f;
+        s->sharpening.threshold = 2.0f;
         s->rotate = 0.0f;
         pie_dev_init_curve(&s->curve_l);
         pie_dev_init_curve(&s->curve_r);
         pie_dev_init_curve(&s->curve_g);
         pie_dev_init_curve(&s->curve_b);
-        s->version = 1;
 }
 
 void pie_dev_init_curve(struct pie_curve* c)
@@ -103,6 +103,7 @@ static void pie_curve_set_to_int_fmt(struct pie_curve* c)
         for (int i = 0; i < c->num_p; i++)
         {
                 c->cntl_p[i].x /= 100.0f;
+                c->cntl_p[i].y /= 100.0f;
         }
 }
 
@@ -126,6 +127,7 @@ void pie_dev_set_to_can_fmt(struct pie_dev_settings* s)
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
 
+        PIE_DEBUG("Version: %d", s->version);
         if (s->version > 0)
         {
                 pie_curve_set_to_can_fmt(&s->curve_l);
@@ -140,6 +142,7 @@ static void pie_curve_set_to_can_fmt(struct pie_curve* c)
         for (int i = 0; i < c->num_p; i++)
         {
                 c->cntl_p[i].x *= 100.0f;
+                c->cntl_p[i].y *= 100.0f;
         }
 }
 
@@ -225,7 +228,7 @@ int pie_dev_render(struct pie_bitmap_f32rgb* img,
         pie_alg_curve(img->c_red,
                       img->c_green,
                       img->c_blue,
-                      PIE_CHANNEL_LUM,
+                      PIE_CHANNEL_RGB,
                       s->curve_l.cntl_p,
                       s->curve_l.num_p,
                       img->width,

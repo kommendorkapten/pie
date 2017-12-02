@@ -145,7 +145,7 @@ void pie_alg_expos(float* restrict r,
         /* Create curve */
         pie_alg_expos_curve(p, e);
         /* apply curve */
-        pie_alg_curve(r, g, b, PIE_CHANNEL_LUM, p, CURVE_LEN, w, h, stride);
+        pie_alg_curve(r, g, b, PIE_CHANNEL_RGB, p, CURVE_LEN, w, h, stride);
 }
 
 /*

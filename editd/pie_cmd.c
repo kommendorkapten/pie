@@ -674,7 +674,7 @@ static enum pie_channel pie_atoc(int c)
         switch (tolower(c))
         {
         case 'l':
-                chan = PIE_CHANNEL_LUM;
+                chan = PIE_CHANNEL_RGB;
                 break;
         case 'r':
                 chan = PIE_CHANNEL_RED;

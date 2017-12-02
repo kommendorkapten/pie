@@ -104,7 +104,7 @@ void pie_alg_highl(float* restrict r,
         /* Create curve */
         len = pie_alg_highl_curve(p, e);
         /* apply curve */
-        pie_alg_curve(r, g, b, PIE_CHANNEL_LUM, p, len, w, h, stride);
+        pie_alg_curve(r, g, b, PIE_CHANNEL_RGB, p, len, w, h, stride);
 }
 
 /*

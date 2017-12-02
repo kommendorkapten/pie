@@ -333,6 +333,23 @@ function loadImage(ws) {
                 devParams.sharp.rad    = Math.round(devParams.sharp.rad    / devSetScale);
                 devParams.sharp.thresh = Math.round(devParams.sharp.thresh / devSetScale);
 
+                for (let l of devParams.curve_l) {
+                    l.x = l.x / (devSetScale * 100.0);
+                    l.y = l.y / (devSetScale * 100.0);
+                }
+                for (let r of devParams.curve_r) {
+                    r.x = r.x / (devSetScale * 100.0);
+                    r.y = r.y / (devSetScale * 100.0);
+                }
+                for (let g of devParams.curve_g) {
+                    g.x = g.x / (devSetScale * 100.0);
+                    g.y = g.y / (devSetScale * 100.0);
+                }
+                for (let b of devParams.curve_b) {
+                    b.x = b.x / (devSetScale * 100.0);
+                    b.y = b.y / (devSetScale * 100.0);
+                }
+
                 updateDevParams(devParams);
             }
         }
@@ -361,11 +378,13 @@ function loadImage(ws) {
     return true;
 }
 
-function changeChannelCurve() {
+function changeChannelCurve(store = true) {
     let channelSelect = document.getElementById("channel-curve-select");
     let channel = parseInt(channelSelect.options[channelSelect.selectedIndex].value);
 
-    curveControlPoints[curves.selectedChannel] = curves.controlPoints;
+    if (store) {
+        curveControlPoints[curves.selectedChannel] = curves.controlPoints;
+    }
     curves.controlPoints = curveControlPoints[channel];
     curves.selectedChannel = channel;
     curves.color = curveColors[channel];
@@ -526,6 +545,13 @@ function updateDevParams(params) {
     document.getElementById("in_sharp_r").value = params.sharp.rad / 10;
     document.getElementById("sl_sharp_t").value = params.sharp.thresh;
     document.getElementById("in_sharp_t").value = params.sharp.thresh;
+
+    curveControlPoints[CURVE_LUM] = params.curve_l;
+    curveControlPoints[CURVE_RED] = params.curve_r;
+    curveControlPoints[CURVE_GREEN] = params.curve_g;
+    curveControlPoints[CURVE_BLUE] = params.curve_b;
+
+    changeChannelCurve(false);
 }
 
 function renderImage(bm) {
@@ -851,7 +877,7 @@ window.addEventListener("load", function(evt) {
     curves = new Curve(document.getElementById("curve_canvas"),
                        curveColors[0],
                        persistCurve);
-    curves.selectedChannel = 0;
+    curves.selectedChannel = CURVE_LUM;
 });
 
 document.onkeydown = function(evt) {

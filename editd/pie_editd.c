@@ -360,6 +360,7 @@ static void* ev_loop(void* a)
                                 {
                                         /* Store update development settings */
                                         timing_start(&t_proc);
+                                        cmd->wrkspc->settings.version = 1;
                                         store_settings(cmd->wrkspc->mob_id,
                                                        &cmd->wrkspc->settings);
                                         PIE_DEBUG("Stored dev settings in %ldusec.",
@@ -535,6 +536,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 {
                         PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
+                        pie_dev_init_settings(&msg->wrkspc->settings,
+                                              proxy->width,
+                                              proxy->height);
                 }
                 /* Free any resources */
                 pie_dev_params_release(&settings_json);
@@ -969,7 +973,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
 
                 switch ((enum pie_channel)msg->i1)
                 {
-                case PIE_CHANNEL_LUM:
+                case PIE_CHANNEL_RGB:
                         ok = parse_curve_pnts(&msg->wrkspc->settings.curve_l,
                                               msg->buf);
                         break;
