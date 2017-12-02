@@ -5,7 +5,7 @@
 #include <sqlite3.h>
 
 /* Make sure in sync with PIE_MQ_MAX_UPD in pie_mq_msg.h */
-#define PIE_DEV_PARAMS_LEN 1024
+#define PIE_DEV_PARAMS_LEN 4096
 
 struct pie_dev_params
 {

@@ -49,7 +49,7 @@
 #define Q_INCOMING_MEDIA "/tmp/pie_new_media.sock"
 #define Q_UPDATE_META    "/tmp/pie_update_meta.sock"
 #define PIE_MQ_MAX_DIGEST 64 /* large enough for SHA-512 */
-#define PIE_MQ_MAX_UPD 1024
+#define PIE_MQ_MAX_UPD 4096
 
 enum pie_mq_upd_media_type
 {
