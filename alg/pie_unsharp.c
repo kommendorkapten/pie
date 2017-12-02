@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -125,9 +125,9 @@ int pie_alg_unsharp(float* restrict r,
                          w,
                          h,
                          s);
-        
+
         /* Green channel */
-        memcpy(blur, g, size);        
+        memcpy(blur, g, size);
         pie_uns_blur_chan(blur,
                           buf,
                           w,
@@ -143,8 +143,8 @@ int pie_alg_unsharp(float* restrict r,
                          h,
                          s);
 
-        /* Blue channel */        
-        memcpy(blur, b, size);        
+        /* Blue channel */
+        memcpy(blur, b, size);
         pie_uns_blur_chan(blur,
                           buf,
                           w,
@@ -159,10 +159,10 @@ int pie_alg_unsharp(float* restrict r,
                          w,
                          h,
                          s);
-        
+
         free(buf);
         free(blur);
-        
+
         return 0;
 }
 
@@ -180,13 +180,13 @@ static void pie_unsharp_chan(float* restrict img,
         __m256 thresholdv = _mm256_set1_ps(threshold);
         __m256 onev = _mm256_set1_ps(1.0f);
         __m256 zerov = _mm256_set1_ps(0.0f);
-        __m256 sign_maskv = _mm256_set1_ps(-0.f);         
+        __m256 sign_maskv = _mm256_set1_ps(-0.f);
 #elif _HAS_SSE42
         __m128 amountv = _mm_set1_ps(param->amount);
         __m128 thresholdv = _mm_set1_ps(threshold);
         __m128 onev = _mm_set1_ps(1.0f);
         __m128 zerov = _mm_set1_ps(0.0f);
-        __m128 sign_maskv = _mm_set1_ps(-0.f); 
+        __m128 sign_maskv = _mm_set1_ps(-0.f);
 #elif _HAS_ALTIVEC
         vector float amountv = (vector float){param->amount, param->amount, param->amount, param->amount};
         vector float thresholdv = (vector float){threshold, threshold, threshold, threshold};
@@ -226,7 +226,7 @@ static void pie_unsharp_chan(float* restrict img,
 
                         cmpv = _mm256_cmp_ps(deltav, thresholdv, _CMP_NLT_UQ);
                         newv = _mm256_blendv_ps(imgv, newv, cmpv);
-                        
+
                         /* the ones less than zero will be 0xffffffff */
                         cmpv = _mm256_cmp_ps(newv, zerov, _CMP_LT_OQ);
                         /* d = a,b,m. if m == 0 a else b */
@@ -236,11 +236,11 @@ static void pie_unsharp_chan(float* restrict img,
                         cmpv = _mm256_cmp_ps(newv, onev, _CMP_NLT_UQ);
                         newv = _mm256_blendv_ps(newv, onev, cmpv);
 
-                        _mm256_store_ps(img + p, newv);                        
+                        _mm256_store_ps(img + p, newv);
                 }
-                
+
 #elif _HAS_SSE42
-        
+
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * s + x;
@@ -262,7 +262,7 @@ static void pie_unsharp_chan(float* restrict img,
 
                         cmpv = _mm_cmpnlt_ps(deltav, thresholdv);
                         newv = _mm_blendv_ps(imgv, newv, cmpv);
-                        
+
                         /* the ones less than zero will be 0xffffffff */
                         cmpv = _mm_cmplt_ps(newv, zerov);
                         /* d = a,b,m. if m == 0 a else b */
@@ -272,7 +272,7 @@ static void pie_unsharp_chan(float* restrict img,
                         cmpv = _mm_cmpnlt_ps(newv, onev);
                         newv = _mm_blendv_ps(newv, onev, cmpv);
 
-                        _mm_store_ps(img + p, newv);                        
+                        _mm_store_ps(img + p, newv);
                 }
 
 #elif _HAS_ALTIVEC
@@ -321,7 +321,7 @@ static void pie_unsharp_chan(float* restrict img,
                         {
                                 img[p] = new;
                         }
-                        
+
                         if (img[p] < 0.0f)
                         {
                                 img[p] = 0.0f;
@@ -331,7 +331,7 @@ static void pie_unsharp_chan(float* restrict img,
                                 img[p] = 1.0f;
                         }
                 }
-        }        
+        }
 }
 
 static void pie_uns_blur_chan(float* restrict chan,
@@ -347,7 +347,7 @@ static void pie_uns_blur_chan(float* restrict chan,
         /* Determine which method to use */
 # ifdef __sparc
         /* always use box blur */
-        pie_box_blur6(chan, buf, sigma, w, h, s);        
+        pie_mth_box_blur6(chan, buf, sigma, w, h, s);
 # else
         if (sigma < 4.1f)
         {
