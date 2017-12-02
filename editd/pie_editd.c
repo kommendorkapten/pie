@@ -1055,9 +1055,12 @@ static void store_settings(pie_id mob_id,
         msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
         PIE_DEBUG("Update settings for %lu", mob_id);
         msg.id = pie_htonll(mob_id);
-        if (pie_enc_json_settings(msg.msg,
-                                  PIE_MQ_MAX_UPD,
-                                  &copy) == 0)
+        bw = pie_enc_json_settings(msg.msg,
+                                   PIE_MQ_MAX_UPD,
+                                   &copy);
+        PIE_DEBUG("Update message size: %ld", bw);
+        /* bw does not include null terminator */
+        if (bw == 0 || (bw + 1)> PIE_MQ_MAX_UPD)
         {
                 PIE_ERR("Failed to JSON encode development settings");
                 return;

@@ -89,13 +89,10 @@ void pie_dev_set_to_int_fmt(struct pie_dev_settings* s)
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
 
-        if (s->version > 0)
-        {
-                pie_curve_set_to_int_fmt(&s->curve_l);
-                pie_curve_set_to_int_fmt(&s->curve_r);
-                pie_curve_set_to_int_fmt(&s->curve_g);
-                pie_curve_set_to_int_fmt(&s->curve_b);
-        }
+        pie_curve_set_to_int_fmt(&s->curve_l);
+        pie_curve_set_to_int_fmt(&s->curve_r);
+        pie_curve_set_to_int_fmt(&s->curve_g);
+        pie_curve_set_to_int_fmt(&s->curve_b);
 }
 
 static void pie_curve_set_to_int_fmt(struct pie_curve* c)
@@ -127,14 +124,10 @@ void pie_dev_set_to_can_fmt(struct pie_dev_settings* s)
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
 
-        PIE_DEBUG("Version: %d", s->version);
-        if (s->version > 0)
-        {
-                pie_curve_set_to_can_fmt(&s->curve_l);
-                pie_curve_set_to_can_fmt(&s->curve_r);
-                pie_curve_set_to_can_fmt(&s->curve_g);
-                pie_curve_set_to_can_fmt(&s->curve_b);
-        }
+        pie_curve_set_to_can_fmt(&s->curve_l);
+        pie_curve_set_to_can_fmt(&s->curve_r);
+        pie_curve_set_to_can_fmt(&s->curve_g);
+        pie_curve_set_to_can_fmt(&s->curve_b);
 }
 
 static void pie_curve_set_to_can_fmt(struct pie_curve* c)

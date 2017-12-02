@@ -22,9 +22,10 @@
 #include "../lib/llist.h"
 #include "../jsmn/jsmn.h"
 
-#define DEV_SET_SCALE 10000.0f
+#define DEV_SET_SCALE 1000.0f
 
 static int pie_ctoa(enum pie_channel);
+static int pie_dec_json_curve(struct pie_curve*, char*);
 static size_t pie_enc_json_curve(char*,
                                  size_t,
                                  const struct pie_curve*,
@@ -79,7 +80,9 @@ size_t pie_enc_json_settings(char* buf,
 {
         size_t bw = 0;
 
-        bw += snprintf(buf+bw, len-bw, "{\"colort\":%d,",
+        bw += snprintf(buf+bw, len-bw, "{\"version\":%d,",
+                       d->version);
+        bw += snprintf(buf+bw, len-bw, "\"colort\":%d,",
                        (int)(d->color_temp * DEV_SET_SCALE));
         bw += snprintf(buf+bw, len-bw, "\"tint\":%d,",
                        (int)(d->tint * DEV_SET_SCALE));
@@ -338,6 +341,34 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                                 goto done;
                         }
                 }
+                else if (pie_enc_jsoneq(buf, tokens + i, "curve_l") == 0)
+                {
+                        if (pie_dec_json_curve(&s->curve_l, field))
+                        {
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "curve_r") == 0)
+                {
+                        if (pie_dec_json_curve(&s->curve_r, field))
+                        {
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "curve_g") == 0)
+                {
+                        if (pie_dec_json_curve(&s->curve_g, field))
+                        {
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "curve_b") == 0)
+                {
+                        if (pie_dec_json_curve(&s->curve_b, field))
+                        {
+                                goto done;
+                        }
+                }
         }
 
         ret = 0;
@@ -349,7 +380,6 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
 {
         jsmn_parser parser;
         jsmntok_t tokens[16];
-
         int ret;
 
         jsmn_init(&parser);
@@ -406,6 +436,96 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
                                 goto done;
                         }
                 }
+        }
+
+        ret = 0;
+done:
+        return ret;
+}
+
+int pie_dec_json_curve(struct pie_curve* s, char* buf)
+{
+        jsmn_parser parser;
+        jsmntok_t tokens[64];
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser,
+                         buf,
+                         strlen(buf) + 1,
+                         tokens,
+                         sizeof(tokens)/sizeof(tokens[0]));
+        if (ret < 0)
+        {
+                PIE_WARN("Failed to JSON parse: '%s'", buf);
+                return 1;
+        }
+        if (tokens[0].type != JSMN_ARRAY)
+        {
+                PIE_WARN("Broken state in parser");
+                return 2;
+        }
+
+        for (int i = 1; i < ret; i++) {
+                jsmn_parser cparser;
+                jsmntok_t ctokens[16];
+                char* p = buf + tokens[i].start;
+                int len = tokens[i].end - tokens[i].start;
+                int cret;
+
+                if (tokens[i].type != JSMN_OBJECT)
+                {
+                        continue;
+                }
+
+                jsmn_init(&cparser);
+                cret = jsmn_parse(&cparser,
+                                  p,
+                                  len,
+                                  ctokens,
+                                  sizeof(ctokens)/sizeof(ctokens[0]));
+
+                if (cret < 0)
+                {
+                        PIE_WARN("Failed to JSON parse '%s'", buf);
+                        return 3;
+                }
+
+                if (ctokens[0].type != JSMN_OBJECT)
+                {
+                        PIE_WARN("Broken state in parser");
+                        return 4;
+                }
+
+                for (int j = 0; j < cret - 1; j++)
+                {
+                        char field[64];
+                        char* cp = p + ctokens[j + 1].start;
+                        len = ctokens[j + 1].end - ctokens[j + 1].start;
+
+                        memcpy(field, cp, len);
+                        field[len] = '\0';
+
+                        if (pie_enc_jsoneq(p, ctokens + j, "x") == 0)
+                        {
+                                s->cntl_p[s->num_p].x = (float)strtol(field, &cp, 10) / DEV_SET_SCALE;
+                                if (field == cp)
+                                {
+                                        PIE_WARN("Invalid x %s", field);
+                                        goto done;
+                                }
+                        }
+                        if (pie_enc_jsoneq(p, ctokens + j, "y") == 0)
+                        {
+                                s->cntl_p[s->num_p].y = (float)strtol(field, &cp, 10) / DEV_SET_SCALE;
+                                if (field == cp)
+                                {
+                                        PIE_WARN("Invalid y %s", field);
+                                        goto done;
+                                }
+                        }
+                }
+                s->num_p++;
         }
 
         ret = 0;

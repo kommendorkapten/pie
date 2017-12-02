@@ -12,7 +12,7 @@ let histChart;
 let lowerPaneHeight = 220;
 let histYMax = 255;
 let bigEndian = 1;
-let devSetScale = 10000.0;
+let devSetScale = 1000.0;
 let zoomMode = {
     "enabled": false,
     "mode": "center",

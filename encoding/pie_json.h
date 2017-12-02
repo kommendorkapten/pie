@@ -25,6 +25,7 @@ struct pie_exif_data;
 struct pie_collection;
 struct llist;
 struct pie_mob;
+struct pie_curve;
 
 /**
  * Encode a histogram to JSON.
