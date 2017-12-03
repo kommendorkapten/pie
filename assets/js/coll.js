@@ -739,7 +739,7 @@ function updateUiFilterRate(rate) {
 
 
     /* reset */
-    for (i = 1; i < 10; i += 2) {
+    for (let i = 1; i < 10; i += 2) {
         btnGrp.childNodes[i].className = "";
     }
 
@@ -753,7 +753,7 @@ function updateUiFilterRate(rate) {
     rate = 5 - rate;
     rate = rate * 2;
 
-    for (i = rate + 1; i < 10; i += 2) {
+    for (let i = rate + 1; i < 10; i += 2) {
         btnGrp.childNodes[i].classList.add("selected");
     }
 }
