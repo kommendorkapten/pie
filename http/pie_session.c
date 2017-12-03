@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -49,6 +49,7 @@ struct pie_sess* pie_sess_create(void)
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
         s->wrkspc = NULL;
         s->rgba = NULL;
+        s->hist = NULL;
         s->tx_ready = 0;
 
         return s;
@@ -59,6 +60,10 @@ void pie_sess_destroy(struct pie_sess* s)
         if (s->rgba)
         {
                 free(s->rgba);
+        }
+        if (s->hist)
+        {
+                free(s->hist);
         }
 }
 
@@ -105,7 +110,7 @@ struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr* sm, char* token)
 
 void pie_sess_mgr_put(struct pie_sess_mgr* sm, struct pie_sess* s)
 {
-        struct timeval tv;        
+        struct timeval tv;
 
         PIE_TRACE("Session: %s", s->token);
         gettimeofday(&tv, NULL);
@@ -128,7 +133,7 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
 
                 if (s->access_ts < tv.tv_sec - threshold)
                 {
-                        PIE_DEBUG("Destroy session [%s]@%p\n", 
+                        PIE_DEBUG("Destroy session [%s]@%p\n",
                                   (char*)s->token,
                                   elems[i].data);
 
@@ -144,6 +149,6 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
                 }
         }
         free(elems);
-        
+
         return 0;
 }

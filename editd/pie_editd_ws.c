@@ -624,19 +624,22 @@ static int cb_hist(struct lws* wsi,
                 if (session->tx_ready & PIE_TX_HIST)
                 {
                         struct timing t;
-                        unsigned char* buf;
                         int bw;
                         int json_len;
 
                         timing_start(&t);
-                        buf = malloc(JSON_HIST_SIZE + LWS_PRE);
-                        json_len = (int)pie_enc_json_hist((char*)buf + LWS_PRE,
+                        if (session->hist == NULL)
+                        {
+                                session->hist = malloc(JSON_HIST_SIZE + LWS_PRE);
+                        }
+
+                        json_len = (int)pie_enc_json_hist((char*)session->hist + LWS_PRE,
                                                           JSON_HIST_SIZE,
                                                           &session->wrkspc->hist);
                         PIE_DEBUG("JSON encoded histogram: %8ldusec",
                                   timing_dur_usec(&t));
                         bw = lws_write(wsi,
-                                       buf + LWS_PRE,
+                                       session->hist + LWS_PRE,
                                        json_len,
                                        LWS_WRITE_TEXT);
                         if (bw < json_len)
@@ -648,7 +651,6 @@ static int cb_hist(struct lws* wsi,
                                 ret = -1;
                         }
                         session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_HIST);
-                        free(buf);
                 }
                 break;
         case LWS_CALLBACK_RECEIVE:

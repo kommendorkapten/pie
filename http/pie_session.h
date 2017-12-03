@@ -35,6 +35,7 @@ struct pie_sess
         char token[PIE_SESS_TOKEN_LEN];
         struct pie_editd_workspace* wrkspc;
         unsigned char* rgba;
+        unsigned char* hist;
         /* Used for duration measurement, set by cb_cmd */
         struct timing t;
         /* Timestamp for last accessed time, in seconds */
