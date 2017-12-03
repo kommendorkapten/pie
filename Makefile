@@ -75,7 +75,7 @@ LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
 	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
-             pie_unsharp.c pie_vibra.c pie_colort.c pie_med3f.c
+             pie_unsharp.c pie_vibra.c pie_colort.c pie_medf3.c
 ENC_SRC    = pie_json.c pie_rgba.c
 MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c
