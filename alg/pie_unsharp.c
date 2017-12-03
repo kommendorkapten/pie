@@ -107,7 +107,9 @@ int pie_alg_unsharp(float* restrict r,
                 return -1;
         }
         /* Create a separable gauss kernel */
-        pie_mth_kernel_sep_gauss(kernel, kernel_len, param->radius * param->radius);
+        pie_mth_kernel_sep_gauss(kernel,
+                                 kernel_len,
+                                 param->radius * param->radius);
 
         /* Red channel */
         memcpy(blur, r, size);

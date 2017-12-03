@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -31,7 +31,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
         for (int x = 1; x < w - 1; x++)
         {
                 /* y = 0 */
-                buf[x] = 
+                buf[x] =
                         k->v[0] * c[0 * s + x - 1] +
                         k->v[1] * c[0 * s + x] +
                         k->v[2] * c[0 * s + x + 1] +
@@ -43,7 +43,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                         k->v[8] * c[1 * s + x + 1];
 
                 /* y = h - 1 */
-                buf[(h - 1) * s + x] = 
+                buf[(h - 1) * s + x] =
                         k->v[0] * c[(h - 2) * s + x - 1] +
                         k->v[1] * c[(h - 2) * s + x] +
                         k->v[2] * c[(h - 2) * s + x + 1] +
@@ -58,7 +58,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
         for (int y = 1; y < h - 1; y++)
         {
                 /* First column */
-                buf[y * s] = 
+                buf[y * s] =
                         k->v[0] * c[(y - 1) * s + 0] +
                         k->v[1] * c[(y - 1) * s + 0] +
                         k->v[2] * c[(y - 1) * s + 1] +
@@ -71,7 +71,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
 
                 for (int x = 1; x < w - 1; x++)
                 {
-                        buf[y * s + x] = 
+                        buf[y * s + x] =
                                 k->v[0] * c[(y - 1) * s + x - 1] +
                                 k->v[1] * c[(y - 1) * s + x] +
                                 k->v[2] * c[(y - 1) * s + x + 1] +
@@ -84,7 +84,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                 }
 
                 /* last column */
-                buf[y * s + w - 1] = 
+                buf[y * s + w - 1] =
                         k->v[0] * c[(y - 1) * s + w - 2] +
                         k->v[1] * c[(y - 1) * s + w - 1] +
                         k->v[2] * c[(y - 1) * s + w - 1] +
@@ -95,9 +95,9 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                         k->v[7] * c[(y + 1) * s + w - 1] +
                         k->v[8] * c[(y + 1) * s + w - 1];
         }
-        
+
         /* Four corners */
-        buf[0] = 
+        buf[0] =
                 k->v[0] * c[0] +
                 k->v[1] * c[0] +
                 k->v[2] * c[1] +
@@ -108,7 +108,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                 k->v[7] * c[s] +
                 k->v[8] * c[s + 1];
 
-        buf[w - 1] = 
+        buf[w - 1] =
                 k->v[0] * c[w - 2] +
                 k->v[1] * c[w - 1] +
                 k->v[2] * c[w - 1] +
@@ -119,7 +119,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                 k->v[7] * c[s + w - 1] +
                 k->v[8] * c[s + w - 1];
 
-        buf[(h - 1) * s] = 
+        buf[(h - 1) * s] =
                 k->v[0] * c[(h - 2) * s] +
                 k->v[1] * c[(h - 2) * s] +
                 k->v[2] * c[(h - 2) * s + 1] +
@@ -130,7 +130,7 @@ void pie_mth_kernel3x3_apply(float* restrict c,
                 k->v[7] * c[(h - 1) * s] +
                 k->v[8] * c[(h - 1) * s + 1];
 
-        buf[(h - 1) * s + w - 1] = 
+        buf[(h - 1) * s + w - 1] =
                 k->v[0] * c[(h - 2) * s + w - 2] +
                 k->v[1] * c[(h - 2) * s + w - 1] +
                 k->v[2] * c[(h - 2) * s + w - 1] +
@@ -143,6 +143,23 @@ void pie_mth_kernel3x3_apply(float* restrict c,
 
         /* Copy result back into c */
         memcpy(c, buf, h * s * sizeof(float));
+
+        for (int y = 0; y < h; y++)
+        {
+                for (int x = 0; x < w; x++)
+                {
+                        int p = y * s + x;
+
+                        if (c[p] > 1.0f)
+                        {
+                                c[p] = 1.0f;
+                        }
+                        else if (c[p] < 0.0f)
+                        {
+                                c[p] = 0.0f;
+                        }
+                }
+        }
 }
 
 void pie_mth_kernel5x5_apply(float* restrict c,
@@ -156,22 +173,22 @@ void pie_mth_kernel5x5_apply(float* restrict c,
         for (int x = 2; x < w - 2; x++)
         {
                 /* y = 0 */
-                buf[x] = 
+                buf[x] =
                         k->v[0] * c[0 * s + x - 2] +
                         k->v[1] * c[0 * s + x - 1] +
-                        k->v[2] * c[0 * s + x] +    
-                        k->v[3] * c[0 * s + x + 1] + 
+                        k->v[2] * c[0 * s + x] +
+                        k->v[3] * c[0 * s + x + 1] +
                         k->v[4] * c[0 * s + x + 2] +
                         /* 1 */
                         k->v[5] * c[0 * s + x - 2] +
                         k->v[6] * c[0 * s + x - 1] +
-                        k->v[7] * c[0 * s + x] +    
+                        k->v[7] * c[0 * s + x] +
                         k->v[8] * c[0 * s + x + 1] +
                         k->v[9] * c[0 * s + x + 2] +
                         /* 2 */
                         k->v[10] * c[0 * s + x - 2] +
                         k->v[11] * c[0 * s + x - 1] +
-                        k->v[12] * c[0 * s + x] +    
+                        k->v[12] * c[0 * s + x] +
                         k->v[13] * c[0 * s + x + 1] +
                         k->v[14] * c[0 * s + x + 2] +
                         /* 3 */
@@ -183,27 +200,27 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[2 * s + x - 2] +
                         k->v[21] * c[2 * s + x - 1] +
-                        k->v[22] * c[2 * s + x] +    
+                        k->v[22] * c[2 * s + x] +
                         k->v[23] * c[2 * s + x + 1] +
                         k->v[24] * c[2 * s + x + 2];
 
                 /* y = 1 */
-                buf[s + x] = 
+                buf[s + x] =
                         k->v[0] * c[0 * s + x - 2] +
                         k->v[1] * c[0 * s + x - 1] +
-                        k->v[2] * c[0 * s + x] +    
-                        k->v[3] * c[0 * s + x + 1] + 
+                        k->v[2] * c[0 * s + x] +
+                        k->v[3] * c[0 * s + x + 1] +
                         k->v[4] * c[0 * s + x + 2] +
                         /* 1 */
                         k->v[5] * c[0 * s + x - 2] +
                         k->v[6] * c[0 * s + x - 1] +
-                        k->v[7] * c[0 * s + x] +    
+                        k->v[7] * c[0 * s + x] +
                         k->v[8] * c[0 * s + x + 1] +
                         k->v[9] * c[0 * s + x + 2] +
                         /* 2 */
                         k->v[10] * c[1 * s + x - 2] +
                         k->v[11] * c[1 * s + x - 1] +
-                        k->v[12] * c[1 * s + x] +    
+                        k->v[12] * c[1 * s + x] +
                         k->v[13] * c[1 * s + x + 1] +
                         k->v[14] * c[1 * s + x + 2] +
                         /* 3 */
@@ -215,27 +232,27 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[3 * s + x - 2] +
                         k->v[21] * c[3 * s + x - 1] +
-                        k->v[22] * c[3 * s + x] +    
+                        k->v[22] * c[3 * s + x] +
                         k->v[23] * c[3 * s + x + 1] +
                         k->v[24] * c[3 * s + x + 2];
 
                 /* y = h - 2 */
-                buf[(h - 2) * s + x] =                 
+                buf[(h - 2) * s + x] =
                         k->v[0] * c[(h - 4) * s + x - 2] +
                         k->v[1] * c[(h - 4) * s + x - 1] +
-                        k->v[2] * c[(h - 4) * s + x] +    
-                        k->v[3] * c[(h - 4) * s + x + 1] + 
+                        k->v[2] * c[(h - 4) * s + x] +
+                        k->v[3] * c[(h - 4) * s + x + 1] +
                         k->v[4] * c[(h - 4) * s + x + 2] +
                         /* 1 */
                         k->v[5] * c[(h - 3) * s + x - 2] +
                         k->v[6] * c[(h - 3) * s + x - 1] +
-                        k->v[7] * c[(h - 3) * s + x] +    
+                        k->v[7] * c[(h - 3) * s + x] +
                         k->v[8] * c[(h - 3) * s + x + 1] +
                         k->v[9] * c[(h - 3) * s + x + 2] +
                         /* 2 */
                         k->v[10] * c[(h - 2) * s + x - 2] +
                         k->v[11] * c[(h - 2) * s + x - 1] +
-                        k->v[12] * c[(h - 2) * s + x] +    
+                        k->v[12] * c[(h - 2) * s + x] +
                         k->v[13] * c[(h - 2) * s + x + 1] +
                         k->v[14] * c[(h - 2) * s + x + 2] +
                         /* 3 */
@@ -247,27 +264,27 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[(h - 1) * s + x - 2] +
                         k->v[21] * c[(h - 1) * s + x - 1] +
-                        k->v[22] * c[(h - 1) * s + x] +    
+                        k->v[22] * c[(h - 1) * s + x] +
                         k->v[23] * c[(h - 1) * s + x + 1] +
                         k->v[24] * c[(h - 1) * s + x + 2];
-                
+
                 /* y = h - 1 */
-                buf[(h - 1) * s + x] = 
+                buf[(h - 1) * s + x] =
                         k->v[0] * c[(h - 3) * s + x - 2] +
                         k->v[1] * c[(h - 3) * s + x - 1] +
-                        k->v[2] * c[(h - 3) * s + x] +    
-                        k->v[3] * c[(h - 3) * s + x + 1] + 
+                        k->v[2] * c[(h - 3) * s + x] +
+                        k->v[3] * c[(h - 3) * s + x + 1] +
                         k->v[4] * c[(h - 3) * s + x + 2] +
                         /* 1 */
                         k->v[5] * c[(h - 2) * s + x - 2] +
                         k->v[6] * c[(h - 2) * s + x - 1] +
-                        k->v[7] * c[(h - 2) * s + x] +    
+                        k->v[7] * c[(h - 2) * s + x] +
                         k->v[8] * c[(h - 2) * s + x + 1] +
                         k->v[9] * c[(h - 2) * s + x + 2] +
                         /* 2 */
                         k->v[10] * c[(h - 1) * s + x - 2] +
                         k->v[11] * c[(h - 1) * s + x - 1] +
-                        k->v[12] * c[(h - 1) * s + x] +    
+                        k->v[12] * c[(h - 1) * s + x] +
                         k->v[13] * c[(h - 1) * s + x + 1] +
                         k->v[14] * c[(h - 1) * s + x + 2] +
                         /* 3 */
@@ -279,7 +296,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[(h - 1) * s + x - 2] +
                         k->v[21] * c[(h - 1) * s + x - 1] +
-                        k->v[22] * c[(h - 1) * s + x] +    
+                        k->v[22] * c[(h - 1) * s + x] +
                         k->v[23] * c[(h - 1) * s + x + 1] +
                         k->v[24] * c[(h - 1) * s + x + 2];
         }
@@ -287,22 +304,22 @@ void pie_mth_kernel5x5_apply(float* restrict c,
         for (int y = 2; y < h - 2; y++)
         {
                 /* First column, x = 0 */
-                buf[y * s] = 
+                buf[y * s] =
                         k->v[0] * c[(y - 2) * s + 0] +
                         k->v[1] * c[(y - 2) * s + 0] +
-                        k->v[2] * c[(y - 2) * s + 0] +    
-                        k->v[3] * c[(y - 2) * s + 1] + 
+                        k->v[2] * c[(y - 2) * s + 0] +
+                        k->v[3] * c[(y - 2) * s + 1] +
                         k->v[4] * c[(y - 2) * s + 2] +
                         /* 1 */
                         k->v[5] * c[(y - 1) * s + 0] +
                         k->v[6] * c[(y - 1) * s + 0] +
-                        k->v[7] * c[(y - 1) * s + 0] +    
+                        k->v[7] * c[(y - 1) * s + 0] +
                         k->v[8] * c[(y - 1) * s + 1] +
                         k->v[9] * c[(y - 1) * s + 2] +
                         /* 2 */
                         k->v[10] * c[y * s + 0] +
                         k->v[11] * c[y * s + 0] +
-                        k->v[12] * c[y * s + 0] +    
+                        k->v[12] * c[y * s + 0] +
                         k->v[13] * c[y * s + 1] +
                         k->v[14] * c[y * s + 2] +
                         /* 3 */
@@ -314,27 +331,27 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[(y + 2) * s + 0] +
                         k->v[21] * c[(y + 2) * s + 0] +
-                        k->v[22] * c[(y + 2) * s + 0] +    
+                        k->v[22] * c[(y + 2) * s + 0] +
                         k->v[23] * c[(y + 2) * s + 1] +
                         k->v[24] * c[(y + 2) * s + 2];
-                
+
                 /* Second column, x = 1 */
-                buf[y * s + 1] = 
+                buf[y * s + 1] =
                         k->v[0] * c[(y - 2) * s + 0] +
                         k->v[1] * c[(y - 2) * s + 0] +
-                        k->v[2] * c[(y - 2) * s + 1] +    
-                        k->v[3] * c[(y - 2) * s + 2] + 
+                        k->v[2] * c[(y - 2) * s + 1] +
+                        k->v[3] * c[(y - 2) * s + 2] +
                         k->v[4] * c[(y - 2) * s + 3] +
                         /* 1 */
                         k->v[5] * c[(y - 1) * s + 0] +
                         k->v[6] * c[(y - 1) * s + 0] +
-                        k->v[7] * c[(y - 1) * s + 1] +    
+                        k->v[7] * c[(y - 1) * s + 1] +
                         k->v[8] * c[(y - 1) * s + 2] +
                         k->v[9] * c[(y - 1) * s + 3] +
                         /* 2 */
                         k->v[10] * c[y * s + 0] +
                         k->v[11] * c[y * s + 0] +
-                        k->v[12] * c[y * s + 1] +    
+                        k->v[12] * c[y * s + 1] +
                         k->v[13] * c[y * s + 2] +
                         k->v[14] * c[y * s + 3] +
                         /* 3 */
@@ -346,7 +363,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[(y + 2) * s + 0] +
                         k->v[21] * c[(y + 2) * s + 0] +
-                        k->v[22] * c[(y + 2) * s + 1] +    
+                        k->v[22] * c[(y + 2) * s + 1] +
                         k->v[23] * c[(y + 2) * s + 2] +
                         k->v[24] * c[(y + 2) * s + 3];
 
@@ -369,14 +386,14 @@ void pie_mth_kernel5x5_apply(float* restrict c,
 #ifdef _USE_MEMCPY
                         float f[24];
 #endif
-                        float f1[4]; 
+                        float f1[4];
                         float f2[4];
                         float f3[4];
                         float f4[4];
                         float f5[4];
                         float f6[4];
 
-#ifdef _USE_MEMCPY                        
+#ifdef _USE_MEMCPY
                         memcpy(f, &c[(y - 2) * s + x - 2],
                                5 * sizeof(float));
                         memcpy(f + 5, &c[(y - 1) * s + x - 2],
@@ -393,22 +410,22 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         memcpy(f4, f + 12, 4 * sizeof(float));
                         memcpy(f5, f + 16, 4 * sizeof(float));
                         memcpy(f6, f + 20, 4 * sizeof(float));
-                        
+
 #else
 
                         f1[0] = c[(y - 2) * s + x - 2];
                         f1[1] = c[(y - 2) * s + x - 1];
-                        f1[2] = c[(y - 2) * s + x];    
-                        f1[3] = c[(y - 2) * s + x + 1]; 
+                        f1[2] = c[(y - 2) * s + x];
+                        f1[3] = c[(y - 2) * s + x + 1];
                         f2[0] = c[(y - 2) * s + x + 2];
                         f2[1] = c[(y - 1) * s + x - 2];
                         f2[2] = c[(y - 1) * s + x - 1];
-                        f2[3] = c[(y - 1) * s + x];    
+                        f2[3] = c[(y - 1) * s + x];
                         f3[0] = c[(y - 1) * s + x + 1];
                         f3[1] = c[(y - 1) * s + x + 2];
                         f3[2] = c[y * s + x - 2];
                         f3[3] = c[y * s + x - 1];
-                        f4[0] = c[y * s + x];    
+                        f4[0] = c[y * s + x];
                         f4[1] = c[y * s + x + 1];
                         f4[2] = c[y * s + x + 2];
                         f4[3] = c[(y + 1) * s + x - 2];
@@ -418,7 +435,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         f5[3] = c[(y + 1) * s + x + 2];
                         f6[0] = c[(y + 2) * s + x - 2];
                         f6[1] = c[(y + 2) * s + x - 1];
-                        f6[2] = c[(y + 2) * s + x];    
+                        f6[2] = c[(y + 2) * s + x];
                         f6[3] = c[(y + 2) * s + x + 1];
 
 #endif
@@ -452,22 +469,22 @@ void pie_mth_kernel5x5_apply(float* restrict c,
 #elif _HAS_ALTIVEC
                         /* TODO implement me */
 #else
-                        buf[y * s + x] = 
+                        buf[y * s + x] =
                                 k->v[0] * c[(y - 2) * s + x - 2] +
                                 k->v[1] * c[(y - 2) * s + x - 1] +
-                                k->v[2] * c[(y - 2) * s + x] +    
-                                k->v[3] * c[(y - 2) * s + x + 1] + 
+                                k->v[2] * c[(y - 2) * s + x] +
+                                k->v[3] * c[(y - 2) * s + x + 1] +
                                 k->v[4] * c[(y - 2) * s + x + 2] +
                                 /* 1 */
                                 k->v[5] * c[(y - 1) * s + x - 2] +
                                 k->v[6] * c[(y - 1) * s + x - 1] +
-                                k->v[7] * c[(y - 1) * s + x] +    
+                                k->v[7] * c[(y - 1) * s + x] +
                                 k->v[8] * c[(y - 1) * s + x + 1] +
                                 k->v[9] * c[(y - 1) * s + x + 2] +
                                 /* 2 */
                                 k->v[10] * c[y * s + x - 2] +
                                 k->v[11] * c[y * s + x - 1] +
-                                k->v[12] * c[y * s + x] +    
+                                k->v[12] * c[y * s + x] +
                                 k->v[13] * c[y * s + x + 1] +
                                 k->v[14] * c[y * s + x + 2] +
                                 /* 3 */
@@ -479,29 +496,29 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                                 /* 4 */
                                 k->v[20] * c[(y + 2) * s + x - 2] +
                                 k->v[21] * c[(y + 2) * s + x - 1] +
-                                k->v[22] * c[(y + 2) * s + x] +    
+                                k->v[22] * c[(y + 2) * s + x] +
                                 k->v[23] * c[(y + 2) * s + x + 1] +
                                 k->v[24] * c[(y + 2) * s + x + 2];
 #endif
                 }
 
                 /* second last column, x = w - 2 */
-                buf[y * s + w - 2] = 
+                buf[y * s + w - 2] =
                         k->v[0] * c[(y - 2) * s + w - 4] +
                         k->v[1] * c[(y - 2) * s + w - 3] +
-                        k->v[2] * c[(y - 2) * s + w - 2] +    
-                        k->v[3] * c[(y - 2) * s + w - 1] + 
+                        k->v[2] * c[(y - 2) * s + w - 2] +
+                        k->v[3] * c[(y - 2) * s + w - 1] +
                         k->v[4] * c[(y - 2) * s + w - 1] +
                         /* 1 */
                         k->v[5] * c[(y - 1) * s + w - 4] +
                         k->v[6] * c[(y - 1) * s + w - 3] +
-                        k->v[7] * c[(y - 1) * s + w - 2] +    
+                        k->v[7] * c[(y - 1) * s + w - 2] +
                         k->v[8] * c[(y - 1) * s + w - 1] +
                         k->v[9] * c[(y - 1) * s + w - 1] +
                         /* 2 */
                         k->v[10] * c[y * s + w - 4] +
                         k->v[11] * c[y * s + w - 3] +
-                        k->v[12] * c[y * s + w - 2] +    
+                        k->v[12] * c[y * s + w - 2] +
                         k->v[13] * c[y * s + w - 1] +
                         k->v[14] * c[y * s + w - 1] +
                         /* 3 */
@@ -516,24 +533,24 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         k->v[22] * c[(y + 2) * s + w - 2] +
                         k->v[23] * c[(y + 2) * s + w - 1] +
                         k->v[24] * c[(y + 2) * s + w - 1];
-                
+
                 /* last column, x = w - 1 */
-                buf[y * s + w - 1] = 
+                buf[y * s + w - 1] =
                         k->v[0] * c[(y - 2) * s + w - 3] +
                         k->v[1] * c[(y - 2) * s + w - 2] +
-                        k->v[2] * c[(y - 2) * s + w - 1] +    
-                        k->v[3] * c[(y - 2) * s + w - 1] + 
+                        k->v[2] * c[(y - 2) * s + w - 1] +
+                        k->v[3] * c[(y - 2) * s + w - 1] +
                         k->v[4] * c[(y - 2) * s + w - 1] +
                         /* 1 */
                         k->v[5] * c[(y - 1) * s + w - 3] +
                         k->v[6] * c[(y - 1) * s + w - 2] +
-                        k->v[7] * c[(y - 1) * s + w - 1] +    
+                        k->v[7] * c[(y - 1) * s + w - 1] +
                         k->v[8] * c[(y - 1) * s + w - 1] +
                         k->v[9] * c[(y - 1) * s + w - 1] +
                         /* 2 */
                         k->v[10] * c[y * s + w - 3] +
                         k->v[11] * c[y * s + w - 2] +
-                        k->v[12] * c[y * s + w - 1] +    
+                        k->v[12] * c[y * s + w - 1] +
                         k->v[13] * c[y * s + w - 1] +
                         k->v[14] * c[y * s + w - 1] +
                         /* 3 */
@@ -545,24 +562,24 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                         /* 4 */
                         k->v[20] * c[(y + 2) * s + w - 3] +
                         k->v[21] * c[(y + 2) * s + w - 2] +
-                        k->v[22] * c[(y + 2) * s + w - 1] +    
+                        k->v[22] * c[(y + 2) * s + w - 1] +
                         k->v[23] * c[(y + 2) * s + w - 1] +
                         k->v[24] * c[(y + 2) * s + w - 1];
         }
-        
+
         /* "Corners", use the naive algoritm here */
         int ay[4] = {0, 1, h - 2, h - 1};
         int ax[4] = {0, 1, w - 2, w - 1};
         for (int iy = 0; iy < 4; iy++)
         {
                 int y = ay[iy];
-                
+
                 for (int ix = 0; ix < 4; ix++)
                 {
                         int x = ax[ix];
-                        
+
                         buf[y * s + x] = 0;
-                        
+
                         for (int ky = 0; ky < 5; ky++)
                         {
                                 int py = (int)(y + ky - 2);
@@ -575,7 +592,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                                 {
                                         py = h - 1;
                                 }
-                                
+
                                 for (int kx = 0; kx < 5; kx++)
                                 {
                                         int px = x + kx - 2;
@@ -615,7 +632,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                 for (int x = 0; x < w; x++)
                 {
                         buf[y * s + x] = 0;
-                        
+
                         for (int ky = 0; ky < 5; ky++)
                         {
                                 int py = y + ky - 2;
@@ -628,7 +645,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                                 {
                                         py = h - 1;
                                 }
-                                
+
                                 for (int kx = 0; kx < 5; kx++)
                                 {
                                         int px = x + kx - 2;
@@ -650,7 +667,7 @@ void pie_mth_kernel5x5_apply(float* restrict c,
                 }
         }
         /* Copy result back into c */
-        memcpy(c, buf, h * s * sizeof(float));        
+        memcpy(c, buf, h * s * sizeof(float));
 }
 #endif
 
@@ -663,7 +680,7 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                               int s)
 {
         int half = len >> 1;
-        
+
         /* x */
         for (int y = 0; y < h; y++)
         {
@@ -680,10 +697,10 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                         for (int i = 0; i < stop1; i++)
                         {
                                 int p = 0;
-                                
+
                                 sum += c[y * s + p] * k[i];
                         }
-                        
+
                         /* 0 <= p <= w - 1 */
                         int rem = (stop2 - stop1) % 4;
                         int par_stop = stop2 - rem;
@@ -693,7 +710,7 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                         float sum2 = 0.0f;
                         float sum3 = 0.0f;
                         float sum4 = 0.0f;
-                        
+
                         for (int i = stop1; i < par_stop; )
                         {
                                 int p = x + i - half;
@@ -720,13 +737,13 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                                 int p = x + i - half;
 
                                 sum += c[y * s + p] * k[i];
-                        }                        
-                        
+                        }
+
                         /* w - 1 < p */
                         for (int i = stop2; i < len; i++)
                         {
                                 int p = w - 1;
-                                
+
                                 sum += c[y * s + p] * k[i];
                         }
 
@@ -750,10 +767,10 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                         for (int i = 0; i < stop1; i++)
                         {
                                 int p = 0;
-                                
+
                                 sum += buf[p * s + x] * k[i];
                         }
-                        
+
                         /* 0 <= p <= h - 1 */
                         int rem = (stop2 - stop1) % 4;
                         int par_stop = stop2 - rem;
@@ -762,7 +779,7 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                         float sum2 = 0.0f;
                         float sum3 = 0.0f;
                         float sum4 = 0.0f;
-                        
+
                         for (int i = stop1; i < par_stop; )
                         {
                                 int p = y + i - half;
@@ -838,4 +855,3 @@ void pie_mth_kernel_sep_gauss(float* r,
                 r[i] /= sum;
         }
 }
-        

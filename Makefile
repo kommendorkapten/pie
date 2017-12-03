@@ -75,9 +75,9 @@ LIB_SRC    = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
 	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
-             pie_unsharp.c pie_vibra.c pie_colort.c
+             pie_unsharp.c pie_vibra.c pie_colort.c pie_med3f.c
 ENC_SRC    = pie_json.c pie_rgba.c
-MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c
+MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
@@ -175,7 +175,7 @@ bin/gauss: testp/gauss.c obj/timing.o $(IO_OBJS) obj/pie_bm.o $(MATH_OBJS)
 bin/unsharp: testp/unsharp.c obj/timing.o $(IO_OBJS) obj/pie_bm.o obj/pie_unsharp.o $(MATH_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
-bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o
+bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o obj/pie_median.o obj/pie_medf3.o  obj/pie_unsharp.o $(MATH_OBJS) obj/pie_curve.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
 
 bin/catm: testp/catm.c $(IO_OBJS) obj/pie_expos.o obj/pie_curve.o obj/pie_bm.o obj/pie_catmull.o obj/pie_math.o

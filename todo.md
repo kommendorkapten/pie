@@ -1,16 +1,20 @@
 # In progress
-* Auto expand coll from query param in coll view.
-* Images created via libraw has blownout highlights.
-* editd, when zoomed in histogram is updated based on zoomed image.
+* raw post processing (chroma noise in particular).
+* Downsample yields weird results when scale factor is close to 1.
 
 # Sorted
+* editd, when zoomed in histogram is updated based on zoomed image.
+* Auto expand coll from query param in coll view.
 * Allow creation of new collections from web ui.
 * collectiond should update mobs via mediad.
 * Move images between collections (rename(2), EXDEV (different file
   sys)).
 * When navigating from dev to coll, expand list and show last state.
+* update thumb nail & proxy with dev settings.
 
 # Unsorted
+* Editd, empty workspace after x min of activity.
+* Editd, prefetch files to workspace.
 * zoom/pan in dev, fix bug with pixmap not being reload from ws before
   drag starts, causes reset of drag.
 * Write install/config script.
@@ -27,7 +31,6 @@
 * Calculate new radius for clarity when an image is loaded. The one
   stored in the database may be for the wrong resolution.
 * handle file name collisions during import.
-* Update proxy and thumb with any adjustments from editd.
 * Load collection in editd.
 * Black adjustment is quite simple, pure linear for both +/-. For
   lightening blacks a non-linear method should be used.
@@ -38,12 +41,11 @@
 * libraw to use lcms on sparc.
 * add size to min
 * add min for proxies.
-* Canvas in editd sometimes contains a non-used line in the top (white
-  colored). Can be seen for image: IMG_0259.CR2
 * Exif parsing, shutter speed greater than 1s
-* Downsample yields weird results when scale factor is close to 1.
 * modify alg_contr to use same function call parameters as rest.
   extend with per alg struct to only allow a single val to be provided.
+* virtual copy of a mob.
+* presets.
 
 # Performance:
 * Memory leak check
@@ -91,3 +93,6 @@
 * ~~Thumbnail in development view, that shows zoomed part of image (navigation).~~
 * ~~Auto expand top collection.~~
 * ~~save filter param in url, useful when switch from dev -> coll.~~
+* ~~Images created via libraw has blownout highlights.~~
+* ~~add medfilt (3x3).~~
+* ~~add curves.~~
