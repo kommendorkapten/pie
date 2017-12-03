@@ -26,6 +26,8 @@
 #include "../encoding/pie_json.h"
 #include "../encoding/pie_rgba.h"
 
+#define JSON_HIST_SIZE (10 * 1024)
+
 #ifdef __sun
 # include <note.h>
 #else
@@ -36,6 +38,7 @@ enum pie_protocols
 {
         PIE_PROTO_HTTP,
         PIE_PROTO_IMG,
+        PIE_PROTO_HIST,
         PIE_PROTO_CMD,
         PIE_PROTO_COUNT
 };
@@ -48,6 +51,11 @@ struct pie_ctx_http
 };
 
 struct pie_ctx_img
+{
+        char token[PIE_SESS_TOKEN_LEN];
+};
+
+struct pie_ctx_hist
 {
         char token[PIE_SESS_TOKEN_LEN];
 };
@@ -80,6 +88,11 @@ static int cb_img(struct lws* wsi,
                   void* user,
                   void* in,
                   size_t len);
+static int cb_hist(struct lws* wsi,
+                   enum lws_callback_reasons reason,
+                   void* user,
+                   void* in,
+                   size_t len);
 static int cb_cmd(struct lws* wsi,
                   enum lws_callback_reasons reason,
                   void* user,
@@ -113,6 +126,14 @@ static struct lws_protocols protocols[] = {
                 "pie-img",
                 cb_img,
                 sizeof(struct pie_ctx_img),
+                0,
+                0,
+                NULL
+        },
+        {
+                "pie-hist",
+                cb_hist,
+                sizeof(struct pie_ctx_hist),
                 0,
                 0,
                 NULL
@@ -216,9 +237,12 @@ int pie_editd_ws_service(void)
                         NOTE(FALLTHRU)
                 case PIE_MSG_RENDER_DONE:
                         /* Update session with tx ready */
-                        session->tx_ready = PIE_TX_IMG;
+                        session->tx_ready =  (PIE_TX_IMG | PIE_TX_HIST);
                         lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_IMG]);
+                        lws_callback_on_writable_all_protocol(server->context,
+                                                              &protocols[PIE_PROTO_HIST]);
+
                         break;
                 case PIE_MSG_NEW_PROXY_DIM:
                         free(session->rgba);
@@ -242,7 +266,7 @@ int pie_editd_ws_service(void)
                 return -1;
         }
 
-        /* Check for stop condition or img is computed */
+        /* Check for stop condition or img/hist is computed */
         /* If nothing to do, return after Xms */
         status = lws_service(server->context, 5);
         /* Reap sessions with inactivity for one hour */
@@ -544,6 +568,91 @@ static int cb_img(struct lws* wsi,
                 PIE_LOG("[%s] Got data: '%s'",
                         session->token,
                         (char*)in);
+
+                break;
+        default:
+                break;
+        }
+
+        return ret;
+}
+
+static int cb_hist(struct lws* wsi,
+                   enum lws_callback_reasons reason,
+                   void* user,
+                   void* in,
+                   size_t len)
+{
+        struct pie_sess* session = NULL;
+        struct pie_ctx_hist* ctx = (struct pie_ctx_hist*)user;
+        int ret = 0;
+
+        (void)len;
+
+        if (user && reason != LWS_CALLBACK_ESTABLISHED)
+        {
+                session = pie_sess_mgr_get(server->sess_mgr, ctx->token);
+        }
+
+        switch (reason)
+        {
+        case LWS_CALLBACK_ESTABLISHED:
+                /* Copy the session token, it is not available later on */
+                if ((session = get_session(server->sess_mgr, wsi)))
+                {
+                        strcpy(ctx->token, session->token);
+
+                }
+                else
+                {
+                        PIE_WARN("No session found");
+                        ret = -1;
+                }
+                break;
+        case LWS_CALLBACK_SERVER_WRITEABLE:
+                if (!session)
+                {
+                        PIE_WARN("No session found");
+                        ret = -1;
+                        break;
+                }
+
+                PIE_TRACE("[%s] tx_ready: 0x%x",
+                          session->token,
+                          session->tx_ready);
+
+                if (session->tx_ready & PIE_TX_HIST)
+                {
+                        struct timing t;
+                        unsigned char* buf;
+                        int bw;
+                        int json_len;
+
+                        timing_start(&t);
+                        buf = malloc(JSON_HIST_SIZE + LWS_PRE);
+                        json_len = (int)pie_enc_json_hist((char*)buf + LWS_PRE,
+                                                          JSON_HIST_SIZE,
+                                                          &session->wrkspc->hist);
+                        PIE_DEBUG("JSON encoded histogram: %8ldusec",
+                                  timing_dur_usec(&t));
+                        bw = lws_write(wsi,
+                                       buf + LWS_PRE,
+                                       json_len,
+                                       LWS_WRITE_TEXT);
+                        if (bw < json_len)
+                        {
+                                PIE_ERR("[%s] ERROR write %d of %d",
+                                        session->token,
+                                        bw,
+                                        json_len);
+                                ret = -1;
+                        }
+                        session->tx_ready = (unsigned char)(session->tx_ready ^ PIE_TX_HIST);
+                        free(buf);
+                }
+                break;
+        case LWS_CALLBACK_RECEIVE:
+                PIE_LOG("[%s]Got data: '%s'", session->token, (char*)in);
 
                 break;
         default:

@@ -32,6 +32,7 @@
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../bm/pie_bm.h"
+#include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
 #include "../pie_id.h"
 #include "../cfg/pie_cfg.h"
@@ -557,6 +558,10 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                              &msg->wrkspc->settings);
         assert(res == 0);
 
+        /* update histogram */
+        pie_alg_hist_lum(&msg->wrkspc->hist, proxy_out);
+        pie_alg_hist_rgb(&msg->wrkspc->hist, proxy_out);
+
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
                   msg->token,
@@ -1014,6 +1019,7 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
         /* New parameters are set. Update the current workspace with the
          * following steps:
          * 1 create a new copy of the stored proxy.
+         * 2 extract histogram data.
          */
         if (ok == 0)
         {
@@ -1035,6 +1041,15 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                       NULL,
                                       &msg->wrkspc->settings);
                 assert(r_ok == 0);
+
+                /* Create histogram */
+                timing_start(&t1);
+                pie_alg_hist_lum(&msg->wrkspc->hist,
+                                 new);
+                pie_alg_hist_rgb(&msg->wrkspc->hist,
+                                 new);
+                PIE_DEBUG(" Created histogram:     %8ldusec",
+                          timing_dur_usec(&t1));
 
                 ret_msg = PIE_MSG_RENDER_DONE;
         }

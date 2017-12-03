@@ -16,6 +16,7 @@
 
 #define PIE_SESS_TOKEN_LEN 41 /* Token is 40 chars, add one for null */
 #define PIE_TX_IMG  0x1
+#define PIE_TX_HIST  0x2
 
 #include "../lib/timing.h"
 

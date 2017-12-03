@@ -25,6 +25,7 @@ struct pie_wrkspc_mgr;
 struct pie_editd_workspace
 {
         pie_id mob_id;
+        struct pie_histogram hist;
         struct pie_dev_settings settings;
         /* Unmodified full resolution image */
         struct pie_bitmap_f32rgb raw;

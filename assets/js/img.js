@@ -7,6 +7,7 @@ let EDITD_HOST = null;
 let PROTO = null;
 let wsCmd = null;
 let wsImg = null;
+let wsHist = null;
 let ctlProxy = null;
 let histChart;
 let lowerPaneHeight = 220;
@@ -147,9 +148,9 @@ function ISController(input, slider, options, callback = null) {
     };
 }
 
-function ControlProxy(wsImg, wsCmd) {
+function ControlProxy(wsImg, wsCmd, wsHist) {
     /* Sync in a hackish way */
-    let wsSync = 2;
+    let wsSync = 3;
 
     wsCmd.onopen = function(evt) {
         console.log("Opening command websocket..." + wsSync);
@@ -169,6 +170,15 @@ function ControlProxy(wsImg, wsCmd) {
         }
     }
 
+    wsHist.onopen = function(evt) {
+        console.log("Opening histogram websocket..." + wsSync);
+        wsSync = wsSync - 1;
+
+        if (wsSync == 0) {
+            loadImage(wsCmd);
+        }
+    }
+
     wsCmd.onclose = function(evt) {
         console.log("Closing websocket...");
         wsCmd = null;
@@ -180,6 +190,67 @@ function ControlProxy(wsImg, wsCmd) {
 
     wsCmd.onmessage = function(evt) {
         console.log("ERROR: " + evt);
+    }
+
+    wsHist.onmessage = function(evt) {
+        let h = JSON.parse(evt.data);
+        let max = 0;
+        let pl = [];
+        let pr = [];
+        let pg = [];
+        let pb = [];
+        let i = 0;
+
+        for (let c of h.l) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (let c of h.r) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (let c of h.g) {
+            if (c > max) {
+                max = c;
+            }
+        }
+        for (let c of h.b) {
+            if (c > max) {
+                max = c;
+            }
+        }
+
+        for (i = 0; i < h.l.length; i++) {
+            let nl = (h.l[i] / max) * histYMax;
+            let nr = (h.r[i] / max) * histYMax;
+            let ng = (h.g[i] / max) * histYMax;
+            let nb = (h.b[i] / max) * histYMax;
+
+            pl[i] = {
+                x: i,
+                y: nl
+            };
+            pr[i] = {
+                x: i,
+                y: nr
+            };
+            pg[i] = {
+                x: i,
+                y: ng
+            };
+            pb[i] = {
+                x: i,
+                y: nb
+            };
+        }
+
+        histDataL.data = pl;
+        histDataR.data = pr;
+        histDataG.data = pg;
+        histDataB.data = pb;
+        histChart.update();
     }
 
     wsImg.onmessage = function(evt) {
@@ -658,17 +729,6 @@ function renderImage(bm) {
                 ctx.drawImage(img, 0, 0, img.width, img.height);
                 dur = Date.now() - now;
                 console.log("Draw image in " + dur + "ms");
-
-                now = Date.now();
-                let hist = calculateHistogram(c);
-                dur = Date.now() - now;
-                console.log("Calculate histogram in " + dur + "ms");
-
-                histDataL.data = hist.pl;
-                histDataR.data = hist.pr;
-                histDataG.data = hist.pg;
-                histDataB.data = hist.pb;
-                histChart.update();
             });
     }
 }
@@ -718,8 +778,10 @@ window.addEventListener("load", function(evt) {
     wsCmd.binaryType = "arraybuffer";
     wsImg = new WebSocket(getWsUrl(), "pie-img");
     wsImg.binaryType = "arraybuffer";
+    wsHist = new WebSocket(getWsUrl(), "pie-hist");
+    wsHist.binaryType = "arraybuffer";
 
-    ctlProxy = new ControlProxy(wsImg, wsCmd);
+    ctlProxy = new ControlProxy(wsImg, wsCmd, wsHist);
 
     /*
      * I N P U T   S L I D E R S
