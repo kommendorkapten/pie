@@ -20,6 +20,7 @@
 #include "../math/pie_math.h"
 
 #define MAX_RADIUS 11
+#define MIN_RADIUS 7
 
 static void pie_bm_conv_u8_u16(struct pie_bitmap_u8rgb*,
                                const struct pie_bitmap_u16rgb*);
@@ -439,34 +440,38 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
 
         PIE_DEBUG("Downsample from (%d, %d) to (%d, %d)",
                   src->width, src->height, dst->width, dst->height);
-        step = 1.0f/((float)dst->width / (float)src->width);
+        step = (float)src->width / (float)dst->width;
         PIE_DEBUG("Scaling x: %f, y: %f",
                   (float)dst->width / (float)src->width,
                   (float)dst->height / (float)src->height);
         PIE_DEBUG("Step is %f", step);
-        radius = (int)(step + 1.0f);
+        radius = (int)(step * 2.0f + 0.5f);
 
         /* Only deal with odd values for the radius. */
         if ((radius & 0x1) == 0)
         {
                 radius++;
         }
-        sigma = step;
+        sigma = step / 3.0f;
         if (radius > MAX_RADIUS)
         {
                 radius = MAX_RADIUS;
+        }
+        if (radius < MIN_RADIUS)
+        {
+                radius = MIN_RADIUS;
         }
         PIE_DEBUG("Matrix size %d, sigma: %f", radius, sigma);
 
         /* Create Gaussion blur matrix */
         pie_mth_gauss_matrix(&blur[0], radius, sigma * sigma);
-#if DEBUG > 2
-        pie_matrix_print(blur, radius);
+#if DEBUG > 1
+        pie_mth_matrix_print(blur, radius);
 #endif
         for (int y = 0; y < dst->height; y++)
         {
 		/* Test with rounding here */
-                int sy = (int)((float)y * step);
+                int sy = (int)((float)y * step + 0.5f);
 
                 if (sy >= src->height)
                 {
@@ -476,7 +481,7 @@ int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict dst,
                 for (int x = 0; x < dst->width; x++)
                 {
 			/* Test with rounding here */
-                        int sx = (int)((float)x * step);
+                        int sx = (int)((float)x * step + 0.5f);
 
                         if (sx >= src->width)
                         {

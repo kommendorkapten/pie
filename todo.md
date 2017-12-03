@@ -1,6 +1,5 @@
 # In progress
-* raw post processing (chroma noise in particular).
-* Downsample yields weird results when scale factor is close to 1.
+* raw post processing (chroma noise in particular) (tojpg contains ideas)..
 
 # Sorted
 * editd, when zoomed in histogram is updated based on zoomed image.
@@ -59,6 +58,7 @@
 
 # Misc
 * Convert Makefile to POSIX make.
+* Downsample with scale factor ~1.2-1.5 still yields bad results.
 
 # Done
 
@@ -96,3 +96,4 @@
 * ~~Images created via libraw has blownout highlights.~~
 * ~~add medfilt (3x3).~~
 * ~~add curves.~~
+* ~~Downsample yields weird results when scale factor is close to 1.~~
