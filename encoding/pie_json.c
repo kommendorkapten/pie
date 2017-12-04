@@ -23,6 +23,8 @@
 #include "../jsmn/jsmn.h"
 
 #define DEV_SET_SCALE 1000.0f
+#define NUM_TOKENS 512
+#define FIELD_LEN 1024
 
 static int pie_ctoa(enum pie_channel);
 static int pie_dec_json_curve(struct pie_curve*, char*);
@@ -179,7 +181,7 @@ static size_t pie_enc_json_curve(char* buf,
 int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
 {
         jsmn_parser parser;
-        jsmntok_t tokens[256];
+        jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
         int ret;
 
         jsmn_init(&parser);
@@ -187,17 +189,19 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
                          buf,
                          strlen(buf) + 1,
                          tokens,
-                         sizeof(tokens)/sizeof(tokens[0]));
+                         NUM_TOKENS);
         if (ret < 0)
         {
                 PIE_WARN("Failed to JSON parse: '%s'\n",
                          buf);
-                return 1;
+                ret = 1;
+                goto done;
         }
         if (tokens[0].type != JSMN_OBJECT)
         {
                 PIE_WARN("Broken state in parser");
-                return 2;
+                ret = 2;
+                goto done;
         }
 
         /* reset version */
@@ -205,14 +209,16 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
 
         for (int i = 0; i < ret - 1; i++)
         {
-#define FIELD_LEN 256
                 char field[FIELD_LEN];
                 char* p = buf + tokens[i + 1].start;
                 int len = tokens[i + 1].end - tokens[i + 1].start;
 
                 if (len > FIELD_LEN)
                 {
-                        PIE_ERR("Field is longer than %d", FIELD_LEN);
+                        field[FIELD_LEN - 1] = '\0';
+                        PIE_ERR("Field ('%s') is longer than %d",
+                                field,
+                                FIELD_LEN);
                         continue;
                 }
 
@@ -373,6 +379,7 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
 
         ret = 0;
 done:
+        free(tokens);
         return ret;
 }
 
@@ -402,9 +409,16 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
 
         for (int i = 0; i < ret - 1; i++)
         {
-                char field[64];
+                char field[128];
                 char* p = buf + tokens[i + 1].start;
                 int len = tokens[i + 1].end - tokens[i + 1].start;
+
+                if (len > 128)
+                {
+                        field[127] = '\0';
+                        PIE_WARN("Field '%s' is too long", field);
+                        continue;
+                }
 
                 memcpy(field, p, len);
                 field[len] = '\0';
@@ -446,7 +460,7 @@ done:
 int pie_dec_json_curve(struct pie_curve* s, char* buf)
 {
         jsmn_parser parser;
-        jsmntok_t tokens[64];
+        jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
         int ret;
 
         jsmn_init(&parser);
@@ -454,18 +468,21 @@ int pie_dec_json_curve(struct pie_curve* s, char* buf)
                          buf,
                          strlen(buf) + 1,
                          tokens,
-                         sizeof(tokens)/sizeof(tokens[0]));
+                         NUM_TOKENS);
         if (ret < 0)
         {
                 PIE_WARN("Failed to JSON parse: '%s'", buf);
-                return 1;
+                ret = 1;
+                goto done;
         }
         if (tokens[0].type != JSMN_ARRAY)
         {
                 PIE_WARN("Broken state in parser");
-                return 2;
+                ret = 2;
+                goto done;
         }
 
+        s->num_p = 0;
         for (int i = 1; i < ret; i++) {
                 jsmn_parser cparser;
                 jsmntok_t ctokens[16];
@@ -488,13 +505,22 @@ int pie_dec_json_curve(struct pie_curve* s, char* buf)
                 if (cret < 0)
                 {
                         PIE_WARN("Failed to JSON parse '%s'", buf);
-                        return 3;
+                        ret = 3;
+                        goto done;
                 }
 
                 if (ctokens[0].type != JSMN_OBJECT)
                 {
                         PIE_WARN("Broken state in parser");
-                        return 4;
+                        ret = 4;
+                        goto done;
+                }
+
+                if (s->num_p == PIE_CURVE_MAX_CNTL_P)
+                {
+                        PIE_WARN("To many control points in curve");
+                        ret = 5;
+                        goto done;
                 }
 
                 for (int j = 0; j < cret - 1; j++)
@@ -502,6 +528,13 @@ int pie_dec_json_curve(struct pie_curve* s, char* buf)
                         char field[64];
                         char* cp = p + ctokens[j + 1].start;
                         len = ctokens[j + 1].end - ctokens[j + 1].start;
+
+                        if (len > 64)
+                        {
+                                field[64 - 1] = '\0';
+                                PIE_WARN("Field '%s' is too long", field);
+                                continue;
+                        }
 
                         memcpy(field, cp, len);
                         field[len] = '\0';
@@ -530,6 +563,7 @@ int pie_dec_json_curve(struct pie_curve* s, char* buf)
 
         ret = 0;
 done:
+        free(tokens);
         return ret;
 }
 
