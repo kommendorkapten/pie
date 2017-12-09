@@ -23,6 +23,7 @@ void pie_alg_medf3(float* restrict c,
                    int s)
 {
         float p[9];
+        (void)a;
 
         /* Top and bottom row */
         for (int x = 1; x < w - 1; x++)

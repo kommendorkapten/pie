@@ -20,7 +20,7 @@ float pie_mth_med4(float* p)
         pie_mth_sort2(p + 0, p + 1); pie_mth_sort2(p + 2, p + 3);
         pie_mth_sort2(p + 0, p + 3); pie_mth_sort2(p + 1, p + 2);
 
-        return (p[1] + p[3]) * 0.5;
+        return (p[1] + p[3]) * 0.5f;
 }
 
 float pie_mth_med6(float* p)
@@ -35,7 +35,7 @@ float pie_mth_med6(float* p)
 
         pie_mth_sort2(p + 1, p + 2); pie_mth_sort2(p + 3, p + 4);
 
-        return (p[2] + p[3]) * 0.5;
+        return (p[2] + p[3]) * 0.5f;
 }
 
 float pie_mth_med9(float* p)
