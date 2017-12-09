@@ -14,6 +14,7 @@
 #ifndef __PIE_MQ_MSG_H__
 #define __PIE_MQ_MSG_H__
 
+#include <stddef.h>
 #include "../pie_types.h"
 #include "../pie_id.h"
 
@@ -64,6 +65,7 @@ struct pie_mq_new_media
         /* path starts with / and is relative to the storage's mount point */
         char path[PIE_PATH_LEN];
         unsigned char digest[PIE_MQ_MAX_DIGEST];
+        size_t file_size;
         int stg_id;
         int digest_len;
 };

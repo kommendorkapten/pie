@@ -281,6 +281,7 @@ static void* worker(void* arg)
                                            PIE_ID_TYPE_MIN);
                 min.min_added_ts_millis = now_ms;
                 min.min_mob_id = mob_id;
+                min.min_size = new->file_size;
                 min.min_stg_id = new->stg_id;
                 strncpy(min.min_path, new->path, MIN_PATH_LEN);
                 /* hex encode digest into MIN */

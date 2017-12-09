@@ -21,6 +21,7 @@ struct pie_min
 	long            min_mob_id;
 	long            min_added_ts_millis;
 	int             min_stg_id;
+        long            min_size;
 	char            min_path[MIN_PATH_LEN];
         char            min_sha1_hash[MIN_HASH_LEN];
 };

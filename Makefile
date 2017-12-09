@@ -232,4 +232,4 @@ bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.
 
 # Tools
 bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/llist.o obj/hmap.o $(BM_OBJS) $(MATH_OBJS) $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 -L/usr/local/lib $(LIMG)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 -L/usr/local/lib $(LIMG) $(LCRYPTO)

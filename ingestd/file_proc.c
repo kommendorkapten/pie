@@ -37,10 +37,11 @@ int pie_fp_process_file(struct pie_mq_new_media*, const char*);
  * Calculate a message digest from the provided file descriptor.
  * @param sum to store digest in. Must be able to at least keep
  *        EVP_MAX_MD_SIZE bytes.
+ * @param [out] the size of the digest in bytes, zero on error.
  * @param file descriptor.
- * @return the size of the digest in bytes, zero on error.
+ * @return the file size in bytes.
  */
-unsigned int pie_fp_mdigest(unsigned char[], int);
+size_t pie_fp_mdigest(unsigned char[], unsigned int*, int);
 
 int pie_fp_add_file(const char* p)
 {
@@ -76,6 +77,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
         struct timing t;
         ssize_t len;
+        size_t file_size;
         unsigned int md_len;
         int src_fd;
         int tgt_fd;
@@ -91,7 +93,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         }
 
         timing_start(&t);
-        md_len = pie_fp_mdigest(digest, src_fd);
+        file_size = pie_fp_mdigest(digest, &md_len, src_fd);
         PIE_DEBUG("Digest in %ldms", timing_dur_msec(&t));
 
         /* hex encode file checksum */
@@ -134,6 +136,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         memcpy(new_mmsg->digest, digest, md_len);
         new_mmsg->stg_id = htonl(id_cfg.dst_stg->stg.stg_id);
         new_mmsg->digest_len = htonl(md_len);
+        new_mmsg->file_size = file_size;
         PIE_DEBUG("New media message path: %s", new_mmsg->path);
 
         /* Make sure the target directory exists. */
@@ -198,23 +201,24 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         return 0;
 }
 
-unsigned int pie_fp_mdigest(unsigned char digest[], int fd)
+size_t pie_fp_mdigest(unsigned char digest[], unsigned int* md_len, int fd)
 {
         char buf[BUF_LEN];
         EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
         const EVP_MD* md = EVP_sha1();
         ENGINE* impl = NULL;
         ssize_t nb;
-        unsigned int md_len;
+        size_t br = 0;
 
         EVP_DigestInit_ex(mdctx, md, impl);
         while ((nb = read(fd, buf, BUF_LEN)) > 0)
         {
                 EVP_DigestUpdate(mdctx, buf, nb);
+                br += (size_t) nb;
         }
 
-        EVP_DigestFinal_ex(mdctx, digest, &md_len);
+        EVP_DigestFinal_ex(mdctx, digest, md_len);
         EVP_MD_CTX_destroy(mdctx);
 
-        return md_len;
+        return br;
 }

@@ -14,6 +14,8 @@
 #include <sqlite3.h>
 #include <string.h>
 #include <unistd.h>
+#include <openssl/evp.h>
+#include <fcntl.h>
 #include "../io/pie_io.h"
 #include "../bm/pie_bm.h"
 #include "../pie_types.h"
@@ -22,6 +24,10 @@
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_storage.h"
 #include "../dm/pie_host.h"
+#include "../dm/pie_min.h"
+#include "../lib/llist.h"
+
+#define BUF_LEN 4096
 
 struct row
 {
@@ -30,6 +36,17 @@ struct row
         char min_path[PIE_PATH_LEN];
 };
 
+struct errors
+{
+        int err_cnt;
+        int err_fix;
+};
+
+static int cksum_verify = 0;
+static int verbose = 0;
+static int dry_run = 0;
+
+static struct errors check_min(pie_id mob_id, int stg_id, const char* path);
 static int check_path(const char*);
 static int tojpg(const char*, const char*, int);
 
@@ -46,19 +63,20 @@ int main(int argc, char** argv)
         int err_cnt = 0;
         int err_fix = 0;
         int ret;
-        int verbose = 0;
-        int dry_run = 0;
         int c;
         int max_thumb;
         long lval;
 
-        while ((c = getopt(argc, argv, "vd")) != -1)
+        while ((c = getopt(argc, argv, "vdx")) != -1)
         {
                 switch (c)
                 {
                 case 'd':
                         dry_run = 1;
                         PIE_LOG("Entering dry run. No modificatons will be done");
+                        break;
+                case 'x':
+                        cksum_verify = 1;
                         break;
                 case 'v':
                         verbose = 1;
@@ -202,6 +220,11 @@ int main(int argc, char** argv)
                                 got_raw = 0;
                         }
 
+                        struct errors err;
+                        err = check_min(r.mob_id, r.stg_id, path_raw);
+                        err_cnt += err.err_cnt;
+                        err_fix += err.err_fix;
+
                         /* Check proxy files */
                         snprintf(path_aux, PIE_PATH_LEN, "%s/%ld.jpg",
                                  stg_proxy->mnt_path,
@@ -333,4 +356,96 @@ static int tojpg(const char* dst, const char* src, int max)
         pie_bm_free_u8(&bm_out);
 
         return 0;
+}
+
+static struct errors check_min(pie_id mob_id, int stg_id, const char* path)
+{
+        char buf[BUF_LEN];
+        char md_hex[2 * EVP_MAX_MD_SIZE + 1];
+        unsigned char md_sum[EVP_MAX_MD_SIZE];
+        struct errors ret = {.err_cnt = 0, .err_fix = 0};
+        EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
+        const EVP_MD* md_alg = EVP_sha1();
+        ENGINE* impl = NULL;
+        struct llist* l;
+        struct lnode* n;
+
+        l = pie_min_find_mob(pie_cfg_get_db(), mob_id);
+        if (l == NULL)
+        {
+                PIE_WARN("DB error");
+                goto done;
+        }
+
+        n = llist_head(l);
+        while (n)
+        {
+                struct pie_min* min = n->data;
+                long br = 0;
+                ssize_t nb;
+                int fd;
+                unsigned int md_len;
+
+                fd = open(path, O_RDONLY);
+
+                /* Read file, calc hash and size */
+                EVP_DigestInit_ex(mdctx, md_alg, impl);
+                while ((nb = read(fd, buf, BUF_LEN)) > 0)
+                {
+                        if (cksum_verify)
+                        {
+                                EVP_DigestUpdate(mdctx, buf, nb);
+                        }
+
+                        br += (long)nb;
+                }
+                EVP_DigestFinal_ex(mdctx, md_sum, &md_len);
+
+                /* Create hex and compare */
+                if (cksum_verify)
+                {
+                        for (unsigned int i = 0; i < md_len; i++)
+                        {
+                                sprintf(md_hex + i * 2, "%02x", md_sum[i]);
+                        }
+                        if (strcmp(min->min_sha1_hash, md_hex))
+                        {
+                                PIE_WARN("Incosistent hash: %ld", min->min_id);
+                                ret.err_cnt++;
+                        }
+                }
+
+                if (br != min->min_size)
+                {
+                        PIE_WARN("Min %ld, size mismatch %ld vs %ld",
+                                 min->min_id,
+                                 min->min_size,
+                                 br);
+                        ret.err_cnt++;
+                }
+                if (!dry_run)
+                {
+                        min->min_size = br;
+
+                        if (pie_min_update(pie_cfg_get_db(), min))
+                        {
+                                PIE_WARN("Could not update MIN %ld",
+                                         min->min_id);
+                        }
+                        else
+                        {
+                                ret.err_fix++;
+                        }
+                }
+
+                close(fd);
+                pie_min_free(min);
+                n = n->next;
+        }
+        llist_destroy(l);
+
+done:
+        EVP_MD_CTX_destroy(mdctx);
+
+        return ret;
 }
