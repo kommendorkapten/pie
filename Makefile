@@ -111,7 +111,7 @@ COLLD_OBJS  = $(COLLD_SRC:%.c=obj/%.o)
 TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
               testfwlk qserver qclient test_exif_meta lrawtest exif_dump \
-              tjson
+              tjson test_gamma
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
@@ -201,6 +201,9 @@ bin/test_exif_meta: testp/test_exif_meta.c obj/pie_exif.o obj/pie_exif_data.o ob
 
 bin/bench_blur: testp/bench_blur.c $(IO_OBJS)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG)
+
+bin/test_gamma: testp/test_gamma.c obj/pie_cspace.o obj/pie_contr.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 bin/test_id: testp/test_id.c obj/pie_id.o
 	$(CC) $(CFLAGS) $< obj/pie_id.o -o $@ $(LFLAGS)
