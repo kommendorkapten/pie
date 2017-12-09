@@ -93,11 +93,19 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg*);
 
 /**
  * Callback. Update an image and renders the image.
- * @param message to acton.
+ * @param message to act on.
  * @return if the message should be retransmit, the new msg type,
  *         if message should be dropped, PIE_MSG_INVALID.
  */
 static enum pie_msg_type cb_msg_render(struct pie_msg*);
+
+/**
+ * Callback. Calculate histogram.
+ * @param message to act on.
+ * @return new message type if msg should be retransmit.
+           PIE_MSG_INVALID if messasge should be droppe.
+*/
+static enum pie_msg_type cb_calc_hist(struct pie_msg*);
 
 /**
  * Send message to mediad for persistance.
@@ -314,8 +322,11 @@ static void* ev_loop(void* a)
                         case PIE_MSG_LOAD:
                                 new = cb_msg_load(cmd);
                                 break;
-                        case PIE_MSG_VIEWPORT:
+                        case PIE_MSG_SET_VIEWPORT:
                                 new = cb_msg_viewp(cmd);
+                                break;
+                        case PIE_MSG_CALC_HIST:
+                                new = cb_calc_hist(cmd);
                                 break;
                         case PIE_MSG_SET_COLOR_TEMP:
                         case PIE_MSG_SET_TINT:
@@ -366,6 +377,30 @@ static void* ev_loop(void* a)
                                                        &cmd->wrkspc->settings);
                                         PIE_DEBUG("Stored dev settings in %ldusec.",
                                                   timing_dur_usec(&t_proc));
+                                }
+
+                                if (cmd->type == PIE_MSG_RENDER_DONE ||
+                                    cmd->type == PIE_MSG_LOAD_DONE)
+                                {
+                                        /* Send message to calc histogram */
+                                        struct pie_msg* hcmd = pie_msg_alloc();
+                                        struct chan_msg envelope;
+
+                                        envelope.data = hcmd;
+                                        envelope.len = sizeof(*hcmd);
+
+                                        hcmd->type = PIE_MSG_CALC_HIST;
+                                        hcmd->wrkspc = cmd->wrkspc;
+                                        strncpy(hcmd->token ,
+                                                cmd->token,
+                                                PIE_MSG_TOKEN_LEN);
+                                        timing_start(&hcmd->t);
+
+                                        if (chan_write(s->command, &envelope))
+                                        {
+                                                PIE_ERR("[%s]Failed to request histgram",
+                                                        hcmd->token);
+                                        }
                                 }
                         }
                         else
@@ -533,7 +568,12 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         {
                 res = pie_dec_json_settings(&msg->wrkspc->settings,
                                             settings_json.pdp_settings);
-                if (res)
+                if (res == 0)
+                {
+                        /* Convert to internal format */
+                        pie_dev_set_to_int_fmt(&msg->wrkspc->settings);
+                }
+                else
                 {
                         PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
@@ -541,11 +581,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                                               proxy->width,
                                               proxy->height);
                 }
+
                 /* Free any resources */
                 pie_dev_params_release(&settings_json);
-
-                /* Convert to internal format */
-                pie_dev_set_to_int_fmt(&msg->wrkspc->settings);
         }
         else if (res < 0)
         {
@@ -557,10 +595,6 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                              NULL,
                              &msg->wrkspc->settings);
         assert(res == 0);
-
-        /* update histogram */
-        pie_alg_hist_lum(&msg->wrkspc->hist, proxy_out);
-        pie_alg_hist_rgb(&msg->wrkspc->hist, proxy_out);
 
         /* Issue a load cmd */
         PIE_DEBUG("[%s] Loaded proxy with size [%d, %d] in %ldusec",
@@ -1042,19 +1076,23 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                                       &msg->wrkspc->settings);
                 assert(r_ok == 0);
 
-                /* Create histogram */
-                timing_start(&t1);
-                pie_alg_hist_lum(&msg->wrkspc->hist,
-                                 new);
-                pie_alg_hist_rgb(&msg->wrkspc->hist,
-                                 new);
-                PIE_DEBUG(" Created histogram:     %8ldusec",
-                          timing_dur_usec(&t1));
-
                 ret_msg = PIE_MSG_RENDER_DONE;
         }
 
         return ret_msg;
+}
+
+static enum pie_msg_type cb_calc_hist(struct pie_msg* msg)
+{
+        struct timing t;
+
+        timing_start(&t);
+        pie_alg_hist_lum(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
+        pie_alg_hist_rgb(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
+        PIE_DEBUG(" Created histogram:     %8ldusec",
+                  timing_dur_usec(&t));
+
+        return PIE_MSG_HIST_DONE;
 }
 
 static void store_settings(pie_id mob_id,

@@ -237,17 +237,19 @@ int pie_editd_ws_service(void)
                         NOTE(FALLTHRU)
                 case PIE_MSG_RENDER_DONE:
                         /* Update session with tx ready */
-                        session->tx_ready =  (PIE_TX_IMG | PIE_TX_HIST);
+                        session->tx_ready |= PIE_TX_IMG;
                         lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_IMG]);
+                        break;
+                case PIE_MSG_HIST_DONE:
+                        session->tx_ready |= PIE_TX_HIST;
                         lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_HIST]);
-
                         break;
                 case PIE_MSG_NEW_PROXY_DIM:
                         free(session->rgba);
                         session->rgba = NULL;
-                        session->tx_ready = PIE_TX_IMG;
+                        session->tx_ready |= PIE_TX_IMG;
                         lws_callback_on_writable_all_protocol(server->context,
                                                               &protocols[PIE_PROTO_IMG]);
                         break;

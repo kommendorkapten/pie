@@ -164,7 +164,7 @@ int parse_cmd_msg(struct pie_msg* msg, char* data, size_t len)
                 msg->i5 = val[4];
                 msg->i6 = val[5];
 
-                msg->type = PIE_MSG_VIEWPORT;
+                msg->type = PIE_MSG_SET_VIEWPORT;
                 PIE_DEBUG("[%s] Set viewport: (%d, %d) (%d, %d) to (%d, %d)",
                           msg->token,
                           msg->i1,

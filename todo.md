@@ -1,8 +1,8 @@
 # In progress
-* raw post processing (chroma noise in particular) (tojpg contains ideas)..
 
 # Sorted
-* editd, when zoomed in histogram is updated based on zoomed image.
+* Editd, when zoomed in histogram is updated based on zoomed image.
+* Make sure image is in linear space before doing modifications.
 * Auto expand coll from query param in coll view.
 * Allow creation of new collections from web ui.
 * collectiond should update mobs via mediad.
@@ -12,6 +12,7 @@
 * update thumb nail & proxy with dev settings.
 
 # Unsorted
+* raw post processing (chroma noise in particular) (tojpg contains ideas)..
 * Editd, empty workspace after x min of activity.
 * Editd, prefetch files to workspace.
 * zoom/pan in dev, fix bug with pixmap not being reload from ws before
@@ -97,3 +98,4 @@
 * ~~add medfilt (3x3).~~
 * ~~add curves.~~
 * ~~Downsample yields weird results when scale factor is close to 1.~~
+* ~~Break out histogram calculation to a separate event~~
