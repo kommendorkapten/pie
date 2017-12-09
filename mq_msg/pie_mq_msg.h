@@ -67,7 +67,7 @@ struct pie_mq_new_media
         unsigned char digest[PIE_MQ_MAX_DIGEST];
         size_t file_size;
         int stg_id;
-        int digest_len;
+        unsigned int digest_len;
 };
 
 struct pie_mq_upd_media
