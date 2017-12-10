@@ -354,8 +354,6 @@ static void* worker(void* arg)
                                 mob_id);
                 }
 
-                /* Create default pie_adjust and store */
-
                 /* TODO move this to processd */
                 /* Write thumbnail */
                 snprintf(tgt_path,
