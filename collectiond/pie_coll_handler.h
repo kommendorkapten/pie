@@ -37,16 +37,27 @@ struct pie_coll_h_resp
 /**
  * GET: Read all collections from the provided database.
  */
-extern int pie_coll_h_collections(struct pie_coll_h_resp*,
-                                  const char*,
-                                  enum pie_http_verb,
-                                  struct pie_http_post_data*,
-                                  sqlite3*);
+extern int pie_coll_h_colls(struct pie_coll_h_resp*,
+                            const char*,
+                            enum pie_http_verb,
+                            struct pie_http_post_data*,
+                            sqlite3*);
 
 /**
  * GET: Read a single collection from the provided database.
  */
-extern int pie_coll_h_collection(struct pie_coll_h_resp*,
+extern int pie_coll_h_coll(struct pie_coll_h_resp*,
+                           const char*,
+                           enum pie_http_verb,
+                           struct pie_http_post_data*,
+                           sqlite3*);
+
+/**
+ * PUT: Move a single asset from an existing coll to this.
+ * DELETE: Remove a single asset from this collection.
+ *         This fill remove the file too.
+ */
+extern int pie_coll_h_coll_asset(struct pie_coll_h_resp*,
                                  const char*,
                                  enum pie_http_verb,
                                  struct pie_http_post_data*,
@@ -72,7 +83,7 @@ extern int pie_coll_h_mob(struct pie_coll_h_resp*,
                           sqlite3*);
 
 /**
- * Read development parameters for an asset.
+ * GET: Read development parameters for an asset.
  */
 extern int pie_coll_h_devp(struct pie_coll_h_resp*,
                            const char*,

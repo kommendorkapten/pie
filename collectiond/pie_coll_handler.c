@@ -66,11 +66,11 @@ static int pie_coll_h_mob_put(struct pie_coll_h_resp*,
                               struct pie_http_post_data*,
                               sqlite3*);
 
-int  pie_coll_h_collections(struct pie_coll_h_resp* r,
-                            const char* url,
-                            enum pie_http_verb verb,
-                            struct pie_http_post_data* data,
-                            sqlite3* db)
+int  pie_coll_h_colls(struct pie_coll_h_resp* r,
+                      const char* url,
+                      enum pie_http_verb verb,
+                      struct pie_http_post_data* data,
+                      sqlite3* db)
 {
         struct llist* cl;
         struct lnode* n;
@@ -118,11 +118,11 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
         return 0;
 }
 
-int pie_coll_h_collection(struct pie_coll_h_resp* r,
-                          const char* url,
-                          enum pie_http_verb verb,
-                          struct pie_http_post_data* data,
-                          sqlite3* db)
+int pie_coll_h_coll(struct pie_coll_h_resp* r,
+                    const char* url,
+                    enum pie_http_verb verb,
+                    struct pie_http_post_data* data,
+                    sqlite3* db)
 {
         struct pie_collection coll;
         struct llist* ml;
@@ -179,6 +179,28 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
 
         r->http_sc = HTTP_STATUS_OK;
         r->content_type = "application/json; charset=UTF-8";
+
+        return 0;
+}
+
+int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
+                          const char* url,
+                          enum pie_http_verb verb,
+                          struct pie_http_post_data* data,
+                          sqlite3* db)
+{
+        pie_id coll_id;
+        pie_id mob_id;
+
+        if (get_id2(&coll_id, &mob_id, url))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        PIE_LOG("Collection: %ld, MOB id: %ld", coll_id, mob_id);
+
+        r->http_sc = HTTP_STATUS_NOT_FOUND;
 
         return 0;
 }
@@ -543,10 +565,73 @@ int get_id1(pie_id* id, const char* url)
 
 int get_id2(pie_id* id1, pie_id* id2, const char* url)
 {
-        printf("parse: %s\n", url);
+        char* pid;
+        char* p;
 
         *id1 = 0L;
         *id2 = 0L;
+
+        pid = strchr(url + 1, '/');
+        if (pid == NULL)
+        {
+                PIE_ERR("Slash dissapeared from requested URL: '%s'", url);
+                return 1;
+        }
+
+        /* Advance pointer to frist char after '/' */
+        pid++;
+        p = pid;
+
+        while (*p)
+        {
+                if (*p == '/')
+                {
+                        break;
+                }
+                if (!isdigit(*p))
+                {
+                        PIE_WARN("Invalid (1) pie_id: '%s'", pid);
+                        return 1;
+                }
+                p++;
+        }
+        /* The error check here is actualy not needed,
+           but better to be safe than sorry. */
+        *id1 = strtol(pid, &p, 10);
+        if (pid == p)
+        {
+                PIE_WARN("Invalid (2) pie_id: '%s'", pid);
+                return 1;
+        }
+
+        /* p is not /asset/123 */
+        pid = strchr(p + 1, '/');
+        if (pid == NULL)
+        {
+                PIE_ERR("Slash (2) dissapeared from requested URL: '%s'", url);
+                return 1;
+        }
+
+        /* Advance pointer to first char after '/' */
+        pid++;
+        p = pid;
+
+        while (*p)
+        {
+                if (!isdigit(*p++))
+                {
+                        PIE_WARN("Invalid (3) pie_id: '%s'", pid);
+                        return 1;
+                }
+        }
+        /* The error check here is actualy not needed,
+           but better to be safe than sorry. */
+        *id2 = strtol(pid, &p, 10);
+        if (pid == p)
+        {
+                PIE_WARN("Invalid (4) pie_id: '%s'", pid);
+                return 1;
+        }
 
         return 0;
 }

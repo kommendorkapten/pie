@@ -545,10 +545,19 @@ static void install_handlers(void)
 {
         int h = 0;
 
-        /* Collection */
+        /* Collection - modify */
         handlers[h].r = malloc(sizeof(regex_t));
-        handlers[h].h = &pie_coll_h_collection;
-        if (regcomp(handlers[h].r, "/collection/[0-9]+", REG_EXTENDED))
+        handlers[h].h = &pie_coll_h_coll_asset;
+        if (regcomp(handlers[h].r, "^/collection/[0-9]+/asset/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Collection - single */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_coll;
+        if (regcomp(handlers[h].r, "^/collection/[0-9]+", REG_EXTENDED))
         {
                 abort();
         }
@@ -556,8 +565,8 @@ static void install_handlers(void)
 
         /* Collection - all */
         handlers[h].r = malloc(sizeof(regex_t));
-        handlers[h].h = &pie_coll_h_collections;
-        if (regcomp(handlers[h].r, "/collection/", REG_EXTENDED))
+        handlers[h].h = &pie_coll_h_colls;
+        if (regcomp(handlers[h].r, "^/collection/$", REG_EXTENDED))
         {
                 abort();
         }
@@ -566,7 +575,7 @@ static void install_handlers(void)
         /* Exif */
         handlers[h].r = malloc(sizeof(regex_t));
         handlers[h].h = &pie_coll_h_exif;
-        if (regcomp(handlers[h].r, "/exif/[0-9]+", REG_EXTENDED))
+        if (regcomp(handlers[h].r, "^/exif/[0-9]+", REG_EXTENDED))
         {
                 abort();
         }
@@ -575,7 +584,7 @@ static void install_handlers(void)
         /* MOB */
         handlers[h].r = malloc(sizeof(regex_t));
         handlers[h].h = &pie_coll_h_mob;
-        if (regcomp(handlers[h].r, "/mob/[0-9]+", REG_EXTENDED))
+        if (regcomp(handlers[h].r, "^/mob/[0-9]+", REG_EXTENDED))
         {
                 abort();
         }
@@ -584,7 +593,7 @@ static void install_handlers(void)
         /* Development params */
         handlers[h].r = malloc(sizeof(regex_t));
         handlers[h].h = &pie_coll_h_devp;
-        if (regcomp(handlers[h].r, "/devparams/[0-9]+", REG_EXTENDED))
+        if (regcomp(handlers[h].r, "^/devparams/[0-9]+", REG_EXTENDED))
         {
                 abort();
         }
