@@ -1,0 +1,241 @@
+Datamodel
+========================================================================
+Each image has it's unique ID:
+64bits
+
+bit 0:7   host               8b, [1:ff] (0 invalid)
+bit 8:15  worker             8b, [1:ff] (0 invalid)
+bit 16:55 ts from pie epoch 40b, [0:ffffffffff]
+bit 56:63 type               8b, [1:ff] (0 invalid)
+
+ts is in hundreds of a second, since pie epoch (20170101T00:00:00Z)
+
+/thumb/MOB_ID.jpg
+GET: Return a specific thumbnail
+
+/proxy/MOB_ID.jpg
+GET: Return a specific proxy image
+
+/collection
+GET: Return all collections
+Response:
+[
+    {
+        "id": "3",
+        "path": "/",
+        "usr_id": "0",
+        "grp_id": "0",
+        "acl": "493",
+        "count": 0
+    },
+    {
+        "id": "4",
+        "path": "/another/path",
+        "usr_id": "0",
+        "grp_id": "0",
+        "acl": "493",
+        "count": 531
+    }
+]
+
+/collection/{coll_id}
+GET: Return metadata for a collection
+Response:
+{
+    "id": "4",
+    "path": "/another/path",
+    "assets": [
+        {
+            "id": "42688378977716225",
+            "developed": 0,
+            "mob": {
+                "id": "42688378977716225",
+                "parent_id": "0",
+                "name": "FSNF0200.JPG",
+                "capture_ts_ms": 1502557675000,
+                "added_ts_ms": 1508673055391,
+                "format": "0",
+                "color": 0,
+                "rating": 0,
+                "orientation": 1
+            }
+        }
+    ]
+}
+
+/collection/{coll_id}/asset/{mob_id}
+DELETE: Remove a MOB from the collection. Warning, this does also
+        remove the physical file(s).
+Response:
+{
+    "id": "4",
+    "path": "/another/path",
+    "assets": [
+        {
+            "id": "42688378977716225",
+            "developed": 0,
+            "mob": {
+                "id": "42688378977716225",
+                "parent_id": "0",
+                "name": "FSNF0200.JPG",
+                "capture_ts_ms": 1502557675000,
+                "added_ts_ms": 1508673055391,
+                "format": "0",
+                "color": 0,
+                "rating": 0,
+                "orientation": 1
+            }
+        }
+    ]
+}
+
+/collection/{coll_id}/asset/{mob_id}
+PUT: Move an existing MOB to this collection. This will remove the MOB
+     from the collection it's member of, and move the backing file(s)
+     on disk.
+Response:
+{
+    "id": "4",
+    "path": "/another/path",
+    "assets": [
+        {
+            "id": "42688378977716225",
+            "developed": 0,
+            "mob": {
+                "id": "42688378977716225",
+                "parent_id": "0",
+                "name": "FSNF0200.JPG",
+                "capture_ts_ms": 1502557675000,
+                "added_ts_ms": 1508673055391,
+                "format": "0",
+                "color": 0,
+                "rating": 0,
+                "orientation": 1
+            }
+        }
+    ]
+}
+
+/exif/{mob_id}
+GET: Return EXIF data for a MOB
+Response:
+{
+    "id": "42688378977716225",
+    "artist": "Fredrik Skogman skogman@gmail.com",
+    "copyright": "Fredrik Skogman",
+    "software": "Digital Camera X-T2 Ver2.00",
+    "date": "2017:08:12 19:07:55",
+    "lens": "Some lens",
+    "make": "FUJIFILM",
+    "model": "X-T2",
+    "exposure_time": "1/7",
+    "sub_sec_time": 0,
+    "x": 6000,
+    "y": 4000,
+    "iso": 800,
+    "gamma": 0,
+    "white_point": 0,
+    "orientation": 1,
+    "focal_len": 18,
+    "fnumber": 28,
+    "exposure_bias": 0,
+    "white_balance": 0,
+    "exposure_prog": 3,
+    "metering_mode": 5,
+    "flash": 0,
+    "exposure_mode": 0,
+    "color_space":1
+}
+
+/mob/{mob_id}
+GET: Return a MOB
+Respose:
+{
+    "id": "42688378977716225",
+    "parent_id": "0",
+    "name": "FSNF0200.JPG",
+    "capture_ts_ms": 1502557675000,
+    "added_ts_ms": 1508673055391,
+    "format": "0",
+    "color": 0,
+    "rating": 0,
+    "orientation": 1
+}
+
+PUT: Update A MOB
+Body:
+{
+    "id": "42688378977716225",
+    "parent_id": "0",
+    "name": "FSNF0200.JPG",
+    "capture_ts_ms": 1502557675000,
+    "added_ts_ms": 1508673055391,
+    "format": "0",
+    "color": 0,
+    "rating": 0,
+    "orientation": 1
+}
+Response:
+{
+    "id": "42688378977716225",
+    "parent_id": "0",
+    "name": "FSNF0200.JPG",
+    "capture_ts_ms": 1502557675000,
+    "added_ts_ms": 1508673055391,
+    "format": "0",
+    "color": 0,
+    "rating": 0,
+    "orientation": 1
+}
+
+/devparams/{mob_id}
+GET: Return the current development parameters for a MOB.
+Response:
+{
+    "version": 1,
+    "colort": -1000,
+    "tint": 0,
+    "expos": 1000,
+    "contr": 0,
+    "highl": 1000,
+    "shado": 0,
+    "white": 0,
+    "black": 0,
+    "clarity": {
+        "amount": 0,
+        "rad": 9780,
+        "thresh": 2000
+    },
+    "vibra": 0,
+    "satur":0,
+    "rot":0,
+    "sharp": {
+        "amount": 19999,
+        "rad": 10000,
+        "thresh": 2000
+    },
+    "curve_l": [
+        {
+            "x":-26199,
+            "y":-18800
+        }
+    ],
+    "curve_r": [
+        {
+            "x":-26199,
+            "y":-18800
+        }
+    ],
+    "curve_g": [
+        {
+            "x":-26199,
+            "y":-18800
+        }
+    ],
+    "curve_b": [
+        {
+            "x":-26199,
+            "y":-18800
+        }
+    ]
+}

@@ -13,6 +13,7 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <regex.h>
 #include <libwebsockets.h>
 #include "pie_coll_handler.h"
 #include "../cfg/pie_cfg.h"
@@ -22,16 +23,24 @@
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
 
-#define ROUTE_COLLECTION "/collection/"
-#define ROUTE_EXIF "/exif/"
-#define ROUTE_MOB "/mob/"
-#define ROUTE_DEV_PARAM "/devparams/"
-#define ROUTE_THUMB "/thumb/"
-#define ROUTE_PROXY "/proxy/"
-#define ROUTE_FULL_SIZE "/fullsize/"
-
 #define RESP_LEN (1 << 20) /* 1M */
 #define MAX_URL 256
+#define MAX_ROUTES 16
+
+/**
+ * Callback from HTTP router.
+ * @param response struct.
+ * @param request url.
+ * @param HTTP method
+ * @param request body.
+ * @param database handle.
+ * @return 0 on success.
+ */
+typedef int (colld_handler)(struct pie_coll_h_resp*,
+                            const char*,
+                            enum pie_http_verb,
+                            struct pie_http_post_data*,
+                            sqlite3*);
 
 struct config
 {
@@ -58,6 +67,12 @@ struct pie_ctx_http
         enum pie_http_verb verb;
 };
 
+struct colld_route
+{
+        regex_t* r;
+        colld_handler* h;
+};
+
 static void sig_h(int);
 
 /**
@@ -76,6 +91,9 @@ static int cb_http(struct lws* wsi,
                    void* in,
                    size_t len);
 
+static void install_handlers(void);
+static colld_handler* route_request(const char* url);
+
 volatile int run;
 static struct config cfg;
 static const struct lws_extension exts[] = {
@@ -91,6 +109,7 @@ static const struct lws_extension exts[] = {
         },
         {NULL, NULL, NULL}
 };
+static struct colld_route handlers[MAX_ROUTES];
 char gresp[RESP_LEN];
 
 int main(void)
@@ -110,6 +129,8 @@ int main(void)
         };
         struct lws_context_creation_info info;
         int status = 1;
+
+        install_handlers();
 
         if (pie_cfg_load(PIE_CFG_PATH))
         {
@@ -211,6 +232,12 @@ int main(void)
         pie_host_free(cfg.host);
         pie_cfg_free_hoststg(cfg.storages);
 
+        for (int h = 0; handlers[h].r != NULL; h++)
+        {
+                regfree(handlers[h].r);
+                h++;
+        }
+
         return 0;
 }
 
@@ -236,6 +263,7 @@ static int cb_http(struct lws* wsi,
         const char* p;
         struct pie_ctx_http* ctx = user;
         const char* mimetype;
+        colld_handler* handler;
         /* current header position */
         unsigned char* hp = resp_headers;
         /* total header length */
@@ -297,61 +325,19 @@ static int cb_http(struct lws* wsi,
                         goto keepalive;
                 }
 
-                if (strcmp(req_url, ROUTE_COLLECTION) == 0)
+                /* Route request */
+                handler = route_request(req_url);
+                if (handler)
                 {
-                        ret = pie_coll_h_collections(&resp,
-                                                     req_url,
-                                                     pie_cfg_get_db());
-
+                        ret = handler(&resp,
+                                      req_url,
+                                      verb,
+                                      &ctx->post_data,
+                                      pie_cfg_get_db());
                         goto writebody;
                 }
 
-                /* route is /collection/\d+$ */
-                p = strstr(req_url, ROUTE_COLLECTION);
-                if (p == req_url)
-                {
-                        ret = pie_coll_h_collection(&resp,
-                                                    req_url,
-                                                    pie_cfg_get_db());
-
-                        goto writebody;
-                }
-
-                /* /exif/\d+$ */
-                p = strstr(req_url, ROUTE_EXIF);
-                if (p == req_url)
-                {
-                        ret = pie_coll_h_exif(&resp,
-                                              req_url,
-                                              pie_cfg_get_db());
-
-                        goto writebody;
-                }
-
-                /* /mob/\d+$ */
-                p = strstr(req_url, ROUTE_MOB);
-                if (p == req_url)
-                {
-                        ret = pie_coll_h_mob(&resp,
-                                             req_url,
-                                             pie_cfg_get_db());
-
-                        goto writebody;
-                }
-
-                /* /devparams/\d+$ */
-                p = strstr(req_url, ROUTE_DEV_PARAM);
-                if (p == req_url)
-                {
-                        ret = pie_coll_h_devp(&resp,
-                                              req_url,
-                                              pie_cfg_get_db());
-
-                        goto writebody;
-                }
-
-                /* /thumb/.* */
-                p = strstr(req_url, ROUTE_THUMB);
+                p = strstr(req_url, "/thumb/");
                 if (p == req_url)
                 {
                         snprintf(file_url, sizeof(file_url),
@@ -360,8 +346,7 @@ static int cb_http(struct lws* wsi,
                                  req_url + 6);
                 }
 
-                /* /proxy/.* */
-                p = strstr(req_url, ROUTE_PROXY);
+                p = strstr(req_url, "/proxy/");
                 if (p == req_url)
                 {
                         snprintf(file_url, sizeof(file_url),
@@ -446,33 +431,23 @@ static int cb_http(struct lws* wsi,
                 ret = 0;
                 goto cleanup;
         case LWS_CALLBACK_HTTP_BODY_COMPLETION:
-                PIE_DEBUG("BODY_COMPLETION %s %s [%p] %lu bytes",
+                PIE_TRACE("BODY_COMPLETION %s %s [%p] %lu bytes",
                           pie_http_verb_string(ctx->verb),
                           ctx->url,
                           user,
                           ctx->post_data.p);
 
+                resp.http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+
                 /* Route request */
-
-                resp.http_sc = 405;
-                /* /exif/\d+$ */
-                p = strstr(ctx->url, ROUTE_EXIF);
-                if (p == &ctx->url[0])
+                handler = route_request(ctx->url);
+                if (handler)
                 {
-                        ret = pie_coll_h_exif_put(&resp,
-                                                  ctx->url,
-                                                  &ctx->post_data,
-                                                  pie_cfg_get_db());
-                }
-
-                /* /mob/\d+$ */
-                p = strstr(ctx->url, ROUTE_MOB);
-                if (p == &ctx->url[0])
-                {
-                        ret = pie_coll_h_mob_put(&resp,
-                                                 ctx->url,
-                                                 &ctx->post_data,
-                                                 pie_cfg_get_db());
+                        ret = handler(&resp,
+                                      ctx->url,
+                                      ctx->verb,
+                                      &ctx->post_data,
+                                      pie_cfg_get_db());
                 }
 
                 if (ctx->post_data.data)
@@ -480,6 +455,10 @@ static int cb_http(struct lws* wsi,
                         free(ctx->post_data.data);
                         ctx->post_data.data = NULL;
                 }
+
+                /* Save state to not mess up logging in writebody */
+                verb = ctx->verb;
+                req_url = ctx->url;
 
                 try_keepalive = 1;
                 goto writebody;
@@ -560,4 +539,99 @@ cleanup:
         }
 
 	return ret;
+}
+
+static void install_handlers(void)
+{
+        int h = 0;
+
+        /* Collection */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_collection;
+        if (regcomp(handlers[h].r, "/collection/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Collection - all */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_collections;
+        if (regcomp(handlers[h].r, "/collection/", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Exif */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_exif;
+        if (regcomp(handlers[h].r, "/exif/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* MOB */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_mob;
+        if (regcomp(handlers[h].r, "/mob/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Development params */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_devp;
+        if (regcomp(handlers[h].r, "/devparams/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Add termination */
+        if (h < MAX_ROUTES - 1)
+        {
+                handlers[h].r = NULL;
+                handlers[h].h = NULL;
+        }
+        if (h >= MAX_ROUTES)
+        {
+                PIE_ERR("To many routes configured");
+                abort();
+        }
+}
+
+static colld_handler* route_request(const char* url)
+{
+        colld_handler* handler = NULL;
+
+        for (int h = 0; h < MAX_ROUTES; h++)
+        {
+                int m;
+
+                if (handlers[h].r == NULL)
+                {
+                        break;
+                }
+
+                m = regexec(handlers[h].r, url, 0, NULL, 0);
+                switch(m)
+                {
+                case 0:
+                        handler = handlers[h].h;
+                        goto done;
+                case REG_NOMATCH:
+                        break;
+                case REG_ENOSYS:
+                        PIE_ERR("REG_ENOSYS");
+                        abort();
+                default:
+                        PIE_LOG("WTF: %d", m);
+                }
+        }
+done:
+
+        return handler;
 }

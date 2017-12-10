@@ -25,23 +25,63 @@
 #include "../dm/pie_mob.h"
 #include "../dm/pie_dev_params.h"
 #include "../jsmn/jsmn.h"
+#include "../http/pie_util.h"
 
 /**
- * Given a path like /abc/123 extract 123 and stor in provided pie_id.
+ * Given a path like /abc/123 extract 123 and store in provided pie_id.
  * @param pie_id to store extracted number in.
  * @param url to parse.
  * @return 0 if pie_id could be extracted, non-zero otherwise.
  */
 int get_id1(pie_id*, const char*);
 
+/**
+ * Given a path like /abc/123/def/456 extract 123 and 456 and store
+ *  in provided pie_ids.
+ * @param pie_id to store first extracted number in.
+ * @param pie_id to store second extracted number in.
+ * @param url to parse.
+ * @return 0 if pie_id could be extracted, non-zero otherwise.
+ */
+int get_id2(pie_id*, pie_id*, const char*);
+
+
+static int pie_coll_h_exif_get(struct pie_coll_h_resp*,
+                               const char*,
+                               struct pie_http_post_data*,
+                               sqlite3*);
+
+static int pie_coll_h_exif_put(struct pie_coll_h_resp*,
+                               const char*,
+                               struct pie_http_post_data*,
+                               sqlite3*);
+
+static int pie_coll_h_mob_get(struct pie_coll_h_resp*,
+                              const char*,
+                              struct pie_http_post_data*,
+                              sqlite3*);
+
+static int pie_coll_h_mob_put(struct pie_coll_h_resp*,
+                              const char*,
+                              struct pie_http_post_data*,
+                              sqlite3*);
+
 int  pie_coll_h_collections(struct pie_coll_h_resp* r,
                             const char* url,
+                            enum pie_http_verb verb,
+                            struct pie_http_post_data* data,
                             sqlite3* db)
 {
         struct llist* cl;
         struct lnode* n;
 
         (void)url;
+
+        if (verb != PIE_HTTP_VERB_GET)
+        {
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+                return 0;
+        }
 
         cl = pie_collection_find_all(db);
         if (cl == NULL)
@@ -80,12 +120,20 @@ int  pie_coll_h_collections(struct pie_coll_h_resp* r,
 
 int pie_coll_h_collection(struct pie_coll_h_resp* r,
                           const char* url,
+                          enum pie_http_verb verb,
+                          struct pie_http_post_data* data,
                           sqlite3* db)
 {
         struct pie_collection coll;
         struct llist* ml;
         struct lnode* n;
         int ret;
+
+        if (verb != PIE_HTTP_VERB_GET)
+        {
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+                return 0;
+        }
 
         if (get_id1(&coll.col_id, url))
         {
@@ -137,7 +185,27 @@ int pie_coll_h_collection(struct pie_coll_h_resp* r,
 
 int pie_coll_h_exif(struct pie_coll_h_resp* r,
                     const char* url,
+                    enum pie_http_verb verb,
+                    struct pie_http_post_data* data,
                     sqlite3* db)
+{
+        switch (verb)
+        {
+        case PIE_HTTP_VERB_GET:
+                return pie_coll_h_exif_get(r, url, NULL, db);
+        case PIE_HTTP_VERB_PUT:
+                return pie_coll_h_exif_put(r, url, data, db);
+        default:
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+        }
+
+        return 0;
+}
+
+static int pie_coll_h_exif_get(struct pie_coll_h_resp* r,
+                               const char* url,
+                               struct pie_http_post_data* data,
+                               sqlite3* db)
 {
         struct pie_exif_data exif;
         int ret;
@@ -174,10 +242,10 @@ int pie_coll_h_exif(struct pie_coll_h_resp* r,
         return 0;
 }
 
-int pie_coll_h_exif_put(struct pie_coll_h_resp* r,
-                        const char* url,
-                        struct pie_http_post_data* data,
-                        sqlite3* db)
+static int pie_coll_h_exif_put(struct pie_coll_h_resp* r,
+                               const char* url,
+                               struct pie_http_post_data* data,
+                               sqlite3* db)
 {
         (void)url;
         (void)data;
@@ -189,7 +257,27 @@ int pie_coll_h_exif_put(struct pie_coll_h_resp* r,
 
 int pie_coll_h_mob(struct pie_coll_h_resp* r,
                    const char* url,
+                   enum pie_http_verb verb,
+                   struct pie_http_post_data* data,
                    sqlite3* db)
+{
+        switch (verb)
+        {
+        case PIE_HTTP_VERB_GET:
+                return pie_coll_h_mob_get(r, url, NULL, db);
+        case PIE_HTTP_VERB_PUT:
+                return pie_coll_h_mob_put(r, url, data, db);
+        default:
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+        }
+
+        return 0;
+}
+
+static int pie_coll_h_mob_get(struct pie_coll_h_resp* r,
+                              const char* url,
+                              struct pie_http_post_data* data,
+                              sqlite3* db)
 {
         struct pie_mob mob;
         int ret;
@@ -226,10 +314,10 @@ int pie_coll_h_mob(struct pie_coll_h_resp* r,
         return 0;
 }
 
-int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
-                       const char* url,
-                       struct pie_http_post_data* data,
-                       sqlite3* db)
+static int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
+                              const char* url,
+                              struct pie_http_post_data* data,
+                              sqlite3* db)
 {
         struct pie_mob mob;
         jsmn_parser parser;
@@ -373,10 +461,18 @@ release:
 
 int pie_coll_h_devp(struct pie_coll_h_resp* r,
                     const char* url,
+                    enum pie_http_verb verb,
+                    struct pie_http_post_data* data,
                     sqlite3* db)
 {
         struct pie_dev_params devp;
         int ret;
+
+        if (verb != PIE_HTTP_VERB_GET)
+        {
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+                return 0;
+        }
 
         if (get_id1(&devp.pdp_mob_id, url))
         {
@@ -429,7 +525,7 @@ int get_id1(pie_id* id, const char* url)
         {
                 if (!isdigit(*p++))
                 {
-                        PIE_WARN("Invalid collection: '%s'", pid);
+                        PIE_WARN("Invalid pie_id: '%s'", pid);
                         return 1;
                 }
         }
@@ -438,9 +534,19 @@ int get_id1(pie_id* id, const char* url)
         *id = strtol(pid, &p, 10);
         if (pid == p)
         {
-                PIE_WARN("Invalid collection: '%s'", pid);
+                PIE_WARN("Invalid pie_id: '%s'", pid);
                 return 1;
         }
+
+        return 0;
+}
+
+int get_id2(pie_id* id1, pie_id* id2, const char* url)
+{
+        printf("parse: %s\n", url);
+
+        *id1 = 0L;
+        *id2 = 0L;
 
         return 0;
 }

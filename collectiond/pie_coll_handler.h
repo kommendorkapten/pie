@@ -16,6 +16,7 @@
 
 #include <sqlite3.h>
 #include "../pie_id.h"
+#include "../http/pie_util.h"
 
 struct pie_http_post_data;
 
@@ -34,89 +35,49 @@ struct pie_coll_h_resp
 };
 
 /**
- * Read all collections from the provided database.
- * Encode the collections to a JSON list in the provided buffer.
- * @param response struct.
- * @param request URL.
- * @param database to read collections from.
- * @return 0 on sucess.
+ * GET: Read all collections from the provided database.
  */
 extern int pie_coll_h_collections(struct pie_coll_h_resp*,
                                   const char*,
+                                  enum pie_http_verb,
+                                  struct pie_http_post_data*,
                                   sqlite3*);
 
 /**
- * Read a single collection from the provided database.
- * JSON encode the collection.
- * @param response struct.
- * @param request URL.
- * @param database to read collections from.
- * @return 0 on success.
+ * GET: Read a single collection from the provided database.
  */
 extern int pie_coll_h_collection(struct pie_coll_h_resp*,
                                  const char*,
+                                 enum pie_http_verb,
+                                 struct pie_http_post_data*,
                                  sqlite3*);
 
 /**
- * Read a exif data for an asset.
- * JSON encode the exif data.
- * @param response struct.
- * @param request URL.
- * @param database to read exif data from.
- * @return 0 on success.
+ *GET: Read a exif data for an asset.
  */
 extern int pie_coll_h_exif(struct pie_coll_h_resp*,
                            const char*,
+                           enum pie_http_verb,
+                           struct pie_http_post_data*,
                            sqlite3*);
 
 /**
- * Update exif data for an asset.
- * JSON encode the exif data.
- * @param response struct.
- * @param request URL.
- * @param database handle.
- * @return 0 on success.
- */
-extern int pie_coll_h_exif_put(struct pie_coll_h_resp*,
-                               const char*,
-                               struct pie_http_post_data*,
-                               sqlite3*);
-
-/**
- * Read mob meta data for an asset.
- * JSON encode the mob data.
- * @param response struct.
- * @param request URL.
- * @param database handle.
- * @return 0 on success.
+ * GET: Read mob meta data for an asset.
+ * PUT: Update mob meta data.
  */
 extern int pie_coll_h_mob(struct pie_coll_h_resp*,
                           const char*,
+                          enum pie_http_verb,
+                          struct pie_http_post_data*,
                           sqlite3*);
 
 /**
- * Update mob meta data for an asset.
- * JSON encode the mob data.
- * @param response struct.
- * @param request URL.
- * @param database handle.
- * @return 0 on success.
- */
-extern int pie_coll_h_mob_put(struct pie_coll_h_resp*,
-                              const char*,
-                              struct pie_http_post_data*,
-                              sqlite3*);
-
-/**
  * Read development parameters for an asset.
- * JSON encode the parameters
- * @param response struct.
- * @param request URL.
- * @param database handle.
- * @return 0 on success.
  */
 extern int pie_coll_h_devp(struct pie_coll_h_resp*,
                            const char*,
+                           enum pie_http_verb,
+                           struct pie_http_post_data*,
                            sqlite3*);
 
 #endif /* __PIE_COLL_HANDLER_H__ */
