@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -30,9 +30,9 @@ struct pie_stg_mnt;
  * @return a min object, or NULL if no MIN could be find for the
  *         provided host.
  */
-extern struct pie_min* pie_stg_min_for_mob(sqlite3*,
-                                           struct pie_stg_mnt**,
-                                           int,
-                                           pie_id);
+extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
+                                            struct pie_stg_mnt**,
+                                            int,
+                                            pie_id);
 
 #endif /* __PIE_STG_H__ */

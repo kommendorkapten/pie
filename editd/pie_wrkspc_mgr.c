@@ -21,7 +21,7 @@
 #include "../bm/pie_bm.h"
 #include "../lib/timing.h"
 #include "../cfg/pie_cfg.h"
-#include "../stg/pie_stg.h"
+#include "../doml/pie_stg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 
@@ -196,10 +196,10 @@ struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 int res;
 
                 /* Check for MIN existance before allocating anything */
-                min = pie_stg_min_for_mob(mgr->db,
-                                          mgr->storages->arr,
-                                          mgr->storages->len,
-                                          id);
+                min = pie_doml_min_for_mob(mgr->db,
+                                           mgr->storages->arr,
+                                           mgr->storages->len,
+                                           id);
                 if (min == NULL)
                 {
                         PIE_WARN("Could not find any MIN for MOB %ld", id);

@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -19,10 +19,10 @@
 #include "../cfg/pie_cfg.h"
 #include "../pie_log.h"
 
-struct pie_min* pie_stg_min_for_mob(sqlite3* db,
-                                    struct pie_stg_mnt** stgs,
-                                    int len,
-                                    pie_id mob_id)
+struct pie_min* pie_doml_min_for_mob(sqlite3* db,
+                                     struct pie_stg_mnt** stgs,
+                                     int len,
+                                     pie_id mob_id)
 {
         struct llist* l = pie_min_find_mob(db, mob_id);
         struct lnode* c;
@@ -32,13 +32,13 @@ struct pie_min* pie_stg_min_for_mob(sqlite3* db,
         {
                 return NULL;
         }
-        
+
         /* Naive implementation. Take the first matching MIN. */
         c = llist_head(l);
         while (c)
         {
                 struct pie_min* cmp = c->data;
-                
+
                 PIE_DEBUG("Found MIN %ld for MOB %ld", cmp->min_id, mob_id);
 
                 for (int i = 0; i < len; i++)
@@ -49,7 +49,7 @@ struct pie_min* pie_stg_min_for_mob(sqlite3* db,
                         {
                                 continue;
                         }
-                        
+
                         if (stg->stg.stg_id == cmp->min_stg_id)
                         {
                                 min = cmp;

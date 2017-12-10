@@ -81,7 +81,7 @@ MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
-STG_SRC    = pie_stg.c
+DOML_SRC   = pie_stg.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c \
              pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c \
@@ -115,7 +115,7 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
-        ingestd exif jsmn stg tools
+        ingestd exif jsmn doml tools
 
 .PHONY: all
 .PHONY: test
