@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -235,14 +235,33 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
         struct pie_mountpoint* mnt[cnt];
         int fail;
 
+        if (host < 0)
+        {
+                /* Current host is requested */
+                struct pie_host* ph = pie_cfg_get_host(host);
+
+                if (ph)
+                {
+                        host = ph->hst_id;
+                        pie_host_free(ph);
+                }
+                else
+                {
+                        return NULL;
+                }
+        }
+
         /* Fetch all mount points for host */
-        fail = pie_mountpoint_find_host(pie_cfg.db, mnt, host, cnt);
+        fail = pie_mountpoint_find_host(pie_cfg.db, mnt, host, cnt - 1);
         if (fail)
         {
                 printf("Failed to get mountpoints\n");
                 return NULL;
         }
 
+        /* If more storages is found than cnt,
+           it will not be null terminated */
+        mnt[cnt - 1] = NULL;
         ret = malloc(sizeof(struct pie_stg_mnt_arr));
         ret->arr = malloc(sizeof(struct pie_stg_mnt*) * cnt);
         ret->len = cnt;
