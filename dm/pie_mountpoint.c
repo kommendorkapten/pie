@@ -9,28 +9,25 @@ pie_mountpoint_alloc(void)
 {
 	struct pie_mountpoint *this = malloc(sizeof(struct pie_mountpoint));
 
-	this->mnt_path = NULL;
+	this->mnt_path[0] = '\0';
 	return this;
 }
-void 
+void
 pie_mountpoint_free(struct pie_mountpoint * this)
 {
 	assert(this);
 	pie_mountpoint_release(this);
 	free(this);
 }
-void 
+void
 pie_mountpoint_release(struct pie_mountpoint * this)
 {
 	assert(this);
 	(void) this;
-	if (this->mnt_path)
-	{
-		free(this->mnt_path);
-		this->mnt_path = NULL;
-	}
+
+	this->mnt_path[0] = '\0';
 }
-int 
+int
 pie_mountpoint_create(sqlite3 * db, struct pie_mountpoint * this)
 {
 	char	       *q = "INSERT INTO pie_mountpoint (mnt_hst_id,mnt_stg_id,mnt_path) VALUES (?,?,?)";
@@ -79,7 +76,7 @@ cleanup:
 	return ret;
 }
 
-int 
+int
 pie_mountpoint_read(sqlite3 * db, struct pie_mountpoint * this)
 {
 	char	       *q = "SELECT mnt_path FROM pie_mountpoint WHERE mnt_hst_id = ? AND mnt_stg_id = ?";
@@ -125,7 +122,6 @@ pie_mountpoint_read(sqlite3 * db, struct pie_mountpoint * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 0);
 	br = sqlite3_column_bytes(pstmt, 0);
-	this->mnt_path = malloc(br + 1);
 	memcpy(this->mnt_path, c, br);
 	this->mnt_path[br] = '\0';
 	ret = 0;
@@ -184,11 +180,10 @@ int pie_mountpoint_find_host(sqlite3 * db, struct pie_mountpoint ** this, int hs
 		/* and set the null terminator., */
 		c = sqlite3_column_text(pstmt, 1);
 		br = sqlite3_column_bytes(pstmt, 1);
-		this[i]->mnt_path = malloc(br + 1);
 		memcpy(this[i]->mnt_path, c, br);
 		this[i]->mnt_path[br] = '\0';
 	}
-	
+
 	ret = 0;
 cleanup:
 	retf = sqlite3_finalize(pstmt);
@@ -196,10 +191,10 @@ cleanup:
 	{
 		ret = -1;
 	}
-	return ret;	   
+	return ret;
 }
 
-int 
+int
 pie_mountpoint_update(sqlite3 * db, struct pie_mountpoint * this)
 {
 	char	       *q = "UPDATE pie_mountpoint SET mnt_path = ? WHERE mnt_hst_id = ? AND mnt_stg_id = ?";
@@ -247,7 +242,7 @@ cleanup:
 	}
 	return ret;
 }
-int 
+int
 pie_mountpoint_delete(sqlite3 * db, struct pie_mountpoint * this)
 {
 	char	       *q = "DELETE FROM pie_mountpoint WHERE mnt_hst_id = ? AND mnt_stg_id = ?";

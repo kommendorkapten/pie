@@ -3,11 +3,18 @@
 #ifndef __6223_PIE_MOUNTPOINT_H__
 #define __6223_PIE_MOUNTPOINT_H__
 #include <sqlite3.h>
+
+#ifdef PIE_PATH_LEN
+# define MNT_PATH_LEN PIE_PATH_LEN
+#else
+# define MNT_PATH_LEN 256
+#endif
+
 struct pie_mountpoint
 {
 	int             mnt_hst_id;
 	int             mnt_stg_id;
-	char           *mnt_path;
+	char            mnt_path[MNT_PATH_LEN];
 };
 extern struct pie_mountpoint *pie_mountpoint_alloc(void);
 extern void     pie_mountpoint_free(struct pie_mountpoint * this);
