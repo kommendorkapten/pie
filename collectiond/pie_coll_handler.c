@@ -24,8 +24,10 @@
 #include "../dm/pie_exif_data.h"
 #include "../dm/pie_mob.h"
 #include "../dm/pie_dev_params.h"
+#include "../dm/pie_collection_member.h"
 #include "../jsmn/jsmn.h"
 #include "../http/pie_util.h"
+#include "../doml/pie_doml_mob.h"
 
 /**
  * Given a path like /abc/123 extract 123 and store in provided pie_id.
@@ -65,6 +67,10 @@ static int pie_coll_h_mob_put(struct pie_coll_h_resp*,
                               const char*,
                               struct pie_http_post_data*,
                               sqlite3*);
+
+static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp*,
+                                     const char*,
+                                     sqlite3*);
 
 int  pie_coll_h_colls(struct pie_coll_h_resp* r,
                       const char* url,
@@ -183,24 +189,66 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
         return 0;
 }
 
+static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
+                                     const char* url,
+                                     sqlite3* db)
+{
+        struct pie_collection_member cmb;
+        int ok;
+
+        if (get_id2(&cmb.cmb_col_id, &cmb.cmb_mob_id, url))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        PIE_LOG("Collection: %ld, MOB id: %ld", cmb.cmb_col_id, cmb.cmb_mob_id);
+
+        /* Verify asset is part of collection */
+        ok = pie_collection_member_read(db, &cmb);
+        if (ok < 0)
+        {
+                PIE_WARN("pie_collection_member_read: %d", ok);
+                r->http_sc = HTTP_STATUS_SERVICE_UNAVAILABLE;
+                return 1;
+        }
+        if (ok > 0)
+        {
+                r->http_sc = HTTP_STATUS_NOT_FOUND;
+        }
+        else
+        {
+                /* Purge MOB, MINs files etc */
+                if (pie_doml_mob_delete(db, cmb.cmb_mob_id))
+                {
+                        r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                }
+                else
+                {
+                        /* Return the updated collection */
+                        r->http_sc = HTTP_STATUS_OK;
+                        r->content_len = 0;
+                        r->wbuf[0] = '\0';
+                        r->content_type = "text/plain";
+                }
+        }
+
+        return 0;
+}
+
 int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
                           const char* url,
                           enum pie_http_verb verb,
                           struct pie_http_post_data* data,
                           sqlite3* db)
 {
-        pie_id coll_id;
-        pie_id mob_id;
-
-        if (get_id2(&coll_id, &mob_id, url))
+        switch (verb)
         {
-                r->http_sc = HTTP_STATUS_BAD_REQUEST;
-                return 0;
+        case PIE_HTTP_VERB_DELETE:
+                return pie_coll_h_coll_asset_del(r, url, db);
         }
 
-        PIE_LOG("Collection: %ld, MOB id: %ld", coll_id, mob_id);
-
-        r->http_sc = HTTP_STATUS_NOT_FOUND;
+        r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
 
         return 0;
 }

@@ -81,7 +81,7 @@ MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
-DOML_SRC   = pie_stg.c
+DOML_SRC   = pie_stg.c pie_doml_mob.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c \
              pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c \
@@ -102,6 +102,7 @@ BM_OBJS     = $(BM_SRC:%.c=obj/%.o)
 HTTP_OBJS   = $(HTTP_SRC:%.c=obj/%.o)
 CFG_OBJS    = $(CFG_SRC:%.c=obj/%.o)
 DM_OBJS     = $(DM_SRC:%.c=obj/%.o)
+DOML_OBJS   = $(DOML_SRC:%.c=obj/%.o)
 # Server objs
 EDITD_OBJS  = $(EDITD_SRC:%.c=obj/%.o)
 MEDIAD_OBJS = $(MEDIAD_SRC:%.c=obj/%.o)
@@ -227,8 +228,8 @@ bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/l
 bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/evp_hw.o obj/timing.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
-bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
-	$(CC) $(CFLAGS) $(COLLD_OBJS) $(HTTP_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/jsmn.o -o $@ $(LNET) -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
+bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) $(DOML_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LNET) -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
 
 # Tools
 bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/llist.o obj/hmap.o $(BM_OBJS) $(MATH_OBJS) $(IO_OBJS)

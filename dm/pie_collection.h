@@ -31,7 +31,7 @@ extern void     pie_collection_release(struct pie_collection * this);
 extern int      pie_collection_create(sqlite3 * db, struct pie_collection * this);
 extern int      pie_collection_read(sqlite3 * db, struct pie_collection * this);
 /**
- * Update the count for a collection struct.
+ * Get the number of members in a collection.
  * @param db handle.
  * @param collection to set count on.
  * @return >0 if no collection is found.
@@ -60,8 +60,9 @@ extern struct llist* pie_collection_find_all(sqlite3 * db);
  * Find all assets associated with a specific collection.
  * @param datbase.
  * @param collection id.
- * @return a possible empty list with the matching MOBs, or NULL if
- *         error occured.
+ * @return A list of struct pie_collection_assets. The list may be empty.
+ *         NULL if an error occured.
+ *
  */
 extern struct llist* pie_collection_find_assets(sqlite3* db, pie_id coll);
 extern int      pie_collection_update(sqlite3 * db, struct pie_collection * this);

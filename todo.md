@@ -1,4 +1,5 @@
 # In progress
+* Move exisiting mob to collection.
 
 # Sorted
 * Editd, when zoomed in histogram is updated based on zoomed image.
@@ -10,13 +11,40 @@
   sys)).
 * When navigating from dev to coll, expand list and show last state.
 * update thumb nail & proxy with dev settings.
+* Load collection in editd.
 
 # Unsorted
-* raw post processing (chroma noise in particular) (tojpg contains ideas)..
-* Editd, empty workspace after x min of activity.
-* Editd, prefetch files to workspace.
+
+## Editd
+* empty workspace after x min of activity.
+* prefetch files to workspace.
 * zoom/pan in dev, fix bug with pixmap not being reload from ws before
   drag starts, causes reset of drag.
+* presets.
+* "time line" with pictures in bottom with selected collection. Both
+  dev and coll view.
+
+## Ingestd
+* handle file name collisions during import.
+* Verify file integrity during import.
+
+## Collectiond
+* Smarter management of collections, only load visible thumbnails.
+
+## Mediad
+
+## Image
+* raw post processing (chroma noise in particular) (tojpg contains ideas)..
+* Calculate new radius for clarity when an image is loaded. The one
+  stored in the database may be for the wrong resolution.
+* Black adjustment is quite simple, pure linear for both +/-. For
+  lightening blacks a non-linear method should be used.
+* White adjustment is quite simple, pure linear for both +/-. For
+  darkening whites a non-linear method should be used.
+* modify alg_contr to use same function call parameters as rest.
+  extend with per alg struct to only allow a single val to be provided.
+
+## General
 * Write install/config script.
 * Allow config path to be set during compile time.
 * Add method to get fd from q_consumser.
@@ -27,25 +55,10 @@
 * Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
-* Smarter management of collections, only load visible thumbnails.
-* Calculate new radius for clarity when an image is loaded. The one
-  stored in the database may be for the wrong resolution.
-* handle file name collisions during import.
-* Load collection in editd.
-* Black adjustment is quite simple, pure linear for both +/-. For
-  lightening blacks a non-linear method should be used.
-* White adjustment is quite simple, pure linear for both +/-. For
-  darkening whites a non-linear method should be used.
-* "time line" with pictures in bottom with selected collection. Both
-  dev and coll view.
 * libraw to use lcms on sparc.
-* add size to min
-* add min for proxies.
+* add mob/min for proxies.
 * Exif parsing, shutter speed greater than 1s
-* modify alg_contr to use same function call parameters as rest.
-  extend with per alg struct to only allow a single val to be provided.
 * virtual copy of a mob.
-* presets.
 
 # Performance:
 * Memory leak check
@@ -99,3 +112,5 @@
 * ~~add curves.~~
 * ~~Downsample yields weird results when scale factor is close to 1.~~
 * ~~Break out histogram calculation to a separate event~~
+* ~~add size to min~~
+* ~~Delete mob from collection.~~

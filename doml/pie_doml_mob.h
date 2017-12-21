@@ -11,28 +11,20 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_STG_H__
-#define __PIE_STG_H__
+#ifndef __PIE_DOML_MOB_H__
+#define __PIE_DOML_MOB_H__
 
 #include <sqlite3.h>
 #include "../pie_id.h"
 
-struct pie_min;
-struct pie_stg_mnt;
-/* Storage abstraction layer */
-
 /**
- * Return the most suitable MIN for a given MOB and set of storages.
+ * Delete a single MOB. This will remove all related assets:
+ * Any related database entities.
+ * Any media instances including proxy and thumbnail.
  * @param handle to the database.
- * @param array of pie_stg_mnt available.
- * @param length of array.
- * @param mob id
- * @return a min object, or NULL if no MIN could be find for the
- *         provided host.
+ * @param MOB id to purge.
+ * @return 0 on success.
  */
-extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
-                                            struct pie_stg_mnt**,
-                                            int,
-                                            pie_id);
+extern int pie_doml_mob_delete(sqlite3*, pie_id);
 
-#endif /* __PIE_STG_H__ */
+#endif /* __PIE_DOML_MOB_H__ */

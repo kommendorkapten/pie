@@ -41,6 +41,6 @@ extern int      pie_min_delete(sqlite3 * db, struct pie_min * this);
  * @return a possible empty list with the matching MINs, or NULL if
  *         error occured.
  */
-extern struct llist* pie_min_find_mob(sqlite3* db, pie_id min_id);
+extern struct llist* pie_min_find_mob(sqlite3* db, pie_id mob_id);
 
 #endif				/* __28230_PIE_MIN_H__ */
