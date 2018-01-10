@@ -27,4 +27,14 @@
  */
 extern int pie_doml_mob_delete(sqlite3*, pie_id);
 
+/**
+ * Move a MOB from one collection to a new.
+ * @param handle to the database.
+ * @param Target collection id.
+ * @param Source collection id.
+ * @param MOB to move.
+ * @return 0 on success.
+ */
+extern int pie_doml_mob_move(sqlite3*, pie_id, pie_id, pie_id);
+
 #endif /* __PIE_DOML_MOB_H__ */
