@@ -1,6 +1,6 @@
 CC      = gcc
 CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE -D_POSIX_C_SOURCE=200112L
-LFLAGS  += -lm
+LFLAGS  += -lm -L/usr/local/lib
 LSCUT   = -L/usr/local/lib -lscut
 OS      = $(shell uname -s)
 ISA     = $(shell uname -p)
@@ -177,7 +177,7 @@ bin/unsharp: testp/unsharp.c obj/timing.o $(IO_OBJS) obj/pie_bm.o obj/pie_unshar
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/tojpg: testp/tojpg.c obj/pie_bm.o obj/timing.o $(IO_OBJS) obj/pie_math.o obj/pie_median.o obj/pie_medf3.o  obj/pie_unsharp.o $(MATH_OBJS) obj/pie_curve.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/catm: testp/catm.c $(IO_OBJS) obj/pie_expos.o obj/pie_curve.o obj/pie_bm.o obj/pie_catmull.o obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
@@ -189,10 +189,10 @@ bin/tdowns: testp/tdowns.c obj/timing.o $(IO_OBJS) $(BM_OBJS) obj/pie_math.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/lrawtest: testp/lrawtest.c obj/timing.o obj/pie_bm.o $(IO_OBJS) obj/pie_math.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib $(LIMG)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LIMG)
 
 bin/exif_dump: testp/exif_dump.c obj/pie_json.o obj/pie_exif.o obj/llist.o obj/jsmn.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -L/usr/local/lib -lraw -lexif
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lraw -lexif
 
 bin/tjson: testp/tjson.c obj/pie_json.o obj/llist.o obj/jsmn.o obj/pie_render.o $(ALG_OBJS) $(MATH_OBJS) obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
@@ -220,7 +220,7 @@ bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 
 # Servers
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DM_OBJS) $(CFG_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o obj/pie_stg.o obj/strutil.o obj/pie_id.o obj/jsmn.o obj/s_queue.o obj/s_queue_intra.o
-	$(CC) $(CFLAGS) $^ -o $@ -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) $(LIMG) -lsqlite3 $(LNET)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET)
 
 bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/llist.o $(DM_OBJS) $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/evp_hw.o obj/fal.o obj/timing.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
@@ -229,8 +229,8 @@ bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) $(DOML_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LNET) -L/usr/local/lib -lwebsockets $(LCRYPTO) $(LFLAGS) -lsqlite3
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3
 
 # Tools
 bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/llist.o obj/hmap.o $(BM_OBJS) $(MATH_OBJS) $(IO_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 -L/usr/local/lib $(LIMG) $(LCRYPTO)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 $(LIMG) $(LCRYPTO)
