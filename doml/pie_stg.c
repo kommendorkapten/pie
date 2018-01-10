@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <sqlite3.h>
+#include <unistd.h>
 #include "pie_stg.h"
 #include "../lib/llist.h"
 #include "../dm/pie_min.h"
@@ -37,9 +38,9 @@ struct pie_min* pie_doml_min_for_mob(sqlite3* db,
         c = llist_head(l);
         while (c)
         {
-                struct pie_min* cmp = c->data;
+                struct pie_min* cand = c->data;
 
-                PIE_DEBUG("Found MIN %ld for MOB %ld", cmp->min_id, mob_id);
+                PIE_DEBUG("Found MIN %ld for MOB %ld", cand->min_id, mob_id);
 
                 for (int i = 0; i < len; i++)
                 {
@@ -50,9 +51,9 @@ struct pie_min* pie_doml_min_for_mob(sqlite3* db,
                                 continue;
                         }
 
-                        if (stg->stg.stg_id == cmp->min_stg_id)
+                        if (stg->stg.stg_id == cand->min_stg_id)
                         {
-                                min = cmp;
+                                min = cand;
                                 goto done;
                         }
                 }
@@ -75,4 +76,45 @@ done:
         llist_destroy(l);
 
         return min;
+}
+
+int pie_doml_file_exists(int stg, const char* rel_path)
+{
+        char path[PIE_PATH_LEN];
+        struct pie_stg_mnt_arr* stgs;
+        int ok;
+        int ret = 0;
+
+        stgs = pie_cfg_get_hoststg(-1);
+        if (stgs == NULL)
+        {
+                PIE_ERR("Could not get storages");
+                return -1;
+        }
+
+        if (stgs->arr[stg] == NULL)
+        {
+                PIE_WARN("Storage %d is not mounted", stg);
+                return -2;
+        }
+
+        snprintf(path,
+                 PIE_PATH_LEN,
+                 "%s%s",
+                 stgs->arr[stg]->mnt_path,
+                 rel_path);
+
+        PIE_TRACE("Test %s for existance", path);
+        ok = access(path, F_OK);
+
+        if (ok == 0)
+        {
+                /* File exists */
+                ret = 1;
+        }
+        /* If ok != 0, errno should be inspected. Skip for now */
+
+        pie_cfg_free_hoststg(stgs);
+
+        return ret;
 }

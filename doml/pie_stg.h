@@ -19,7 +19,6 @@
 
 struct pie_min;
 struct pie_stg_mnt;
-/* Storage abstraction layer */
 
 /**
  * Return the most suitable MIN for a given MOB and set of storages.
@@ -34,5 +33,14 @@ extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
                                             struct pie_stg_mnt**,
                                             int,
                                             pie_id);
+
+/**
+ * Check if a file exists on a storage. Storage must be mounted on
+ * current host.
+ * @param storage id.
+ * @param relative path on storage.
+ * @return 1 if file exists. 0 if file does not exits. Negative on error.
+ */
+extern int pie_doml_file_exists(int, const char*);
 
 #endif /* __PIE_STG_H__ */
