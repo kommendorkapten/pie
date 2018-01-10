@@ -13,6 +13,7 @@ extern void     pie_collection_member_free(struct pie_collection_member * this);
 extern void     pie_collection_member_release(struct pie_collection_member * this);
 extern int      pie_collection_member_create(sqlite3 * db, struct pie_collection_member * this);
 extern int      pie_collection_member_read(sqlite3 * db, struct pie_collection_member * this);
+extern int      pie_collection_member_find_mob(sqlite3 * db, struct pie_collection_member* this);
 extern int      pie_collection_member_update(sqlite3 * db, struct pie_collection_member * this);
 extern int      pie_collection_member_delete(sqlite3 * db, struct pie_collection_member * this);
 extern int      pie_collection_member_delete_mob(sqlite3 * db, long mob_id);

@@ -65,6 +65,7 @@ cleanup:
 	}
 	return ret;
 }
+
 int
 pie_collection_member_read(sqlite3 * db, struct pie_collection_member * this)
 {
@@ -112,6 +113,52 @@ cleanup:
 	}
 	return ret;
 }
+
+int pie_collection_member_find_mob(sqlite3 * db,
+                                   struct pie_collection_member* this)
+{
+	char           *q = "SELECT cmb_col_id FROM pie_collection_member WHERE cmb_mob_id = ?";
+	sqlite3_stmt   *pstmt;
+	int             ret;
+	int             retf;
+
+	assert(this);
+	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_bind_int64(pstmt, 1, this->cmb_mob_id);
+	if (ret != SQLITE_OK)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+	ret = sqlite3_step(pstmt);
+	if (ret == SQLITE_DONE)
+	{
+		ret = 1;
+		goto cleanup;
+	}
+	if (ret != SQLITE_ROW)
+	{
+		ret = -1;
+		goto cleanup;
+	}
+
+        this->cmb_col_id = sqlite3_column_int64(pstmt, 0);
+
+	ret = 0;
+cleanup:
+	retf = sqlite3_finalize(pstmt);
+	if (retf != SQLITE_OK)
+	{
+		ret = -1;
+	}
+	return ret;
+}
+
 int
 pie_collection_member_update(sqlite3 * db, struct pie_collection_member * this)
 {
