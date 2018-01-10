@@ -266,7 +266,8 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
         ret->arr = malloc(sizeof(struct pie_stg_mnt*) * cnt);
         ret->len = cnt;
         memset(ret->arr, 0, sizeof(struct pie_stg_mnt*) * cnt);
-
+        /* Safety check, only one online stg is supported now */
+        int online = 0;
         for (int i = 0; i < cnt; i++)
         {
                 int stg_id;
@@ -296,6 +297,15 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
                         break;
                 }
                 strcpy(ret->arr[stg_id]->mnt_path, mnt[i]->mnt_path);
+                if (ret->arr[stg_id]->stg.stg_type == PIE_STG_ONLINE)
+                {
+                        if (online)
+                        {
+                                PIE_ERR("Max 1 online storage is currently supported");
+                                abort();
+                        }
+                        online = 1;
+                }
         }
         for (int i = 0; i < cnt; i++)
         {
