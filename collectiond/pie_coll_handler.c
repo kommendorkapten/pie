@@ -68,6 +68,16 @@ static int pie_coll_h_mob_put(struct pie_coll_h_resp*,
                               struct pie_http_post_data*,
                               sqlite3*);
 
+/**
+ * Move a MOB from one collection to another.
+ */
+static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp*,
+                                     const char*,
+                                     sqlite3*);
+/**
+ * Delete a MOB from a collection.
+ * This will also delete the MOB and all MINs.
+ */
 static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp*,
                                      const char*,
                                      sqlite3*);
@@ -189,6 +199,51 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
         return 0;
 }
 
+static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp* r,
+                                      const char* url,
+                                      sqlite3* db)
+{
+        pie_id mob_id;
+        pie_id tgt_col_id;
+        struct pie_collection_member src_col;
+        int ok;
+
+        if (get_id2(&tgt_col_id, &mob_id, url))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        src_col.cmb_mob_id = mob_id;
+        ok = pie_collection_member_find_mob(db, &src_col);
+        if (ok)
+        {
+                PIE_ERR("%d", ok);
+                r->http_sc = HTTP_STATUS_NOT_FOUND;
+                return 0;
+        }
+
+        PIE_LOG("Move: %ld, from: %ld to: %ld",
+                mob_id,
+                src_col.cmb_col_id,
+                tgt_col_id);
+
+        if (pie_doml_mob_move(db, tgt_col_id, src_col.cmb_col_id, mob_id))
+        {
+                PIE_ERR("pie_doml_mob_move");
+                r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        }
+        else
+        {
+                r->http_sc = HTTP_STATUS_OK;
+                r->content_len = 0;
+                r->wbuf[0] = '\0';
+                r->content_type = "text/plain";
+        }
+
+        return 0;
+}
+
 static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
                                      const char* url,
                                      sqlite3* db)
@@ -244,6 +299,8 @@ int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
 {
         switch (verb)
         {
+        case PIE_HTTP_VERB_POST:
+                return pie_coll_h_coll_asset_post(r, url, db);
         case PIE_HTTP_VERB_DELETE:
                 return pie_coll_h_coll_asset_del(r, url, db);
         }

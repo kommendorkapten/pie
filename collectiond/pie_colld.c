@@ -312,6 +312,7 @@ static int cb_http(struct lws* wsi,
                         memcpy(ctx->url, in, len);
                         ctx->url[len] = '\0';
 
+                        PIE_TRACE("Prepare for body [%p] '%s'", user, req_url);
                         ret = 0;
                         goto cleanup;
                 }
