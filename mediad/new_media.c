@@ -537,7 +537,7 @@ static struct pie_collection* get_or_create_coll(const char* p, long coll_id)
                 /* Create */
                 coll = pie_collection_alloc();
                 coll->col_id = coll_id;
-                coll->col_path = strdup(p);
+                strncpy(coll->col_path, p, PIE_PATH_LEN);
                 /* Use defaults for now */
                 coll->col_usr_id = 0;
                 coll->col_grp_id = 0;

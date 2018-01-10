@@ -12,7 +12,7 @@ pie_collection_alloc(void)
 {
 	struct pie_collection *this = malloc(sizeof(struct pie_collection));
 
-	this->col_path = NULL;
+	this->col_path[0] = '\0';
 	return this;
 }
 void
@@ -26,11 +26,7 @@ void
 pie_collection_release(struct pie_collection * this)
 {
 	assert(this);
-	if (this->col_path)
-	{
-		free(this->col_path);
-		this->col_path = NULL;
-	}
+	this->col_path[0] = '\0';
 }
 int
 pie_collection_create(sqlite3 * db, struct pie_collection * this)
@@ -173,7 +169,6 @@ pie_collection_read(sqlite3 * db, struct pie_collection * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 0);
 	br = sqlite3_column_bytes(pstmt, 0);
-	this->col_path = malloc(br + 1);
 	memcpy(this->col_path, c, br);
 	this->col_path[br] = '\0';
 	this->col_usr_id = (int) sqlite3_column_int(pstmt, 1);
@@ -270,7 +265,8 @@ pie_collection_find_path(sqlite3 * db, const char * path)
         retc = pie_collection_alloc();
 
         retc->col_id = sqlite3_column_int64(pstmt, 0);
-        retc->col_path = strdup(path);
+        strncpy(retc->col_path, path, COL_PATH_LEN);
+
         retc->col_usr_id = (int) sqlite3_column_int(pstmt, 1);
         retc->col_grp_id = (int) sqlite3_column_int(pstmt, 2);
         retc->col_acl = (int) sqlite3_column_int(pstmt, 3);
@@ -323,7 +319,6 @@ struct llist* pie_collection_find_all(sqlite3 * db)
                 coll->col_id = sqlite3_column_int64(pstmt, 0);
                 c = sqlite3_column_text(pstmt, 1);
                 br = sqlite3_column_bytes(pstmt, 1);
-                coll->col_path = malloc(br + 1);
                 memcpy(coll->col_path, c, br);
                 coll->col_path[br] = '\0';
                 coll->col_usr_id = (int) sqlite3_column_int(pstmt, 2);

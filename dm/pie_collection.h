@@ -8,6 +8,12 @@
 struct llist;
 struct pie_mob;
 
+#ifdef PIE_PATH_LEN
+# define COL_PATH_LEN PIE_PATH_LEN
+#else
+# define COL_PATH_LEN 256
+#endif
+
 struct pie_collection_asset
 {
         struct pie_mob* mob;
@@ -17,7 +23,7 @@ struct pie_collection_asset
 struct pie_collection
 {
 	long            col_id;
-	char           *col_path;
+	char            col_path[COL_PATH_LEN];
 	int             col_usr_id;
 	int             col_grp_id;
 	int             col_acl;
