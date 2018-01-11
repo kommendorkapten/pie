@@ -292,7 +292,7 @@ static void* worker(void* arg)
                                 MIN_HASH_LEN);
                         abort();
                 }
-                for (int i = 0; i < new->digest_len; i++)
+                for (unsigned int i = 0; i < new->digest_len; i++)
                 {
                         sprintf(min.min_sha1_hash + i * 2,
                                 "%02x",

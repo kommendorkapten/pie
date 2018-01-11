@@ -92,6 +92,7 @@ int  pie_coll_h_colls(struct pie_coll_h_resp* r,
         struct lnode* n;
 
         (void)url;
+        (void)data;
 
         if (verb != PIE_HTTP_VERB_GET)
         {
@@ -144,6 +145,8 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
         struct llist* ml;
         struct lnode* n;
         int ret;
+
+        (void)data;
 
         if (verb != PIE_HTTP_VERB_GET)
         {
@@ -297,12 +300,16 @@ int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
                           struct pie_http_post_data* data,
                           sqlite3* db)
 {
+        (void)data;
+
         switch (verb)
         {
         case PIE_HTTP_VERB_POST:
                 return pie_coll_h_coll_asset_post(r, url, db);
         case PIE_HTTP_VERB_DELETE:
                 return pie_coll_h_coll_asset_del(r, url, db);
+        default:
+                break;
         }
 
         r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
@@ -336,6 +343,8 @@ static int pie_coll_h_exif_get(struct pie_coll_h_resp* r,
 {
         struct pie_exif_data exif;
         int ret;
+
+        (void)data;
 
         if (get_id1(&exif.ped_mob_id, url))
         {
@@ -408,6 +417,8 @@ static int pie_coll_h_mob_get(struct pie_coll_h_resp* r,
 {
         struct pie_mob mob;
         int ret;
+
+        (void)data;
 
         if (get_id1(&mob.mob_id, url))
         {
@@ -594,6 +605,8 @@ int pie_coll_h_devp(struct pie_coll_h_resp* r,
 {
         struct pie_dev_params devp;
         int ret;
+
+        (void)data;
 
         if (verb != PIE_HTTP_VERB_GET)
         {

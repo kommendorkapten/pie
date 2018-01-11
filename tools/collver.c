@@ -370,6 +370,8 @@ static struct errors check_min(pie_id mob_id, int stg_id, const char* path)
         struct llist* l;
         struct lnode* n;
 
+        (void)stg_id;
+
         l = pie_min_find_mob(pie_cfg_get_db(), mob_id);
         if (l == NULL)
         {

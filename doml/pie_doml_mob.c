@@ -189,7 +189,7 @@ int pie_doml_mob_move(sqlite3* db,
         struct pie_collection tgt_col;
         struct pie_host* host = NULL;
         struct llist* l = NULL;
-        struct pie_min* min;
+        struct pie_min* min = NULL;
         char* p;
         int cnt = 0;
         int ret = -1;
@@ -224,6 +224,12 @@ int pie_doml_mob_move(sqlite3* db,
                 }
                 cnt++;
                 min = n->data;
+        }
+
+        if (min == NULL)
+        {
+                PIE_WARN("No min found for MOB %ld", mob_id);
+                return -1;
         }
 
         /* Get the target collection */
