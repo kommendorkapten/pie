@@ -79,6 +79,7 @@ var exifRotationClass = {
     8: 'rotate270',
 };
 var fullsizeProxy = null;
+var contextMenuActive = false;
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -267,7 +268,7 @@ function renderCollection(coll, options) {
     var columns = 3;
     var img_x = w - 15 - 2 * 238;
     var thumb_size = 212;
-    var table = document.getElementById("meta_data_tbl_top");
+    var table;
     var innerHtml = "";
     var newRow = "<tr>";
     var div = "<div class=\"grid-view-table-cell\">";
@@ -282,7 +283,7 @@ function renderCollection(coll, options) {
     for (let i of activeAssets) {
         var cellId = "grid-cell-mob-" + i.id;
         mobCache[i.id] = i.mob;
-        var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\">";
+        var newCell = "<td id=\"" + cellId +"\"class=\"grid-view-table-td\" onclick=\"selectMob('" + i.id + "',this);\" mobid=\"" + i.id + "\">";
         var color = "";
 
         innerHtml += newCell;
@@ -346,6 +347,7 @@ function renderCollection(coll, options) {
 
     var collTable = document.getElementById("coll-grid-table");
     collTable.innerHTML = innerHtml;
+    collTable.addEventListener('contextmenu', contextMenu);
 
     var dur = Date.now() - start;
     console.log("renderCollection: " + dur + "ms");
@@ -437,6 +439,29 @@ function navigateMob(direction) {
     var newCell = collTable.rows[y].cells[newMob];
     selectMob(mobId, newCell);
     updateSingleView(mobId);
+}
+
+function contextMenu(e) {
+    contextMenuActive = true;
+    e.preventDefault();
+    var tgt = e.target;
+    var left = e.clientX;
+    var top = e.clientY;
+    var menuBox = document.getElementById("coll-context-menu");
+    var mobid = null;
+
+    mobid = tgt.getAttribute("mobid");
+    if (mobid == null && tgt.localName == "img") {
+        mobid = tgt.parentElement.parentElement.getAttribute("mobid");
+    }
+
+    if (mobid){
+        console.log("Found mob " + mobid);
+    }
+
+    menuBox.style.left = (left - 10) + "px";
+    menuBox.style.top = (top - 10) + "px";
+    menuBox.classList.add("coll-context-menu-active");
 }
 
 function loadExif(id) {
@@ -909,7 +934,8 @@ function updateCounts(coll) {
 }
 
 window.addEventListener("load", function(evt) {
-    var id = getParameterByName("id")
+    var col = getParameterByName('col');
+    var mob = getParameterByName("mob");
     var rate = getParameterByName("rate");
     var color = getParameterByName("color");
     var xmlhttp = new XMLHttpRequest();
@@ -1081,7 +1107,7 @@ window.addEventListener("load", function(evt) {
                     innerHtml += "<li>";
 
                     if ("id" in node) {
-                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\">" + name + "</a>";
+                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\" colid=\"" + node.id + "\">" + name + "</a>";
                     } else {
                         innerHtml += name;
                     }
@@ -1157,9 +1183,6 @@ window.addEventListener("load", function(evt) {
         EDITD_HOST = url[2].split(":")[0];
     }
 
-    var col = getParameterByName('col');
-    var mob = getParameterByName("mob");
-
     if (col != null && col != "") {
         loadCollection(col, mob);
     }
@@ -1173,6 +1196,10 @@ window.onclick = function(event) {
             var openDropdown = dropdowns[i];
             openDropdown.classList.remove('color-dropdown-show');
         }
+    }
+    if(contextMenuActive) {
+        var menuBox = document.getElementById("coll-context-menu");
+        menuBox.classList.remove("coll-context-menu-active");
     }
 };
 
