@@ -66,6 +66,7 @@ Response:
 /collection/{coll_id}/asset/{mob_id}
 DELETE: Remove a MOB from the collection. Warning, this does also
         remove the physical file(s).
+200
 Response:
 {
     "id": "4",

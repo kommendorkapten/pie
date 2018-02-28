@@ -9,6 +9,7 @@ var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
 var selectedCollection = {};
+/* activeAssets is updated by renderCollection */
 var activeAssets = [];
 var zoomMode = {
     "enabled": false,
@@ -79,7 +80,6 @@ var exifRotationClass = {
     8: 'rotate270',
 };
 var fullsizeProxy = null;
-var contextMenuActive = false;
 
 function getParameterByName(name, url) {
     if (!url) {
@@ -442,12 +442,12 @@ function navigateMob(direction) {
 }
 
 function contextMenu(e) {
-    contextMenuActive = true;
     e.preventDefault();
     var tgt = e.target;
     var left = e.clientX;
     var top = e.clientY;
     var menuBox = document.getElementById("coll-context-menu");
+    var delLink = document.getElementById("coll-context-menu-del");
     var mobid = null;
 
     mobid = tgt.getAttribute("mobid");
@@ -455,13 +455,15 @@ function contextMenu(e) {
         mobid = tgt.parentElement.parentElement.getAttribute("mobid");
     }
 
-    if (mobid){
-        console.log("Found mob " + mobid);
+    if (!mobid){
+        return;
     }
 
     menuBox.style.left = (left - 10) + "px";
     menuBox.style.top = (top - 10) + "px";
     menuBox.classList.add("coll-context-menu-active");
+    menuBox.active = true;
+    delLink.mobId = mobid;
 }
 
 function loadExif(id) {
@@ -753,6 +755,29 @@ function rateMob(mobId, rate) {
     if (opt.rating.value > 0 || opt.color > 0) {
         renderCollection(selectedCollection, opt);
     }
+}
+
+function deleteMob(mobId) {
+    if (!mobId) {
+        return;
+    }
+
+    let url = "collection/" + selectedCollection.id + "/asset/" + mobId;
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+           if (xmlhttp.status == 200) {
+               var coll = JSON.parse(xmlhttp.responseText);
+
+               selectedCollection = coll;
+               renderCollection(selectedCollection, getCollectionModifiers());
+           }
+        }
+    };
+
+    xmlhttp.open("DELETE", url, true);
+    xmlhttp.send();
 }
 
 function updateUiFilterRate(rate) {
@@ -1197,9 +1222,11 @@ window.onclick = function(event) {
             openDropdown.classList.remove('color-dropdown-show');
         }
     }
-    if(contextMenuActive) {
-        var menuBox = document.getElementById("coll-context-menu");
+
+    var menuBox = document.getElementById("coll-context-menu");
+    if (menuBox.active) {
         menuBox.classList.remove("coll-context-menu-active");
+        menuBox.active = true;
     }
 };
 
