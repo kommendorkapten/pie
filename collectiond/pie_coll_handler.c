@@ -35,7 +35,7 @@
  * @param url to parse.
  * @return 0 if pie_id could be extracted, non-zero otherwise.
  */
-int get_id1(pie_id*, const char*);
+static int get_id1(pie_id*, const char*);
 
 /**
  * Given a path like /abc/123/def/456 extract 123 and 456 and store
@@ -45,8 +45,18 @@ int get_id1(pie_id*, const char*);
  * @param url to parse.
  * @return 0 if pie_id could be extracted, non-zero otherwise.
  */
-int get_id2(pie_id*, pie_id*, const char*);
+static int get_id2(pie_id*, pie_id*, const char*);
 
+/**
+ * Utility method to read a collection and its assets, and then JSON
+ * serialize it.
+ * @param buffer to write output.
+ * @param pointer to size of buffer. If successfull referenced value
+ *        will be updated with the number of bytes written.
+ * @param id of collection.
+ * @return 0 if sucessfull, otherwise matching HTTP status code.
+ */
+static int coll_to_json(char*, size_t*, sqlite3*, pie_id);
 
 static int pie_coll_h_exif_get(struct pie_coll_h_resp*,
                                const char*,
@@ -141,9 +151,8 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
                     struct pie_http_post_data* data,
                     sqlite3* db)
 {
-        struct pie_collection coll;
-        struct llist* ml;
-        struct lnode* n;
+        pie_id id;
+        size_t len = r->wbuf_len;
         int ret;
 
         (void)data;
@@ -154,50 +163,57 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
                 return 0;
         }
 
-        if (get_id1(&coll.col_id, url))
+        if (get_id1(&id, url))
         {
                 r->http_sc = HTTP_STATUS_BAD_REQUEST;
                 return 0;
         }
 
-        ret = pie_collection_read(db, &coll);
-        if (ret > 0)
+        ret = coll_to_json(r->wbuf, &len, db, id);
+
+        if (ret == 0)
         {
-                r->http_sc = HTTP_STATUS_NOT_FOUND;
-                return 0;
+                r->content_len = len;
+                r->http_sc = HTTP_STATUS_OK;
+                r->content_type = "application/json; charset=UTF-8";
         }
-        if (ret < 0)
+        else
         {
-                PIE_WARN("pie_collection_read: %d", ret);
-                r->http_sc = HTTP_STATUS_SERVICE_UNAVAILABLE;
-                return 1;
+                r->content_len = 0;
+                r->http_sc = ret;
+
+                switch (ret)
+                {
+                case HTTP_STATUS_SERVICE_UNAVAILABLE:
+                case HTTP_STATUS_INTERNAL_SERVER_ERROR:
+                        ret = 1;
+                default:
+                        ret = 0;
+                }
         }
 
-        ml = pie_collection_find_assets(db, coll.col_id);
-        if (ml == NULL)
+        return ret;
+}
+
+int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
+                          const char* url,
+                          enum pie_http_verb verb,
+                          struct pie_http_post_data* data,
+                          sqlite3* db)
+{
+        (void)data;
+
+        switch (verb)
         {
-                r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
-                return 0;
+        case PIE_HTTP_VERB_POST:
+                return pie_coll_h_coll_asset_post(r, url, db);
+        case PIE_HTTP_VERB_DELETE:
+                return pie_coll_h_coll_asset_del(r, url, db);
+        default:
+                break;
         }
-        r->content_len = pie_enc_json_collection(r->wbuf,
-                                                 r->wbuf_len,
-                                                 &coll,
-                                                 ml);
 
-        n = llist_head(ml);
-        while(n)
-        {
-                struct pie_collection_asset* asset = n->data;
-
-                pie_collection_asset_free(asset);
-                n = n->next;
-
-        }
-        llist_destroy(ml);
-        pie_collection_release(&coll);
-
-        r->http_sc = HTTP_STATUS_OK;
-        r->content_type = "application/json; charset=UTF-8";
+        r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
 
         return 0;
 }
@@ -238,6 +254,7 @@ static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp* r,
         }
         else
         {
+                /* Return update collection */
                 r->http_sc = HTTP_STATUS_OK;
                 r->content_len = 0;
                 r->wbuf[0] = '\0';
@@ -253,11 +270,13 @@ static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
 {
         struct pie_collection_member cmb;
         int ok;
+        int ret;
 
         if (get_id2(&cmb.cmb_col_id, &cmb.cmb_mob_id, url))
         {
                 r->http_sc = HTTP_STATUS_BAD_REQUEST;
-                return 0;
+                ret = 0;
+                goto done;
         }
 
         PIE_LOG("Collection: %ld, MOB id: %ld", cmb.cmb_col_id, cmb.cmb_mob_id);
@@ -268,53 +287,53 @@ static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
         {
                 PIE_WARN("pie_collection_member_read: %d", ok);
                 r->http_sc = HTTP_STATUS_SERVICE_UNAVAILABLE;
-                return 1;
+                ret = 1;
+                goto done;
         }
         if (ok > 0)
         {
                 r->http_sc = HTTP_STATUS_NOT_FOUND;
+                ret = 0;
+                goto done;
+        }
+
+        /* Purge MOB, MINs files etc */
+        if (pie_doml_mob_delete(db, cmb.cmb_mob_id))
+        {
+                r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                r->content_type = "application/json; charset=UTF-8";
+                r->content_len = 0;
+                ret = 1;
+                goto done;
+        }
+
+        size_t len = r->wbuf_len;
+        ret = coll_to_json(r->wbuf, &len, db, cmb.cmb_col_id);
+
+        if (ret == 0)
+        {
+                r->content_len = len;
+                r->http_sc = HTTP_STATUS_OK;
+                r->content_type = "application/json; charset=UTF-8";
         }
         else
         {
-                /* Purge MOB, MINs files etc */
-                if (pie_doml_mob_delete(db, cmb.cmb_mob_id))
+                r->content_len = 0;
+                r->http_sc = ret;
+
+                switch (ret)
                 {
-                        r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
-                }
-                else
-                {
-                        /* Return the updated collection */
-                        r->http_sc = HTTP_STATUS_OK;
-                        r->content_len = 0;
-                        r->wbuf[0] = '\0';
-                        r->content_type = "text/plain";
+                case HTTP_STATUS_SERVICE_UNAVAILABLE:
+                case HTTP_STATUS_INTERNAL_SERVER_ERROR:
+                        ret = 1;
+                default:
+                        ret = 0;
                 }
         }
 
-        return 0;
-}
+done:
 
-int pie_coll_h_coll_asset(struct pie_coll_h_resp* r,
-                          const char* url,
-                          enum pie_http_verb verb,
-                          struct pie_http_post_data* data,
-                          sqlite3* db)
-{
-        (void)data;
-
-        switch (verb)
-        {
-        case PIE_HTTP_VERB_POST:
-                return pie_coll_h_coll_asset_post(r, url, db);
-        case PIE_HTTP_VERB_DELETE:
-                return pie_coll_h_coll_asset_del(r, url, db);
-        default:
-                break;
-        }
-
-        r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
-
-        return 0;
+        return ret;
 }
 
 int pie_coll_h_exif(struct pie_coll_h_resp* r,
@@ -645,7 +664,7 @@ int pie_coll_h_devp(struct pie_coll_h_resp* r,
         return 0;
 }
 
-int get_id1(pie_id* id, const char* url)
+static int get_id1(pie_id* id, const char* url)
 {
         char* pid;
         char* p;
@@ -681,7 +700,7 @@ int get_id1(pie_id* id, const char* url)
         return 0;
 }
 
-int get_id2(pie_id* id1, pie_id* id2, const char* url)
+static int get_id2(pie_id* id1, pie_id* id2, const char* url)
 {
         char* pid;
         char* p;
@@ -752,4 +771,58 @@ int get_id2(pie_id* id1, pie_id* id2, const char* url)
         }
 
         return 0;
+}
+
+static int coll_to_json(char* buf, size_t* len, sqlite3* db, pie_id col_id)
+{
+        struct pie_collection coll;
+        struct llist* ml = NULL;
+        size_t bw;
+        int ret;
+
+        coll.col_id = col_id;
+        ret = pie_collection_read(db, &coll);
+        if (ret > 0)
+        {
+                ret = HTTP_STATUS_NOT_FOUND;
+                return ret;
+        }
+        if (ret < 0)
+        {
+                PIE_WARN("pie_collection_read: %d", ret);
+                ret = HTTP_STATUS_SERVICE_UNAVAILABLE;
+                goto done;
+        }
+
+        ml = pie_collection_find_assets(db, coll.col_id);
+        if (ml == NULL)
+        {
+                ret = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                goto done;
+        }
+        bw = pie_enc_json_collection(buf,
+                                     *len,
+                                     &coll,
+                                     ml);
+        *len = bw;
+        ret = 0;
+done:
+        if (ml)
+        {
+                struct lnode* n = llist_head(ml);
+
+                while(n)
+                {
+                        struct pie_collection_asset* asset = n->data;
+
+                        pie_collection_asset_free(asset);
+                        n = n->next;
+                }
+
+                llist_destroy(ml);
+        }
+
+        pie_collection_release(&coll);
+
+        return ret;
 }
