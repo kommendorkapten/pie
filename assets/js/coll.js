@@ -20,6 +20,7 @@ var zoomMode = {
     "dx": 0,
     "dy": 0,
 };
+var collTree = null;
 var globalFilterRate = 0;
 var globalFilterColor = 0;
 var NAV_LEFT = 37;
@@ -944,20 +945,6 @@ function updateMob(mob) {
     xmlhttp.send(jsonString);
 }
 
-function updateCounts(coll) {
-    var c = coll["children"];
-    var count = 0;
-
-    for (var prop in c) {
-        if (c.hasOwnProperty(prop)) {
-            updateCounts(c[prop]);
-            count += c[prop]["count"];
-        }
-    }
-
-    coll["count"] += count;
-}
-
 window.addEventListener("load", function(evt) {
     var col = getParameterByName('col');
     var mob = getParameterByName("mob");
@@ -1062,102 +1049,13 @@ window.addEventListener("load", function(evt) {
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
             if (xmlhttp.status == 200) {
-                var coll_tree = {};
                 var coll = JSON.parse(xmlhttp.responseText);
-
-                /* Build the tree structure of all collections */
-                coll.sort(function(a,b) {
-                    return a.path.localeCompare(b.path);
-                });
-
-                if (coll[0].path != "/") {
-                    alert("This is not right");
-                }
-                coll_tree["path"] = "Collection root";
-                coll_tree["id"] = coll[0].id;
-                coll_tree["count"] = coll[0].count;
-                coll_tree["children"] = {};
-
-                for (let i of coll) {
-                    if (i.path == "/") {
-                        continue;
-                    }
-
-                    var comps = i.path.split("/");
-                    var root = coll_tree;
-
-                    for (let c of comps) {
-                        if (c.length == 0) {
-                            continue;
-                        }
-
-                        if (!(c in root.children)) {
-                            var child = {
-                                "children": {},
-                                "path": c,
-                                "count": 0,
-                            };
-                            root["children"][c] = child;
-                        }
-
-                        root = root["children"][c];
-                    }
-
-                    root["id"] = i.id;
-                    root["count"] = i.count;
-                }
-
-                /* Update cumulative count of assets */
-                updateCounts(coll_tree);
-
-                /* Create the HTML for it by doing a depth first
-                   traversal. */
-                var stack = [];
-                var innerHtml = "";
-
-                stack.push(coll_tree);
-                while (stack.length > 0) {
-                    var node = stack.pop();
-                    var name = node.path + " (" + node.count + ")";
-
-                    if ("closeLi" in node) {
-                        innerHtml += "</li>";
-                        continue;
-                    }
-                    if ("closeUl" in node) {
-                        innerHtml += "</ul>";
-                        continue;
-                    }
-
-                    innerHtml += "<li>";
-
-                    if ("id" in node) {
-                        innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\" colid=\"" + node.id + "\">" + name + "</a>";
-                    } else {
-                        innerHtml += name;
-                    }
-
-                    stack.push({
-                        "closeLi": true,
-                    });
-
-                    var childs = Object.keys(node.children);
-                    if (childs.length > 0) {
-                        innerHtml += "<ul>";
-                        stack.push({
-                            "closeUl": true,
-                        });
-                        for (let i = childs.length - 1; i >= 0; i--) {
-                            stack.push(node.children[childs[i]]);
-                        }
-                    }
-                }
-
                 var collUl = document.getElementById("coll-list");
-                collUl.innerHTML = innerHtml;
-                /* Initialize the list */
-                CollapsibleLists.apply();
-                CollapsibleLists.toggle(collUl.children[0]);
+
+                collTree = new CollectionTree(collUl);
+                collTree.load(coll);
+                collTree.countCumulative();
+                collTree.render();
             } else {
                 console.log("Error");
                 console.log(xmlhttp);
