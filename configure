@@ -7,11 +7,12 @@ CFLAGS=""
 CFLAGS_cc=""
 CFLAGS_gcc=""
 CFLAGS_c99=""
+CFLAGS_clang=""
 
 configure_i386()
 {
     cmd=$1
-    
+
     printf "Scan for SSE 4.2..."
     if ${cmd} | grep -q -i sse4\\.2; then
         printf "found\n"
@@ -29,7 +30,7 @@ configure_i386()
     printf "Scan for AVX2......"
     if ${cmd} | grep -q -i avx2; then
         printf "found\n"
-        CFLAGS="${CFLAGS} -D_HAS_AVX=2"
+        CFLAGS="${CFLAGS} -D_HAS_AVX2=1"
     else
         printf "not found\n"
     fi
@@ -38,7 +39,7 @@ configure_i386()
 configure_sunos_i386()
 {
     cmd="isainfo -x"
-    
+
     configure_i386 "$cmd"
 
     if echo ${CFLAGS} | grep -q AVX2; then
@@ -59,7 +60,7 @@ configure_sunos_i386()
 configure_sunos_sparc()
 {
     cmd="isainfo -x"
-    
+
     printf "Scan for VIS 2.0..."
     if ${cmd} | grep -q -i vis2; then
         printf "found\n"
@@ -87,7 +88,7 @@ configure_bsd_i386()
         CFLAGS_gcc="${CFLAGS_gcc} -mavx"
     elif echo ${CFLAGS} | grep -q SSE4; then
         CFLAGS_gcc="${CFLAGS_gcc} -msse4.2"
-    fi    
+    fi
 }
 
 configure_bsd_ppc()
@@ -105,6 +106,33 @@ configure_bsd_ppc()
 
     if sysctl -n hw.model | grep -q 970; then
         CFLAGS_gcc="${CFLAGS_gcc} -mcpu=970 -mtune=970 -mpowerpc64"
+    fi
+}
+
+configure_obsd_amd64()
+{
+    cmd="grep cpu0 /var/run/dmesg.boot"
+
+    configure_i386 "$cmd"
+
+    # Byte order for GCC
+    order=`sysctl hw.byteorder | cut -d= -f2`
+    CFLAGS_gcc="${CFLAGS_gcc} -D__BYTE_ORDER__=${order}"
+
+    if echo ${CFLAGS} | grep -q AVX2; then
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx2"
+    elif echo ${CFLAGS} | grep -q AVX; then
+        CFLAGS_gcc="${CFLAGS_gcc} -mavx"
+    elif echo ${CFLAGS} | grep -q SSE4; then
+        CFLAGS_gcc="${CFLAGS_gcc} -msse4.2"
+    fi
+
+    if echo ${CFLAGS} | grep -q AVX2; then
+        CFLAGS_clang="${CFLAGS_clang} -mavx2"
+    elif echo ${CFLAGS} | grep -q AVX; then
+        CFLAGS_clang="${CFLAGS_clang} -mavx"
+    elif echo ${CFLAGS} | grep -q SSE4; then
+        CFLAGS_clang="${CFLAGS_clang} -msse4.2"
     fi
 }
 
@@ -145,6 +173,17 @@ case ${OS} in
                 ;;
         esac
         ;;
+    OpenBSD)
+        case ${ISA} in
+            amd64)
+                configure_obsd_amd64
+                ;;
+            *)
+                echo Unsupported ISA
+                exit 1
+                ;;
+        esac
+        ;;
     *)
         echo Unsupported Operating system
         exit 1
@@ -157,5 +196,4 @@ echo "CFLAGS += ${CFLAGS}" >> ${TGT}
 echo "CFLAGS_cc = ${CFLAGS_cc}" >> ${TGT}
 echo "CFLAGS_c99 = ${CFLAGS_c99}" >> ${TGT}
 echo "CFLAGS_gcc = ${CFLAGS_gcc}" >> ${TGT}
-
-
+echo "CFLAGS_clang = ${CFLAGS_clang}" >> ${TGT}

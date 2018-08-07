@@ -21,6 +21,10 @@ ifeq ($(OS), SunOS)
   CC = c99
 endif
 
+ifeq ($(OS), OpenBSD)
+  CC = clang
+endif
+
 ifeq ($(OS), FreeBSD)
   # Something weird with FreeBSD and math.h, M_PI is not visible unless
   # _XOPEN_SOURCE is defined. (_POSIX_C_SOURCE is not needed when
@@ -31,6 +35,11 @@ endif
 
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
+  CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
+  CFLAGS += -Wextra -Wall -Wstrict-aliasing
+endif
+
+ifeq ($(CC), clang)
   CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
   CFLAGS += -Wextra -Wall -Wstrict-aliasing
 endif
