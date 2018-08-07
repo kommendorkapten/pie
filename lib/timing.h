@@ -19,7 +19,7 @@
 
 struct timing
 {
-	struct timeval tv;
+        struct timeval tv;
 };
 
 /**
@@ -35,14 +35,14 @@ extern void timing_start(struct timing*);
  * @param the start time.
  * @return the duration since the start time in seconds.
  */
-extern time_t timing_dur_sec(const struct timing*);
+extern long timing_dur_sec(const struct timing*);
 
 /**
  * Extract the duration from the time to the current time.
  * @param the start time.
  * @return the duration since the start time in micro seconds.
  */
-extern time_t timing_dur_usec(const struct timing*);
+extern long timing_dur_usec(const struct timing*);
 
 /**
  * Extract the duration from the time to the current time. Returned
@@ -50,13 +50,13 @@ extern time_t timing_dur_usec(const struct timing*);
  * @param the start time.
  * @return the duration since the start time in milli seconds.
  */
-extern time_t timing_dur_msec(const struct timing*);
+extern long timing_dur_msec(const struct timing*);
 
 /**
  * Return the current epoch time in milli seconds.
  * @param void
  * @return epoch time in milli seconds.
  */
-extern time_t timing_current_millis(void);
+extern long timing_current_millis(void);
 
 #endif /* __TIMING_H__ */

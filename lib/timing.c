@@ -16,42 +16,12 @@
 
 void timing_start(struct timing* t)
 {
-	int res = gettimeofday(&t->tv, NULL);
+        int res = gettimeofday(&t->tv, NULL);
 
-	assert(res == 0);
+        assert(res == 0);
 }
 
-time_t timing_dur_sec(const struct timing* t)
-{
-	struct timeval now;
-	int res;
-
-	res = gettimeofday(&now, NULL);
-	assert(res == 0);
-
-	return now.tv_sec - t->tv.tv_sec;
-}
-
-time_t timing_dur_usec(const struct timing* t)
-{
-	struct timeval now;
-	int res;
-
-	res = gettimeofday(&now, NULL);
-	assert(res == 0);
-
-	return (now.tv_sec * 1000000 + now.tv_usec) -
-		(t->tv.tv_sec * 1000000 + t->tv.tv_usec);
-}
-
-time_t timing_dur_msec(const struct timing* t)
-{
-	time_t usec = timing_dur_usec(t);
-
-	return usec / 1000;
-}
-
-time_t timing_current_millis(void)
+long timing_dur_sec(const struct timing* t)
 {
         struct timeval now;
         int res;
@@ -59,5 +29,35 @@ time_t timing_current_millis(void)
         res = gettimeofday(&now, NULL);
         assert(res == 0);
 
-        return now.tv_sec * 1000 + now.tv_usec / 1000;
+        return (long)(now.tv_sec - t->tv.tv_sec);
+}
+
+long timing_dur_usec(const struct timing* t)
+{
+        struct timeval now;
+        int res;
+
+        res = gettimeofday(&now, NULL);
+        assert(res == 0);
+
+        return (long)((now.tv_sec * 1000000 + now.tv_usec) -
+                      (t->tv.tv_sec * 1000000 + t->tv.tv_usec));
+}
+
+long timing_dur_msec(const struct timing* t)
+{
+        time_t usec = timing_dur_usec(t);
+
+        return (long)(usec / 1000);
+}
+
+long timing_current_millis(void)
+{
+        struct timeval now;
+        int res;
+
+        res = gettimeofday(&now, NULL);
+        assert(res == 0);
+
+        return (long)(now.tv_sec * 1000 + now.tv_usec / 1000);
 }

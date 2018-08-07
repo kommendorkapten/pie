@@ -17,7 +17,7 @@ int main(int argc, char** argv)
         struct pie_histogram hist;
         char* out_name = "out.jpg";
         float* buf;
-        time_t dur;
+        long dur;
         int ret;
 
         if (argc != 2)
@@ -34,15 +34,15 @@ int main(int argc, char** argv)
                 printf("Error loading media: %d\n", ret);
                 return -1;
         }
-        printf("Loaded media in %luusec\n", dur);
+        printf("Loaded media in %ldusec\n", dur);
 
         buf = malloc(img.width * img.row_stride * sizeof(float) + 8);
         pie_dev_init_settings(&settings, img.width, img.height);
 
         settings.saturation = 1.3f;
-        //settings.vibrance = 0.3f;
+        settings.contrast = 1.7f;
         pie_dev_render(&img, buf, &settings);
-        
+
         timing_start(&t);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
@@ -52,23 +52,23 @@ int main(int argc, char** argv)
         timing_start(&t);
         pie_io_jpg_u8rgb_write(out_name, &out, 95);
         dur = timing_dur_usec(&t);
-        printf("Wrote %s in %luusec\n", out_name, dur);
+        printf("Wrote %s in %ldusec\n", out_name, dur);
 
         timing_start(&t);
         pie_enc_bm_rgba((unsigned char*)buf, &img, PIE_IMAGE_TYPE_PRIMARY);
         dur = timing_dur_usec(&t);
-        printf("RGBA encode in %luusec\n", dur);
+        printf("RGBA encode in %ldusec\n", dur);
 
         timing_start(&t);
         pie_alg_hist_lum(&hist, &img);
         dur = timing_dur_usec(&t);
-        printf("Created LUM hist in %luusec\n", dur);
+        printf("Created LUM hist in %ldusec\n", dur);
 
         timing_start(&t);
         pie_alg_hist_rgb(&hist, &img);
         dur = timing_dur_usec(&t);
-        printf("Created RGB hist in %luusec\n", dur);        
-        
+        printf("Created RGB hist in %ldusec\n", dur);
+
         free(buf);
         pie_bm_free_f32(&img);
         pie_bm_free_u8(&out);
