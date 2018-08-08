@@ -8,6 +8,7 @@
 #define PIE_STG_NEARLINE 2
 #define PIE_STG_THUMB    3
 #define PIE_STG_PROXY    4
+#define PIE_STG_EXPORT   5
 
 struct pie_storage
 {
