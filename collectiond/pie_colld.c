@@ -235,7 +235,6 @@ int main(void)
         for (int h = 0; handlers[h].r != NULL; h++)
         {
                 regfree(handlers[h].r);
-                h++;
         }
 
         return 0;
