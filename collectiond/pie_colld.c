@@ -634,9 +634,6 @@ static colld_handler* route_request(const char* url)
                         goto done;
                 case REG_NOMATCH:
                         break;
-                case REG_ENOSYS:
-                        PIE_ERR("REG_ENOSYS");
-                        abort();
                 default:
                         PIE_LOG("WTF: %d", m);
                 }
