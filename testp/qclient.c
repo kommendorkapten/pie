@@ -27,23 +27,23 @@ int main(void)
                 printf("%d\n", ok);
                 return -1;
         }
-        
+
         int msg = 0;
         for (;;)
         {
                 char buf[256];
-                sprintf(buf, "%09d", msg++);
+                snprintf(buf, 256,"%09d", msg++);
                 if ((br = q->send(q->this, buf, strlen(buf) + 1)) < 0)
                 {
                         perror("send");
                         break;
                 }
-                
+
                 sleep(1);
         }
 
         q->close(q->this);
         q_del_producer(q);
-        
+
         return 0;
 }

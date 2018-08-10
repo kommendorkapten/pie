@@ -76,11 +76,13 @@ int pie_cfg_load(const char* p)
                 *d++ = '\0';
                 strlstrip(d);
 
-                char* key = malloc(strlen(line) + 1);
-                char* val = malloc(strlen(d) + 1);
+                size_t key_len = strlen(line) + 1;
+                size_t val_len = strlen(d) + 1;
+                char* key = malloc(key_len);
+                char* val = malloc(val_len);
 
-                strcpy(key, line);
-                strcpy(val, d);
+                strncpy(key, line, key_len);
+                strncpy(val, d, val_len);
                 hmap_set(pie_cfg.cfg_map, key, val);
         }
 
@@ -205,10 +207,11 @@ struct pie_host* pie_cfg_get_host(int host)
 struct pie_host* pie_cfg_get_hostbyname(const char* host)
 {
         struct pie_host* h = pie_host_alloc();
+        size_t host_len = strlen(host) + 1;
         int ret;
 
-        h->hst_name = malloc(strlen(host) + 1);
-        strcpy(h->hst_name, host);
+        h->hst_name = malloc(host_len);
+        strncpy(h->hst_name, host, host_len);
         ret = pie_host_find_name(pie_cfg.db, h);
 
         if (ret > 0)
@@ -296,7 +299,9 @@ struct pie_stg_mnt_arr* pie_cfg_get_hoststg(int host)
                         PIE_ERR("Failed to find storage %d", stg_id);
                         break;
                 }
-                strcpy(ret->arr[stg_id]->mnt_path, mnt[i]->mnt_path);
+                strncpy(ret->arr[stg_id]->mnt_path,
+                        mnt[i]->mnt_path,
+                        PIE_PATH_LEN);
                 if (ret->arr[stg_id]->stg.stg_type == PIE_STG_ONLINE)
                 {
                         if (online)

@@ -22,7 +22,7 @@ int main(int argc, char** argv)
         struct timing t;
         char fout[MAX_PATH] = {0};
         char fin[MAX_PATH] = {0};
-        time_t dur;
+        long dur;
         int c;
         int max = 0;
         int ret;

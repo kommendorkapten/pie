@@ -175,7 +175,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         PIE_LOG("Copy file to: %s", tmp_path);
         timing_start(&t);
         len = fal_copy_fd(tgt_fd, src_fd);
-        time_t ms = timing_dur_msec(&t);
+        long ms = timing_dur_msec(&t);
         PIE_LOG("Copied %ld bytes in %ldms (%0.2fMB/s)",
                 len,
                 ms,

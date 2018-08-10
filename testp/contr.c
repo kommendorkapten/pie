@@ -11,7 +11,7 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb img;
         struct pie_bitmap_u8rgb out;
         struct timing t;
-        time_t dur;
+        long dur;
         float amount = 1.5f;
 
         if (argc != 2)
@@ -19,7 +19,7 @@ int main(int argc, char** argv)
                 printf("Usage contr filename\n");
                 return -1;
         }
-        
+
         timing_start(&t);
         ret = pie_io_load(&img, argv[1], NULL);
         dur = timing_dur_usec(&t);

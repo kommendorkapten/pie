@@ -36,7 +36,7 @@ struct pie_sess* pie_sess_create(void)
 
         s = malloc(sizeof(struct pie_sess));
         gettimeofday(&tv, NULL);
-        n = snprintf(buf, 64, "x&y_z%ld%d", tv.tv_sec, (int)tv.tv_usec);
+        n = snprintf(buf, 64, "x&y_z%ld%d", (long)tv.tv_sec, (int)tv.tv_usec);
         SHA1_Init(&ctx);
         SHA1_Update(&ctx, (void*)buf, n);
         SHA1_Final(sum, &ctx);
@@ -44,7 +44,7 @@ struct pie_sess* pie_sess_create(void)
         /* hex encode */
         for (int i = 0; i < 20; i++)
         {
-                sprintf(s->token + i * 2, "%02x", sum[i]);
+                snprintf(s->token + i * 2, PIE_SESS_TOKEN_LEN, "%02x", sum[i]);
         }
         s->token[PIE_SESS_TOKEN_LEN-1] = 0;
         s->wrkspc = NULL;

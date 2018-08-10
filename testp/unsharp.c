@@ -12,8 +12,8 @@ int main(int argc, char** argv)
         struct pie_bitmap_u8rgb out;
         struct timing t;
         struct pie_unsharp_param p;
-        time_t dur;
-        
+        long dur;
+
         //p.radius = 50.0f;
         p.radius = 1.0f;
         p.amount = 0.85f;    /* 0.3 to 0.7 is suitable values */
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
                 printf("Usage unsharp filename\n");
                 return -1;
         }
-        
+
         timing_start(&t);
         ret = pie_io_load(&img, argv[1], NULL);
         dur = timing_dur_usec(&t);
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         timing_start(&t);
 
         printf("Using radius: %f\n", p.radius);
-        
+
         ret = pie_alg_unsharp(img.c_red,
                               img.c_green,
                               img.c_blue,
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         {
                 abort();
         }
-        
+
         dur = timing_dur_usec(&t);
         printf("Executed unsharp mask took %luusec\n", dur);
 
@@ -61,6 +61,6 @@ int main(int argc, char** argv)
 
         pie_bm_free_f32(&img);
         pie_bm_free_u8(&out);
-        
+
         return 0;
 }

@@ -408,7 +408,10 @@ static struct errors check_min(pie_id mob_id, int stg_id, const char* path)
                 {
                         for (unsigned int i = 0; i < md_len; i++)
                         {
-                                sprintf(md_hex + i * 2, "%02x", md_sum[i]);
+                                snprintf(md_hex + i * 2,
+                                         MIN_HASH_LEN,
+                                         "%02x",
+                                         md_sum[i]);
                         }
                         if (strcmp(min->min_sha1_hash, md_hex))
                         {

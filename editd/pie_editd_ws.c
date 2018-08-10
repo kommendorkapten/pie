@@ -293,7 +293,7 @@ static int cb_http(struct lws* wsi,
                    void* in,
                    size_t len)
 {
-        char url[256];
+        char url[PIE_PATH_LEN];
         unsigned char resp_headers[256];
         struct hmap* query_params = NULL;
         struct pie_sess* session = NULL;
@@ -378,7 +378,7 @@ static int cb_http(struct lws* wsi,
                 {
                         PIE_LOG("coll=%s", qv);
                 }
-                strcpy(url, server->directory);
+                strncpy(url, server->directory, PIE_PATH_LEN);
 
                 /* Get the URL */
                 if (strcmp(in, "/"))
@@ -389,7 +389,9 @@ static int cb_http(struct lws* wsi,
                 else
                 {
                         /* Get index page */
-                        strcat(url, "/edit.html");
+                        strncat(url,
+                                "/edit.html",
+                                sizeof(url) - strlen(url) - 1);
                 }
                 url[sizeof(url) - 1] = 0;
                 mimetype = get_mimetype(url);
@@ -500,7 +502,7 @@ static int cb_img(struct lws* wsi,
                 /* Copy the session token, it is not available later on */
                 if ((session = get_session(server->sess_mgr, wsi)))
                 {
-                        strcpy(ctx->token, session->token);
+                        strncpy(ctx->token, session->token, PIE_SESS_TOKEN_LEN);
                 }
                 else
                 {
@@ -602,7 +604,7 @@ static int cb_hist(struct lws* wsi,
                 /* Copy the session token, it is not available later on */
                 if ((session = get_session(server->sess_mgr, wsi)))
                 {
-                        strcpy(ctx->token, session->token);
+                        strncpy(ctx->token, session->token, PIE_SESS_TOKEN_LEN);
 
                 }
                 else
@@ -689,7 +691,7 @@ static int cb_cmd(struct lws* wsi,
                 /* Copy the session token, it is not available later on */
                 if ((session = get_session(server->sess_mgr, wsi)))
                 {
-                        strcpy(ctx->token, session->token);
+                        strncpy(ctx->token, session->token, PIE_SESS_TOKEN_LEN);
                 }
                 else
                 {

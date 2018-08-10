@@ -294,9 +294,10 @@ static void* worker(void* arg)
                 }
                 for (unsigned int i = 0; i < new->digest_len; i++)
                 {
-                        sprintf(min.min_sha1_hash + i * 2,
-                                "%02x",
-                                new->digest[i]);
+                        snprintf(min.min_sha1_hash + i * 2,
+                                 MIN_HASH_LEN,
+                                 "%02x",
+                                 new->digest[i]);
                 }
                 min.min_sha1_hash[new->digest_len * 2] = '\0';
 
@@ -385,7 +386,7 @@ static void* worker(void* arg)
                 }
 
                 /* Update target collection */
-                strcpy(tgt_path, new->path);
+                strncpy(tgt_path, new->path, PIE_PATH_LEN);
                 p = strrchr(tgt_path, '/');
                 if (p)
                 {
