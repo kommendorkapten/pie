@@ -222,7 +222,7 @@ bin/testfwlk: testp/testfwlk.c obj/llist.o obj/fswalk.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LCRYPTO)
 
 bin/qserver: testp/qserver.c obj/s_queue.o obj/s_queue_intra.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lpthread
 
 bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
