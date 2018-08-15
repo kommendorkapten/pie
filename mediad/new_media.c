@@ -460,7 +460,7 @@ static void free_msg(struct pie_mq_new_media* m)
 }
 
 static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
-                          int max,
+                          int max_size,
                           const char* p,
                           int qual)
 {
@@ -470,24 +470,24 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
         struct timing t;
         int ok;
 
-        if (max >= 0 && max < 100)
+        if (max_size >= 0 && max_size < 100)
         {
-                max = 100;
+                max_size = 100;
         }
 
-        if (max > 0)
+        if (max_size > 0)
         {
                 timing_start(&t);
                 if (pie_bm_dwn_smpl(&bm_dwn,
                                     src,
-                                    max,
-                                    max))
+                                    max_size,
+                                    max_size))
                 {
                         PIE_ERR("Failed to downsample");
                         return -1;
                 }
                 PIE_DEBUG("Downsampled tp %dpx in %ldms",
-                          max,
+                          max_size,
                           timing_dur_msec(&t));
                 bm_src = &bm_dwn;
         }
@@ -504,7 +504,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
         }
         PIE_DEBUG("Converted to 8b in %ldms", timing_dur_msec(&t));
 
-        if (max > 0)
+        if (max_size > 0)
         {
                 pie_bm_free_f32(&bm_dwn);
         }
