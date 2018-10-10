@@ -50,7 +50,12 @@ static float gauss_avg(const float* restrict img,
 
 int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
 {
-        int rem = bm->width % 4;
+#if _HAS_SIMD8
+        int align = 8;
+#else
+        int align = 4;
+#endif
+        int rem = bm->width % align;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -62,7 +67,7 @@ int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
         }
         else
         {
-                bm->row_stride = bm->width + (4 - rem);
+                bm->row_stride = bm->width + (align - rem);
         }
 
         s = bm->row_stride * bm->height * sizeof(uint8_t);
@@ -80,7 +85,12 @@ int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
 
 int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
 {
-        int rem = bm->width % 4;
+#if _HAS_SIMD8
+        int align = 8;
+#else
+        int align = 4;
+#endif
+        int rem = bm->width % align;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -92,7 +102,7 @@ int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
         }
         else
         {
-                bm->row_stride = bm->width + (4 - rem);
+                bm->row_stride = bm->width + (align - rem);
         }
 
         s = bm->row_stride * bm->height * sizeof(uint16_t);
@@ -110,7 +120,12 @@ int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
 
 int pie_bm_alloc_f32(struct pie_bitmap_f32rgb* bm)
 {
-        int rem = bm->width % 4;
+#if _HAS_SIMD8
+        int align = 8;
+#else
+        int align = 4;
+#endif
+        int rem = bm->width % align;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -122,7 +137,7 @@ int pie_bm_alloc_f32(struct pie_bitmap_f32rgb* bm)
         }
         else
         {
-                bm->row_stride = bm->width + (4 - rem);
+                bm->row_stride = bm->width + (align - rem);
         }
 
         s = bm->row_stride * bm->height * sizeof(float);
