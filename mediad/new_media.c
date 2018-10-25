@@ -176,6 +176,8 @@ static void* worker(void* arg)
                         case PIE_STG_PROXY:
                                 proxy_stg = stg;
                                 break;
+                        default:
+                                break;
                         }
                 }
         }

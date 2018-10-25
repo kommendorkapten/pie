@@ -154,8 +154,9 @@ int main(void)
         {
                 if (cfg.storages->arr[i])
                 {
-                        PIE_LOG("Storage %d at %s",
+                        PIE_LOG("Storage %d (%s) at %s",
                                 cfg.storages->arr[i]->stg.stg_id,
+                                pie_storage_type(cfg.storages->arr[i]->stg.stg_type),
                                 cfg.storages->arr[i]->mnt_path);
 
                         switch(cfg.storages->arr[i]->stg.stg_type)
@@ -168,6 +169,8 @@ int main(void)
                                 break;
                         case PIE_STG_PROXY:
                                 cfg.proxy_stg = cfg.storages->arr[i];
+                                break;
+                        default:
                                 break;
                         }
                 }

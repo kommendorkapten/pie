@@ -73,6 +73,8 @@ int pie_doml_mob_delete(sqlite3* db, pie_id mob_id)
                         case PIE_STG_PROXY:
                                 proxy = i;
                                 break;
+                        default:
+                                break;
                         }
                 }
         }
