@@ -163,8 +163,9 @@ int main(void)
         {
                 if (md_cfg.storages->arr[i])
                 {
-                        PIE_LOG("Storage %d at %s",
+                        PIE_LOG("Storage %d (%s) at %s",
                                 md_cfg.storages->arr[i]->stg.stg_id,
+                                pie_storage_type(md_cfg.storages->arr[i]->stg.stg_type),
                                 md_cfg.storages->arr[i]->mnt_path);
                 }
         }
@@ -331,7 +332,7 @@ static void* process_upd(void* arg)
                 int status;
                 int db_ok = 0;
 
-                dp.pdp_mob_id = pie_ntohll(msg.id);
+                dp.pdp_mob_id = pie_ntohll(msg.mob_id);
                 PIE_DEBUG("Update mob: %ld with msg type %d",
                           dp.pdp_mob_id,
                           msg.type);

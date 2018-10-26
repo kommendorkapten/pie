@@ -101,6 +101,7 @@ EDITD_SRC  = pie_editd_ws.c pie_cmd.c pie_render.c pie_wrkspc_mgr.c \
 MEDIAD_SRC = mediad.c new_media.c
 INGEST_SRC = ingestd.c file_proc.c
 COLLD_SRC  = pie_colld.c pie_coll_handler.c
+EXPORTD_SRC = exportd.c
 
 # Objects
 ALG_OBJS    = $(ALG_SRC:%.c=obj/%.o)
@@ -117,6 +118,8 @@ EDITD_OBJS  = $(EDITD_SRC:%.c=obj/%.o)
 MEDIAD_OBJS = $(MEDIAD_SRC:%.c=obj/%.o)
 INGEST_OBJS = $(INGEST_SRC:%.c=obj/%.o)
 COLLD_OBJS  = $(COLLD_SRC:%.c=obj/%.o)
+EXPORTD_OBJS = $(EXPORTD_SRC:%.c=obj/%.o)
+
 # Binaries
 TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
               histinfo contr gauss unsharp tojpg catm tapply tdowns test_id \
@@ -125,7 +128,7 @@ TEST_BINS   = pngrw pngcreate imgread jpgcreate jpgtopng linvsgma analin \
 T_BINS     = $(TEST_BINS:%=bin/%)
 
 VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
-        ingestd exif jsmn doml tools
+        ingestd exif jsmn doml tools exportd
 
 .PHONY: all
 .PHONY: test
@@ -227,6 +230,9 @@ bin/qserver: testp/qserver.c obj/s_queue.o obj/s_queue_intra.o
 bin/qclient: testp/qclient.c obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
 
+bin/test_export: testp/test_export.c obj/s_queue.o obj/s_queue_intra.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET)
+
 # Servers
 bin/editd: $(EDITD_OBJS) $(HTTP_OBJS) $(IO_OBJS) $(BM_OBJS) $(ENC_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DM_OBJS) $(CFG_OBJS) obj/hmap.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/llist.o obj/pie_stg.o obj/strutil.o obj/pie_id.o obj/jsmn.o obj/s_queue.o obj/s_queue_intra.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET)
@@ -237,8 +243,11 @@ bin/ingestd: $(INGEST_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/fswalk.o obj/l
 bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/strutil.o obj/hmap.o obj/evp_hw.o obj/timing.o obj/pie_math.o obj/pie_id.o obj/llist.o obj/pie_exif.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
-bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) $(DOML_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
+bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) $(DOML_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o obj/pie_io.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3
+
+bin/exportd: $(EXPORTD_OBJS) obj/pie_mountpoint.o obj/pie_storage.o obj/pie_host.o obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/timing.o obj/hmap.o obj/strutil.o obj/worker.o obj/pie_min.o obj/llist.o $(IO_OBJS) obj/pie_bm.o obj/pie_math.o obj/pie_stg.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LIMG)
 
 # Tools
 bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) obj/strutil.o obj/llist.o obj/hmap.o $(BM_OBJS) $(MATH_OBJS) $(IO_OBJS)

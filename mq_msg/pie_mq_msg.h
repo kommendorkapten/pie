@@ -49,6 +49,7 @@
 
 #define Q_INCOMING_MEDIA "/tmp/pie_new_media.sock"
 #define Q_UPDATE_META    "/tmp/pie_update_meta.sock"
+#define Q_EXPORT_MEDIA   "/tmp/pie_export_media.sock"
 #define PIE_MQ_MAX_DIGEST 64 /* large enough for SHA-512 */
 #define PIE_MQ_MAX_UPD 4096
 
@@ -73,9 +74,36 @@ struct pie_mq_new_media
 struct pie_mq_upd_media
 {
         enum pie_mq_upd_media_type type;
-        pie_id id;
-        /* JSON encoded data */
+        pie_id mob_id;
+        /* JSON encoded data of the development settings */
         char msg[PIE_MQ_MAX_UPD];
+};
+
+enum pie_mq_export_type
+{
+        PIE_MQ_EXP_INV,
+        PIE_MQ_EXP_JPG,
+        PIE_MQ_EXP_PNG8,
+        PIE_MQ_EXP_PNG16
+};
+
+struct pie_mq_export_media
+{
+        /* Complete path/filename relative storage mount point */
+        char path[PIE_PATH_LEN];
+        pie_id mob_id;
+        int stg_id;
+        /* -1 to don't care */
+        int max_x;
+        /* -1 to don't care */
+        int max_y;
+        enum pie_mq_export_type type;
+        /* Only valid for JPG */
+        int quality;
+        unsigned char sharpen;
+        unsigned char disable_exif;
+
+
 };
 
 #endif /* __PIE_MQ_MSG_H__ */
