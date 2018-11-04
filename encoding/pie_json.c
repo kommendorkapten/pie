@@ -74,7 +74,7 @@ size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_histogram* h)
 }
 
 /*
- * Encodes all floats with scaling of 10000.
+ * Encodes all floats with scaling of 1000.
  */
 size_t pie_enc_json_settings(char* buf,
                              size_t len,
