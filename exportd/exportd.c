@@ -19,6 +19,7 @@
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
+#include "../dm/pie_dev_params.h"
 #include "../doml/pie_stg.h"
 #include "../io/pie_io.h"
 #include "../lib/llist.h"
@@ -27,6 +28,8 @@
 #include "../lib/worker.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../pie_log.h"
+#include "../encoding/pie_json.h"
+#include "../editd/pie_render.h"
 
 /**
  * Signal handler.
@@ -232,6 +235,7 @@ static void export(void* a, size_t len)
         struct timing t_tot;
         struct pie_mq_export_media* msg = a;
         struct pie_min* min;
+        int st;
 
         timing_start(&t_tot);
         io_opts.qual = PIE_IO_HIGH_QUAL;
@@ -285,6 +289,36 @@ static void export(void* a, size_t len)
         resize(&bm_src, msg->max_x, msg->max_y);
 
         /* Apply development settings */
+        struct pie_dev_params dev_json;
+        dev_json.pdp_mob_id = msg->mob_id;
+        st = pie_dev_params_read(db, &dev_json);
+        if (st == 0)
+        {
+                struct pie_dev_settings dev;
+
+                st = pie_dec_json_settings(&dev, dev_json.pdp_settings);
+                if (st)
+                {
+                        PIE_ERR("Failed to parse development parameters for %ld",
+                                msg->mob_id);
+                }
+                else
+                {
+                        pie_dev_set_to_int_fmt(&dev);
+                        timing_start(&t);
+                        float* buf = malloc(bm_src.row_stride * bm_src.height * sizeof(float));
+                        pie_dev_render(&bm_src, buf, &dev);
+                        free(buf);
+                        PIE_DEBUG("Rendered %s in %ldms",
+                                  path,
+                                  timing_dur_msec(&t));
+                }
+        }
+        else if (st < 0)
+        {
+                PIE_ERR("Failed to load development parameters for %ld",
+                        msg->mob_id);
+        }
 
         /* Post rescale sharpening */
 

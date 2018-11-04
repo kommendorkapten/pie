@@ -10,12 +10,12 @@ int main(void)
         int ret = 1;
         int ok;
 
-        snprintf(msg.path, 128, "/1.png");
-        msg.mob_id = 41684828696938241;
+        snprintf(msg.path, 128, "/2.jpg");
+        msg.mob_id = 85562243416131329;
         msg.stg_id = 4;
         msg.max_x = 1024;
         msg.max_y = 1024;
-        msg.type = PIE_MQ_EXP_PNG8;
+        msg.type = PIE_MQ_EXP_JPG;
         msg.quality = 100;
 
         q = q_new_producer(QUEUE_INTRA_HOST);
