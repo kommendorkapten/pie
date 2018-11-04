@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -16,12 +16,12 @@
 
 /**
  * Simple color temperature adjustments.
- * Adj and tint are in ranges [-0.5, 0.5].
+ * Adj and tint are in ranges [-0.3, 0.3].
  * @param the red channel.
  * @param the green channel.
  * @param the blue channel.
  * @param color temperature adjustment.
- * @param ting adjustment.
+ * @param tint adjustment.
  * @param image width.
  * @param image height.
  * @param image row stride.

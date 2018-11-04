@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -49,14 +49,14 @@ void pie_alg_color_temp(float* restrict r,
 #else
         int stop = 0;
 #endif
-        
+
         assert(colort >= -0.3f);
         assert(colort <= 0.3f);
         assert(tint >= -0.3f);
-        assert(tint <= 0.3f);        
+        assert(tint <= 0.3f);
 
         for (int y = 0; y < h; y++)
-        {        
+        {
 
 #if _HAS_SSE42
                 for (int x = 0; x < stop; x += 4)
@@ -69,13 +69,13 @@ void pie_alg_color_temp(float* restrict r,
 
                         rv = _mm_load_ps(r + p);
                         gv = _mm_load_ps(g + p);
-                        bv = _mm_load_ps(b + p);                        
+                        bv = _mm_load_ps(b + p);
 
                         rv = _mm_add_ps(rv, ctv);
                         gv = _mm_add_ps(gv, tintv);
                         gv = _mm_add_ps(gv, _mm_mul_ps(ctv, onethirdv));
                         bv = _mm_sub_ps(bv, ctv);
-                        
+
                         /* Truncate red */
                         cmpv = _mm_cmplt_ps(rv, zerov);
                         rv = _mm_blendv_ps(rv, zerov, cmpv);
@@ -85,7 +85,7 @@ void pie_alg_color_temp(float* restrict r,
 
                         _mm_store_ps(r + p, rv);
 
-                        /* Truncate green */                        
+                        /* Truncate green */
                         cmpv = _mm_cmplt_ps(gv, zerov);
                         gv = _mm_blendv_ps(gv, zerov, cmpv);
 
@@ -121,14 +121,14 @@ void pie_alg_color_temp(float* restrict r,
                         rv = vec_add(rv, ctv);
                         gv = vec_add(gv, vec_madd(ctv, onethirdv, tintv));
                         bv = vec_sub(bv, ctv);
-                        
+
                         /* Truncate red */
                         cmpv = vec_cmpgt(rv, onev);
                         rv = vec_sel(rv, onev, cmpv);
 
                         cmpv = vec_cmplt(rv, zerov);
                         rv = vec_sel(rv, zerov, cmpv);
-        
+
                         vec_st(rv, p, r);
 
                         /* Truncate red */
@@ -137,7 +137,7 @@ void pie_alg_color_temp(float* restrict r,
 
                         cmpv = vec_cmplt(gv, zerov);
                         gv = vec_sel(gv, zerov, cmpv);
-        
+
                         vec_st(gv, p, g);
 
                         /* Truncate red */
@@ -146,12 +146,12 @@ void pie_alg_color_temp(float* restrict r,
 
                         cmpv = vec_cmplt(bv, zerov);
                         bv = vec_sel(bv, zerov, cmpv);
-        
-                        vec_st(bv, p, b);                        
+
+                        vec_st(bv, p, b);
                 }
 
 #endif
-        
+
                 for (int x = stop; x < w; x++)
                 {
                         int p = y * s + x;
@@ -175,7 +175,7 @@ void pie_alg_color_temp(float* restrict r,
                         if (g[p] < 0.0f)
                         {
                                 g[p] = 0.0f;
-                        }                        
+                        }
                         if (b[p] > 1.0f)
                         {
                                 b[p] = 1.0f;
@@ -183,7 +183,7 @@ void pie_alg_color_temp(float* restrict r,
                         if (b[p] < 0.0f)
                         {
                                 b[p] = 0.0f;
-                        }     
+                        }
                 }
         }
 }
