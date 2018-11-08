@@ -64,7 +64,7 @@ int fal_mkdir_tree(const char* dir, const char* new)
                 t = strtok_r(NULL, "/", &lasts);
         }
 
-        return 1;
+        return 0;
 }
 
 ssize_t fal_copy_fd(int dst, int src)
