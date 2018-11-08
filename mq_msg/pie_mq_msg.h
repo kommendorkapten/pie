@@ -100,6 +100,7 @@ struct pie_mq_export_media
         enum pie_mq_export_type type;
         /* Only valid for JPG */
         int quality;
+        /* 0 no sharpening, 1 apply sharpening */
         unsigned char sharpen;
         unsigned char disable_exif;
 

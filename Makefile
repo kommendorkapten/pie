@@ -246,7 +246,7 @@ bin/mediad: $(MEDIAD_OBJS) $(DM_OBJS) $(IO_OBJS) $(BM_OBJS) obj/s_queue.o obj/s_
 bin/collectiond: $(COLLD_OBJS) $(HTTP_OBJS) $(DOML_OBJS) obj/pie_json.o obj/llist.o obj/hmap.o $(CFG_OBJS) obj/strutil.o $(DM_OBJS) obj/jsmn.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3
 
-bin/exportd: $(EXPORTD_OBJS) obj/pie_mountpoint.o obj/pie_storage.o obj/pie_host.o obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/timing.o obj/hmap.o obj/strutil.o obj/worker.o obj/pie_min.o obj/llist.o $(IO_OBJS) obj/pie_bm.o obj/pie_math.o obj/pie_stg.o obj/pie_render.o obj/pie_json.o $(ALG_OBJS) obj/jsmn.o obj/pie_dev_params.o $(MATH_OBJS)
+bin/exportd: $(EXPORTD_OBJS) obj/pie_mountpoint.o obj/pie_storage.o obj/pie_host.o obj/s_queue.o obj/s_queue_intra.o obj/chan.o obj/chan_poll.o obj/lock.o $(CFG_OBJS) obj/timing.o obj/hmap.o obj/strutil.o obj/worker.o obj/pie_min.o obj/llist.o $(IO_OBJS) obj/pie_bm.o obj/pie_math.o obj/pie_stg.o obj/pie_render.o obj/pie_json.o $(ALG_OBJS) obj/jsmn.o obj/pie_dev_params.o $(MATH_OBJS) obj/fal.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LIMG)
 
 # Tools

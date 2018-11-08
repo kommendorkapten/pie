@@ -10,13 +10,14 @@ int main(void)
         int ret = 1;
         int ok;
 
-        snprintf(msg.path, 128, "/2.jpg");
+        snprintf(msg.path, 128, "/3.jpg");
         msg.mob_id = 85562243416131329;
         msg.stg_id = 4;
         msg.max_x = 1024;
         msg.max_y = 1024;
         msg.type = PIE_MQ_EXP_JPG;
         msg.quality = 100;
+        msg.sharpen = 1;
 
         q = q_new_producer(QUEUE_INTRA_HOST);
         if (q == NULL)

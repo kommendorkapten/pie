@@ -240,3 +240,14 @@ Response:
         }
     ]
 }
+
+/export/{storage_id}/{path}
+POST:
+Body:
+{
+        "mobs": [1,2,3],
+        "max_x": 1024,
+        "max_y": 1024,
+        "sharpen": 1,
+        "disable_exif": false,
+}

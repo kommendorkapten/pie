@@ -93,6 +93,10 @@ int pie_alg_unsharp(float* restrict r,
         {
                 kernel_len = MAX_KERNEL_LEN;
         }
+        if (kernel_len < 5)
+        {
+                kernel_len = 5;
+        }
 
         size = s * h * sizeof(float);
         buf = malloc(size);

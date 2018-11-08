@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
+#include <string.h>
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../cfg/pie_cfg.h"
@@ -26,10 +27,12 @@
 #include "../lib/s_queue.h"
 #include "../lib/timing.h"
 #include "../lib/worker.h"
+#include "../lib/fal.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../pie_log.h"
 #include "../encoding/pie_json.h"
 #include "../editd/pie_render.h"
+#include "../alg/pie_unsharp.h"
 
 /**
  * Signal handler.
@@ -321,16 +324,52 @@ static void export(void* a, size_t len)
         }
 
         /* Post rescale sharpening */
+        if (msg->sharpen)
+        {
+                struct pie_unsharp_param p =
+                        {
+                                .radius = 0.3f,
+                                .amount = 3.0f,
+                                .threshold = 2.0f,
+                        };
+                PIE_DEBUG("Apply post resize sharpening");
+                pie_alg_unsharp(bm_src.c_red,
+                                bm_src.c_green,
+                                bm_src.c_blue,
+                                &p,
+                                bm_src.width,
+                                bm_src.height,
+                                bm_src.row_stride);
+        }
 
         /* Export */
         struct pie_bitmap_u8rgb u8;
         struct pie_bitmap_u16rgb u16;
+        char* p = strrchr(min->min_path, '/');
+        if (!p)
+        {
+                p = min->min_path;
+        }
 
-        snprintf(path,
-                 PIE_PATH_LEN,
-                 "%s%s",
-                 cfg.storages->arr[msg->stg_id]->mnt_path,
-                 msg->path);
+        /* Make sure path exists */
+        if (fal_mkdir_tree(cfg.storages->arr[msg->stg_id]->mnt_path,
+                           msg->path))
+        {
+                abort();
+        }
+
+        st = snprintf(path,
+                      PIE_PATH_LEN,
+                      "%s%s",
+                      cfg.storages->arr[msg->stg_id]->mnt_path,
+                      msg->path);
+        if (st >= PIE_PATH_LEN)
+        {
+                /* Path to large */
+                abort();
+        }
+        strncat(path, p, PIE_PATH_LEN - st);
+
         PIE_DEBUG("Export to path %s", path);
 
         timing_start(&t);
@@ -387,6 +426,6 @@ static void resize(struct pie_bitmap_f32rgb* bm, int max_x, int max_y)
         pie_bm_free_f32(bm);
         pie_bm_conv_bd(bm, PIE_COLOR_32B, &new, PIE_COLOR_32B);
         pie_bm_free_f32(&new);
-        PIE_DEBUG("Downsampled tp %dpx, %dpx in %ldms",
+        PIE_DEBUG("Downsampled to %dpx, %dpx in %ldms",
                   bm->width, bm->height, timing_dur_msec(&t));
 }

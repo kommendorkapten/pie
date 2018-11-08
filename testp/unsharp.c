@@ -11,13 +11,22 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb img;
         struct pie_bitmap_u8rgb out;
         struct timing t;
-        struct pie_unsharp_param p;
+        struct pie_unsharp_param p_scr =
+                {
+                        .radius = 0.5f,
+                        .amount = 0.5f,
+                        .threshold = 2.0f,
+                };
+        struct pie_unsharp_param p_web =
+                {
+                        .radius = 0.3f,
+                        .amount = 3.0f,
+                        .threshold = 2.0f,
+                };
+        struct pie_unsharp_param* p;
         long dur;
 
-        //p.radius = 50.0f;
-        p.radius = 1.0f;
-        p.amount = 0.85f;    /* 0.3 to 0.7 is suitable values */
-        p.threshold = 4.0f; /* typical 3 to 20 */
+        p = & p_web;
 
         if (argc != 2)
         {
@@ -37,12 +46,12 @@ int main(int argc, char** argv)
 
         timing_start(&t);
 
-        printf("Using radius: %f\n", p.radius);
+        printf("Using radius: %f\n", p->radius);
 
         ret = pie_alg_unsharp(img.c_red,
                               img.c_green,
                               img.c_blue,
-                              &p,
+                              p,
                               img.width,
                               img.height,
                               img.row_stride);
@@ -57,7 +66,7 @@ int main(int argc, char** argv)
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
 
-        pie_io_jpg_u8rgb_write("out.jpg", &out, 95);
+        pie_io_jpg_u8rgb_write("out.jpg", &out, 100);
 
         pie_bm_free_f32(&img);
         pie_bm_free_u8(&out);
