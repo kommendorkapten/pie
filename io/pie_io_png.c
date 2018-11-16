@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -103,7 +103,7 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 NOTE(EMPTY);
                 PIE_DEBUG("Read gamma from file: %f.", gamma);
         }
-        
+
         bm->width = width;
         bm->height = height;
 
@@ -274,7 +274,7 @@ int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                 {
                         struct pie_pixel_u8rgb p;
 
-                        pie_pixel_u8rgb_get(&p, bitmap, x, y);
+                        pie_bm_pixel_u8rgb_get(&p, bitmap, x, y);
                         *row++ = p.red;
                         *row++ = p.green;
                         *row++ = p.blue;
@@ -363,7 +363,7 @@ int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                 {
                         struct pie_pixel_u16rgb p;
 
-                        pie_pixel_u16rgb_get(&p, bitmap, x, y);
+                        pie_bm_pixel_u16rgb_get(&p, bitmap, x, y);
                         *r16++ = p.red;
                         *r16++ = p.green;
                         *r16++ = p.blue;

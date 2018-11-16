@@ -81,10 +81,10 @@ void pie_bm_free_f32(struct pie_bitmap_f32rgb*);
  * @param the y coordinate (row).
  * @return void
  */
-void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
-                         const struct pie_bitmap_u8rgb*,
-                         int,
-                         int);
+void pie_bm_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
+                            const struct pie_bitmap_u8rgb*,
+                            int,
+                            int);
 
 /**
  * Set a pixel int the bitmap.
@@ -94,10 +94,10 @@ void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
-                         int,
-                         int,
-                         struct pie_pixel_u8rgb*);
+void pie_bm_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
+                            int,
+                            int,
+                            struct pie_pixel_u8rgb*);
 
 /**
  * Get a pixel from a bitmap.
@@ -107,10 +107,10 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
  * @param the y coordinate (row).
  * @return void
  */
-void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
-                          const struct pie_bitmap_u16rgb*,
-                          int,
-                          int);
+void pie_bm_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
+                             const struct pie_bitmap_u16rgb*,
+                             int,
+                             int);
 
 /**
  * Set a pixel int the bitmap.
@@ -120,10 +120,10 @@ void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
-                          int,
-                          int,
-                          struct pie_pixel_u16rgb*);
+void pie_bm_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
+                             int,
+                             int,
+                             struct pie_pixel_u16rgb*);
 
 /**
  * Convert a bitmap from a specific bitdepth.

@@ -216,10 +216,10 @@ void pie_bm_free_f32(struct pie_bitmap_f32rgb* bm)
         bm->c_blue = NULL;
 }
 
-void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb* p,
-                         const struct pie_bitmap_u8rgb* bm,
-                         int x,
-                         int y)
+void pie_bm_pixel_u8rgb_get(struct pie_pixel_u8rgb* p,
+                            const struct pie_bitmap_u8rgb* bm,
+                            int x,
+                            int y)
 {
         int offset = bm->row_stride * y + x;
 
@@ -228,10 +228,10 @@ void pie_pixel_u8rgb_get(struct pie_pixel_u8rgb* p,
         p->blue = bm->c_blue[offset];
 }
 
-void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb* bm,
-                         int x,
-                         int y,
-                         struct pie_pixel_u8rgb* p)
+void pie_bm_pixel_u8rgb_set(struct pie_bitmap_u8rgb* bm,
+                            int x,
+                            int y,
+                            struct pie_pixel_u8rgb* p)
 {
         int offset = bm->row_stride * y + x;
 
@@ -240,10 +240,10 @@ void pie_pixel_u8rgb_set(struct pie_bitmap_u8rgb* bm,
         bm->c_blue[offset] = p->blue;
 }
 
-void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb* p,
-                          const struct pie_bitmap_u16rgb* bm,
-                          int x,
-                          int y)
+void pie_bm_pixel_u16rgb_get(struct pie_pixel_u16rgb* p,
+                             const struct pie_bitmap_u16rgb* bm,
+                             int x,
+                             int y)
 {
         int offset = bm->row_stride * y + x;
 
@@ -252,10 +252,10 @@ void pie_pixel_u16rgb_get(struct pie_pixel_u16rgb* p,
         p->blue = bm->c_blue[offset];
 }
 
-void pie_pixel_u16rgb_set(struct pie_bitmap_u16rgb* bm,
-                          int x,
-                          int y,
-                          struct pie_pixel_u16rgb* p)
+void pie_bm_pixel_u16rgb_set(struct pie_bitmap_u16rgb* bm,
+                             int x,
+                             int y,
+                             struct pie_pixel_u16rgb* p)
 {
         int offset = bm->row_stride * y + x;
 
