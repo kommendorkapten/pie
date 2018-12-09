@@ -3,7 +3,7 @@
 #include <math.h>
 #include "../encoding/pie_json.h"
 #include "../pie_types.h"
-#include "../editd/pie_render.h"
+#include "../bm/pie_render.h"
 
 #define MAX_DELTA 0.0001f
 #define BUF_LEN 1024

@@ -24,9 +24,9 @@
 # define NOTE(X)
 #endif
 #include "pie_msg.h"
-#include "pie_render.h"
 #include "pie_wrkspc_mgr.h"
 #include "pie_editd_ws.h"
+#include "../bm/pie_render.h"
 #include "../lib/chan.h"
 #include "../lib/timing.h"
 #include "../pie_types.h"

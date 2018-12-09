@@ -35,7 +35,7 @@ extern void pie_dev_init_settings(struct pie_dev_settings*, int, int);
 extern void pie_dev_init_curve(struct pie_curve*);
 
 /**
- * Convert pie_dev_settings to internal format.
+ * Convert pie_dev_settings to internal format, used when rendering..
  * @param settings struct.
  * @return void
  */
@@ -43,7 +43,7 @@ extern void pie_dev_set_to_int_fmt(struct pie_dev_settings*);
 
 /**
  * Convert pie_dev_settings to canonical format. Used for exchanging
- * data.
+ * data (to webapp or persist in database).
  * @param settings struct.
  * @return void
  */

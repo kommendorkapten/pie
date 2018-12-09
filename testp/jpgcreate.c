@@ -3,7 +3,7 @@
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
 #include "../io/pie_io_jpg.h"
-    
+
 /* Given "value" and "max", the maximum value which we expect "value"
    to take, this returns an integer between 0 and 255 proportional to
    "value" divided by "max". */
@@ -12,7 +12,7 @@ static int pix(int value, int max)
 {
         if (value < 0)
         {
-                return 0;            
+                return 0;
         }
 
         return (int) (256.0 *((double) (value)/(double) max));
@@ -41,7 +41,7 @@ int main ()
                         pixel.green = (uint8_t)pix(y, out.height);
                         pixel.blue = 0;
 
-                        pie_pixel_u8rgb_set(&out, x, y, &pixel);
+                        pie_bm_pixel_u8rgb_set(&out, x, y, &pixel);
                 }
         }
 

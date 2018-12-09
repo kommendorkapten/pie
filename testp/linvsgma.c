@@ -47,9 +47,9 @@ int main(void)
         /* Convert to sRGB */
         for (int y = 0; y < img.height; y++)
         {
-                linear_to_srgbv(img.c_red + y * img.row_stride, img.width);
-                linear_to_srgbv(img.c_green + y * img.row_stride, img.width);
-                linear_to_srgbv(img.c_blue + y * img.row_stride, img.width);
+                pie_alg_linear_to_srgbv(img.c_red + y * img.row_stride, img.width);
+                pie_alg_linear_to_srgbv(img.c_green + y * img.row_stride, img.width);
+                pie_alg_linear_to_srgbv(img.c_blue + y * img.row_stride, img.width);
         }
 
         pie_bm_free_u8(&out);

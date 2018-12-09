@@ -6,19 +6,19 @@
 #include "../bm/pie_bm.h"
 #include "../io/pie_io.h"
 #include "../lib/timing.h"
-#include "../alg/pie_kernel.h"
+#include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
 
 #define KERNEL_LEN 281
 
-long time_gauss(struct bitmap_f32rgb*, float, float*, float*, int);
-long time_box(struct bitmap_f32rgb*, float, float*);
+long time_gauss(struct pie_bitmap_f32rgb*, float, float*, float*, int);
+long time_box(struct pie_bitmap_f32rgb*, float, float*);
 
 int main(int argc, char** argv)
 {
         int ret;
-        struct bitmap_f32rgb imgl;
-        struct bitmap_f32rgb imgs;
+        struct pie_bitmap_f32rgb imgl;
+        struct pie_bitmap_f32rgb imgs;
         float kernel[KERNEL_LEN];
         float* buf;
         int kernel_len;
@@ -29,12 +29,12 @@ int main(int argc, char** argv)
         long timlb[] = {0, 0, 0, 0, 0, 0};
         int count = sizeof(sigmas)/sizeof(float);
 
-        ret = pie_io_load(&imgl, "test-images/large.png");
+        ret = pie_io_load(&imgl, "test-images/large.png", NULL);
         if (ret)
         {
                 abort();
         }
-        ret = pie_io_load(&imgs, "test-images/sidensvans_small.jpg");
+        ret = pie_io_load(&imgs, "test-images/sidensvans_small.jpg", NULL);
         if (ret)
         {
                 abort();
@@ -79,16 +79,16 @@ int main(int argc, char** argv)
         for (int i = 0; i < count; i++)
         {
                 printf("%f %10d %10d\n", sigmas[i], timsg[i], timsb[i]);
-        }        
-        
+        }
+
         free(buf);
-        bm_free_f32(&imgl);
-        bm_free_f32(&imgs);        
+        pie_bm_free_f32(&imgl);
+        pie_bm_free_f32(&imgs);
         return 0;
 }
 
 
-long time_gauss(struct bitmap_f32rgb* img,
+long time_gauss(struct pie_bitmap_f32rgb* img,
                 float s,
                 float* buf,
                 float* kernel,
@@ -98,28 +98,28 @@ long time_gauss(struct bitmap_f32rgb* img,
         time_t dur;
 
         timing_start(&t);
-        pie_kernel_sep_gauss(kernel, kernel_len, s * s);
-        pie_kernel_sep_apply(img->c_red,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);
-        pie_kernel_sep_apply(img->c_green,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);
-        pie_kernel_sep_apply(img->c_blue,
-                             kernel,
-                             kernel_len,
-                             buf,
-                             img->width,
-                             img->height,
-                             img->row_stride);        
+        pie_mth_kernel_sep_gauss(kernel, kernel_len, s * s);
+        pie_mth_kernel_sep_apply(img->c_red,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img->width,
+                                 img->height,
+                                 img->row_stride);
+        pie_mth_kernel_sep_apply(img->c_green,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img->width,
+                                 img->height,
+                                 img->row_stride);
+        pie_mth_kernel_sep_apply(img->c_blue,
+                                 kernel,
+                                 kernel_len,
+                                 buf,
+                                 img->width,
+                                 img->height,
+                                 img->row_stride);
 
         dur = timing_dur_usec(&t);
         printf("Executed kernel took %8luusec\n", dur);
@@ -127,30 +127,30 @@ long time_gauss(struct bitmap_f32rgb* img,
         return dur;
 }
 
-long time_box(struct bitmap_f32rgb* img, float s, float* buf)
+long time_box(struct pie_bitmap_f32rgb* img, float s, float* buf)
 {
         struct timing t;
         time_t dur;
 
         timing_start(&t);
-        pie_box_blur6(img->c_red,
-                      buf,
-                      s,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        pie_box_blur6(img->c_green,
-                      buf,
-                      s,
-                      img->width,
-                      img->height,
-                      img->row_stride);
-        pie_box_blur6(img->c_blue,
-                      buf,    
-                      s,
-                      img->width,
-                      img->height,
-                      img->row_stride);
+        pie_mth_box_blur6(img->c_red,
+                          buf,
+                          s,
+                          img->width,
+                          img->height,
+                          img->row_stride);
+        pie_mth_box_blur6(img->c_green,
+                          buf,
+                          s,
+                          img->width,
+                          img->height,
+                          img->row_stride);
+        pie_mth_box_blur6(img->c_blue,
+                          buf,
+                          s,
+                          img->width,
+                          img->height,
+                          img->row_stride);
         dur = timing_dur_usec(&t);
         printf("Box blur 6 took      %8luusec\n", dur);
 

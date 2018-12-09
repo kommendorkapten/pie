@@ -6,7 +6,7 @@
 #include "../lib/timing.h"
 #include "../encoding/pie_rgba.h"
 #include "../alg/pie_hist.h"
-#include "../editd/pie_render.h"
+#include "../bm/pie_render.h"
 
 int main(int argc, char** argv)
 {

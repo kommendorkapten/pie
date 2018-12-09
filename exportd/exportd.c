@@ -17,6 +17,7 @@
 #include <string.h>
 #include "../pie_types.h"
 #include "../bm/pie_bm.h"
+#include "../bm/pie_render.h"
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
@@ -31,7 +32,6 @@
 #include "../mq_msg/pie_mq_msg.h"
 #include "../pie_log.h"
 #include "../encoding/pie_json.h"
-#include "../editd/pie_render.h"
 #include "../alg/pie_unsharp.h"
 
 /**

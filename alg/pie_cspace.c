@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -17,20 +17,20 @@
 /* sRGB gamma exponent */
 #define SRGB_G_EXP 2.4f
 
-float pie_gamma(float b, float g)
+float pie_alg_gamma(float b, float g)
 {
         return powf(b, g);
 }
 
-void pie_gammav(float* b, float g, size_t size)
+void pie_alg_gammav(float* b, float g, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
-                b[i] = pie_gamma(b[i], g);
+                b[i] = pie_alg_gamma(b[i], g);
         }
 }
 
-float srgb_to_linear(float g)
+float pie_alg_srgb_to_linear(float g)
 {
         float l;
 
@@ -46,15 +46,15 @@ float srgb_to_linear(float g)
         return l;
 }
 
-void srgb_to_linearv(float* l, size_t size)
+void pie_alg_srgb_to_linearv(float* l, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
-                l[i] = srgb_to_linear(l[i]);
+                l[i] = pie_alg_srgb_to_linear(l[i]);
         }
 }
 
-float linear_to_srgb(float l)
+float pie_alg_linear_to_srgb(float l)
 {
         float g;
 
@@ -70,10 +70,10 @@ float linear_to_srgb(float l)
         return g;
 }
 
-void linear_to_srgbv(float* l, size_t size)
+void pie_alg_linear_to_srgbv(float* l, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
-                l[i] = linear_to_srgb(l[i]);
+                l[i] = pie_alg_linear_to_srgb(l[i]);
         }
 }
