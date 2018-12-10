@@ -90,7 +90,7 @@ MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c pie_render.c
 HTTP_SRC   = pie_session.c pie_util.c
 CFG_SRC    = pie_cfg.c
-DOML_SRC   = pie_stg.c pie_doml_mob.c
+DOML_SRC   = pie_doml_stg.c pie_doml_mob.c
 EXIF_SRC   = pie_exif.c
 DM_SRC     = pie_host.c pie_mountpoint.c pie_storage.c pie_collection.c \
              pie_collection_member.c pie_exif_data.c pie_mob.c pie_min.c \

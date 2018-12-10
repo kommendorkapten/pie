@@ -25,21 +25,21 @@ struct pie_curve;
  * @param height of image.
  * @return void.
  */
-extern void pie_dev_init_settings(struct pie_dev_settings*, int, int);
+extern void pie_bm_init_settings(struct pie_dev_settings*, int, int);
 
 /**
  * Init a curve to linear from (0, 0) to (1, 1).
  * @param pointer to a pie curve struct.
  * @return void.
  */
-extern void pie_dev_init_curve(struct pie_curve*);
+extern void pie_bm_init_curve(struct pie_curve*);
 
 /**
  * Convert pie_dev_settings to internal format, used when rendering..
  * @param settings struct.
  * @return void
  */
-extern void pie_dev_set_to_int_fmt(struct pie_dev_settings*);
+extern void pie_bm_set_to_int_fmt(struct pie_dev_settings*);
 
 /**
  * Convert pie_dev_settings to canonical format. Used for exchanging
@@ -47,7 +47,7 @@ extern void pie_dev_set_to_int_fmt(struct pie_dev_settings*);
  * @param settings struct.
  * @return void
  */
-extern void pie_dev_set_to_can_fmt(struct pie_dev_settings*);
+extern void pie_bm_set_to_can_fmt(struct pie_dev_settings*);
 
 /**
  * Render a bitmap.
@@ -56,8 +56,8 @@ extern void pie_dev_set_to_can_fmt(struct pie_dev_settings*);
  * @param settings to apply.
  * @return 0 on success.
  */
-extern int pie_dev_render(struct pie_bitmap_f32rgb*,
-                          float*,
-                          const struct pie_dev_settings*);
+extern int pie_bm_render(struct pie_bitmap_f32rgb*,
+                         float*,
+                         const struct pie_dev_settings*);
 
 #endif /* __PIE_RENDER_H__ */

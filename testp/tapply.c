@@ -37,11 +37,11 @@ int main(int argc, char** argv)
         printf("Loaded media in %ldusec\n", dur);
 
         buf = malloc(img.width * img.row_stride * sizeof(float) + 8);
-        pie_dev_init_settings(&settings, img.width, img.height);
+        pie_bm_init_settings(&settings, img.width, img.height);
 
         settings.saturation = 1.3f;
         settings.contrast = 1.7f;
-        pie_dev_render(&img, buf, &settings);
+        pie_bm_render(&img, buf, &settings);
 
         timing_start(&t);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,

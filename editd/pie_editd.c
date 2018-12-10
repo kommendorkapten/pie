@@ -558,9 +558,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
            as a JSON string. This way we can be future compatible,
            if the format stored in the DB is older, only the relevat
            changes are merged. */
-        pie_dev_init_settings(&msg->wrkspc->settings,
-                              proxy->width,
-                              proxy->height);
+        pie_bm_init_settings(&msg->wrkspc->settings,
+                             proxy->width,
+                             proxy->height);
 
         settings_json.pdp_mob_id = id;
         res = pie_dev_params_read(pie_cfg_get_db(), &settings_json);
@@ -571,15 +571,15 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 if (res == 0)
                 {
                         /* Convert to internal format */
-                        pie_dev_set_to_int_fmt(&msg->wrkspc->settings);
+                        pie_bm_set_to_int_fmt(&msg->wrkspc->settings);
                 }
                 else
                 {
                         PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
-                        pie_dev_init_settings(&msg->wrkspc->settings,
-                                              proxy->width,
-                                              proxy->height);
+                        pie_bm_init_settings(&msg->wrkspc->settings,
+                                             proxy->width,
+                                             proxy->height);
                 }
 
                 /* Free any resources */
@@ -591,9 +591,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         }
 
         /* Call render */
-        res = pie_dev_render(proxy_out,
-                             NULL,
-                             &msg->wrkspc->settings);
+        res = pie_bm_render(proxy_out,
+                            NULL,
+                            &msg->wrkspc->settings);
         assert(res == 0);
 
         /* Issue a load cmd */
@@ -779,9 +779,9 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         memcpy(proxy_out->c_green, proxy->c_green, len);
         memcpy(proxy_out->c_blue, proxy->c_blue, len);
 
-        res = pie_dev_render(proxy_out,
-                             NULL,
-                             &msg->wrkspc->settings);
+        res = pie_bm_render(proxy_out,
+                            NULL,
+                            &msg->wrkspc->settings);
         assert(res == 0);
 
         if (new_proxy)
@@ -1071,9 +1071,9 @@ static enum pie_msg_type cb_msg_render(struct pie_msg* msg)
                 PIE_DEBUG(" Reset proxy:           %8ldusec",
                           timing_dur_usec(&t1));
 
-                r_ok = pie_dev_render(new,
-                                      NULL,
-                                      &msg->wrkspc->settings);
+                r_ok = pie_bm_render(new,
+                                     NULL,
+                                     &msg->wrkspc->settings);
                 assert(r_ok == 0);
 
                 ret_msg = PIE_MSG_RENDER_DONE;
@@ -1103,7 +1103,7 @@ static void store_settings(pie_id mob_id,
         size_t bw;
 
         /* Convert to canonical format */
-        pie_dev_set_to_can_fmt(&copy);
+        pie_bm_set_to_can_fmt(&copy);
 
         msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
         PIE_DEBUG("Update settings for %lu", mob_id);

@@ -20,8 +20,8 @@
 
 struct lws;
 struct hmap;
-struct pie_sess;
-struct pie_sess_mgr;
+struct pie_http_sess;
+struct pie_http_sess_mgr;
 
 enum pie_http_verb
 {
@@ -44,7 +44,7 @@ struct pie_http_post_data
  * @param the request URL.
  * @return the mimetype (e.g image/jpeg) or NULL if unknown.
  */
-extern const char* get_mimetype(const char*);
+extern const char* pie_http_get_mimetype(const char*);
 
 /**
  * Exract request query parameters.
@@ -61,7 +61,8 @@ extern struct hmap* pie_http_req_params(struct lws*);
  * @param the request
  * @return pointer to the session, or NULL if no session is found.
  */
-extern struct pie_sess* get_session(struct pie_sess_mgr*, struct lws*);
+extern struct pie_http_sess* pie_http_get_session(struct pie_http_sess_mgr*,
+                                                  struct lws*);
 
 /**
  * Get a cookie from a request.
@@ -71,10 +72,10 @@ extern struct pie_sess* get_session(struct pie_sess_mgr*, struct lws*);
  * @param max length of value.
  * @return 0 if the cookie was found. Non zero otherwise.
  */
-extern int get_lws_cookie(char* restrict,
-                          struct lws*,
-                          const char* restrict,
-                          size_t);
+extern int pie_http_get_cookie(char* restrict,
+                               struct lws*,
+                               const char* restrict,
+                               size_t);
 
 /**
  * Write data to lws request object.

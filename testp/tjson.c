@@ -50,12 +50,12 @@ int main(void)
         s.sharpening.amount = 0.001f;
         s.sharpening.radius = 0.002f;
         s.sharpening.threshold = 0.003f;
-        pie_dev_init_curve(&s.curve_l);
-        pie_dev_init_curve(&s.curve_r);
-        pie_dev_init_curve(&s.curve_g);
-        pie_dev_init_curve(&s.curve_b);
+        pie_bm_init_curve(&s.curve_l);
+        pie_bm_init_curve(&s.curve_r);
+        pie_bm_init_curve(&s.curve_g);
+        pie_bm_init_curve(&s.curve_b);
 
-        pie_dev_set_to_can_fmt(&s);
+        pie_bm_set_to_can_fmt(&s);
 
         len = pie_enc_json_settings(buf, BUF_LEN, &s);
         buf[len] = '\0';

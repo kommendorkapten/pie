@@ -21,7 +21,7 @@
 #include "../bm/pie_bm.h"
 #include "../lib/timing.h"
 #include "../cfg/pie_cfg.h"
-#include "../doml/pie_stg.h"
+#include "../doml/pie_doml_stg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 

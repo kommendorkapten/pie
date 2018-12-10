@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 #include <unistd.h>
-#include "pie_stg.h"
+#include "pie_doml_stg.h"
 #include "../lib/llist.h"
 #include "../dm/pie_min.h"
 #include "../cfg/pie_cfg.h"

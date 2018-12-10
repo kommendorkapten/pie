@@ -22,7 +22,7 @@
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 #include "../dm/pie_dev_params.h"
-#include "../doml/pie_stg.h"
+#include "../doml/pie_doml_stg.h"
 #include "../io/pie_io.h"
 #include "../lib/llist.h"
 #include "../lib/s_queue.h"
@@ -80,7 +80,7 @@ int main(void)
         sigset_t b_sigset;
         sigset_t o_sigset;
         long lval;
-        int num_workers;
+        int num_workers = 4;
         int ret = -1;
         int ok;
 
@@ -307,10 +307,10 @@ static void export(void* a, size_t len)
                 }
                 else
                 {
-                        pie_dev_set_to_int_fmt(&dev);
+                        pie_bm_set_to_int_fmt(&dev);
                         timing_start(&t);
                         float* buf = malloc(bm_src.row_stride * bm_src.height * sizeof(float));
-                        pie_dev_render(&bm_src, buf, &dev);
+                        pie_bm_render(&bm_src, buf, &dev);
                         free(buf);
                         PIE_DEBUG("Rendered %s in %ldms",
                                   path,

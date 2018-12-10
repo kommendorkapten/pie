@@ -20,7 +20,7 @@
 
 #include "../lib/timing.h"
 
-struct pie_sess_mgr;
+struct pie_http_sess_mgr;
 struct pie_editd_workspace;
 
 /**
@@ -30,7 +30,7 @@ struct pie_editd_workspace;
  * and hence the data referenced by the session must be managed by
  * another entity to avoid memory leaks.
  */
-struct pie_sess
+struct pie_http_sess
 {
         char token[PIE_SESS_TOKEN_LEN];
         struct pie_editd_workspace* wrkspc;
@@ -51,21 +51,21 @@ struct pie_sess
  * @param void
  * @return a new session.
  */
-extern struct pie_sess* pie_sess_create(void);
+extern struct pie_http_sess* pie_http_sess_create(void);
 
 /**
  * Destroy a session.
  * @param the session to destroy.
  * @return void.
  */
-extern void pie_sess_destroy(struct pie_sess* s);
+extern void pie_http_sess_destroy(struct pie_http_sess* s);
 
 /**
  * Create a session manager.
  * @param void.
  * @return a session manager.
  */
-extern struct pie_sess_mgr* pie_sess_mgr_create(void);
+extern struct pie_http_sess_mgr* pie_http_sess_mgr_create(void);
 
 /**
  * Destroy a session manager.
@@ -73,7 +73,7 @@ extern struct pie_sess_mgr* pie_sess_mgr_create(void);
  * @param the session manager to destroy.
  * @return void.
  */
-extern void pie_sess_mgr_destroy(struct pie_sess_mgr*);
+extern void pie_http_sess_mgr_destroy(struct pie_http_sess_mgr*);
 
 /**
  * Retrieve a session.
@@ -83,7 +83,8 @@ extern void pie_sess_mgr_destroy(struct pie_sess_mgr*);
  * @param the token to search for.
  * @return pointer to the session or NULL if not found.
  */
-extern struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr*, char*);
+extern struct pie_http_sess* pie_http_sess_mgr_get(struct pie_http_sess_mgr*,
+                                                   char*);
 
 /**
  * Store a session.
@@ -93,7 +94,8 @@ extern struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr*, char*);
  * @param session to store.
  * @return void.
  */
-extern void pie_sess_mgr_put(struct pie_sess_mgr*, struct pie_sess*);
+extern void pie_http_sess_mgr_put(struct pie_http_sess_mgr*,
+                                  struct pie_http_sess*);
 
 /**
  * Look for sessions that are older than a specific duration.
@@ -101,6 +103,6 @@ extern void pie_sess_mgr_put(struct pie_sess_mgr*, struct pie_sess*);
  * @param the threshold in seconds.
  * @return number of sessions that were repaed.
  */
-extern int pie_sess_mgr_reap(struct pie_sess_mgr*, long);
+extern int pie_http_sess_mgr_reap(struct pie_http_sess_mgr*, long);
 
 #endif /* __PIE_SESSION_H__ */

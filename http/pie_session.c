@@ -20,21 +20,21 @@
 #include "../lib/hmap.h"
 #include "../pie_log.h"
 
-struct pie_sess_mgr
+struct pie_http_sess_mgr
 {
         struct hmap* store;
 };
 
-struct pie_sess* pie_sess_create(void)
+struct pie_http_sess* pie_http_sess_create(void)
 {
-        struct pie_sess* s;
+        struct pie_http_sess* s;
         char buf[64];
         unsigned char sum[20];
         SHA_CTX ctx;
         struct timeval tv;
         unsigned int n;
 
-        s = malloc(sizeof(struct pie_sess));
+        s = malloc(sizeof(struct pie_http_sess));
         gettimeofday(&tv, NULL);
         n = snprintf(buf, 64, "x&y_z%ld%d", (long)tv.tv_sec, (int)tv.tv_usec);
         SHA1_Init(&ctx);
@@ -55,7 +55,7 @@ struct pie_sess* pie_sess_create(void)
         return s;
 }
 
-void pie_sess_destroy(struct pie_sess* s)
+void pie_http_sess_destroy(struct pie_http_sess* s)
 {
         if (s->rgba)
         {
@@ -67,16 +67,16 @@ void pie_sess_destroy(struct pie_sess* s)
         }
 }
 
-struct pie_sess_mgr* pie_sess_mgr_create(void)
+struct pie_http_sess_mgr* pie_http_sess_mgr_create(void)
 {
-        struct pie_sess_mgr* sm = malloc(sizeof(struct pie_sess_mgr));
+        struct pie_http_sess_mgr* sm = malloc(sizeof(struct pie_http_sess_mgr));
 
         sm->store = hmap_create(NULL, NULL, 16, 0.7f);
 
         return sm;
 }
 
-void pie_sess_mgr_destroy(struct pie_sess_mgr* sm)
+void pie_http_sess_mgr_destroy(struct pie_http_sess_mgr* sm)
 {
         struct hmap_entry* elems;
         size_t len;
@@ -92,10 +92,10 @@ void pie_sess_mgr_destroy(struct pie_sess_mgr* sm)
         free(sm);
 }
 
-struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr* sm, char* token)
+struct pie_http_sess* pie_http_sess_mgr_get(struct pie_http_sess_mgr* sm, char* token)
 {
         struct timeval tv;
-        struct pie_sess* s;
+        struct pie_http_sess* s;
 
         PIE_TRACE("Session: %s", token);
         s = hmap_get(sm->store, token);
@@ -108,7 +108,7 @@ struct pie_sess* pie_sess_mgr_get(struct pie_sess_mgr* sm, char* token)
         return s;
 }
 
-void pie_sess_mgr_put(struct pie_sess_mgr* sm, struct pie_sess* s)
+void pie_http_sess_mgr_put(struct pie_http_sess_mgr* sm, struct pie_http_sess* s)
 {
         struct timeval tv;
 
@@ -119,7 +119,7 @@ void pie_sess_mgr_put(struct pie_sess_mgr* sm, struct pie_sess* s)
         hmap_set(sm->store, s->token, s);
 }
 
-int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
+int pie_http_sess_mgr_reap(struct pie_http_sess_mgr* sm, long threshold)
 {
         struct timeval tv;
         struct hmap_entry* elems;
@@ -129,7 +129,7 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
         elems = hmap_iter(sm->store, &len);
         for (size_t i = 0; i < len; i++)
         {
-                struct pie_sess* s = elems[i].data;
+                struct pie_http_sess* s = elems[i].data;
 
                 if (s->access_ts < tv.tv_sec - threshold)
                 {
@@ -143,7 +143,7 @@ int pie_sess_mgr_reap(struct pie_sess_mgr* sm, long threshold)
                            it except from this hmap. Free the session. */
 
                         memcpy(token, elems[i].key, PIE_SESS_TOKEN_LEN);
-                        pie_sess_destroy((struct pie_sess*)elems[i].data);
+                        pie_http_sess_destroy((struct pie_http_sess*)elems[i].data);
                         free(elems[i].data);
                         hmap_del(sm->store, token);
                 }

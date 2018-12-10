@@ -20,7 +20,7 @@
 #include "../pie_log.h"
 #include "../lib/hmap.h"
 
-const char* get_mimetype(const char *path)
+const char* pie_http_get_mimetype(const char *path)
 {
         size_t n = strlen(path);
 
@@ -92,10 +92,10 @@ struct hmap* pie_http_req_params(struct lws* wsi)
         return h;
 }
 
-int get_lws_cookie(char* restrict v,
-                   struct lws* wsi,
-                   const char* restrict cookie,
-                   size_t len)
+int pie_http_get_cookie(char* restrict v,
+                        struct lws* wsi,
+                        const char* restrict cookie,
+                        size_t len)
 {
         char buf[MAX_HEADERS];
         char* t;
@@ -148,19 +148,20 @@ int get_lws_cookie(char* restrict v,
         return found;
 }
 
-struct pie_sess* get_session(struct pie_sess_mgr* sess_mgr, struct lws* wsi)
+struct pie_http_sess* pie_http_get_session(struct pie_http_sess_mgr* sess_mgr,
+                                           struct lws* wsi)
 {
         char buf[256];
-        struct pie_sess* session = NULL;
+        struct pie_http_sess* session = NULL;
 
-        if (get_lws_cookie(buf, wsi, "pie-session", 256))
+        if (pie_http_get_cookie(buf, wsi, "pie-session", 256))
         {
                 PIE_WARN("No pie-session cookie found");
         }
         else
         {
-                session = pie_sess_mgr_get(sess_mgr,
-                                           buf);
+                session = pie_http_sess_mgr_get(sess_mgr,
+                                                buf);
         }
 
         return session;

@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "pie_doml_mob.h"
-#include "pie_stg.h"
+#include "pie_doml_stg.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../dm/pie_host.h"

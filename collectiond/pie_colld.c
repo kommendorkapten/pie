@@ -386,7 +386,7 @@ static int cb_http(struct lws* wsi,
                 file_url[sizeof(file_url) - 1] = 0;
                 PIE_LOG("Serve static file '%s'", file_url);
 
-                mimetype = get_mimetype(file_url);
+                mimetype = pie_http_get_mimetype(file_url);
                 if (!mimetype)
                 {
                         lws_return_http_status(wsi,
