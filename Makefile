@@ -235,7 +235,7 @@ bin/tjson: testp/tjson.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE) $(LIBUTIL)
 
 bin/test_exif_meta: testp/test_exif_meta.c $(LIBCORE) $(CFG_OBJS) $(LIBUTIL) $(LIBDM)
-	$(CC) $(CFLAGS) $< $(CFG_OBJS) -o $@ $(LFLAGS) -lexif -lsqlite3 -lraw $(LIBCORE) $(LIBUTIL) $(LIBDM)
+	$(CC) $(CFLAGS) $< $(CFG_OBJS) -o $@ $(LFLAGS) -lexif -lsqlite3 -lraw $(LIBCORE) $(LIBDM) $(LIBUTIL)
 
 bin/bench_blur: testp/bench_blur.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)

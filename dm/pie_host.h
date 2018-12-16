@@ -3,11 +3,14 @@
 #ifndef __6223_PIE_HOST_H__
 #define __6223_PIE_HOST_H__
 #include <sqlite3.h>
+
+#define STG_HOST_LEN 64
+
 struct pie_host
 {
 	int             hst_id;
-	char           *hst_name;
-	char           *hst_fqdn;
+	char            hst_name[STG_HOST_LEN];
+	char            hst_fqdn[STG_HOST_LEN];
 };
 extern struct pie_host *pie_host_alloc(void);
 extern void     pie_host_free(struct pie_host * this);

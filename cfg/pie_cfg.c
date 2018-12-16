@@ -210,7 +210,6 @@ struct pie_host* pie_cfg_get_hostbyname(const char* host)
         size_t host_len = strlen(host) + 1;
         int ret;
 
-        h->hst_name = malloc(host_len);
         strncpy(h->hst_name, host, host_len);
         ret = pie_host_find_name(pie_cfg.db, h);
 

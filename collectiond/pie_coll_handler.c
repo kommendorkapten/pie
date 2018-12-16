@@ -26,6 +26,8 @@
 #include "../dm/pie_mob.h"
 #include "../dm/pie_dev_params.h"
 #include "../dm/pie_collection_member.h"
+#include "../dm/pie_storage.h"
+#include "../dm/pie_host.h"
 #include "../jsmn/jsmn.h"
 #include "../http/pie_util.h"
 #include "../http/pie_http_types.h"
@@ -683,6 +685,61 @@ int pie_coll_h_stgs(struct pie_coll_h_resp* r,
                     struct pie_http_post_data* data,
                     sqlite3* db)
 {
+        if (verb != PIE_HTTP_VERB_GET)
+        {
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+                return 0;
+        }
+
+        struct llist* stgs = pie_storage_read_all(db);
+        struct pie_http_storages_resp resp;
+
+        resp.storages = llist_create();
+        for (struct lnode* n = llist_head(stgs); n; n = n->next)
+        {
+                struct pie_host hst;
+                struct pie_storage* stg = n->data;
+                struct pie_http_storage_item* i = malloc(sizeof(struct pie_http_storage_item));
+                int status;
+
+                hst.hst_id = stg->stg_hst_id;
+                status = pie_host_read(db, &hst);
+                if (status > 0)
+                {
+                        PIE_WARN("No entry for host %d", hst.hst_id);
+                        goto next_item;
+                }
+                if (status < 0)
+                {
+                        PIE_ERR("DB failed when reading host: %d", hst.hst_id);
+                        abort();
+                }
+
+                i->id = stg->stg_id;
+                strncpy(i->name, stg->stg_name, HTTP_HOSTNAME_LEN);
+                strncpy(i->type, pie_storage_type(stg->stg_id), HTTP_HOSTNAME_LEN);
+                strncpy(i->hostname, hst.hst_name, HTTP_HOSTNAME_LEN);
+                strncpy(i->fqdn, hst.hst_fqdn, HTTP_HOSTNAME_LEN);
+
+                llist_pushb(resp.storages, i);
+        next_item:
+                pie_storage_free(stg);
+        }
+        llist_destroy(stgs);
+
+        r->content_len = pie_enc_json_http_stg_resp(r->wbuf,
+                                                    r->wbuf_len,
+                                                    &resp);
+        r->http_sc = HTTP_STATUS_OK;
+        r->content_type = "application/json; charset=UTF-8";
+
+        struct lnode* n = llist_head(resp.storages);
+        while (n)
+        {
+                free(n->data);
+                n = n->next;
+        };
+
         return 0;
 }
 

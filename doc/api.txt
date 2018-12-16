@@ -256,14 +256,18 @@ Body:
 GET:
 Response:
 {
-    "3": {
-        "name": "name of the storage"
-        "type": "export",
-        "host": "hostname of the host"
-    },
-    "4": {
-        "name": "name of the storage"
-        "type": "online",
-        "host": "hostname of the host"
-    }
+    "storages": [
+        {
+            "id": 3,
+            "name": "name of the storage"
+            "type": "export",
+            "host": "hostname of the host"
+        },
+        {
+            "id": 4,
+            "name": "name of the storage"
+            "type": "online",
+            "host": "hostname of the host"
+        }
+    ]
 }

@@ -28,6 +28,8 @@ struct pie_mob;
 struct pie_curve;
 struct pie_http_export_request;
 struct pie_mq_export_media;
+struct pie_http_storage_item;
+struct pie_http_storages_resp;
 
 /**
  * Encode a histogram to JSON.
@@ -76,5 +78,13 @@ extern size_t pie_enc_json_mq_export(char*,
 extern int pie_dec_json_mq_export(struct pie_mq_export_media*, char*);
 
 extern int pie_enc_jsoneq(const char *, jsmntok_t *, const char *);
+
+extern size_t pie_enc_json_http_stg_itm(char*,
+                                        size_t,
+                                        struct pie_http_storage_item*);
+
+extern size_t pie_enc_json_http_stg_resp(char*,
+                                         size_t,
+                                         struct pie_http_storages_resp*);
 
 #endif /* __PIE_JSON_H__ */

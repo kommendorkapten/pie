@@ -10,34 +10,25 @@ pie_host_alloc(void)
 {
 	struct pie_host *this = malloc(sizeof(struct pie_host));
 
-	this->hst_name = NULL;
-	this->hst_fqdn = NULL;
+	this->hst_name[0] = '\0';
+	this->hst_fqdn[0] = '\0';
 	return this;
 }
-void 
+void
 pie_host_free(struct pie_host * this)
 {
 	assert(this);
 	pie_host_release(this);
 	free(this);
 }
-void 
+void
 pie_host_release(struct pie_host * this)
 {
 	assert(this);
-	(void) this;
-	if (this->hst_name)
-	{
-		free(this->hst_name);
-		this->hst_name = NULL;
-	}
-	if (this->hst_fqdn)
-	{
-		free(this->hst_fqdn);
-		this->hst_fqdn = NULL;
-	}
+	this->hst_name[0] = '\0';
+	this->hst_fqdn[0] = '\0';
 }
-int 
+int
 pie_host_create(sqlite3 * db, struct pie_host * this)
 {
 	char	       *q = "INSERT INTO pie_host (hst_id,hst_name,hst_fqdn) VALUES (?,?,?)";
@@ -114,7 +105,7 @@ cleanup:
 	}
 	return ret;
 }
-int 
+int
 pie_host_read(sqlite3 * db, struct pie_host * this)
 {
 	char	       *q = "SELECT hst_name,hst_fqdn FROM pie_host WHERE hst_id = ?";
@@ -124,7 +115,7 @@ pie_host_read(sqlite3 * db, struct pie_host * this)
 	const unsigned char *c;
 	int		br;
 
-	assert(this);	     
+	assert(this);
 	ret = sqlite3_prepare_v2(db, q, -1, &pstmt, NULL);
 	if (ret != SQLITE_OK)
 	{
@@ -154,7 +145,6 @@ pie_host_read(sqlite3 * db, struct pie_host * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 0);
 	br = sqlite3_column_bytes(pstmt, 0);
-	this->hst_name = malloc(br + 1);
 	memcpy(this->hst_name, c, br);
 	this->hst_name[br] = '\0';
 	/* Force reading text into memory, and ge the length */
@@ -163,7 +153,6 @@ pie_host_read(sqlite3 * db, struct pie_host * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 1);
 	br = sqlite3_column_bytes(pstmt, 1);
-	this->hst_fqdn = malloc(br + 1);
 	memcpy(this->hst_fqdn, c, br);
 	this->hst_fqdn[br] = '\0';
 	ret = 0;
@@ -221,7 +210,6 @@ pie_host_find_name(sqlite3 * db, struct pie_host * this)
 	/* and set the null terminator., */
 	c = sqlite3_column_text(pstmt, 1);
 	br = sqlite3_column_bytes(pstmt, 1);
-	this->hst_fqdn = malloc(br + 1);
 	memcpy(this->hst_fqdn, c, br);
 	this->hst_fqdn[br] = '\0';
 	ret = 0;
@@ -231,10 +219,10 @@ cleanup:
 	{
 		ret = -1;
 	}
-	return ret;	   
+	return ret;
 }
 
-int 
+int
 pie_host_update(sqlite3 * db, struct pie_host * this)
 {
 	char	       *q = "UPDATE pie_host SET hst_name = ?,hst_fqdn = ? WHERE hst_id = ?";
@@ -282,7 +270,7 @@ cleanup:
 	}
 	return ret;
 }
-int 
+int
 pie_host_delete(sqlite3 * db, struct pie_host * this)
 {
 	char	       *q = "DELETE FROM pie_host WHERE hst_id = ?";

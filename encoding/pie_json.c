@@ -1015,6 +1015,53 @@ done:
         return l;
 }
 
+size_t pie_enc_json_http_stg_itm(char* buf,
+                                 size_t len,
+                                 struct pie_http_storage_item* i)
+{
+        size_t bw = 0;
+
+        bw += snprintf(buf + bw, len - bw, "{\"id\":\"%d\",", i->id);
+        bw += snprintf(buf + bw, len - bw, "\"name\":\"%s\",", i->name);
+        bw += snprintf(buf + bw, len - bw, "\"type\":\"%s\",", i->type);
+        bw += snprintf(buf + bw, len - bw, "\"hostname\":\"%s\",", i->hostname);
+        bw += snprintf(buf + bw, len - bw, "\"fqdn\":\"%s\"}", i->fqdn);
+
+        return bw;
+}
+
+size_t pie_enc_json_http_stg_resp(char* buf,
+                                  size_t len,
+                                  struct pie_http_storages_resp* r)
+{
+        struct lnode* n = llist_head(r->storages);
+        size_t bw = 0;
+        int first = 1;
+
+        bw += snprintf(buf + bw, len - bw, "{");
+        bw += snprintf(buf + bw, len - bw, "\"storages\":[");
+        while (n)
+        {
+                struct pie_http_storage_item* i = n->data;
+
+                if (!first)
+                {
+                        bw += snprintf(buf + bw, len - bw, ",");
+                }
+                else
+                {
+                        first = 0;
+                }
+
+                bw += pie_enc_json_http_stg_itm(buf + bw, len - bw, i);
+                n = n->next;
+        }
+        bw += snprintf(buf + bw, len - bw, "]");
+        bw += snprintf(buf + bw, len - bw, "}");
+
+        return bw;
+}
+
 /* Stolen from jsmn/example/simple.c */
 int pie_enc_jsoneq(const char *json, jsmntok_t *tok, const char *s)
 {

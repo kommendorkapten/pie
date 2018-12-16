@@ -16,6 +16,8 @@
 
 #include "../pie_types.h"
 
+#define HTTP_HOSTNAME_LEN 128
+
 struct llist;
 
 struct pie_http_export_request
@@ -27,6 +29,21 @@ struct pie_http_export_request
         int max_y;
         unsigned char sharpen;
         unsigned char disable_exif;
+};
+
+struct pie_http_storage_item
+{
+        int id;
+        char name[HTTP_HOSTNAME_LEN];
+        char type[HTTP_HOSTNAME_LEN];
+        char hostname[HTTP_HOSTNAME_LEN];
+        char fqdn[HTTP_HOSTNAME_LEN];
+};
+
+struct pie_http_storages_resp
+{
+        /* list of pie_http_storage_items */
+        struct llist* storages;
 };
 
 #endif /* __PIE_HTTP_TYPES_H__ */
