@@ -119,7 +119,8 @@ extern int pie_http_post_data_init(struct pie_http_post_data*, size_t);
  * @param post data struct.
  * @param data.
  * @param bytes to add.
- * @return 0 on success.
+ * @return 0 on success. If call fails, no data is touched, and thus memory
+ *         needs to be freed.
  */
 extern int pie_http_post_data_add(struct pie_http_post_data*,
                                   const void*,

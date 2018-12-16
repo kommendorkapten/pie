@@ -2,13 +2,16 @@
 #include "../pie_log.h"
 #include "../lib/s_queue.h"
 #include "../mq_msg/pie_mq_msg.h"
+#include "../encoding/pie_json.h"
 
 int main(void)
 {
+        char buf[4096];
         struct q_producer* q;
         struct pie_mq_export_media msg;
         int ret = 1;
         int ok;
+        size_t bw;
 
         snprintf(msg.path, 128, "/3.jpg");
         msg.mob_id = 85562243416131329;
@@ -18,6 +21,7 @@ int main(void)
         msg.type = PIE_MQ_EXP_JPG;
         msg.quality = 100;
         msg.sharpen = 1;
+        msg.disable_exif = 1;
 
         q = q_new_producer(QUEUE_INTRA_HOST);
         if (q == NULL)
@@ -33,9 +37,10 @@ int main(void)
                 goto cleanup;
         }
 
-        q->send(q->this,
-                (char*)&msg,
-                sizeof(msg));
+        bw = pie_enc_json_mq_export(buf, 4096, &msg);
+
+        q->send(q->this, buf, bw);
+
         ret = 0;
 cleanup:
         if (q)

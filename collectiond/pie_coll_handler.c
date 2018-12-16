@@ -18,6 +18,7 @@
 #include "../pie_id.h"
 #include "../pie_log.h"
 #include "../lib/llist.h"
+#include "../lib/s_queue.h"
 #include "../encoding/pie_json.h"
 #include "../http/pie_util.h"
 #include "../dm/pie_collection.h"
@@ -27,7 +28,11 @@
 #include "../dm/pie_collection_member.h"
 #include "../jsmn/jsmn.h"
 #include "../http/pie_util.h"
+#include "../http/pie_http_types.h"
 #include "../doml/pie_doml_mob.h"
+#include "../mq_msg/pie_mq_msg.h"
+
+extern struct q_producer* export_q;
 
 /**
  * Given a path like /abc/123 extract 123 and store in provided pie_id.
@@ -46,6 +51,15 @@ static int get_id1(pie_id*, const char*);
  * @return 0 if pie_id could be extracted, non-zero otherwise.
  */
 static int get_id2(pie_id*, pie_id*, const char*);
+
+/**
+ * Given a path like /abc/123/\S+ extract 123 and '/\S+'.
+ * @param pie_id to store extracted number in.
+ * @param pointer to store string in
+ * @param url to parse
+ * @return 0 if parsing was successful.
+ */
+static int get_id1_path(pie_id*, const char**, const char*);
 
 /**
  * Utility method to read a collection and its assets, and then JSON
@@ -481,7 +495,6 @@ static int pie_coll_h_mob_put(struct pie_coll_h_resp* r,
         jsmntok_t tokens[32]; /* Can only parse with 32 tokens */
         int ret;
 
-        data->data[data->p] = 0;
         PIE_DEBUG("Url: '%s'", url);
         PIE_TRACE("Got mob: '%s'", data->data);
 
@@ -664,6 +677,113 @@ int pie_coll_h_devp(struct pie_coll_h_resp* r,
         return 0;
 }
 
+int pie_coll_h_stgs(struct pie_coll_h_resp* r,
+                    const char* url,
+                    enum pie_http_verb verb,
+                    struct pie_http_post_data* data,
+                    sqlite3* db)
+{
+        return 0;
+}
+
+/*
+ * Export images.
+ * The POST methods receives one pie_http_export request which contains
+ * the mobs to export. For each mob create one pie_mq_export_media msg
+ * and place on export queue.
+ */
+int pie_coll_h_exp(struct pie_coll_h_resp* r,
+                   const char* url,
+                   enum pie_http_verb verb,
+                   struct pie_http_post_data* data,
+                   sqlite3* db)
+{
+#define BUF_LEN 4096
+        struct pie_http_export_request req;
+        char* buf = NULL;
+        const char *p;
+        pie_id stg_id;
+
+        switch (verb)
+        {
+        case PIE_HTTP_VERB_POST:
+                break;
+        default:
+                r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
+                return 0;
+        }
+
+        if (data->p == 0)
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        if (get_id1_path(&stg_id, &p, url))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+        }
+
+        PIE_LOG("Export to %s@%d", p, stg_id);
+
+        req.mobs = NULL;
+        if (pie_dec_json_export_request(&req, data->data))
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+
+        buf = malloc(BUF_LEN);
+        for (struct lnode* n = llist_head(req.mobs); n; n = n->next)
+        {
+                struct pie_mq_export_media em;
+                size_t bw;
+
+                strncpy(em.path, p, PIE_PATH_LEN);
+                em.mob_id = (pie_id)n->data;
+                em.stg_id = stg_id;
+                em.max_x = req.max_x;
+                em.max_y = req.max_y;
+                em.type = PIE_MQ_EXP_JPG;
+                em.quality = 100;
+                em.sharpen = req.sharpen;
+                em.disable_exif = req.disable_exif;
+
+                PIE_LOG("export %ld", em.mob_id);
+
+                bw = pie_enc_json_mq_export(buf, BUF_LEN, &em);
+                if (bw == 0)
+                {
+                        PIE_ERR("Failed to encode json for mob %ld", em.mob_id);
+                }
+                else
+                {
+                        /* make sure null terminator gets written */
+                        bw++;
+                        if (export_q->send(export_q->this, buf, bw) != bw)
+                        {
+                                PIE_ERR("Failed to send export job for %ld",
+                                        em.mob_id);
+                        }
+                }
+        }
+        if (req.mobs)
+        {
+                llist_destroy(req.mobs);
+                req.mobs = NULL;
+        }
+
+        if (buf)
+        {
+                free(buf);
+        }
+
+        r->http_sc = HTTP_STATUS_OK;
+        r->content_type = "application/json; charset=UTF-8";
+
+        return 0;
+}
+
 static int get_id1(pie_id* id, const char* url)
 {
         char* pid;
@@ -767,6 +887,56 @@ static int get_id2(pie_id* id1, pie_id* id2, const char* url)
         if (pid == p)
         {
                 PIE_WARN("Invalid (4) pie_id: '%s'", pid);
+                return 1;
+        }
+
+        return 0;
+}
+
+static int get_id1_path(pie_id* id, const char** path, const char* url)
+{
+        char buf[64];
+        char* pid;
+        char* p;
+
+        /* /abc/123/some/random/data/123 */
+        /*      111222222222222222222222 */
+
+        pid = strchr(url + 1, '/');
+        if (pid == NULL)
+        {
+                PIE_ERR("Slash dissapeared from request URL: '%s'", url);
+        }
+        /* Advance to char after '/' */
+        pid++;
+        p = pid;
+        size_t l = 0;
+        while (*p)
+        {
+                if (*p != '/')
+                {
+                        l++;
+                }
+                else
+                {
+                        *path = p;
+                        break;
+                }
+                p++;
+        }
+
+        if (l > 63)
+        {
+                PIE_WARN("To large number in URL: '%s'", url);
+                return 1;
+        }
+
+        memcpy(buf, pid, l);
+        buf[l] = '\0';
+        *id = strtol(pid, &p, 10);
+        if (pid == p)
+        {
+                PIE_WARN("Invalid pie_id: '%s'", buf);
                 return 1;
         }
 

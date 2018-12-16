@@ -21,6 +21,8 @@
 #include "../dm/pie_mob.h"
 #include "../lib/llist.h"
 #include "../jsmn/jsmn.h"
+#include "../http/pie_http_types.h"
+#include "../mq_msg/pie_mq_msg.h"
 
 #define DEV_SET_SCALE 1000.0f
 #define NUM_TOKENS 512
@@ -33,6 +35,12 @@ static size_t pie_enc_json_curve(char*,
                                  const struct pie_curve*,
                                  enum pie_channel,
                                  int);
+/**
+ * Parses a single dimension array into a linked list of id.
+ * @param an array in JSON format: "[1,2,3]".
+ * @return a linked list with all items in it.
+ */
+static struct llist* pie_dec_id_list(char*);
 
 /*
 Encode to following structure (without newlines)
@@ -210,8 +218,8 @@ int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
         for (int i = 0; i < ret - 1; i++)
         {
                 char field[FIELD_LEN];
-                char* p = buf + tokens[i + 1].start;
-                int len = tokens[i + 1].end - tokens[i + 1].start;
+                char* p = buf + tokens[i+1].start;
+                int len = tokens[i+1].end - tokens[i+1].start;
 
                 if (len > FIELD_LEN)
                 {
@@ -410,13 +418,12 @@ int pie_dec_json_unsharp(struct pie_unsharp_param* s, char* buf)
         for (int i = 0; i < ret - 1; i++)
         {
                 char field[128];
-                char* p = buf + tokens[i + 1].start;
-                int len = tokens[i + 1].end - tokens[i + 1].start;
+                char* p = buf + tokens[i+1].start;
+                int len = tokens[i+1].end - tokens[i+1].start;
 
-                if (len > 128)
+                if (len > 127)
                 {
-                        field[127] = '\0';
-                        PIE_WARN("Field '%s' is too long", field);
+                        PIE_WARN("Field is too long");
                         continue;
                 }
 
@@ -525,13 +532,13 @@ int pie_dec_json_curve(struct pie_curve* s, char* buf)
 
                 for (int j = 0; j < cret - 1; j++)
                 {
-                        char field[64];
+                        char field[FIELD_LEN];
                         char* cp = p + ctokens[j + 1].start;
                         len = ctokens[j + 1].end - ctokens[j + 1].start;
 
-                        if (len > 64)
+                        if (len > FIELD_LEN-1)
                         {
-                                field[64 - 1] = '\0';
+                                field[FIELD_LEN - 1] = '\0';
                                 PIE_WARN("Field '%s' is too long", field);
                                 continue;
                         }
@@ -724,6 +731,288 @@ size_t pie_enc_json_mob(char* buf, size_t len, const struct pie_mob* mob)
                       mob->mob_orientation);
 
         return bw;
+}
+
+int pie_dec_json_export_request(struct pie_http_export_request* r, char* s)
+{
+        jsmn_parser parser;
+        jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser, s, strlen(s) + 1, tokens, NUM_TOKENS);
+        if (ret < 0)
+        {
+                goto done;
+        }
+        if (tokens[0].type != JSMN_OBJECT)
+        {
+                PIE_WARN("Broken state in parser");
+                ret = -1;
+                goto done;
+        }
+
+        for (int i = 0; i < ret - 1; i++)
+        {
+                char field[1024];
+                char* p = s + tokens[i+1].start;
+                int len = tokens[i+1].end - tokens[i+1].start;
+
+                if (len > 1023)
+                {
+                        PIE_WARN("Field is too long");
+                        continue;
+                }
+
+                memcpy(field, p, len);
+                field[len] = '\0';
+
+                if (pie_enc_jsoneq(s, tokens + i, "mobs") == 0)
+                {
+                        r->mobs = pie_dec_id_list(field);
+                }
+                else if (pie_enc_jsoneq(s, tokens + i, "max_x") == 0)
+                {
+                        r->max_x = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid max x: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(s, tokens + i, "max_y") == 0)
+                {
+                        r->max_y = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid max y: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(s, tokens + i, "sharpen") == 0)
+                {
+                        r->sharpen = (unsigned char)strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid sharpen: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(s, tokens + i, "disable_exif") == 0)
+                {
+                        if (strncmp("true", field, 5) == 0)
+                        {
+                                r->disable_exif = 1;
+                        }
+                        else
+                        {
+                                r->disable_exif = 0;
+                        }
+                }
+        }
+
+        ret = 0;
+
+done:
+        free(tokens);
+        return ret;
+}
+
+size_t pie_enc_json_mq_export(char* buf,
+                              size_t len,
+                              struct pie_mq_export_media* em)
+{
+        size_t bw = 0;
+
+        bw += snprintf(buf + bw, len - bw, "{\"path\":\"%s\",", em->path);
+        bw += snprintf(buf + bw, len - bw, "\"mob_id\":\"%ld\",", em->mob_id);
+        bw += snprintf(buf + bw, len - bw, "\"stg_id\":%d,", em->stg_id);
+        bw += snprintf(buf + bw, len - bw, "\"max_x\":%d,", em->max_x);
+        bw += snprintf(buf + bw, len - bw, "\"max_y\":%d,", em->max_y);
+        bw += snprintf(buf + bw, len - bw, "\"type\":%d,", em->type);
+        bw += snprintf(buf + bw, len - bw, "\"quality\":%d,", em->quality);
+        bw += snprintf(buf + bw, len - bw, "\"sharpen\":%d,", em->sharpen);
+        bw += snprintf(buf + bw, len - bw, "\"disable_exif\":%d}", em->disable_exif);
+
+        return bw;
+}
+
+int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
+{
+        jsmn_parser parser;
+        char field[FIELD_LEN];
+        jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser,
+                         buf,
+                         strlen(buf) + 1,
+                         tokens,
+                         NUM_TOKENS);
+        if (ret < 0)
+        {
+                PIE_WARN("Failed to JSON parse: '%s'\n",
+                         buf);
+                ret = 1;
+                goto done;
+        }
+        if (tokens[0].type != JSMN_OBJECT)
+        {
+                PIE_WARN("Broken state in parser");
+                ret = 2;
+                goto done;
+        }
+
+        for (int i = 0; i < ret - 1; i++)
+        {
+                char* p = buf + tokens[i+1].start;
+                int len = tokens[i+1].end - tokens[i+1].start;
+
+                if (len > FIELD_LEN)
+                {
+                        PIE_ERR("Too long field");
+                        goto done;
+                }
+
+                memcpy(field, p, len);
+                field[len] = '\0';
+
+                if (pie_enc_jsoneq(buf, tokens + i, "path") == 0)
+                {
+                        strncpy(em->path, field, PIE_PATH_LEN);
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "mob_id") == 0)
+                {
+                        em->mob_id = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid mob_id: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "stg_id") == 0)
+                {
+                        em->stg_id = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid stg_id: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "max_x") == 0)
+                {
+                        em->max_x = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid max_x: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "max_y") == 0)
+                {
+                        em->max_y = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid max_y: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "type") == 0)
+                {
+                        em->type = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid type: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "quality") == 0)
+                {
+                        em->quality = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid quality: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "sharpen") == 0)
+                {
+                        em->sharpen = strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid sharpen: %s", field);
+                                goto done;
+                        }
+                }
+                else if (pie_enc_jsoneq(buf, tokens + i, "disable_exif") == 0)
+                {
+                        em->disable_exif= strtol(field, &p, 10);
+                        if (field == p)
+                        {
+                                PIE_WARN("Invalid disable_exif: %s", field);
+                                goto done;
+                        }
+                }
+        }
+
+        ret = 0;
+done:
+        free(tokens);
+
+        return ret;
+}
+
+static struct llist* pie_dec_id_list(char* buf)
+{
+        jsmn_parser parser;
+        char field[FIELD_LEN];
+        struct llist* l = llist_create();
+        jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
+        int ret;
+
+        jsmn_init(&parser);
+        ret = jsmn_parse(&parser, buf, strlen(buf) + 1, tokens, NUM_TOKENS);
+        if (ret < 0)
+        {
+                PIE_WARN("Failed to JSON parse: '%s'", buf);
+                goto done;
+        }
+
+        if (tokens[0].type != JSMN_ARRAY)
+        {
+                PIE_WARN("Broken state in parser");
+                goto done;
+        }
+
+        for (int i = 1; i < ret; i++)
+        {
+                char* p = buf + tokens[i].start;
+                int len = tokens[i].end - tokens[i].start;
+                pie_id id;
+
+                if (len > FIELD_LEN - 1)
+                {
+                        PIE_WARN("Invalid id found at pos %d", i);
+                        continue;
+                }
+                memcpy(field, p, len);
+                field[len] = '\0';
+
+                id = strtol(field, &p, 10);
+                if (field == p)
+                {
+                        PIE_WARN("Invalid id: %s", field);
+                        continue;
+                }
+
+                llist_pushb(l, (void*)id);
+        }
+
+done:
+        free(tokens);
+
+        return l;
 }
 
 /* Stolen from jsmn/example/simple.c */

@@ -226,49 +226,56 @@ static int process(struct q_consumer* q)
 
 static void export(void* a, size_t len)
 {
-        if (len != sizeof(struct pie_mq_export_media))
-        {
-                PIE_ERR("Received invalid job of len: %ld", len);
-                return;
-        }
         char path[PIE_PATH_LEN];
         struct pie_io_opt io_opts;
         struct pie_bitmap_f32rgb bm_src;
         struct timing t;
         struct timing t_tot;
-        struct pie_mq_export_media* msg = a;
+        struct pie_mq_export_media msg;
         struct pie_min* min;
         int st;
 
         timing_start(&t_tot);
+
+        if (pie_dec_json_mq_export(&msg, (char*)a))
+        {
+                PIE_ERR("Could not parse msg");
+                return;
+        }
+
         io_opts.qual = PIE_IO_HIGH_QUAL;
 
-        PIE_DEBUG("Path %s", msg->path);
-        PIE_DEBUG("Mob id: %ld", msg->mob_id);
-        PIE_DEBUG("Stg id: %d", msg->stg_id);
-        PIE_DEBUG("Max x:  %d", msg->max_x);
-        PIE_DEBUG("Max y:  %d", msg->max_y);
-        PIE_DEBUG("Sharp: %d", msg->sharpen);
-        PIE_DEBUG("d exif: %d", msg->disable_exif);
-        PIE_DEBUG("qualit: %d", msg->quality);
-        PIE_DEBUG("e type: %d", msg->type);
+        PIE_DEBUG("Path %s", msg.path);
+        PIE_DEBUG("Mob id: %ld", msg.mob_id);
+        PIE_DEBUG("Stg id: %d", msg.stg_id);
+        PIE_DEBUG("Max x:  %d", msg.max_x);
+        PIE_DEBUG("Max y:  %d", msg.max_y);
+        PIE_DEBUG("Sharp:  %d", msg.sharpen);
+        PIE_DEBUG("d exif: %d", msg.disable_exif);
+        PIE_DEBUG("qualit: %d", msg.quality);
+        PIE_DEBUG("e type: %d", msg.type);
 
         min = pie_doml_min_for_mob(db,
                                    cfg.storages->arr,
                                    cfg.storages->len,
-                                   msg->mob_id);
+                                   msg.mob_id);
         if (!min)
         {
-                PIE_WARN("No MIN found for MOB %ld", msg->mob_id);
+                PIE_WARN("No MIN found for MOB %ld", msg.mob_id);
                 return;
         }
         else
         {
-                PIE_LOG("Use MIN %ld for MOB %ld", min->min_id, msg->mob_id);
+                PIE_LOG("Use MIN %ld for MOB %ld", min->min_id, msg.mob_id);
         }
-        if (msg->stg_id >= cfg.storages->len || msg->stg_id < 1)
+        if (msg.stg_id >= cfg.storages->len || msg.stg_id < 1)
         {
-                PIE_ERR("Unknown storage: %d", msg->stg_id);
+                PIE_ERR("Unknown export storage: %d", msg.stg_id);
+                goto cleanup;
+        }
+        if (cfg.storages->arr[msg.stg_id]->stg.stg_type != PIE_STG_EXPORT)
+        {
+                PIE_ERR("Storage %d is not of type export", msg.stg_id);
                 goto cleanup;
         }
         snprintf(path,
@@ -289,11 +296,11 @@ static void export(void* a, size_t len)
                   timing_dur_msec(&t));
 
         /* Resize */
-        resize(&bm_src, msg->max_x, msg->max_y);
+        resize(&bm_src, msg.max_x, msg.max_y);
 
         /* Apply development settings */
         struct pie_dev_params dev_json;
-        dev_json.pdp_mob_id = msg->mob_id;
+        dev_json.pdp_mob_id = msg.mob_id;
         st = pie_dev_params_read(db, &dev_json);
         if (st == 0)
         {
@@ -303,7 +310,7 @@ static void export(void* a, size_t len)
                 if (st)
                 {
                         PIE_ERR("Failed to parse development parameters for %ld",
-                                msg->mob_id);
+                                msg.mob_id);
                 }
                 else
                 {
@@ -320,11 +327,11 @@ static void export(void* a, size_t len)
         else if (st < 0)
         {
                 PIE_ERR("Failed to load development parameters for %ld",
-                        msg->mob_id);
+                        msg.mob_id);
         }
 
         /* Post rescale sharpening */
-        if (msg->sharpen)
+        if (msg.sharpen)
         {
                 struct pie_unsharp_param p =
                         {
@@ -345,6 +352,7 @@ static void export(void* a, size_t len)
         /* Export */
         struct pie_bitmap_u8rgb u8;
         struct pie_bitmap_u16rgb u16;
+        /* get the file name */
         char* p = strrchr(min->min_path, '/');
         if (!p)
         {
@@ -352,8 +360,8 @@ static void export(void* a, size_t len)
         }
 
         /* Make sure path exists */
-        if (fal_mkdir_tree(cfg.storages->arr[msg->stg_id]->mnt_path,
-                           msg->path))
+        if (fal_mkdir_tree(cfg.storages->arr[msg.stg_id]->mnt_path,
+                           msg.path))
         {
                 abort();
         }
@@ -361,40 +369,53 @@ static void export(void* a, size_t len)
         st = snprintf(path,
                       PIE_PATH_LEN,
                       "%s%s",
-                      cfg.storages->arr[msg->stg_id]->mnt_path,
-                      msg->path);
+                      cfg.storages->arr[msg.stg_id]->mnt_path,
+                      msg.path);
         if (st >= PIE_PATH_LEN)
         {
                 /* Path to large */
                 abort();
         }
+        PIE_DEBUG("Export to path %s", path);
         strncat(path, p, PIE_PATH_LEN - st);
 
-        PIE_DEBUG("Export to path %s", path);
+        /* remove file extension */
+        p = strrchr(path, '.');
+        *p = '\0';
+
+        size_t plen = strlen(path);
+        if (plen + 4 > PIE_PATH_LEN)
+        {
+                PIE_ERR("Path '%s' can't fit file extension", path);
+                abort();
+        }
 
         timing_start(&t);
-        switch (msg->type)
+        switch (msg.type)
         {
         case PIE_MQ_EXP_JPG:
-                assert(msg->quality <= 100);
-                assert(msg->quality > 0);
+                assert(msg.quality <= 100);
+                assert(msg.quality > 0);
 
+                strncat(path, ".jpg", PIE_PATH_LEN - plen);
                 pie_bm_conv_bd(&u8, PIE_COLOR_8B, &bm_src, PIE_COLOR_32B);
-                pie_io_jpg_u8rgb_write(path, &u8, msg->quality);
+                pie_io_jpg_u8rgb_write(path, &u8, msg.quality);
                 pie_bm_free_u8(&u8);
                 break;
         case PIE_MQ_EXP_PNG8:
+                strncat(path, ".png", PIE_PATH_LEN - plen);
                 pie_bm_conv_bd(&u8, PIE_COLOR_8B, &bm_src, PIE_COLOR_32B);
                 pie_io_png_u8rgb_write(path, &u8);
                 pie_bm_free_u8(&u8);
                 break;
         case PIE_MQ_EXP_PNG16:
+                strncat(path, ".png", PIE_PATH_LEN - plen);
                 pie_bm_conv_bd(&u16, PIE_COLOR_16B, &bm_src, PIE_COLOR_32B);
                 pie_io_png_u16rgb_write(path, &u16);
                 pie_bm_free_u16(&u16);
                 break;
         default:
-                PIE_ERR("Invalid export type: %d", msg->type);
+                PIE_ERR("Invalid export type: %d", msg.type);
         }
         PIE_DEBUG("Exported %s in %ldms", path, timing_dur_msec(&t));
 
@@ -402,7 +423,7 @@ static void export(void* a, size_t len)
 cleanup:
         pie_min_free(min);
         PIE_DEBUG("Processed MOB %ld in %ldms",
-                  msg->mob_id,
+                  msg.mob_id,
                   timing_dur_msec(&t_tot));
 }
 

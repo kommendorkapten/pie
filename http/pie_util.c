@@ -312,9 +312,13 @@ int pie_http_post_data_add(struct pie_http_post_data* p,
                            const void* s,
                            size_t len)
 {
-        if (p->p + len > p->cap)
+        if (p->p + len + 1 > p->cap)
         {
-                size_t cap = p->cap * 2;
+                size_t cap = p->cap;
+                do
+                {
+                        cap *= 2;
+                } while (p->p + len + 1 > cap);
                 char* new = realloc(p->data, cap);
 
                 if (new == NULL)

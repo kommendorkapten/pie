@@ -91,4 +91,22 @@ extern int pie_coll_h_devp(struct pie_coll_h_resp*,
                            struct pie_http_post_data*,
                            sqlite3*);
 
+/**
+ * GET: Get a list of available storages.
+ */
+extern int pie_coll_h_stgs(struct pie_coll_h_resp*,
+                           const char*,
+                           enum pie_http_verb,
+                           struct pie_http_post_data*,
+                           sqlite3*);
+
+/**
+ * POST: create an export job.
+ */
+extern int pie_coll_h_exp(struct pie_coll_h_resp*,
+                          const char*,
+                          enum pie_http_verb,
+                          struct pie_http_post_data*,
+                          sqlite3*);
+
 #endif /* __PIE_COLL_HANDLER_H__ */

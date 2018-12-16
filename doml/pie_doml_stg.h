@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_STG_H__
-#define __PIE_STG_H__
+#ifndef __PIE_DOML_STG_H__
+#define __PIE_DOML_STG_H__
 
 #include <sqlite3.h>
 #include "../pie_id.h"
@@ -43,4 +43,4 @@ extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
  */
 extern int pie_doml_file_exists(int, const char*);
 
-#endif /* __PIE_STG_H__ */
+#endif /* __PIE_DOML_STG_H__ */

@@ -22,6 +22,8 @@
 #include "../http/pie_util.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
+#include "../lib/s_queue.h"
+#include "../mq_msg/pie_mq_msg.h"
 
 #define RESP_LEN (1 << 20) /* 1M */
 #define MAX_URL 256
@@ -111,6 +113,7 @@ static const struct lws_extension exts[] = {
 };
 static struct colld_route handlers[MAX_ROUTES];
 char gresp[RESP_LEN];
+struct q_producer* export_q;
 
 int main(void)
 {
@@ -128,8 +131,23 @@ int main(void)
                 {NULL, NULL, 0, 0, 0, NULL}
         };
         struct lws_context_creation_info info;
-        int status = 1;
+        int status;
 
+        export_q = q_new_producer(QUEUE_INTRA_HOST);
+        if (export_q == NULL)
+        {
+                PIE_ERR("Can not create queue");
+                return 1;
+        }
+
+        status = export_q->init(export_q->this, Q_EXPORT_MEDIA);
+        if (status)
+        {
+                PIE_ERR("Can not connect to '%s'", Q_EXPORT_MEDIA);
+                return 1;
+        }
+
+        status = -1;
         install_handlers();
 
         if (pie_cfg_load(PIE_CFG_PATH))
@@ -238,6 +256,12 @@ int main(void)
         for (int h = 0; handlers[h].r != NULL; h++)
         {
                 regfree(handlers[h].r);
+        }
+
+        if (export_q)
+        {
+                export_q->close(export_q->this);
+                q_del_producer(export_q);
         }
 
         return 0;
@@ -440,6 +464,8 @@ static int cb_http(struct lws* wsi,
                           user,
                           ctx->post_data.p);
 
+                /* Make sure post data is null terminated */
+                ctx->post_data.data[ctx->post_data.p] = 0;
                 resp.http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
 
                 /* Route request */
@@ -467,7 +493,7 @@ static int cb_http(struct lws* wsi,
                 goto writebody;
         case LWS_CALLBACK_CLOSED_HTTP:
                 PIE_LOG("Timeout, closing.");
-                goto bailout;
+                goto cleanup;
         case LWS_CALLBACK_HTTP_WRITEABLE:
                 try_keepalive = 1;
                 lws_callback_on_writable(wsi);
@@ -485,6 +511,9 @@ writebody:
                   resp.content_len);
         if (ret || resp.http_sc > 399)
         {
+                PIE_DEBUG("Offending statement: ret: %d sc: %d",
+                          ret,
+                          resp.http_sc);
                 goto bailout;
         }
 
@@ -524,7 +553,11 @@ bailout:
                                        NULL);
         }
         ret = -1;
-
+        if (ctx->post_data.data)
+        {
+                free(ctx->post_data.data);
+                ctx->post_data.data = NULL;
+        }
 cleanup:
         if (query_params)
         {
@@ -597,6 +630,24 @@ static void install_handlers(void)
         handlers[h].r = malloc(sizeof(regex_t));
         handlers[h].h = &pie_coll_h_devp;
         if (regcomp(handlers[h].r, "^/devparams/[0-9]+", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Storages */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_stgs;
+        if (regcomp(handlers[h].r, "^/storage", REG_EXTENDED))
+        {
+                abort();
+        }
+        h++;
+
+        /* Export */
+        handlers[h].r = malloc(sizeof(regex_t));
+        handlers[h].h = &pie_coll_h_exp;
+        if (regcomp(handlers[h].r, "^/export/[0-9]+/[a-zA-Z0-9\\.]+", REG_EXTENDED))
         {
                 abort();
         }

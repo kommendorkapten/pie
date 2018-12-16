@@ -89,7 +89,7 @@ enum pie_mq_export_type
 
 struct pie_mq_export_media
 {
-        /* Complete path/filename relative storage mount point */
+        /* Complete path relative storage mount point */
         char path[PIE_PATH_LEN];
         pie_id mob_id;
         int stg_id;
@@ -103,8 +103,6 @@ struct pie_mq_export_media
         /* 0 no sharpening, 1 apply sharpening */
         unsigned char sharpen;
         unsigned char disable_exif;
-
-
 };
 
 #endif /* __PIE_MQ_MSG_H__ */
