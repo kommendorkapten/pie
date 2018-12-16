@@ -638,3 +638,53 @@ li.collapsibleListClosed{
     color: #282828;
     text-decoration: none;
 }
+
+/* export popup form */
+.exp-form-popup {
+    font-family: Arial, Verdana, sans-serif;
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    margin-left: -150px;
+    border: 3px solid #f1f1f1;
+    z-index: 9;
+}
+
+.exp-form-container {
+    max-width: 300px;
+    padding: 10px;
+    background-color: white;
+}
+
+.exp-form-container input[type=text], .exp-form-container input[type=password] {
+    width: 100%;
+    padding: 15px;
+    margin: 5px 0 22px 0;
+    border: none;
+    background: #f1f1f1;
+}
+
+.exp-form-container input[type=text]:focus, .exp-form-container input[type=password]:focus {
+    background-color: #ddd;
+    outline: none;
+}
+
+.exp-form-container .btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom:10px;
+    opacity: 0.8;
+}
+
+.exp-form-container .cancel {
+    background-color: red;
+}
+
+.exp-form-container .btn:hover, .open-button:hover {
+    opacity: 1;
+}

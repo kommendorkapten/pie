@@ -231,7 +231,7 @@ static void export(void* a, size_t len)
         struct pie_bitmap_f32rgb bm_src;
         struct timing t;
         struct timing t_tot;
-        struct pie_mq_export_media msg;
+        struct pie_mq_export_media msg = {0};
         struct pie_min* min;
         int st;
 

@@ -449,6 +449,7 @@ function contextMenu(e) {
     var top = e.clientY;
     var menuBox = document.getElementById("coll-context-menu");
     var delLink = document.getElementById("coll-context-menu-del");
+    var expLink = document.getElementById("coll-context-menu-exp");
     var mobid = null;
 
     mobid = tgt.getAttribute("mobid");
@@ -465,6 +466,7 @@ function contextMenu(e) {
     menuBox.classList.add("coll-context-menu-active");
     menuBox.active = true;
     delLink.mobId = mobid;
+    expLink.mobId = mobid;
 }
 
 function loadExif(id) {
@@ -779,6 +781,70 @@ function deleteMob(mobId) {
 
     xmlhttp.open("DELETE", url, true);
     xmlhttp.send();
+}
+
+function exportMob() {
+    let form = document.getElementById("exp_form_popup");
+    let req = {
+        "max_x": form.querySelectorAll('[name=max_x]')[0].value,
+        "max_y": form.querySelectorAll('[name=max_y]')[0].value,
+        "sharpen": 1,
+        "disable_exif": false,
+        "mobs": form.mobIds
+    };
+    let path = form.querySelectorAll('[name=path]')[0].value;
+    let stgId = form.querySelectorAll('[name=storages]')[0].value;
+    let xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (xmlhttp.status == 200) {
+                document.getElementById("exp_form_popup").style.display = "none";
+            }
+        }
+    }
+
+    let url = "export/" + stgId + "/" + path;
+    xmlhttp.open("POST", url, true);
+    xmlhttp.send(JSON.stringify(req))
+}
+
+function prepareExportMob(mobId) {
+    let form = document.getElementById("exp_form_popup");
+    let xmlhttp = new XMLHttpRequest();
+
+    form.mobIds = [mobId];
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+            if (xmlhttp.status == 200) {
+                let stgs = JSON.parse(xmlhttp.responseText);
+                let expStgs = stgs.storages.filter(s => s.type == "export");
+                let path = form.querySelectorAll('[name=path]')[0];
+                let select = form.querySelectorAll('[name=storages]')[0];
+                let d = new Date();
+
+                path.value = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+
+                for (let stg of expStgs) {
+                    let opt = document.createElement('option');
+
+                    opt.text = stg.name + "@" + stg.hostname;
+                    opt.value = stg.id;
+
+                    select.add(opt);
+                }
+
+                form.style.display = "block";
+           }
+        }
+    };
+
+    xmlhttp.open("GET", "storage", true);
+    xmlhttp.send();
+}
+
+function closeExpForm() {
+    document.getElementById("exp_form_popup").style.display = "none";
 }
 
 function updateUiFilterRate(rate) {

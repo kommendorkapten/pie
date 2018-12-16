@@ -717,7 +717,7 @@ int pie_coll_h_stgs(struct pie_coll_h_resp* r,
 
                 i->id = stg->stg_id;
                 strncpy(i->name, stg->stg_name, HTTP_HOSTNAME_LEN);
-                strncpy(i->type, pie_storage_type(stg->stg_id), HTTP_HOSTNAME_LEN);
+                strncpy(i->type, pie_storage_type(stg->stg_type), HTTP_HOSTNAME_LEN);
                 strncpy(i->hostname, hst.hst_name, HTTP_HOSTNAME_LEN);
                 strncpy(i->fqdn, hst.hst_fqdn, HTTP_HOSTNAME_LEN);
 
@@ -756,7 +756,7 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
                    sqlite3* db)
 {
 #define BUF_LEN 4096
-        struct pie_http_export_request req;
+        struct pie_http_export_request req = {0};
         char* buf = NULL;
         const char *p;
         pie_id stg_id;
@@ -790,6 +790,11 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
                 return 0;
         }
 
+        if (req.mobs == NULL)
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
         buf = malloc(BUF_LEN);
         for (struct lnode* n = llist_head(req.mobs); n; n = n->next)
         {

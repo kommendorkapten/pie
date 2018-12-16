@@ -153,6 +153,28 @@
         Empty
       </div>
 
+      <div class="exp-form-popup" id="exp_form_popup">
+        <form class="exp-form-container">
+          <h2>Export</h2>
+
+          <label for="path">Path</label>
+          <input type="text" value="1970-01-01" name="path" required>
+
+          <label for="max_x">X</label>
+          <input type="text" value="1080" name="max_x" required>
+          <label for="max_y">Y</label>
+          <input type="text" value="1080" name="max_y" required>
+
+          <div class="coll-select-med semi-square">
+            <select name="storages">
+            </select>
+          </div>
+
+          <button type="button" class="btn" onclick="exportMob();">Export</button>
+          <button type="button" class="btn cancel" onclick="closeExpForm()">Cancel</button>
+        </form>
+      </div>
+
       <div class="header-40px">
         <!-- sorting -->
         <div class="header-grp">
@@ -359,7 +381,7 @@
           </a>
         </li>
         <li>
-          <a href="#">
+          <a id="coll-context-menu-exp" href="#" onclick="prepareExportMob(this.mobId);">
             Export
           </a>
         </li>
