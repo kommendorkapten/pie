@@ -785,16 +785,26 @@ function deleteMob(mobId) {
 
 function exportMob() {
     let form = document.getElementById("exp_form_popup");
+    let resize = form.querySelectorAll('[name=resize]')[0].checked;
+    let sharpen = form.querySelectorAll('[name=sharpen]')[0].checked;
     let req = {
-        "max_x": form.querySelectorAll('[name=max_x]')[0].value,
-        "max_y": form.querySelectorAll('[name=max_y]')[0].value,
-        "sharpen": 1,
+        "max_x": -1,
+        "max_y": -1,
+        "sharpen": 0,
         "disable_exif": false,
         "mobs": form.mobIds
     };
     let path = form.querySelectorAll('[name=path]')[0].value;
     let stgId = form.querySelectorAll('[name=storages]')[0].value;
     let xmlhttp = new XMLHttpRequest();
+
+    if (sharpen) {
+        req.sharpen = 1;
+    }
+    if (resize) {
+        req.max_x = form.querySelectorAll('[name=max_x]')[0].value;
+        req.max_y = form.querySelectorAll('[name=max_y]')[0].value;
+    }
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
@@ -812,6 +822,7 @@ function exportMob() {
 function prepareExportMob(mobId) {
     let form = document.getElementById("exp_form_popup");
     let xmlhttp = new XMLHttpRequest();
+    let sharpen = form.querySelectorAll('[name=sharpen]')[0].checked = true;
 
     form.mobIds = [mobId];
     xmlhttp.onreadystatechange = function() {

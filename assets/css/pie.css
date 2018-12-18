@@ -642,49 +642,118 @@ li.collapsibleListClosed{
 /* export popup form */
 .exp-form-popup {
     font-family: Arial, Verdana, sans-serif;
+    color:	 #c9c9c9;
+    font-size:	 12px;
     display: none;
     position: fixed;
     top: 10%;
     left: 50%;
     margin-left: -150px;
-    border: 3px solid #f1f1f1;
+    border: 3px solid #c9c9c9;
+    background-color: #333333;
     z-index: 9;
 }
 
 .exp-form-container {
     max-width: 300px;
     padding: 10px;
-    background-color: white;
+    background-color: #333333;
 }
 
-.exp-form-container input[type=text], .exp-form-container input[type=password] {
+.exp-form-container input[type=text] {
+    font-family: Arial, Verdana, sans-serif;
+    color:	 #c9c9c9;
+    font-size:	 12px;
     width: 100%;
-    padding: 15px;
-    margin: 5px 0 22px 0;
+    padding: 3px;
+    margin: 5px 0 5px 0;
     border: none;
-    background: #f1f1f1;
+    background: #686868;
 }
 
-.exp-form-container input[type=text]:focus, .exp-form-container input[type=password]:focus {
-    background-color: #ddd;
+.exp-form-container input[type=text]:focus {
+    background-color: #a8a8a8;
     outline: none;
 }
 
 .exp-form-container .btn {
-    background-color: #4CAF50;
+    background-color: #57c160;
     color: white;
-    padding: 16px 20px;
+    padding: 8px 10px;
     border: none;
     cursor: pointer;
     width: 100%;
-    margin-bottom:10px;
+    margin-bottom:4px;
     opacity: 0.8;
 }
 
 .exp-form-container .cancel {
-    background-color: red;
+    background-color: #e05b5d;
 }
 
 .exp-form-container .btn:hover, .open-button:hover {
     opacity: 1;
+}
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch:focus {
+    outline: none;
+}
+
+.switch input:focus {
+    outline: none;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #686868;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 13px;
+    width: 13px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #c9c9c9;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #57c160;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+    outline: none;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
 }
