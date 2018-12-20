@@ -36,7 +36,7 @@ float pie_alg_srgb_to_linear(float g)
 
         if (g < 0.04045f)
         {
-                l = g / 12.09f;
+                l = g / 12.92f;
         }
         else
         {
