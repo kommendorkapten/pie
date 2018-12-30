@@ -7,7 +7,6 @@
 
 int main(int argc, char** argv)
 {
-        /* int scale; */
         int ret;
         struct pie_bitmap_f32rgb img;
         float gamma = 0.454550f;
@@ -17,7 +16,6 @@ int main(int argc, char** argv)
                 printf("Usage: analin file\n");
                 return 1;
         }
-        /* scale = atoi(argv[2]); */
 
         ret = pie_io_load(&img, argv[1], NULL);
         if (ret)

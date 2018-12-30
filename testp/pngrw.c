@@ -9,7 +9,7 @@ int main(void)
         char* f = "out.png";
         struct pie_bitmap_u8rgb src;
         struct pie_bitmap_f32rgb dst;
-        
+
         src.height = 10;
         src.width = 10;
         src.color_type = PIE_COLOR_TYPE_RGB;
@@ -60,14 +60,14 @@ int main(void)
                         if (red != blue)
                         {
                                 printf("ERROR\n");
-                                abort();                                
+                                abort();
                         }
                         if (red != green)
                         {
                                 printf("ERROR\n");
-                                abort();                                
+                                abort();
                         }
-                        
+
                 }
                 printf("\n");
         }

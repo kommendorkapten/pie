@@ -6,16 +6,18 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#include "pie_io.h"
-#include "../pie_log.h"
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "pie_io.h"
+#include "../pie_log.h"
+#include "../bm/pie_bm.h"
+#include "../alg/pie_cspace.h"
 
 #define PIE_MAGIC_MAX 16
 
@@ -53,7 +55,7 @@ static enum pie_file_type pie_get_magic(unsigned char magic[PIE_MAGIC_MAX],
 
 int pie_io_load(struct pie_bitmap_f32rgb* bm,
                 const char* path,
-                struct pie_io_opt* opts)
+                struct pie_io_opts* opts)
 {
         /* Read the magic bytes */
         unsigned char magic[PIE_MAGIC_MAX];
@@ -76,13 +78,16 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm,
         }
         ft = pie_get_magic(magic, br);
 
+        int conv_cspace = 0;
         switch (ft)
         {
         case PIE_FT_JPG:
                 ret = pie_io_jpg_f32_read(bm, path);
+                conv_cspace = 1;
                 break;
         case PIE_FT_PNG:
                 ret = pie_io_png_f32_read(bm, path);
+                conv_cspace = 1;
                 break;
         case PIE_FT_UNKNOWN:
                 /* Assume a RAW format, try to load */
@@ -91,7 +96,27 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm,
         default:
                 ret = PIE_IO_UNSUPPORTED_FMT;
         }
-        
+
+        if (conv_cspace && opts)
+        {
+                switch (opts->cspace)
+                {
+                case PIE_IO_LINEAR:
+                        pie_alg_srgb_to_linearv(bm->c_red,
+                                                bm->height * bm->row_stride);
+                        pie_alg_srgb_to_linearv(bm->c_green,
+                                                bm->height * bm->row_stride);
+                        pie_alg_srgb_to_linearv(bm->c_blue,
+                                                bm->height * bm->row_stride);
+                        break;
+                case PIE_IO_SRGB:
+                        break;
+                default:
+                        pie_bm_free_f32(bm);
+                        ret = PIE_IO_INV_OPT;
+                }
+        }
+
         return ret;
 }
 

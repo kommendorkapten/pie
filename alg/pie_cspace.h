@@ -26,7 +26,7 @@ extern float pie_alg_gamma(float, float);
  * Apply gamma correction to an array of values.
  * @param the channel values.
  * @param the gamma exponent.
- * @param the number of values in the array.
+ * @param the number of samples in the array.
  * @return void.
  */
 extern void pie_alg_gammav(float*, float, size_t);
@@ -40,7 +40,7 @@ extern float pie_alg_srgb_to_linear(float);
 /**
  * Convert from sRGB color space to linear color space, vector.
  * @param sRGB channel values.
- * @param the size of the array.
+ * @param the number of samples in the array.
  * @return void.
  */
 extern void pie_alg_srgb_to_linearv(float*, size_t);
@@ -55,7 +55,7 @@ extern float pie_alg_linear_to_srgb(float);
 /**
  * Convert from linear color space to sRGB color space, vector.
  * @param a linear channel value.
- * @param the size of the array.
+ * @param the number of samples in the array.
  * @return void.
  */
 extern void pie_alg_linear_to_srgbv(float*, size_t);

@@ -6,6 +6,7 @@
 #include "../lib/timing.h"
 #include "../alg/pie_medf3.h"
 #include "../alg/pie_unsharp.h"
+#include "../alg/pie_cspace.h"
 #include "../alg/pie_curve.h"
 #include "../math/pie_kernel.h"
 
@@ -16,7 +17,7 @@ int main(int argc, char** argv)
         struct pie_bitmap_f32rgb bmf;
         struct pie_bitmap_u8rgb bmu;
         struct timing t;
-        struct pie_io_opt opts;
+        struct pie_io_opts opts;
         float* buf;
         int ok;
         char med3 = 0;
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
         out = argv[2];
 
         opts.qual = PIE_IO_HIGH_QUAL;
+        opts.cspace = PIE_IO_LINEAR;
 
         timing_start(&t);
         if (ok = pie_io_load(&bmf, in, &opts), ok)
@@ -187,6 +189,15 @@ int main(int argc, char** argv)
                               bmf.row_stride);
                 printf("curve in %luusec\n", timing_dur_usec(&t));
         }
+
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(bmf.c_red,
+                                bmf.height * bmf.row_stride);
+        pie_alg_linear_to_srgbv(bmf.c_green,
+                                bmf.height * bmf.row_stride);
+        pie_alg_linear_to_srgbv(bmf.c_blue,
+                                bmf.height * bmf.row_stride);
+        printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
 
         timing_start(&t);
         if (pie_bm_conv_bd(&bmu, PIE_COLOR_8B,

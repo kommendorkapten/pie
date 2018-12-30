@@ -26,6 +26,7 @@
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 #include "../lib/llist.h"
+#include "../alg/pie_cspace.h"
 
 #define BUF_LEN 4096
 
@@ -305,47 +306,48 @@ static int check_path(const char* p)
 
 static int tojpg(const char* dst, const char* src, int max)
 {
-        struct pie_bitmap_f32rgb bm_org;
-        struct pie_bitmap_f32rgb bm_dwn;
+        struct pie_bitmap_f32rgb bm_in;
         struct pie_bitmap_u8rgb bm_out;
-        struct pie_io_opt opts;
+        struct pie_io_opts opts;
         int ok;
 
         opts.qual = PIE_IO_HIGH_QUAL;
+        opts.cspace = PIE_IO_LINEAR;
 
-        if (ok = pie_io_load(&bm_org, src, &opts), ok)
+        if (ok = pie_io_load(&bm_in, src, &opts), ok)
         {
                 return 1;
         }
 
         if (max> 0)
         {
-                if (pie_bm_dwn_smpl(&bm_dwn,
-                                    &bm_org,
+                struct pie_bitmap_f32rgb new;
+
+                if (pie_bm_dwn_smpl(&new,
+                                    &bm_in,
                                     max,
                                     max))
                 {
-                        pie_bm_free_f32(&bm_org);
+                        pie_bm_free_f32(&bm_in);
                         return 1;
                 }
-                pie_bm_free_f32(&bm_org);
-                if (pie_bm_conv_bd(&bm_out, PIE_COLOR_8B,
-                                   &bm_dwn, PIE_COLOR_32B))
-                {
-                        pie_bm_free_f32(&bm_org);
-                        return 1;
-                }
-                pie_bm_free_f32(&bm_dwn);
+
+                pie_bm_free_f32(&bm_in);
+                bm_in = new;
         }
-        else
+
+        pie_alg_linear_to_srgbv(bm_in.c_red,
+                                bm_in.height * bm_in.row_stride);
+        pie_alg_linear_to_srgbv(bm_in.c_green,
+                                bm_in.height * bm_in.row_stride);
+        pie_alg_linear_to_srgbv(bm_in.c_blue,
+                                bm_in.height * bm_in.row_stride);
+
+        if (pie_bm_conv_bd(&bm_out, PIE_COLOR_8B,
+                           &bm_in, PIE_COLOR_32B))
         {
-                if (pie_bm_conv_bd(&bm_out, PIE_COLOR_8B,
-                                   &bm_org, PIE_COLOR_32B))
-                {
-                        pie_bm_free_f32(&bm_org);
-                        return 1;
-                }
-                pie_bm_free_f32(&bm_org);
+                pie_bm_free_f32(&bm_in);
+                return 1;
         }
 
         if (pie_io_jpg_u8rgb_write(dst, &bm_out, 80))
@@ -353,6 +355,7 @@ static int tojpg(const char* dst, const char* src, int max)
                 return 1;
         }
 
+        pie_bm_free_f32(&bm_in);
         pie_bm_free_u8(&bm_out);
 
         return 0;

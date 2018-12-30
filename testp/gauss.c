@@ -8,6 +8,7 @@
 #include "../lib/timing.h"
 #include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
+#include "../alg/pie_cspace.h"
 
 #define KERNEL_LEN 281
 
@@ -35,6 +36,10 @@ int main(int argc, char** argv)
         float s = 2.0f;
         int kernel_len = (int)((6.0f * s) + 0.5f);
         int size;
+        struct pie_io_opts opts = {
+                .qual = PIE_IO_HIGH_QUAL,
+                .cspace = PIE_IO_LINEAR
+        };
 
         if (kernel_len > KERNEL_LEN)
         {
@@ -53,7 +58,7 @@ int main(int argc, char** argv)
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1], NULL);
+        ret = pie_io_load(&img, argv[1], &opts);
         dur = timing_dur_usec(&t);
         if (ret)
         {
@@ -137,12 +142,21 @@ int main(int argc, char** argv)
         dur = timing_dur_usec(&t);
         printf("Executed kernel took %8luusec\n", dur);
 
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(img.c_red,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_green,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_blue,
+                                img.height * img.row_stride);
+        printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
+
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
         pie_io_png_u8rgb_write("gauss.png", &out);
         pie_bm_free_u8(&out);
         pie_bm_free_f32(&img);
-        ret = pie_io_load(&img, argv[1], NULL);
+        ret = pie_io_load(&img, argv[1], &opts);
 
         /* BOX Blur 6 */
         timing_start(&t);
@@ -208,6 +222,16 @@ int main(int argc, char** argv)
 
         dur = timing_dur_usec(&t);
         printf("Box blur 6 took      %8luusec\n", dur);
+
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(img.c_red,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_green,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_blue,
+                                img.height * img.row_stride);
+        printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
+
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
         pie_io_png_u8rgb_write("box.png", &out);

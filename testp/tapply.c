@@ -6,6 +6,7 @@
 #include "../lib/timing.h"
 #include "../encoding/pie_rgba.h"
 #include "../alg/pie_hist.h"
+#include "../alg/pie_cspace.h"
 #include "../bm/pie_render.h"
 
 int main(int argc, char** argv)
@@ -15,6 +16,10 @@ int main(int argc, char** argv)
         struct timing t;
         struct pie_dev_settings settings;
         struct pie_histogram hist;
+        struct pie_io_opts opts = {
+                .qual = PIE_IO_HIGH_QUAL,
+                .cspace = PIE_IO_LINEAR
+        };
         char* out_name = "out.jpg";
         float* buf;
         long dur;
@@ -22,12 +27,12 @@ int main(int argc, char** argv)
 
         if (argc != 2)
         {
-                printf("Usage contr filename\n");
+                printf("Usage tapply filename\n");
                 return -1;
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1], NULL);
+        ret = pie_io_load(&img, argv[1], &opts);
         dur = timing_dur_usec(&t);
         if (ret)
         {
@@ -42,6 +47,15 @@ int main(int argc, char** argv)
         settings.saturation = 1.3f;
         settings.contrast = 1.7f;
         pie_bm_render(&img, buf, &settings);
+
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(img.c_red,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_green,
+                                img.height * img.row_stride);
+        pie_alg_linear_to_srgbv(img.c_blue,
+                                img.height * img.row_stride);
+        printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
 
         timing_start(&t);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,

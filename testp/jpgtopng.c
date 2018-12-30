@@ -44,7 +44,7 @@ int main(int argc, char** argv)
                 printf("2\n");
                 return -1;
         }
-        printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));        
+        printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));
 
         pie_bm_free_u8(&bmu);
         pie_bm_free_f32(&bmf);

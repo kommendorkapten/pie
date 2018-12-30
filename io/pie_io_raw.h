@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -16,7 +16,7 @@
 
 #include "../pie_types.h"
 
-struct pie_io_opt;
+struct pie_io_opts;
 
 /**
  * Reads an RAW image into the provided bitmap.
@@ -27,6 +27,6 @@ struct pie_io_opt;
  */
 extern int pie_io_raw_f32_read(struct pie_bitmap_f32rgb*,
                                const char*,
-                               struct pie_io_opt*);
+                               struct pie_io_opts*);
 
 #endif /* __PIE_IO_RAW_H__ */

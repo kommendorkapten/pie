@@ -40,6 +40,7 @@
 #include "../exif/pie_exif.h"
 #include "../io/pie_io.h"
 #include "../io/pie_io_jpg.h"
+#include "../alg/pie_cspace.h"
 
 struct nm_worker
 {
@@ -157,9 +158,10 @@ static void* worker(void* arg)
         struct nm_worker* me = (struct nm_worker*)arg;
         struct pie_stg_mnt* proxy_stg = NULL;
         struct pie_stg_mnt* thumb_stg = NULL;
-        struct pie_io_opt io_opts;
+        struct pie_io_opts io_opts;
 
         io_opts.qual = PIE_IO_HIGH_QUAL;
+        io_opts.cspace = PIE_IO_LINEAR;
 
         for (int i = 0; i < md_cfg.storages->len; i++)
         {
@@ -493,6 +495,16 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
                           timing_dur_msec(&t));
                 bm_src = &bm_dwn;
         }
+
+        /* Go back to sRGB */
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(bm_src->c_red,
+                                bm_src->height * bm_src->row_stride);
+        pie_alg_linear_to_srgbv(bm_src->c_green,
+                                bm_src->height * bm_src->row_stride);
+        pie_alg_linear_to_srgbv(bm_src->c_blue,
+                                bm_src->height * bm_src->row_stride);
+        PIE_DEBUG("Converted to sRGB in %ldms", timing_dur_msec(&t));
 
         timing_start(&t);
         if (pie_bm_conv_bd(&bm_out,

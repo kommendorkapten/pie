@@ -99,7 +99,6 @@ int main(int argc, char** argv)
                 bmu.c_blue[y * bmu.row_stride + x] = 255;
         }
 
-
         pie_io_png_u8rgb_write("out.png", &bmu);
 
         pie_bm_free_f32(&bmf);

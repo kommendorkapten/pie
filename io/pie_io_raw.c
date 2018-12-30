@@ -20,7 +20,7 @@
 
 int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                         const char* path,
-                        struct pie_io_opt* opts)
+                        struct pie_io_opts* opts)
 {
         libraw_data_t* lrd;
         libraw_processed_image_t* mem_img;
@@ -59,7 +59,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                     11 - DHT interpolation <--- Best performance 2x slower
         */
 
-        /* Gamma, set sRGB */
+        /* Default to sRGB */
         lrd->params.gamm[0] = 1.0 / 2.4f;
         lrd->params.gamm[1] = 12.92f;
 
@@ -73,6 +73,20 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                         break;
                 default:
                         break;
+                }
+
+                switch (opts->cspace)
+                {
+                case PIE_IO_LINEAR:
+                        lrd->params.gamm[0] = 1.0f;
+                        lrd->params.gamm[1] = 1.0f;
+                        break;
+                case PIE_IO_SRGB:
+                        break;
+                default:
+                        PIE_WARN("Invalid target color space: %d", opts->cspace);
+                        ret = PIE_IO_INV_OPT;
+                        goto done;
                 }
         }
 

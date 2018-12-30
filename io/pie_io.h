@@ -19,6 +19,7 @@
 #define PIE_IO_INTERNAL_ERR    3
 #define PIE_IO_INV_FMT         4
 #define PIE_IO_UNSUPPORTED_FMT 5
+#define PIE_IO_INV_OPT         6
 
 #include "pie_io_png.h"
 #include "pie_io_jpg.h"
@@ -31,20 +32,29 @@ enum pie_io_opt_qual
         PIE_IO_HIGH_QUAL
 };
 
-struct pie_io_opt
+enum pie_io_opt_cspace
+{
+        PIE_IO_LINEAR,
+        PIE_IO_SRGB
+};
+
+struct pie_io_opts
 {
         enum pie_io_opt_qual qual;
+        enum pie_io_opt_cspace cspace;
 };
 
 /**
  * Open a file and load content into an empty bitmap.
  * @param the bitmap to load content into.
  * @param the path to open.
- * @param options to use when loading, or NULL for default.
+ * @param options to use when loading, or NULL for default:
+ *        PIE_IO_NORM_QUAL
+ *        PIE_IO_SRGB
  * @return 0 on success.
  */
 extern int pie_io_load(struct pie_bitmap_f32rgb*,
                        const char*,
-                       struct pie_io_opt*);
+                       struct pie_io_opts*);
 
 #endif /* __PIE_IO_H__ */

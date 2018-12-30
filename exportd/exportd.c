@@ -33,6 +33,7 @@
 #include "../pie_log.h"
 #include "../encoding/pie_json.h"
 #include "../alg/pie_unsharp.h"
+#include "../alg/pie_cspace.h"
 
 /**
  * Signal handler.
@@ -227,7 +228,7 @@ static int process(struct q_consumer* q)
 static void export(void* a, size_t len)
 {
         char path[PIE_PATH_LEN];
-        struct pie_io_opt io_opts;
+        struct pie_io_opts io_opts;
         struct pie_bitmap_f32rgb bm_src;
         struct timing t;
         struct timing t_tot;
@@ -244,6 +245,7 @@ static void export(void* a, size_t len)
         }
 
         io_opts.qual = PIE_IO_HIGH_QUAL;
+        io_opts.cspace = PIE_IO_LINEAR;
 
         PIE_DEBUG("Path %s", msg.path);
         PIE_DEBUG("Mob id: %ld", msg.mob_id);
@@ -339,7 +341,7 @@ static void export(void* a, size_t len)
                                 .amount = 3.0f,
                                 .threshold = 2.0f,
                         };
-                PIE_DEBUG("Apply post resize sharpening");
+                timing_start(&t);
                 pie_alg_unsharp(bm_src.c_red,
                                 bm_src.c_green,
                                 bm_src.c_blue,
@@ -347,7 +349,19 @@ static void export(void* a, size_t len)
                                 bm_src.width,
                                 bm_src.height,
                                 bm_src.row_stride);
+                PIE_DEBUG("Applied post resize sharpening in %ldms",
+                          timing_dur_msec(&t));
         }
+
+        /* Convert to sRGB */
+        timing_start(&t);
+        pie_alg_linear_to_srgbv(bm_src.c_red,
+                                bm_src.height * bm_src.row_stride);
+        pie_alg_linear_to_srgbv(bm_src.c_green,
+                                bm_src.height * bm_src.row_stride);
+        pie_alg_linear_to_srgbv(bm_src.c_blue,
+                                bm_src.height * bm_src.row_stride);
+        PIE_DEBUG("Converted to sRGB in %ldms", timing_dur_msec(&t));
 
         /* Export */
         struct pie_bitmap_u8rgb u8;

@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -29,7 +29,7 @@ struct pie_bitmap_f32rgb;
 extern int pie_io_png_f32_read(struct pie_bitmap_f32rgb*, const char*);
 
 /**
- * Writes an 8bit RGB bitmap to a PNG file.
+ * Writes an 8bit sRGB bitmap to a PNG file.
  * @param the output filename of the PNG file.
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
@@ -37,7 +37,7 @@ extern int pie_io_png_f32_read(struct pie_bitmap_f32rgb*, const char*);
 extern int pie_io_png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
 
 /**
- * Writes an 16bit RGB bitmap to a PNG file.
+ * Writes an 16bit sRGB bitmap to a PNG file.
  * @param the output filename of the PNG file.
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.

@@ -13,15 +13,19 @@ int main(int argc, char** argv)
         struct timing t;
         unsigned long dur;
         int count = 0;
+        struct pie_io_opts opts = {
+                .qual = PIE_IO_HIGH_QUAL,
+                .cspace = PIE_IO_LINEAR
+        };
 
         if (argc != 2)
         {
                 printf("Usage histinfo filename\n");
                 return -1;
         }
-        
+
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1], NULL);
+        ret = pie_io_load(&img, argv[1], &opts);
         dur = timing_dur_usec(&t);
         if (ret)
         {
@@ -43,7 +47,7 @@ int main(int argc, char** argv)
 
         if (count != img.width * img.height)
         {
-                printf("Counted %u pixels, expected is %u\n", 
+                printf("Counted %u pixels, expected is %u\n",
                        count, img.width * img.height);
         }
         pie_bm_free_f32(&img);

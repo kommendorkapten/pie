@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -29,7 +29,7 @@
 struct pie_jpg_error_mgr
 {
         /* Jpeg error mgr fields */
-        struct jpeg_error_mgr pub; 
+        struct jpeg_error_mgr pub;
         jmp_buf setjmp_buffer;
 };
 
@@ -63,9 +63,9 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 
         cinfo.err = jpeg_std_error(&jerr.pub);
         jerr.pub.error_exit = pie_jpg_error_exit;
-        
+
         /* Provision error handling */
-        if (setjmp(jerr.setjmp_buffer)) 
+        if (setjmp(jerr.setjmp_buffer))
         {
                 /*
                  * Error during encoding, clean up and return.
@@ -103,15 +103,15 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         for (int i = 0; i < num_rows; i++)
         {
                 rows[i] = malloc(sizeof(JSAMPLE) *
-                                 cinfo.output_width * 
+                                 cinfo.output_width *
                                  cinfo.output_components);
         }
 
-        while (cinfo.output_scanline < cinfo.output_height) 
+        while (cinfo.output_scanline < cinfo.output_height)
         {
                 int read_rows;
                 int jpos;
-                
+
                 read_rows = jpeg_read_scanlines(&cinfo, rows, num_rows);
                 for (int r = 0; r < read_rows; r++)
                 {
@@ -139,7 +139,6 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
        /* If error handling is configured, check *.num_warnings.
         * Should be zero if no warnings were found.
         */
-
         return 0;
 }
 
@@ -165,7 +164,7 @@ int pie_io_jpg_u8rgb_write(const char* path,
         jpeg_create_compress(&cinfo);
         jpeg_stdio_dest(&cinfo, fp);
 
-        cinfo.image_width = bm->width; 
+        cinfo.image_width = bm->width;
         cinfo.image_height = bm->height;
 
         switch(bm->color_type)
@@ -183,17 +182,17 @@ int pie_io_jpg_u8rgb_write(const char* path,
                 jpeg_destroy_compress(&cinfo);
                 return PIE_IO_UNSUPPORTED_FMT;
         }
-        
+
         /* Set other values */
         jpeg_set_defaults(&cinfo);
         jpeg_set_quality(&cinfo, quality, TRUE);
         jpeg_start_compress(&cinfo, TRUE);
-        
+
         /* Allocate buffer for row */
-        row = malloc(sizeof(JSAMPLE) * 
-                     cinfo.image_width * 
+        row = malloc(sizeof(JSAMPLE) *
+                     cinfo.image_width *
                      cinfo.input_components);
-        while (cinfo.next_scanline < cinfo.image_height) 
+        while (cinfo.next_scanline < cinfo.image_height)
         {
                 JSAMPROW rows[1];
                 int jpos = 0;
