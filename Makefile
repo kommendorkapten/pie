@@ -85,7 +85,7 @@ UTIL_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c pie_medf3.c
-ENC_SRC    = pie_json.c pie_rgba.c
+ENC_SRC    = pie_json.c pie_rgba.c jsmn.c
 MATH_SRC   = pie_math.c pie_catmull.c pie_blur.c pie_kernel.c pie_median.c
 BM_SRC     = pie_bm.c pie_render.c
 HTTP_SRC   = pie_session.c pie_util.c
@@ -162,8 +162,8 @@ $(DIRS):
 $(LIBCORE): $(IO_OBJS) $(MATH_OBJS) $(ALG_OBJS) $(BM_OBJS) $(EXIF_OBJS) pie_id.o
 	ar -cr $@ $(IO_OBJS) $(MATH_OBJS) $(ALG_OBJS) $(BM_OBJS) $(EXIF_OBJS) pie_id.o
 
-$(LIBUTIL): $(UTIL_OBJS) $(ENC_OBJS) obj/jsmn.o
-	ar -cr $@ $(UTIL_OBJS) $(ENC_OBJS) obj/jsmn.o
+$(LIBUTIL): $(UTIL_OBJS) $(ENC_OBJS)
+	ar -cr $@ $(UTIL_OBJS) $(ENC_OBJS)
 
 $(LIBDM): $(DM_OBJS) $(DOML_OBJS)
 	ar -cr $@ $(DM_OBJS) $(DOML_OBJS)
@@ -180,32 +180,8 @@ clean:
 bin/pngrw: testp/pngrw.c $(LIBCORE)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
 
-bin/pngcreate: testp/pngcreate.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
-
 bin/imgread: testp/imgread.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/jpgcreate: testp/jpgcreate.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
-
-bin/jpgtopng: testp/jpgtopng.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/linvsgma: testp/linvsgma.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
-
-bin/analin: testp/analin.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
-
-bin/histinfo: testp/histinfo.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/contr: testp/contr.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/texp: testp/texp.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
 
 bin/gauss: testp/gauss.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
@@ -215,9 +191,6 @@ bin/unsharp: testp/unsharp.c $(LIBCORE) $(LIBUTIL)
 
 bin/tojpg: testp/tojpg.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/catm: testp/catm.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
 
 bin/tapply: testp/tapply.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
@@ -234,14 +207,8 @@ bin/exif_dump: testp/exif_dump.c $(LIBCORE) $(LIBUTIL)
 bin/tjson: testp/tjson.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE) $(LIBUTIL)
 
-bin/test_exif_meta: testp/test_exif_meta.c $(LIBCORE) $(CFG_OBJS) $(LIBUTIL) $(LIBDM)
-	$(CC) $(CFLAGS) $< $(CFG_OBJS) -o $@ $(LFLAGS) -lexif -lsqlite3 -lraw $(LIBCORE) $(LIBDM) $(LIBUTIL)
-
 bin/bench_blur: testp/bench_blur.c $(LIBCORE) $(LIBUTIL)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
-
-bin/test_gamma: testp/test_gamma.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE)
 
 bin/test_id: testp/test_id.c $(LIBCORE)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE)
@@ -262,21 +229,21 @@ bin/exif_tags: testp/exif_tags.c
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) -lexif
 
 # Servers
-bin/editd: $(EDITD_OBJS) $(CFG_OBJS) $(LIBCORE) $(LIBUTIL) $(LIBDM) $(LIBHTTP)
-	$(CC) $(CFLAGS) $(EDITD_OBJS) $(CFG_OBJS) -o $@ $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET) $(LIBCORE) $(LIBUTIL) $(LIBDM) $(LIBHTTP)
+bin/editd: $(EDITD_OBJS) $(IO_OBJS) $(HTTP_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DOML_OBJS) $(CFG_OBJS) $(ENC_OBJS) $(BM_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/strutil.o obj/timing.o obj/s_queue.o obj/s_queue_intra.o obj/pie_id.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET)
 
-bin/ingestd: $(INGEST_OBJS) $(CFG_OBJS) $(LIBUTIL) $(LIBDM)
-	$(CC) $(CFLAGS) $(INGEST_OBJS) $(CFG_OBJS) -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO) $(LIBUTIL) $(LIBDM)
+bin/ingestd: $(INGEST_OBJS) $(CFG_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/s_queue.o obj/s_queue_intra.o obj/timing.o obj/strutil.o obj/fal.o obj/evp_hw.o obj/fswalk.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) $(CFG_OBJS) $(LIBCORE) $(LIBUTIL) $(LIBDM)
-	$(CC) $(CFLAGS) $(MEDIAD_OBJS) $(CFG_OBJS) -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG) $(LIBCORE) $(LIBDM) $(LIBUTIL)
+bin/mediad: $(MEDIAD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/pie_bm.o obj/evp_hw.o obj/s_queue.o obj/s_queue_intra.o obj/pie_exif.o obj/pie_id.o obj/pie_cspace.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
-bin/collectiond: $(COLLD_OBJS) $(CFG_OBJS) $(LIBUTIL) $(LIBDM) $(LIBHTTP)
-	$(CC) $(CFLAGS) $(COLLD_OBJS) $(CFG_OBJS) -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3 $(LIBUTIL) $(LIBDM) $(LIBHTTP)
+bin/collectiond: $(COLLD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(DOML_OBJS) $(ENC_OBJS) $(HTTP_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/s_queue.o obj/s_queue_intra.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3
 
-bin/exportd: $(EXPORTD_OBJS) $(CFG_OBJS) $(LIBCORE) $(LIBDM) $(LIBUTIL)
-	$(CC) $(CFLAGS) $(EXPORTD_OBJS) $(CFG_OBJS) -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LIMG) $(LIBCORE) $(LIBDM) $(LIBUTIL)
+bin/exportd: $(EXPORTD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(BM_OBJS) $(IO_OBJS) $(ENC_OBJS) $(DOML_OBJS) obj/llist.o obj/hmap.o obj/timing.o obj/strutil.o obj/s_queue.o obj/s_queue_intra.o obj/fal.o obj/worker.o obj/chan.o obj/chan_poll.o obj/lock.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LIMG)
 
 # Tools
-bin/collver: tools/collver.c $(LIBCORE) $(CFG_OBJS) $(LIBDM) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< $(CFG_OBJS) -o $@ $(LFLAGS) -lsqlite3 $(LIMG) $(LCRYPTO) $(LIBCORE) $(LIBDM) $(LIBUTIL)
+bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) obj/llist.o obj/hmap.o obj/pie_bm.o obj/pie_cspace.o obj/strutil.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lsqlite3 $(LIMG) $(LCRYPTO)
