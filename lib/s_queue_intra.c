@@ -63,6 +63,8 @@ void q_intra_c_close(struct q_queue* q)
         {
                 return;
         }
+        /* shutdown is needed on OpenBSD to terminate socket properly */
+        shutdown(qc->fd, SHUT_RDWR);
         close(qc->fd);
         unlink(qc->queue);
 }
