@@ -178,8 +178,16 @@ struct pie_host* pie_cfg_get_host(int host)
                         PIE_WARN("Could not get hostname");
                         return NULL;
                 }
+                PIE_DEBUG("Current host is '%s'", hostname);
+                char *p = strchr(hostname, '.');
+                if (p)
+                {
+                        *p = '\0';
+                        PIE_DEBUG("Stripping domain information: %s",
+                                  hostname);
+                }
 
-                return pie_cfg_get_hostbyname(hostname);
+                h = pie_cfg_get_hostbyname(hostname);
         }
         else
         {
