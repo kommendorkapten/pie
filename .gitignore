@@ -2,8 +2,9 @@
 bin/*
 obj/*
 *.o
-.jpg
-.png
+*.jpg
+*.png
+*.CR2
 core
 include.*
 playground/*
