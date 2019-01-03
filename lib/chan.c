@@ -30,14 +30,14 @@ struct chan* chan_create(void)
 		perror("chan_create::pipe");
 		free(c);
 		return NULL;
-		
+
 	}
-		
+
         if (fcntl(c->fds[READ_FD], F_SETFL, O_NONBLOCK) == -1)
 	{
 		perror("chan_create::fncntl");
 		free(c);
-		return NULL;	
+		return NULL;
 	}
 
 #ifdef MT_SAFE
@@ -54,7 +54,7 @@ void chan_close(struct chan* c)
 		return;
 	}
 
-        if (c->fan_in) 
+        if (c->fan_in)
         {
                 /* Kill fan in thread */
                 pthread_kill(*c->fan_in, SIGUSR1);
@@ -187,7 +187,7 @@ int chan_read_msg(struct chan* c, struct chan_msg* m)
 	{
 		result = 0;
 	}
-	else 
+	else
 	{
 		if(errno == EBADF)
 		{
@@ -197,7 +197,7 @@ int chan_read_msg(struct chan* c, struct chan_msg* m)
 		{
 			result = EAGAIN;
 		}
-		else 
+		else
 		{
 #ifdef __GNUC__
                         /* Some strange behavior has been noticed with gcc,
@@ -207,16 +207,16 @@ int chan_read_msg(struct chan* c, struct chan_msg* m)
                         {
                                 result = EBADF;
                         }
-                        else 
+                        else
                         {
                                 result = -1;
                         }
 #else
-			result = -1;			
+			result = -1;
 #endif
 		}
 	}
-	
+
 	return result;
 }
 
@@ -227,19 +227,19 @@ static void* fun_fan_in(void* arg)
         struct chan** chans = (struct chan**)arg;
         struct chan* tgt;
         int num = 0;
-        
+
         /* Block all signals */
         sigfillset(&sigset);
         pthread_sigmask(SIG_BLOCK, &sigset, NULL);
         sigemptyset(&sigset);
         sigaddset(&sigset, SIGUSR1);
         pthread_sigmask(SIG_UNBLOCK, &sigset, NULL);
-        
+
         /* Install dummy handler so we can abort chan_select */
         sa.sa_handler = &sig_noop;
         sa.sa_flags = 0;
         sigfillset(&sa.sa_mask);
-        /* Sigaction virtally fails only on invalid signals, so skip error 
+        /* Sigaction virtally fails only on invalid signals, so skip error
            check */
         sigaction(SIGUSR1, &sa, NULL);
 
@@ -281,7 +281,7 @@ static void* fun_fan_out(void* arg)
         struct chan** chans = (struct chan**)arg;
         struct chan* src;
         int num = 0;
-        
+
         /* Block all signals */
         sigfillset(&sigset);
         pthread_sigmask(SIG_BLOCK, &sigset, NULL);
@@ -300,7 +300,7 @@ static void* fun_fan_out(void* arg)
         {
                 struct chan_msg msg = {.data = NULL,
                                        .len = 0};
-                
+
                 if (chan_read(src, &msg, -1))
                 {
                         break;
