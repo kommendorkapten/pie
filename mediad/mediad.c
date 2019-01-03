@@ -256,12 +256,17 @@ int main(void)
         q_update = NULL;
         ret = 0;
 
+        PIE_LOG("Waiting for worker threads");
+        pie_nm_stop_workers();
+        PIE_LOG("Done");
+
         /* join threads */
+        PIE_LOG("Waiting for recv threads");
         for (int i = 0; i < NUM_QUEUES; i++)
         {
                 pthread_join(thr[i], NULL);
         }
-        pie_nm_stop_workers();
+        PIE_LOG("Done");
 cleanup:
         if (q_incoming)
         {
