@@ -446,6 +446,9 @@ static int cb_http(struct lws* wsi,
                 }
 
                 goto keepalive;
+        case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+                try_keepalive = 1;
+                goto keepalive;
         case LWS_CALLBACK_HTTP_BODY:
                 PIE_TRACE("BODY [%p] '%s' %lu", user, req_url, len);
                 if (pie_http_post_data_add(&ctx->post_data, in, len))
