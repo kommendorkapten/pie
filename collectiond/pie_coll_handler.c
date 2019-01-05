@@ -685,6 +685,8 @@ int pie_coll_h_stgs(struct pie_coll_h_resp* r,
                     struct pie_http_post_data* data,
                     sqlite3* db)
 {
+        (void)url;
+        (void)data;
         if (verb != PIE_HTTP_VERB_GET)
         {
                 r->http_sc = HTTP_STATUS_METHOD_NOT_ALLOWED;
@@ -755,11 +757,14 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
                    struct pie_http_post_data* data,
                    sqlite3* db)
 {
+        (void)db;
 #define BUF_LEN 4096
-        struct pie_http_export_request req = {0};
+        struct pie_http_export_request req;
         char* buf = NULL;
         const char *p;
         pie_id stg_id;
+
+        memset(&req, 0, sizeof(req));
 
         switch (verb)
         {
@@ -781,7 +786,7 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
                 r->http_sc = HTTP_STATUS_BAD_REQUEST;
         }
 
-        PIE_LOG("Export to %s@%d", p, stg_id);
+        PIE_LOG("Export to %s@%d", p, (int)stg_id);
 
         req.mobs = NULL;
         if (pie_dec_json_export_request(&req, data->data))
@@ -822,7 +827,7 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
                 {
                         /* make sure null terminator gets written */
                         bw++;
-                        if (export_q->send(export_q->this, buf, bw) != bw)
+                        if (export_q->send(export_q->this, buf, bw) != (ssize_t)bw)
                         {
                                 PIE_ERR("Failed to send export job for %ld",
                                         em.mob_id);
