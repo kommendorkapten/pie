@@ -37,6 +37,19 @@ extern void pie_alg_gammav(float*, float, size_t);
  * @return a linear channel value.
  */
 extern float pie_alg_srgb_to_linear(float);
+
+/**
+ * Convert from sRGB color space to linear color space.
+ * Implemented using a 6 degree polynom as approximation for the
+ * logarithmic curve.
+ * Average relative error is < 0.01%.
+ * Maximum relative error (0.2-0.5%) occurs at the shades where value is
+ * in range 0.041 to 0.05.
+ * @param sRGB channel value.
+ * @return a linear channel value.
+ */
+extern float pie_alg_srgb_to_linearp(float);
+
 /**
  * Convert from sRGB color space to linear color space, vector.
  * @param sRGB channel values.
@@ -51,6 +64,15 @@ extern void pie_alg_srgb_to_linearv(float*, size_t);
  * @return sRGB channel value.
  */
 extern float pie_alg_linear_to_srgb(float);
+
+/**
+ * Convert from linear color space to sRGB color space.
+ * Implemented using a polynom as approximation. Currently to
+ * much errror to be reliable.
+ * @param a linear channel value.
+ * @return sRGB channel value.
+ */
+extern float pie_alg_linear_to_srgbp(float);
 
 /**
  * Convert from linear color space to sRGB color space, vector.
