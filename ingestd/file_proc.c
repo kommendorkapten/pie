@@ -60,6 +60,15 @@ int pie_fp_add_file(const char* p)
                                 sizeof(new_mmsg));
         if (nb != sizeof(new_mmsg))
         {
+                switch (errno)
+                {
+                case ENOBUFS:
+                        PIE_ERR("ENOBUFS");
+                        break;
+                case EAGAIN:
+                        PIE_ERR("EAGAIN");
+                        break;
+                }
                 perror("queue->send");
                 PIE_ERR("Could not send messsage to queue");
                 abort();
