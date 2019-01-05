@@ -18,6 +18,21 @@
 #include "pie_kernel.h"
 #include "pie_math.h"
 
+static void pie_mth_kernel_sep_apply_x(float* restrict c,
+                                       float* restrict k,
+                                       int len,
+                                       float* restrict buf,
+                                       int w,
+                                       int h,
+                                       int s);
+static void pie_mth_kernel_sep_apply_y(float* restrict c,
+                                       float* restrict k,
+                                       int len,
+                                       float* restrict buf,
+                                       int w,
+                                       int h,
+                                       int s);
+
 void pie_mth_kernel3x3_apply(float* restrict c,
                              struct pie_kernel3x3* k,
                              float* restrict buf,
@@ -679,145 +694,137 @@ void pie_mth_kernel_sep_apply(float* restrict c,
                               int h,
                               int s)
 {
-        int half = len >> 1;
+        pie_mth_kernel_sep_apply_x(c, k, len, buf, w, h, s);
+        pie_mth_kernel_sep_apply_y(buf, k, len, c, w, h, s);
+}
 
-        /* x */
-        for (int y = 0; y < h; y++)
+static void pie_mth_kernel_sep_apply_x(float* restrict c,
+                                       float* restrict k,
+                                       int len,
+                                       float* restrict buf,
+                                       int w,
+                                       int h,
+                                       int s)
+{
+        int half = len >> 1;
+        int rem = h % 4;
+        int ystop = h - rem;
+
+        for (int y = 0; y < ystop; y+=4)
         {
+                int row1 = y * s;
+                int row2 = (y+1) * s;
+                int row3 = (y+2) * s;
+                int row4 = (y+3) * s;
+
                 for (int x = 0; x < w; x++)
                 {
-                        float sum = 0.0f;
-                        int stop1 = half - x;
-                        int stop2 = w + half - x;
-
-                        stop1 = stop1 > 0 ? stop1 : 0;
-                        stop2 = stop2 < len ? stop2 : len;
-
-                        /* p < 0 */
-                        for (int i = 0; i < stop1; i++)
-                        {
-                                int p = 0;
-
-                                sum += c[y * s + p] * k[i];
-                        }
-
-                        /* 0 <= p <= w - 1 */
-                        int rem = (stop2 - stop1) % 4;
-                        int par_stop = stop2 - rem;
-
-#ifdef __powerpc__
+                        int start = x - half;
+                        int stop = x + half + 1;
+                        int count = stop > w ? w - start : stop - start;
                         float sum1 = 0.0f;
                         float sum2 = 0.0f;
                         float sum3 = 0.0f;
                         float sum4 = 0.0f;
 
-                        for (int i = stop1; i < par_stop; )
-                        {
-                                int p = x + i - half;
+                        start = start < 0 ? 0 : start;
 
-                                sum1 += c[y * s + p++] * k[i++];
-                                sum2 += c[y * s + p++] * k[i++];
-                                sum3 += c[y * s + p++] * k[i++];
-                                sum4 += c[y * s + p] * k[i++];
-                        }
-                        sum += sum1 + sum2 + sum3 + sum4;
-#else
-                        for (int i = stop1; i < par_stop; )
+                        for (int i = 0; i < count; i++)
                         {
-                                int p = x + i - half;
-
-                                sum += c[y * s + p++] * k[i++];
-                                sum += c[y * s + p++] * k[i++];
-                                sum += c[y * s + p++] * k[i++];
-                                sum += c[y * s + p] * k[i++];
-                        }
-#endif
-                        for (int i = par_stop; i < stop2; i++)
-                        {
-                                int p = x + i - half;
-
-                                sum += c[y * s + p] * k[i];
+                                sum1 += c[row1 + start + i] * k[i];
+                                sum2 += c[row2 + start + i] * k[i];
+                                sum3 += c[row3 + start + i] * k[i];
+                                sum4 += c[row4 + start + i] * k[i];
                         }
 
-                        /* w - 1 < p */
-                        for (int i = stop2; i < len; i++)
-                        {
-                                int p = w - 1;
-
-                                sum += c[y * s + p] * k[i];
-                        }
-
-                        buf[y * s + x] = sum;
+                        buf[row1 + x] = sum1;
+                        buf[row2 + x] = sum2;
+                        buf[row3 + x] = sum3;
+                        buf[row4 + x] = sum4;
                 }
         }
 
-        /* y */
-        for (int x = 0; x < w; x++)
+        for (int y = ystop; y < h; y++)
+        {
+                int row1 = y * s;
+
+                for (int x = 0; x < w; x++)
+                {
+                        int start = x - half;
+                        int stop = x + half + 1;
+                        int count = stop > w ? w - start : stop - start;
+                        float sum1 = 0.0f;
+
+                        start = start < 0 ? 0 : start;
+
+                        for (int i = 0; i < count; i++)
+                        {
+                                sum1 += c[row1 + start + i] * k[i];
+                        }
+
+                        buf[row1 + x] = sum1;
+                }
+        }
+}
+
+static void pie_mth_kernel_sep_apply_y(float* restrict c,
+                                       float* restrict k,
+                                       int len,
+                                       float* restrict buf,
+                                       int w,
+                                       int h,
+                                       int s)
+{
+        int half = len >> 1;
+        int rem = w % 4;
+        int xstop = w - rem;
+
+        for (int x = 0; x < w; x+=4)
         {
                 for (int y = 0; y < h; y++)
                 {
-                        float sum = 0.0f;
-                        int stop1 = half - y;
-                        int stop2 = h + half - y;
-
-                        stop1 = stop1 > 0 ? stop1 : 0;
-                        stop2 = stop2 < len ? stop2 : len;
-
-                        /* p < 0 */
-                        for (int i = 0; i < stop1; i++)
-                        {
-                                int p = 0;
-
-                                sum += buf[p * s + x] * k[i];
-                        }
-
-                        /* 0 <= p <= h - 1 */
-                        int rem = (stop2 - stop1) % 4;
-                        int par_stop = stop2 - rem;
-#ifdef __powerpc__
+                        int start = y - half;
+                        int stop = y + half + 1;
+                        int count = stop > h ? h - start : stop - start;
                         float sum1 = 0.0f;
                         float sum2 = 0.0f;
                         float sum3 = 0.0f;
                         float sum4 = 0.0f;
 
-                        for (int i = stop1; i < par_stop; )
+                        start = start < 0 ? 0 : start;
+
+                        for (int i = 0; i < count; i++)
                         {
-                                int p = y + i - half;
-
-                                sum1 += buf[p++ * s + x] * k[i++];
-                                sum2 += buf[p++ * s + x] * k[i++];
-                                sum3 += buf[p++ * s + x] * k[i++];
-                                sum4 += buf[p * s + x] * k[i++];
-                        }
-                        sum += sum1 + sum2 + sum3 + sum4;
-#else
-                        for (int i = stop1; i < par_stop; )
-                        {
-                                int p = y + i - half;
-
-                                sum += buf[p++ * s + x] * k[i++];
-                                sum += buf[p++ * s + x] * k[i++];
-                                sum += buf[p++ * s + x] * k[i++];
-                                sum += buf[p * s + x] * k[i++];
-                        }
-#endif
-
-                        for (int i = par_stop; i < stop2; i++)
-                        {
-                                int p = y + i - half;
-
-                                sum += buf[p * s + x] * k[i];
+                                sum1 += c[(start + i) * s + x] * k[i];
+                                sum2 += c[(start + i) * s + x + 1] * k[i];
+                                sum3 += c[(start + i) * s + x + 2] * k[i];
+                                sum4 += c[(start + i) * s + x + 3] * k[i];
                         }
 
-                        /* h - 1 < p */
-                        for (int i = stop2; i < len; i++)
-                        {
-                                int p = h - 1;
+                        buf[y * s + x] = sum1;
+                        buf[y * s + x + 1] = sum2;
+                        buf[y * s + x + 2] = sum3;
+                        buf[y * s + x + 3] = sum4;
+                }
+        }
 
-                                sum += buf[p * s + x] * k[i];
+        for (int x = xstop; x < w; x++)
+        {
+                for (int y = 0; y < h; y++)
+                {
+                        int start = y - half;
+                        int stop = y + half + 1;
+                        int count = stop > h ? h - start : stop - start;
+                        float sum1 = 0.0f;
+
+                        start = start < 0 ? 0 : start;
+
+                        for (int i = 0; i < count; i++)
+                        {
+                                sum1 += buf[(start + i) *  s + x] * k[i];
                         }
 
-                        c[y * s + x] = sum;
+                        c[y * s + x] = sum1;
                 }
         }
 }
