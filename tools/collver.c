@@ -312,7 +312,11 @@ static int tojpg(const char* dst, const char* src, int max)
         int ok;
 
         opts.qual = PIE_IO_HIGH_QUAL;
+#if _PIE_EDIT_LINEAR
         opts.cspace = PIE_IO_LINEAR;
+#else
+        opts.cspace = PIE_IO_SRGB;
+#endif
 
         if (ok = pie_io_load(&bm_in, src, &opts), ok)
         {
@@ -336,12 +340,14 @@ static int tojpg(const char* dst, const char* src, int max)
                 bm_in = new;
         }
 
+#if _PIE_EDIT_LINEAR
         pie_alg_linear_to_srgbv(bm_in.c_red,
                                 bm_in.height * bm_in.row_stride);
         pie_alg_linear_to_srgbv(bm_in.c_green,
                                 bm_in.height * bm_in.row_stride);
         pie_alg_linear_to_srgbv(bm_in.c_blue,
                                 bm_in.height * bm_in.row_stride);
+#endif /* _PIE_EDIT_LINEAR */
 
         if (pie_bm_conv_bd(&bm_out, PIE_COLOR_8B,
                            &bm_in, PIE_COLOR_32B))

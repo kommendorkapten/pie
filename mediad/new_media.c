@@ -161,7 +161,11 @@ static void* worker(void* arg)
         struct pie_io_opts io_opts;
 
         io_opts.qual = PIE_IO_HIGH_QUAL;
+#if _PIE_EDIT_LINEAR
         io_opts.cspace = PIE_IO_LINEAR;
+#else
+        io_opts.cspace = PIE_IO_SRGB;
+#endif
 
         for (int i = 0; i < md_cfg.storages->len; i++)
         {
@@ -496,6 +500,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
                 bm_src = &bm_dwn;
         }
 
+#if _PIE_EDIT_LINEAR
         /* Go back to sRGB */
         timing_start(&t);
         pie_alg_linear_to_srgbv(bm_src->c_red,
@@ -505,6 +510,7 @@ static int write_dwn_smpl(struct pie_bitmap_f32rgb* src,
         pie_alg_linear_to_srgbv(bm_src->c_blue,
                                 bm_src->height * bm_src->row_stride);
         PIE_DEBUG("Converted to sRGB in %ldms", timing_dur_msec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         timing_start(&t);
         if (pie_bm_conv_bd(&bm_out,

@@ -37,7 +37,11 @@ int main(int argc, char** argv)
         int size;
         struct pie_io_opts opts = {
                 .qual = PIE_IO_HIGH_QUAL,
+#if _PIE_EDIT_LINEAR
                 .cspace = PIE_IO_LINEAR
+#else
+                .cspace = PIE_IO_SRGB
+#endif
         };
 
         if (kernel_len > KERNEL_LEN)
@@ -98,6 +102,7 @@ int main(int argc, char** argv)
         dur = timing_dur_msec(&t);
         printf("Executed kernel took %lumsec\n", dur);
 
+#if _PIE_EDIT_LINEAR
         timing_start(&t);
         pie_alg_linear_to_srgbv(img.c_red,
                                 img.height * img.row_stride);
@@ -106,6 +111,7 @@ int main(int argc, char** argv)
         pie_alg_linear_to_srgbv(img.c_blue,
                                 img.height * img.row_stride);
         printf("Convert to sRGB took %lumsec\n", timing_dur_msec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
@@ -138,6 +144,7 @@ int main(int argc, char** argv)
         dur = timing_dur_msec(&t);
         printf("Box blur 6 took %lumsec\n", dur);
 
+#if _PIE_EDIT_LINEAR
         timing_start(&t);
         pie_alg_linear_to_srgbv(img.c_red,
                                 img.height * img.row_stride);
@@ -146,6 +153,7 @@ int main(int argc, char** argv)
         pie_alg_linear_to_srgbv(img.c_blue,
                                 img.height * img.row_stride);
         printf("Convert to sRGB took %lumsec\n", timing_dur_msec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);

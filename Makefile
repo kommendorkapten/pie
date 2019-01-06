@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE -D_POSIX_C_SOURCE=200112L
+CFLAGS  = -m64 -I/usr/local/include -DMT_SAFE -D_POSIX_C_SOURCE=200112L -D_PIE_EDIT_LINEAR=0
 LFLAGS  += -lm -L/usr/local/lib
 LSCUT   = -L/usr/local/lib -lscut
 OS      = $(shell uname -s)

@@ -36,7 +36,11 @@ int main(int argc, char** argv)
         out = argv[2];
 
         opts.qual = PIE_IO_HIGH_QUAL;
+#if _PIE_EDIT_LINEAR
         opts.cspace = PIE_IO_LINEAR;
+#else
+        opts.cspace = PIE_IO_SRGB;
+#endif
 
         timing_start(&t);
         if (ok = pie_io_load(&bmf, in, &opts), ok)
@@ -190,6 +194,7 @@ int main(int argc, char** argv)
                 printf("curve in %luusec\n", timing_dur_usec(&t));
         }
 
+#if _PIE_EDIT_LINEAR
         timing_start(&t);
         pie_alg_linear_to_srgbv(bmf.c_red,
                                 bmf.height * bmf.row_stride);
@@ -198,6 +203,7 @@ int main(int argc, char** argv)
         pie_alg_linear_to_srgbv(bmf.c_blue,
                                 bmf.height * bmf.row_stride);
         printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         timing_start(&t);
         if (pie_bm_conv_bd(&bmu, PIE_COLOR_8B,

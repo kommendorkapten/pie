@@ -228,7 +228,11 @@ struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 timing_start(&t);
                 struct pie_io_opts opts;
                 opts.qual = PIE_IO_NORM_QUAL;
+#if _PIE_EDIT_LINEAR
                 opts.cspace = PIE_IO_LINEAR;
+#else
+                opts.cspace = PIE_IO_SRGB;
+#endif
                 res = pie_io_load(&wrkspc->raw, buf, &opts);
                 PIE_DEBUG("Loaded '%s'@stg-%d in %ldusec",
                           buf,

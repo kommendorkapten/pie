@@ -1225,6 +1225,7 @@ static int gen_screen_bm(struct pie_bitmap_f32rgb* new,
 
         r = pie_bm_render(new, NULL, s);
 
+#if _PIE_EDIT_LINEAR
         timing_start(&t);
         pie_alg_linear_to_srgbv(new->c_red,
                                 new->height * new->row_stride);
@@ -1234,6 +1235,7 @@ static int gen_screen_bm(struct pie_bitmap_f32rgb* new,
                                 new->height * new->row_stride);
         PIE_DEBUG("To sRGB:               %8ldusec",
                   timing_dur_usec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         return r;
 }

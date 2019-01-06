@@ -18,7 +18,11 @@ int main(int argc, char** argv)
         struct pie_histogram hist;
         struct pie_io_opts opts = {
                 .qual = PIE_IO_HIGH_QUAL,
+#if _PIE_EDIT_LINEAR
                 .cspace = PIE_IO_LINEAR
+#else
+                .cspace = PIE_IO_SRGB
+#endif
         };
         char* out_name = "out.jpg";
         float* buf;
@@ -48,6 +52,7 @@ int main(int argc, char** argv)
         settings.contrast = 1.0f;
         pie_bm_render(&img, buf, &settings);
 
+#if _PIE_EDIT_LINEAR
         timing_start(&t);
         pie_alg_linear_to_srgbv(img.c_red,
                                 img.height * img.row_stride);
@@ -56,6 +61,7 @@ int main(int argc, char** argv)
         pie_alg_linear_to_srgbv(img.c_blue,
                                 img.height * img.row_stride);
         printf("Convert to sRGB took %lums\n", timing_dur_msec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         timing_start(&t);
         pie_bm_conv_bd(&out, PIE_COLOR_8B,

@@ -246,7 +246,11 @@ static void export(void* a, size_t len)
         }
 
         io_opts.qual = PIE_IO_HIGH_QUAL;
+#if _PIE_EDIT_LINEAR
         io_opts.cspace = PIE_IO_LINEAR;
+#else
+        io_opts.cspace = PIE_IO_SRGB;
+#endif
 
         PIE_DEBUG("Path %s", msg.path);
         PIE_DEBUG("Mob id: %ld", msg.mob_id);
@@ -354,6 +358,7 @@ static void export(void* a, size_t len)
                           timing_dur_msec(&t));
         }
 
+#if _PIE_EDIT_LINEAR
         /* Convert to sRGB */
         timing_start(&t);
         pie_alg_linear_to_srgbv(bm_src.c_red,
@@ -363,6 +368,7 @@ static void export(void* a, size_t len)
         pie_alg_linear_to_srgbv(bm_src.c_blue,
                                 bm_src.height * bm_src.row_stride);
         PIE_DEBUG("Converted to sRGB in %ldms", timing_dur_msec(&t));
+#endif /* _PIE_EDIT_LINEAR */
 
         /* Export */
         struct pie_bitmap_u8rgb u8;
