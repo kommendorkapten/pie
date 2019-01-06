@@ -8,3 +8,4 @@ obj/*
 core
 include.*
 playground/*
+scripts/install/pie.conf

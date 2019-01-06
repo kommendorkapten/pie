@@ -1,0 +1,13 @@
+# Main database
+db:engine sqlite
+db:path DB_PATH
+
+global:workers 4
+
+image:thumbnail:size 256
+image:proxy:size 1920
+# Set to 1 to keep images size in proxy. Zoom in collection view can
+# only zoom into proxy's size.
+image:proxy:fullsize 1
+# JPEG quality used for writing proxy image. 80 is a good start.
+image:proxy:quality 80
