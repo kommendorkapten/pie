@@ -36,13 +36,13 @@ int main(int argc, char** argv)
 
         timing_start(&t);
         ret = pie_io_load(&img, argv[1], NULL);
-        dur = timing_dur_usec(&t);
+        dur = timing_dur_msec(&t);
         if (ret)
         {
                 printf("Error loading media: %d\n", ret);
                 return -1;
         }
-        printf("Loaded media in %luusec\n", dur);
+        printf("Loaded media in %lumsec\n", dur);
 
         timing_start(&t);
 
@@ -60,16 +60,18 @@ int main(int argc, char** argv)
                 abort();
         }
 
-        dur = timing_dur_usec(&t);
-        printf("Executed unsharp mask took %luusec\n", dur);
+        dur = timing_dur_msec(&t);
+        printf("Executed unsharp mask took %lumsec\n", dur);
 
+#if 0
         pie_bm_conv_bd(&out, PIE_COLOR_8B,
                        &img, PIE_COLOR_32B);
 
         pie_io_jpg_u8rgb_write("out.jpg", &out, 100);
+        pie_bm_free_u8(&out);
+#endif
+
 
         pie_bm_free_f32(&img);
-        pie_bm_free_u8(&out);
-
         return 0;
 }
