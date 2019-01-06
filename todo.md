@@ -1,14 +1,14 @@
 # In progress
-* Move exisiting mob to collection.
+* Move MOB(s) from UI.
+* Multi select in UI.
 
 # Sorted
+* After MOB is deleted/moved update collection tree (break out to new
+  class).
 * Editd, when zoomed in histogram is updated based on zoomed image.
-* Make sure image is in linear space before doing modifications.
 * Auto expand coll from query param in coll view.
 * Allow creation of new collections from web ui.
 * collectiond should update mobs via mediad.
-* Move images between collections (rename(2), EXDEV (different file
-  sys)).
 * When navigating from dev to coll, expand list and show last state.
 * update thumb nail & proxy with dev settings.
 * Load collection in editd.
@@ -34,7 +34,7 @@
 ## Mediad
 
 ## Image
-* raw post processing (chroma noise in particular) (tojpg contains ideas)..
+* raw post processing (chroma noise in particular) (tojpg contains ideas).
 * Calculate new radius for clarity when an image is loaded. The one
   stored in the database may be for the wrong resolution.
 * Black adjustment is quite simple, pure linear for both +/-. For
@@ -45,20 +45,21 @@
   extend with per alg struct to only allow a single val to be provided.
 
 ## General
-* Write install/config script.
 * Allow config path to be set during compile time.
 * Add method to get fd from q_consumser.
 * Rewrite mediad to use poll(2) when reading from queues.
 * better javascript management for color tag dropdown. Remove global
   js func.
-* Export pictures (new storage type).
 * Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
 * libraw to use lcms on sparc.
-* add mob/min for proxies.
+* add mob/min for proxies?.
 * Exif parsing, shutter speed greater than 1s
 * virtual copy of a mob.
+* Proper transfer flow, ingest first create, then copy. Send to mediad
+  d, extract info and send to export for thumb/proxy generation.
+* Bench only sending delta/pixel over websocket.
 
 # Performance:
 * Memory leak check
@@ -71,7 +72,6 @@
 * Multi threaded algs.
 
 # Misc
-* Convert Makefile to POSIX make.
 * Downsample with scale factor ~1.2-1.5 still yields bad results.
 
 # Done
@@ -114,3 +114,8 @@
 * ~~Break out histogram calculation to a separate event~~
 * ~~add size to min~~
 * ~~Delete mob from collection.~~
+* ~~Move exisiting mob to collection.~~
+* ~~Delete MOB(s) from UI.~~
+* ~~Export picture (exportd)~~
+* ~~Write install/config script.~~
+* ~~Make sure image is in linear space before doing modifications.~~
