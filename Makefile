@@ -8,7 +8,7 @@ DEBUG   = 1
 LCRYPTO = -lssl -lcrypto
 LIMG    = -lpng -ljpeg -lraw
 LNET    =
-
+OPT_LVL = -O3
 # -ftree-loop-linear MAY introduce bugs.
 PPC_FAST = -falign-functions=16 -falign-loops=16 -falign-jumps=16 \
            -malign-natural -ffast-math -fstrict-aliasing \
@@ -35,12 +35,12 @@ endif
 
 # Configure stuff based on compiler
 ifeq ($(CC), gcc)
-  CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
+  CFLAGS += -std=c99 -pedantic $(OPT_LVL) -fstrict-aliasing
   CFLAGS += -Wextra -Wall -Wstrict-aliasing
 endif
 
 ifeq ($(CC), clang)
-  CFLAGS += -std=c99 -pedantic -O3 -fstrict-aliasing
+  CFLAGS += -std=c99 -pedantic $(OPT_LVL) -fstrict-aliasing
   CFLAGS += -Wextra -Wall -Wstrict-aliasing
 endif
 
@@ -227,6 +227,9 @@ bin/test_export: testp/test_export.c $(LIBUTIL)
 
 bin/exif_tags: testp/exif_tags.c
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) -lexif
+
+bin/srgb_test: testp/srgb_test.c obj/pie_cspace.o obj/timing.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 # Servers
 bin/editd: $(EDITD_OBJS) $(IO_OBJS) $(HTTP_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DOML_OBJS) $(CFG_OBJS) $(ENC_OBJS) $(BM_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/strutil.o obj/timing.o obj/s_queue.o obj/s_queue_intra.o obj/pie_id.o
