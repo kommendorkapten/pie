@@ -430,6 +430,9 @@ static int cb_http(struct lws* wsi,
                         goto bailout;
                 }
                 break;
+        case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+                try_keepalive = 1;
+                break;
         default:
                 break;
         }
