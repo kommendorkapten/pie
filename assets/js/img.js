@@ -365,6 +365,32 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function newDevParams() {
+    return {
+        "colort": 0,
+        "tint":  0,
+        "expos": 0,
+        "contr": 0,
+        "highl": 0,
+        "shado": 0,
+        "white": 0,
+        "black": 0,
+        "clarity": {
+            "amount": 0,
+            "rad   ": 0,
+            "thresh": 0
+        },
+        "vibra": 0,
+        "satur": 0,
+        "rot":  0,
+        "sharp": {
+            "amount":  0,
+            "rad":  0,
+            "thresh":  0
+        }
+    }
+}
+
 function loadImage(ws) {
     let colldUrl = PROTO + "//" + COLLD_HOST + ":" + COLLD_PORT;
     let devpClient = new XMLHttpRequest();
@@ -376,9 +402,9 @@ function loadImage(ws) {
         return false;
     }
 
+    devParams = newDevParams();
     ws.pieStartTs = Date.now();
     ws.send("LOAD " + img + " " + c.width + " " + c.height);
-
     /* Load development settings */
     devpClient.onreadystatechange = function() {
         if (devpClient.readyState == XMLHttpRequest.DONE) {
