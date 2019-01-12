@@ -17,11 +17,14 @@
 #include <stdio.h>
 #include "s_queue_intra.h"
 
+#define PIE_SO_BUFLEN 5120
+
 int q_intra_c_init(struct q_queue* q, char* name)
 {
         struct sockaddr_un un;
         struct q_queue_intra_c* qc = (struct q_queue_intra_c*)q;
         socklen_t size;
+        int buflen = PIE_SO_BUFLEN;
 
         strncpy(qc->queue, name, MAX_QUEUE_NAME);
         qc->queue[MAX_QUEUE_NAME-1] = '\0';
@@ -33,6 +36,12 @@ int q_intra_c_init(struct q_queue* q, char* name)
         if (qc->fd  < 0)
         {
                 return -1;
+        }
+
+        size = sizeof(buflen);
+        if (setsockopt(qc->fd, SOL_SOCKET, SO_RCVBUF, &buflen, size))
+        {
+                perror("setsockopt");
         }
 
         size = (socklen_t)(offsetof(struct sockaddr_un, sun_path) +
@@ -74,6 +83,7 @@ int q_intra_p_init(struct q_queue* q, char* name)
         struct sockaddr_un un;
         struct q_queue_intra_p* qp = (struct q_queue_intra_p*)q;
         socklen_t size;
+        int buflen = PIE_SO_BUFLEN;
 
         un.sun_family = AF_UNIX;
         snprintf(qp->local, MAX_QUEUE_NAME, "%s.%05d", name, getpid());
@@ -105,6 +115,13 @@ int q_intra_p_init(struct q_queue* q, char* name)
         if (connect(qp->fd, (struct sockaddr*)&un, size) < 0)
         {
                 return -3;
+        }
+
+
+        size = sizeof(buflen);
+        if (setsockopt(qp->fd, SOL_SOCKET, SO_SNDBUF, &buflen, size))
+        {
+                perror("setsockopt");
         }
 
         return 0;
