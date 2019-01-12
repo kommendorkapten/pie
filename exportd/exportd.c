@@ -236,6 +236,8 @@ static void export(void* a, size_t len)
         struct pie_min* min;
         int st;
 
+        (void)len;
+
         memset(&msg, 0, sizeof(msg));
         timing_start(&t_tot);
 
