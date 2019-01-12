@@ -1105,6 +1105,7 @@ static void store_settings(pie_id mob_id,
                            sizeof(msg));
         if (bw != sizeof(msg))
         {
+                perror("store_settings");
                 PIE_ERR("Failed to store new development settings");
                 PIE_ERR("Wrote %ld bytes, expected %ld bytes",
 			bw,
