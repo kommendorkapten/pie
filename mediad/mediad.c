@@ -68,6 +68,8 @@ int main(void)
         int ret = -1;
         int ok;
 
+        setvbuf(stdout, NULL, _IOLBF, 0);
+
         evp_enable_hw(evp_hw);
 
         if (pie_cfg_load(PIE_CFG_PATH))

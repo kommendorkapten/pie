@@ -133,6 +133,8 @@ int main(void)
         struct lws_context_creation_info info;
         int status;
 
+        setvbuf(stdout, NULL, _IOLBF, 0);
+
         export_q = q_new_producer(QUEUE_INTRA_HOST);
         if (export_q == NULL)
         {

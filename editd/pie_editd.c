@@ -152,6 +152,8 @@ int main(void)
         void* ret;
         int ok;
 
+        setvbuf(stdout, NULL, _IOLBF, 0);
+
         /* Load storages */
         if (pie_cfg_load(PIE_CFG_PATH))
         {

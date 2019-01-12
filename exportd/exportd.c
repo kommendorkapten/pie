@@ -85,6 +85,8 @@ int main(void)
         int ret = -1;
         int ok;
 
+        setvbuf(stdout, NULL, _IOLBF, 0);
+
         if (pie_cfg_load(PIE_CFG_PATH))
         {
                 PIE_ERR("Failed to read conf");
