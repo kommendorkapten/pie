@@ -9,3 +9,8 @@ core
 include.*
 playground/*
 scripts/install/pie.conf
+logs/
+*.pid
+
+
+
