@@ -384,9 +384,9 @@ function newDevParams() {
         "satur": 0,
         "rot":  0,
         "sharp": {
-            "amount":  0,
-            "rad":  0,
-            "thresh":  0
+            "amount":  20,
+            "rad":  10,
+            "thresh":  1
         }
     }
 }
