@@ -173,7 +173,7 @@ function updateImgNavigation(c, img, exif, imgCanvas) {
 
     /* Reset before drawing nav rectangle */
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.strokeStyle = "white";
+    ctx.strokeStyle = "red";
     if (zoomMode.enabled) {
         var rx = -(zoomMode.dx * scale);
         var ry = -(zoomMode.dy * scale);
