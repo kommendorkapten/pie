@@ -365,29 +365,41 @@ static void* ev_loop(void* a)
                         }
                         if (new != PIE_MSG_INVALID)
                         {
+                                /* Make a copy of the message as we
+                                   are going to retransmit parts of it.
+                                   Re-using cmd after it has been sent to
+                                   channel is unsafe as receiver may free it,
+                                   and thus can itroduce user after free. */
+                                struct pie_msg cpy;
                                 /* It is safe to re-transmit the
                                    message. It's the receiver's
                                    responsibility to free any message */
                                 cmd->type = new;
+                                cpy.wrkspc = cmd->wrkspc;
+                                strncpy(cpy.token,
+                                        cmd->token,
+                                        PIE_MSG_TOKEN_LEN);
                                 if (chan_write(s->response, &msg))
                                 {
                                         PIE_ERR("Failed to send response %d.",
                                                 (int)cmd->type);
                                 }
+                                /* Prevent usage as it may be freed by now */
+                                cmd = NULL;
 
-                                if (cmd->type == PIE_MSG_RENDER_DONE)
+                                if (new == PIE_MSG_RENDER_DONE)
                                 {
                                         /* Store update development settings */
                                         timing_start(&t_proc);
-                                        cmd->wrkspc->settings.version = 1;
-                                        store_settings(cmd->wrkspc->mob_id,
-                                                       &cmd->wrkspc->settings);
+                                        cpy.wrkspc->settings.version = 1;
+                                        store_settings(cpy.wrkspc->mob_id,
+                                                       &cpy.wrkspc->settings);
                                         PIE_DEBUG("Stored dev settings in %ldusec.",
                                                   timing_dur_usec(&t_proc));
                                 }
 
-                                if (cmd->type == PIE_MSG_RENDER_DONE ||
-                                    cmd->type == PIE_MSG_LOAD_DONE)
+                                if (new == PIE_MSG_RENDER_DONE ||
+                                    new == PIE_MSG_LOAD_DONE)
                                 {
                                         /* Send message to calc histogram */
                                         struct pie_msg* hcmd = pie_msg_alloc();
@@ -397,11 +409,16 @@ static void* ev_loop(void* a)
                                         envelope.len = sizeof(*hcmd);
 
                                         hcmd->type = PIE_MSG_CALC_HIST;
-                                        hcmd->wrkspc = cmd->wrkspc;
+                                        hcmd->wrkspc = cpy.wrkspc;
                                         strncpy(hcmd->token ,
-                                                cmd->token,
+                                                cpy.token,
                                                 PIE_MSG_TOKEN_LEN);
                                         timing_start(&hcmd->t);
+
+                                        PIE_LOG("[%s]histd: %p proxy: %p",
+                                                hcmd->token,
+                                                &hcmd->wrkspc->hist,
+                                                &hcmd->wrkspc->proxy_out);
 
                                         if (chan_write(s->command, &envelope))
                                         {
@@ -1070,6 +1087,10 @@ static enum pie_msg_type cb_calc_hist(struct pie_msg* msg)
         struct timing t;
 
         timing_start(&t);
+        PIE_LOG("[%s]histd: %p proxy: %p",
+                msg->token,
+                &msg->wrkspc->hist,
+                &msg->wrkspc->proxy_out);
         pie_alg_hist_lum(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
         pie_alg_hist_rgb(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
         PIE_DEBUG("Created histogram:     %8ldusec",
