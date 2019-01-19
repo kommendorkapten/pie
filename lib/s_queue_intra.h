@@ -50,6 +50,13 @@ extern int q_intra_c_init(struct q_queue*, char*);
 extern ssize_t q_intra_c_recv(struct q_queue*, char*, size_t);
 
 /**
+ * Get the underlying filedescriptor used.
+ * @param queue
+ * @return filedescriptor
+ */
+extern int q_intra_c_fd(struct q_queue*);
+
+/**
  * Close a queue.
  * @param queue to close.
  * @return void.

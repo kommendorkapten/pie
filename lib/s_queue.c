@@ -5,7 +5,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -30,6 +30,7 @@ struct q_consumer* q_new_consumer(enum q_type type)
                 q->init = &q_intra_c_init;
                 q->recv = &q_intra_c_recv;
                 q->close = &q_intra_c_close;
+                q->fd = &q_intra_c_fd;
                 memset(q->this, 0, sizeof(struct q_queue_intra_c));
                 ((struct q_queue_intra_c*)q->this)->fd = -1;
                 break;
@@ -62,13 +63,13 @@ struct q_producer* q_new_producer(enum q_type type)
                 q->send = &q_intra_p_send;
                 q->close = &q_intra_p_close;
                 memset(q->this, 0, sizeof(struct q_queue_intra_p));
-                ((struct q_queue_intra_p*)q->this)->fd = -1;                
+                ((struct q_queue_intra_p*)q->this)->fd = -1;
                 break;
        case QUEUE_AMQP:
                 break;
         }
 
-        return q;        
+        return q;
 }
 
 void q_del_producer(struct q_producer* q)

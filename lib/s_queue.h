@@ -35,6 +35,7 @@ struct q_consumer
         int (*init)(struct q_queue*, char*);
         ssize_t (*recv)(struct q_queue*, char*, size_t);
         void (*close)(struct q_queue*);
+        int (*fd)(struct q_queue*);
 };
 
 struct q_producer

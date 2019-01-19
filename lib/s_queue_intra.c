@@ -64,6 +64,13 @@ ssize_t q_intra_c_recv(struct q_queue* q, char* buf, size_t len)
         return br;
 }
 
+int q_intra_c_fd(struct q_queue* q)
+{
+        struct q_queue_intra_c* qc = (struct q_queue_intra_c*)q;
+
+        return qc->fd;
+}
+
 void q_intra_c_close(struct q_queue* q)
 {
         struct q_queue_intra_c* qc = (struct q_queue_intra_c*)q;
@@ -76,6 +83,7 @@ void q_intra_c_close(struct q_queue* q)
         shutdown(qc->fd, SHUT_RDWR);
         close(qc->fd);
         unlink(qc->queue);
+        qc->fd = -1;
 }
 
 int q_intra_p_init(struct q_queue* q, char* name)
