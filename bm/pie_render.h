@@ -35,7 +35,7 @@ extern void pie_bm_init_settings(struct pie_dev_settings*, int, int);
 extern void pie_bm_init_curve(struct pie_curve*);
 
 /**
- * Convert pie_dev_settings to internal format, used when rendering..
+ * Convert pie_dev_settings to internal format, used when rendering.
  * @param settings struct.
  * @return void
  */
