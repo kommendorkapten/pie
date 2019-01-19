@@ -1,4 +1,6 @@
-# In progress
+# High prio
+* Crop.
+* Make sure date format is ISO 8601 in export view
 * Move MOB(s) from UI.
 * Multi select in UI.
 
@@ -10,7 +12,6 @@
 * Allow creation of new collections from web ui.
 * collectiond should update mobs via mediad.
 * When navigating from dev to coll, expand list and show last state.
-* update thumb nail & proxy with dev settings.
 * Load collection in editd.
 
 # Unsorted
@@ -29,6 +30,7 @@
 * Verify file integrity during import.
 
 ## Collectiond
+* use cache for thumbnails and proxy images.
 * Smarter management of collections, only load visible thumbnails.
 
 ## Mediad
@@ -45,21 +47,23 @@
   extend with per alg struct to only allow a single val to be provided.
 
 ## General
+* Refactor new_media.c
+* Add method to load file + params via mob (used in editd.c and new_mediad.c)
 * Allow config path to be set during compile time.
 * Add method to get fd from q_consumser.
-* Rewrite mediad to use poll(2) when reading from queues.
 * better javascript management for color tag dropdown. Remove global
   js func.
 * Timestamp to log messages
 * Remove CORS headers from pie_http_lws_write, replace with hmap for
   custom headers.
 * libraw to use lcms on sparc.
-* add mob/min for proxies?.
 * Exif parsing, shutter speed greater than 1s
 * virtual copy of a mob.
 * Proper transfer flow, ingest first create, then copy. Send to mediad
   d, extract info and send to export for thumb/proxy generation.
 * Bench only sending delta/pixel over websocket.
+* Copy development settings to a different mob.
+* Presets.
 
 # Performance:
 * Memory leak check
@@ -119,3 +123,6 @@
 * ~~Export picture (exportd)~~
 * ~~Write install/config script.~~
 * ~~Make sure image is in linear space before doing modifications.~~
+* ~~Fix broken sharpening adjustments in ui.~~
+* ~~update thumb nail & proxy with dev settings.~~
+* ~~Rewrite mediad to use poll(2) when reading from queues.~~

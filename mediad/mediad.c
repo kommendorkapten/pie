@@ -17,21 +17,29 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include <poll.h>
+#include <errno.h>
+#include <assert.h>
 #include "mediad_cfg.h"
 #include "new_media.h"
 #include "../pie_types.h"
 #include "../pie_log.h"
 #include "../lib/s_queue.h"
 #include "../lib/evp_hw.h"
+#include "../lib/timing.h"
+#include "../lib/btree.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
 #include "../dm/pie_dev_params.h"
 
-#define Q_INC 0
+#define Q_ING 0
 #define Q_UPD 1
 #define NUM_QUEUES 2
+#define FLUSH_INT 5000 /* 5 sec */
+
+static int mob_id_cmp(const void*, const void*);
 
 /**
  * Signal handler.
@@ -42,26 +50,34 @@ static void sig_h(int);
 
 /**
  * Drain incoming media.
- * @param struct server.
- * @return NULL if successfull.
+ * @param q to read from
+ * @return void
  */
-static void* process_inc(void*);
+static void process_inc(struct q_consumer*);
 
 /**
  * Drain update meta data.
- * @param struct server.
- * @return NULL if successfull.
+ * @param q to read from
+ * @return mob_id processed, or -1 if error occured.
  */
-static void* process_upd(void*);
+static pie_id process_upd(struct q_consumer*);
+
+/**
+ * Serve incoming requests.
+ * @param Queus to listen on.
+ * @return void.
+ */
+static void serve(struct q_consumer*[], int);
+
+static void flush_upd(struct btree*);
 
 struct mediad_cfg md_cfg;
+static sig_atomic_t run;
 
 int main(void)
 {
-        pthread_t thr[NUM_QUEUES];
         struct sigaction sa;
-        struct q_consumer* q_incoming = NULL;
-        struct q_consumer* q_update = NULL;
+        struct q_consumer* mqs[NUM_QUEUES];
         sigset_t b_sigset;
         sigset_t o_sigset;
         int evp_hw = 1;
@@ -173,28 +189,28 @@ int main(void)
         }
 
         /* Init queues */
-        q_incoming = q_new_consumer(QUEUE_INTRA_HOST);
-        if (q_incoming == NULL)
+        mqs[Q_ING] = q_new_consumer(QUEUE_INTRA_HOST);
+        if (mqs[Q_ING] == NULL)
         {
-                PIE_ERR("Can not create queue consumer");
+                PIE_ERR("Can not create ingest queue consumer");
                 goto cleanup;
         }
-        q_update = q_new_consumer(QUEUE_INTRA_HOST);
-        if (q_incoming == NULL)
+        mqs[Q_UPD] = q_new_consumer(QUEUE_INTRA_HOST);
+        if (mqs[Q_UPD] == NULL)
         {
-                PIE_ERR("Can not create queue consumer");
+                PIE_ERR("Can not create update queue consumer");
                 goto cleanup;
         }
 
-        ok = q_incoming->init(q_incoming->this,
+        ok = mqs[Q_ING]->init(mqs[Q_ING]->this,
                               Q_INCOMING_MEDIA);
         if (ok)
         {
                 PIE_ERR("Could not init queue '%s'", Q_INCOMING_MEDIA);
                 goto cleanup;
         }
-        ok = q_update->init(q_update->this,
-                            Q_UPDATE_META);
+        ok = mqs[Q_UPD]->init(mqs[Q_UPD]->this,
+                              Q_UPDATE_META);
         if (ok)
         {
                 PIE_ERR("Could not init queue '%s'", Q_UPDATE_META);
@@ -212,24 +228,6 @@ int main(void)
         /* Block all signals */
         sigfillset(&b_sigset);
         pthread_sigmask(SIG_BLOCK, &b_sigset, &o_sigset);
-        ok = pthread_create(&thr[Q_INC],
-                            NULL,
-                            &process_inc,
-                            q_incoming);
-        if (ok)
-        {
-                PIE_ERR("Could not create incoming media thread");
-                goto cleanup;
-        }
-        ok = pthread_create(&thr[Q_UPD],
-                            NULL,
-                            &process_upd,
-                            q_update);
-        if (ok)
-        {
-                PIE_ERR("Could not create update meta data thread");
-                goto cleanup;
-        }
 
         if (pie_nm_start_workers(num_workers))
         {
@@ -246,41 +244,26 @@ int main(void)
                 PIE_ERR("Could not set signal handler");
                 goto cleanup;
         }
-
         PIE_LOG("All set, wait for incoming messages");
-        pause();
 
-        q_incoming->close(q_incoming->this);
-        q_update->close(q_update->this);
-        q_del_consumer(q_incoming);
-        q_del_consumer(q_update);
-        q_incoming = NULL;
-        q_update = NULL;
+        run = 1;
+        serve(mqs, NUM_QUEUES);
+
         ret = 0;
 
         PIE_LOG("Waiting for worker threads");
         pie_nm_stop_workers();
         PIE_LOG("Done");
 
-        /* join threads */
-        PIE_LOG("Waiting for recv threads");
+cleanup:
         for (int i = 0; i < NUM_QUEUES; i++)
         {
-                pthread_join(thr[i], NULL);
-        }
-        PIE_LOG("Done");
-cleanup:
-        if (q_incoming)
-        {
-                q_incoming->close(q_incoming->this);
-                q_del_consumer(q_incoming);
-                q_incoming = NULL;
-        }
-        if (q_update)
-        {
-                q_update->close(q_update->this);
-                q_del_consumer(q_update);
-                q_update = NULL;
+                if (mqs[i])
+                {
+                        mqs[i]->close(mqs[i]->this);
+                        q_del_consumer(mqs[i]);
+                        mqs[i] = NULL;
+                }
         }
 
         if (md_cfg.host)
@@ -299,47 +282,106 @@ cleanup:
         return ret;
 }
 
-static void* process_inc(void* arg)
+static void serve(struct q_consumer* mqs[], int num)
 {
-        struct pie_mq_new_media msg;
-        void* ret = NULL;
-        struct q_consumer* q = (struct q_consumer*)arg;
-        ssize_t br;
+        struct pollfd poll_fds[num];
+        struct timing t;
+        struct btree* mob_set = btree_create(&mob_id_cmp);
 
-        PIE_LOG("Incoming media thread ready for messages");
-        while ((br = q->recv(q->this,
-                             (char*)&msg,
-                             sizeof(msg))) > 0)
+        for (int i = 0; i < num; i++)
         {
-                if (pie_nm_add_job(&msg))
+                poll_fds[i].fd = mqs[i]->fd(mqs[i]->this);
+                poll_fds[i].events = POLLIN;
+        }
+
+        timing_start(&t);
+        while (run)
+        {
+                int s = poll(poll_fds, num, FLUSH_INT);
+
+                if (s < 0)
                 {
-                        PIE_WARN("Could not add new media '%s'",
-                                 msg.path);
+                        if (errno != EAGAIN && errno != EINTR)
+                        {
+                                perror("poll");
+                                abort();
+                        }
+                }
+
+                if (poll_fds[Q_ING].revents & POLL_IN)
+                {
+                        process_inc(mqs[Q_ING]);
+                }
+                if (poll_fds[Q_UPD].revents & POLL_IN)
+                {
+                        pie_id mob_id = process_upd(mqs[Q_UPD]);
+                        assert(mob_id > 0);
+                        btree_insert(mob_set, (void*)mob_id);
+                }
+
+                for (int i = 0; i < num; i++)
+                {
+                        if (poll_fds[i].revents & POLLHUP)
+                        {
+                                poll_fds[i].fd = -1;
+                                poll_fds[i].events = 0;
+                                poll_fds[i].revents = 0;
+                        }
+                }
+
+                if (timing_dur_msec(&t) >= FLUSH_INT)
+                {
+                        flush_upd(mob_set);
+                        timing_start(&t);
                 }
         }
 
-        PIE_LOG("Incoming media thread leaving");
-
-        return ret;
+        flush_upd(mob_set);
+        btree_destroy(mob_set);
 }
 
-static void* process_upd(void* arg)
+static void process_inc(struct q_consumer* q)
+{
+        struct pie_mq_process_media envelope;
+        ssize_t br;
+
+        envelope.type = PIE_MQ_MEDIA_NEW;
+        if ((br = q->recv(q->this,
+                          (char*)&envelope.msg.new,
+                          sizeof(envelope))) > 0)
+        {
+                if (pie_nm_add_job(&envelope))
+                {
+                        PIE_ERR("Could not add new media '%s'",
+                                envelope.msg.new.path);
+                }
+        }
+        else
+        {
+                perror("recv");
+                PIE_ERR("Failed to process incoming media");
+        }
+}
+
+static pie_id process_upd(struct q_consumer* q)
 {
         struct pie_dev_params dp;
         struct pie_mq_upd_media msg;
-        void* ret = NULL;
-        struct q_consumer* q = (struct q_consumer*)arg;
         ssize_t br;
+        pie_id mob_id = -1;
 
-        PIE_LOG("Update media thread ready for messages");
-        while ((br = q->recv(q->this,
-                             (char*)&msg,
-                             sizeof(msg))) > 0)
+        if ((br = q->recv(q->this,
+                          (char*)&msg,
+                          sizeof(msg))) > 0)
         {
                 int status;
                 int db_ok = 0;
 
-                dp.pdp_mob_id = pie_ntohll(msg.mob_id);
+                assert(msg.type == PIE_MQ_MEDIA_SETTINGS);
+
+                mob_id = pie_ntohll(msg.mob_id);
+                dp.pdp_mob_id = mob_id;
+
                 PIE_DEBUG("Update mob: %ld with msg type %d",
                           dp.pdp_mob_id,
                           msg.type);
@@ -366,13 +408,59 @@ static void* process_upd(void* arg)
                         PIE_ERR("Database error: %d", db_ok);
                 }
         }
+        else
+        {
+                perror("recv");
+                PIE_ERR("Failed to process update media");
+        }
 
-        PIE_LOG("Update meta data thread leaving");
-
-        return ret;
+        return mob_id;
 }
 
 static void sig_h(int signum)
 {
         PIE_LOG("Got signal %d", signum);
+        run = 0;
+}
+
+static int mob_id_cmp(const void* a, const void* b)
+{
+        const pie_id l = (const pie_id)a;
+        const pie_id r = (const pie_id)b;
+
+        if (l < r)
+        {
+                return -1;
+        }
+        else if (l > r)
+        {
+                return 1;
+        }
+        return 0;
+}
+
+static void flush_upd(struct btree* set)
+{
+        void** mob_ids = btree_bf(set);
+        int i = 0;
+
+        while (mob_ids[i])
+        {
+                struct pie_mq_process_media envelope;
+                pie_id mob_id = (pie_id)mob_ids[i++];
+
+
+                envelope.type = PIE_MQ_MEDIA_PROXY;
+                envelope.msg.proxy.mob_id = mob_id;
+
+                PIE_LOG("Request new proxy for %ld", envelope.msg.proxy.mob_id);
+                if (pie_nm_add_job(&envelope))
+                {
+                        PIE_ERR("Could not add new proxy %ld",
+                                envelope.msg.proxy.mob_id);
+                }
+        }
+
+        free(mob_ids);
+        btree_clear(set);
 }

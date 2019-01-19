@@ -1109,7 +1109,7 @@ static void store_settings(pie_id mob_id,
         /* Convert to canonical format */
         pie_bm_set_to_can_fmt(&copy);
 
-        msg.type = PIE_MQ_UPD_MEDIA_SETTINGS;
+        msg.type = PIE_MQ_MEDIA_SETTINGS;
         PIE_DEBUG("Update settings for %lu", mob_id);
         msg.mob_id = pie_htonll(mob_id);
         bw = pie_enc_json_settings(msg.msg,

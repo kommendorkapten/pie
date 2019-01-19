@@ -81,7 +81,8 @@ endif
 DIRS       = obj bin obj/lib
 IO_SRC     = pie_io_jpg.c pie_io_png.c pie_io.c pie_io_raw.c
 UTIL_SRC   = timing.c hmap.c chan.c chan_poll.c lock.c s_queue.c \
-	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c worker.c
+	     s_queue_intra.c fswalk.c llist.c strutil.c evp_hw.c fal.c \
+	     worker.c btree.c
 ALG_SRC    = pie_hist.c pie_contr.c pie_expos.c pie_curve.c pie_cspace.c \
              pie_satur.c pie_black.c pie_white.c pie_shado.c pie_highl.c \
              pie_unsharp.c pie_vibra.c pie_colort.c pie_medf3.c
@@ -238,7 +239,7 @@ bin/editd: $(EDITD_OBJS) $(IO_OBJS) $(HTTP_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DOML
 bin/ingestd: $(INGEST_OBJS) $(CFG_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/s_queue.o obj/s_queue_intra.o obj/timing.o obj/strutil.o obj/fal.o obj/evp_hw.o obj/fswalk.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
 
-bin/mediad: $(MEDIAD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/pie_bm.o obj/evp_hw.o obj/s_queue.o obj/s_queue_intra.o obj/pie_exif.o obj/pie_id.o obj/pie_cspace.o
+bin/mediad: $(MEDIAD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) $(ALG_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/pie_bm.o obj/evp_hw.o obj/s_queue.o obj/s_queue_intra.o obj/pie_exif.o obj/pie_id.o obj/pie_cspace.o obj/btree.o obj/pie_json.o obj/pie_render.o obj/jsmn.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
 bin/collectiond: $(COLLD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(DOML_OBJS) $(ENC_OBJS) $(HTTP_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/s_queue.o obj/s_queue_intra.o

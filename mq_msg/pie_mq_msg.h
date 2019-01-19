@@ -53,12 +53,14 @@
 #define PIE_MQ_MAX_DIGEST 64 /* large enough for SHA-512 */
 #define PIE_MQ_MAX_UPD 4096
 
-enum pie_mq_upd_media_type
+enum pie_mq_media_type
 {
-        PIE_MQ_UPD_MEDIA_MOB,
-        PIE_MQ_UPD_MEDIA_EXIF,
-        PIE_MQ_UPD_MEDIA_SETTINGS,
-        PIE_MQ_UPD_MEDIA_COUNT
+        PIE_MQ_MEDIA_NEW,
+        PIE_MQ_MEDIA_MOB,
+        PIE_MQ_MEDIA_EXIF,
+        PIE_MQ_MEDIA_SETTINGS,
+        PIE_MQ_MEDIA_PROXY,
+        PIE_MQ_MEDIA_COUNT
 };
 
 struct pie_mq_new_media
@@ -73,7 +75,7 @@ struct pie_mq_new_media
 
 struct pie_mq_upd_media
 {
-        enum pie_mq_upd_media_type type;
+        enum pie_mq_media_type type;
         pie_id mob_id;
         /* JSON encoded data of the development settings */
         char msg[PIE_MQ_MAX_UPD];
@@ -103,6 +105,21 @@ struct pie_mq_export_media
         /* 0 no sharpening, 1 apply sharpening */
         unsigned char sharpen;
         unsigned char disable_exif;
+};
+
+struct pie_mq_upd_proxy
+{
+        pie_id mob_id;
+};
+
+struct pie_mq_process_media
+{
+        enum pie_mq_media_type type;
+        union
+        {
+                struct pie_mq_new_media new;
+                struct pie_mq_upd_proxy proxy;
+        } msg;
 };
 
 #endif /* __PIE_MQ_MSG_H__ */
