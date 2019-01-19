@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -39,7 +39,7 @@ void pie_alg_satur(float* restrict r,
         assert(v >= 0.0f);
         assert(v <= 2.0f);
 
-#if _HAS_AVX        
+#if _HAS_AVX
         __m256 prv = _mm256_set1_ps(P_R);
         __m256 pgv = _mm256_set1_ps(P_G);
         __m256 pbv = _mm256_set1_ps(P_B);
@@ -141,7 +141,7 @@ void pie_alg_satur(float* restrict r,
                         accv = _mm256_blendv_ps(accv, onev, cmpv);
                         _mm256_store_ps(b + p, accv);
                 }
-                
+
 #elif _HAS_SSE42
 
                 for (int x = 0; x < stop; x += 4)
@@ -223,13 +223,13 @@ void pie_alg_satur(float* restrict r,
                         vector float dv;
                         vector int bool cmpv;
                         vector float input_halfv;
-                        vector float prodv;                        
+                        vector float prodv;
                         int p = sizeof(float) * (y * s + x);
 
                         rv = vec_ld(p, r);
                         gv = vec_ld(p, g);
-                        bv = vec_ld(p, b);                        
-                        
+                        bv = vec_ld(p, b);
+
                         rsv = vec_madd(rv, rv, zerov);
                         gsv = vec_madd(gv, gv, zerov);
                         bsv = vec_madd(bv, bv, zerov);
@@ -281,11 +281,11 @@ void pie_alg_satur(float* restrict r,
                         /* Min 0.0 */
                         cmpv = vec_cmplt(accv, zerov);
                         accv = vec_sel(accv, zerov, cmpv);
-                        vec_st(accv, p, b);                        
+                        vec_st(accv, p, b);
                 }
 
 #endif
-                
+
                 for (int x = stop; x < w; x++)
                 {
                         int o = y * s + x;
@@ -322,7 +322,7 @@ void pie_alg_satur(float* restrict r,
                         else if (b[o] > 1.0f)
                         {
                                 b[o] = 1.0f;
-                        }                        
+                        }
                 }
         }
 }
