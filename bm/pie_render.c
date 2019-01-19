@@ -89,6 +89,16 @@ void pie_bm_set_to_int_fmt(struct pie_dev_settings* s)
         /* s->sharpening.threshod not transformed */
         /* s->rotate not transformed */
 
+        /* If values are at min, they can be converted to -0.0f */
+        if (s->contrast < 0.0f)
+        {
+                s->contrast = 0.0f;
+        }
+        if (s->saturation < 0.0f)
+        {
+                s->saturation = 0.0f;
+        }
+
         pie_curve_set_to_int_fmt(&s->curve_l);
         pie_curve_set_to_int_fmt(&s->curve_r);
         pie_curve_set_to_int_fmt(&s->curve_g);
