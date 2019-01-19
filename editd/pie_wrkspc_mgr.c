@@ -234,10 +234,10 @@ struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 opts.cspace = PIE_IO_SRGB;
 #endif
                 res = pie_io_load(&wrkspc->raw, buf, &opts);
-                PIE_DEBUG("Loaded '%s'@stg-%d in %ldusec",
+                PIE_DEBUG("Loaded '%s'@stg-%d in %ldmsec",
                           buf,
                           min->min_stg_id,
-                          timing_dur_usec(&t));
+                          timing_dur_msec(&t));
                 if (res)
                 {
                         PIE_ERR("Could not open '%s'",
