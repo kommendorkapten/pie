@@ -308,11 +308,11 @@ static void serve(struct q_consumer* mqs[], int num)
                         }
                 }
 
-                if (poll_fds[Q_ING].revents & POLL_IN)
+                if (poll_fds[Q_ING].revents & POLLIN)
                 {
                         process_inc(mqs[Q_ING]);
                 }
-                if (poll_fds[Q_UPD].revents & POLL_IN)
+                if (poll_fds[Q_UPD].revents & POLLIN)
                 {
                         pie_id mob_id = process_upd(mqs[Q_UPD]);
                         assert(mob_id > 0);
