@@ -38,7 +38,7 @@ alive()
 
 startd()
 {
-    data=`alive $1`
+    data=`alive "$1"`
     if echo $data | grep -q running; then
         echo pie is still running.
         exit 1
@@ -98,13 +98,13 @@ fi
 
 case ${cmd} in
     start)
-        startd $sub_cmd
+        startd "$sub_cmd"
         ;;
     stop)
-        stopd $sub_cmd
+        stopd "$sub_cmd"
         ;;
     status)
-        alive $sub_cmd
+        alive "$sub_cmd"
         ;;
     *)
         echo Invalid action $1
