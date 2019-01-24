@@ -21,6 +21,7 @@ function CollectionTree(elem) {
         tree["path"] = "Collection root";
         tree["id"] = colls[0].id;
         tree["count"] = colls[0].count;
+        tree["root"] = true;
         tree["children"] = {};
 
         for (let i of colls) {
@@ -75,7 +76,12 @@ function CollectionTree(elem) {
                 continue;
             }
 
-            innerHtml += "<li>";
+            if (node.hasOwnProperty("root")) {
+                innerHtml += "<li ondragover=\"allowDrop(event)\" ";
+                innerHtml += "ondrop=\"drop(event)\">";
+            } else {
+                innerHtml += "<li>";
+            }
 
             if ("id" in node) {
                 innerHtml += "<a href=\"#\" onclick=\"loadCollection('" + node.id + "');\" colid=\"" + node.id + "\">" + name + "</a>";

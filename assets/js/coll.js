@@ -82,6 +82,59 @@ var exifRotationClass = {
 };
 var fullsizeProxy = null;
 
+function allowDrop(ev) {
+    console.log("allow drop");
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    let mobId = ev.target.attributes["mobid"];
+    if (mobId) {
+        mobId = mobId.value;
+    }
+    ev.dataTransfer.setData("text", mobId);
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    let mobId = ev.dataTransfer.getData("text");
+    let colId = ev.target.attributes["colid"];
+
+    if (mobId == "undefined") {
+        console.log("no MOB provided");
+        return;
+    }
+
+    if (colId) {
+        colId = colId.value;
+        let name = ev.target.innerText;
+
+        console.log("Add " + mobId + " to " + colId + " [" + name + "]");
+        moveMob(colId, mobId);
+    } else {
+        console.log(ev.target);
+        console.log(ev.target.innerText);
+        console.log("Not a valid collection");
+    }
+}
+
+function moveMob(colId, mobId) {
+    let url = "collection/" + colId + "/asset/" + mobId;
+    let xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            console.log(xmlhttp.status);
+            if (xmlhttp.status == 200) {
+                console.log("done");
+            }
+        }
+    }
+
+    xmlhttp.open("POST", url, true);
+    xmlhttp.send("-");
+}
+
 function getParameterByName(name, url) {
     if (!url) {
       url = window.location.href;
@@ -291,7 +344,9 @@ function renderCollection(coll, options) {
         innerHtml += div;
 	innerHtml += '<img class="' + (exifRotationClass[i.mob.orientation] || '') +
 	    '" width="' + thumb_size +
-	    '" src="thumb/' + i.id + '.jpg">';
+            '" draggable="true" ondragstart="drag(event)"' +
+            ' mobid="' + i.id + '"' +
+	    ' src="thumb/' + i.id + '.jpg">';
 
         switch (i.mob.color) {
         case MOB_COLOR_RED:
