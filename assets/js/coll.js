@@ -83,7 +83,6 @@ var exifRotationClass = {
 var fullsizeProxy = null;
 
 function allowDrop(ev) {
-    console.log("allow drop");
     ev.preventDefault();
 }
 
@@ -110,7 +109,7 @@ function drop(ev) {
         let name = ev.target.innerText;
 
         console.log("Add " + mobId + " to " + colId + " [" + name + "]");
-        moveMob(colId, mobId);
+        prepareMoveMob(colId, name, mobId);
     } else {
         console.log(ev.target);
         console.log(ev.target.innerText);
@@ -118,9 +117,25 @@ function drop(ev) {
     }
 }
 
-function moveMob(colId, mobId) {
+function prepareMoveMob(colId, name, mobId) {
+    let form = document.getElementById("mov_form_popup");
+
+    form.style.display = "block";
+    form.querySelector("h2").innerText = "Move 1 item to " + name;
+    form.colId = colId
+    form.mobId = mobId
+}
+
+function moveMob() {
+    let form = document.getElementById("mov_form_popup");
+    let colId = form.colId;
+    let mobId = form.mobId;
     let url = "collection/" + colId + "/asset/" + mobId;
     let xmlhttp = new XMLHttpRequest();
+
+    if (!(colId && mobId)) {
+        return;
+    }
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
@@ -131,8 +146,15 @@ function moveMob(colId, mobId) {
         }
     }
 
-    xmlhttp.open("POST", url, true);
+    xmlhttp.open("POST", url, false);
     xmlhttp.send("-");
+
+    form.style.display = "none";
+}
+
+function closeMovForm() {
+    let form = document.getElementById("mov_form_popup");
+    form.style.display = "none";
 }
 
 function getParameterByName(name, url) {
