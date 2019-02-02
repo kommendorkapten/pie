@@ -1,7 +1,6 @@
 # High prio
 * Crop.
 * Make sure date format is ISO 8601 in export view
-* Move MOB(s) from UI.
 * Multi select in UI.
 
 # Sorted
@@ -126,3 +125,4 @@
 * ~~Fix broken sharpening adjustments in ui.~~
 * ~~update thumb nail & proxy with dev settings.~~
 * ~~Rewrite mediad to use poll(2) when reading from queues.~~
+* ~~Move MOB(s) from UI.~~

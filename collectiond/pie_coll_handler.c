@@ -267,17 +267,35 @@ static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp* r,
         {
                 PIE_ERR("pie_doml_mob_move");
                 r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                return 1;
+
+        }
+
+        size_t len = r->wbuf_len;
+        int ret = coll_to_json(r->wbuf, &len, db, src_col.cmb_col_id);
+
+        if (ret == 0)
+        {
+                r->content_len = len;
+                r->http_sc = HTTP_STATUS_OK;
+                r->content_type = "application/json; charset=UTF-8";
         }
         else
         {
-                /* Return update collection */
-                r->http_sc = HTTP_STATUS_OK;
                 r->content_len = 0;
-                r->wbuf[0] = '\0';
-                r->content_type = "text/plain";
+                r->http_sc = ret;
+
+                switch (ret)
+                {
+                case HTTP_STATUS_SERVICE_UNAVAILABLE:
+                case HTTP_STATUS_INTERNAL_SERVER_ERROR:
+                        ret = 1;
+                default:
+                        ret = 0;
+                }
         }
 
-        return 0;
+        return ret;
 }
 
 static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,

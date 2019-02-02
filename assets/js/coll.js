@@ -141,12 +141,15 @@ function moveMob() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
             console.log(xmlhttp.status);
             if (xmlhttp.status == 200) {
-                console.log("done");
+                let coll = JSON.parse(xmlhttp.responseText);
+
+                selectedCollection = coll;
+                renderCollection(selectedCollection, getCollectionModifiers());
             }
         }
     }
 
-    xmlhttp.open("POST", url, false);
+    xmlhttp.open("POST", url, true);
     xmlhttp.send("-");
 
     form.style.display = "none";
