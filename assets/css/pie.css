@@ -404,6 +404,21 @@ li.collapsibleListClosed{
     margin-top: 10px;
 }
 
+.duplicate-btn-group {
+    margin-left: 10px;
+}
+
+.duplicate-btn-group button {
+    background-color: #282828;
+    height: 20px;
+    width: 20px;
+    border: 2px solid #686868;
+    padding: 1px 1px;
+    cursor: pointer;
+    float: left; /* Float the buttons side by side */
+    margin-top: 10px;
+}
+
 .color-dropdown {
     position: relative;
     display: inline-block;
@@ -515,6 +530,15 @@ li.collapsibleListClosed{
 
 .color-btn-group button:not(:last-child) {
     border-right: none; /* Prevent double borders */
+}
+
+
+.duplicate-btn-group button.raw {
+    background: url(../img/icon_raw.jpg);
+}
+
+.duplicate-btn-group button.jpeg {
+    background: url(../img/icon_jpeg.jpg);
 }
 
 /* Clear floats (clearfix hack) */

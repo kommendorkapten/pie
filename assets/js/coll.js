@@ -5,6 +5,7 @@ var EDITD_PORT = 8080;
 var COLLD_HOST = null;
 var EDITD_HOST = null;
 var PROTO = null;
+var TYPE_JPEG = 2;
 var mobCache = {};
 var exifCache = {};
 var selectedMobId = "";
@@ -23,6 +24,7 @@ var zoomMode = {
 var collTree = null;
 var globalFilterRate = 0;
 var globalFilterColor = 0;
+var globalDuplicate = 0;
 var NAV_LEFT = 37;
 var NAV_UP = 38;
 var NAV_RIGHT = 39;
@@ -212,7 +214,8 @@ function getCollectionModifiers() {
             "value": globalFilterRate,
             "op": filterOp
         },
-        "color": globalFilterColor
+        "color": globalFilterColor,
+        "dup": globalDuplicate,
     };
 
     return options;
@@ -309,12 +312,16 @@ function renderCollection(coll, options) {
         var vb;
         var ret;
 
+        // Strip millisec part and rely solely on file name for correct
+        // ordering. This is as cases has been seen where ms is inconsistent
+        // during high frequency capturing and recording to multiple formats,
+        // e.g. both RAW and JPEG.
         if (options.sort.key == "added_time") {
-            va = a.mob.added_ts_ms;
-            vb = b.mob.added_ts_ms;
+            va = Math.floor(a.mob.added_ts_ms / 1000);
+            vb = Math.floor(b.mob.added_ts_ms / 1000);
         } else {
-            va = a.mob.capture_ts_ms;
-            vb = b.mob.capture_ts_ms;
+            va = Math.floor(a.mob.capture_ts_ms / 1000);
+            vb = Math.floor(b.mob.capture_ts_ms / 1000);
         }
 
         if (options.sort.order == "asc") {
@@ -333,6 +340,44 @@ function renderCollection(coll, options) {
 
         return ret;
     });
+
+    if (options.dup > 0) {
+        let seen = {};
+        let org = activeAssets;
+        activeAssets = [];
+
+        for (let o of org) {
+            let p = o.mob.name.lastIndexOf('.');
+            let name = o.mob.name.substring(0, p);
+
+            if (seen.hasOwnProperty(name)) {
+                seen[name] = seen[name] + 1;
+            } else {
+                seen[name] = 1;
+            }
+
+        }
+
+        for (let o of org) {
+            let p = o.mob.name.lastIndexOf('.');
+            let name = o.mob.name.substring(0, p);
+            let type = o.mob.name.substring(p + 1);
+
+            if (seen[name] > 1) {
+                if (options.dup == TYPE_JPEG) {
+                    if (type.toUpperCase() == "JPG") {
+                        activeAssets.push(o);
+                    }
+                } else {
+                    if (type.toUpperCase() != "JPG") {
+                        activeAssets.push(o);
+                    }
+                }
+            } else {
+                activeAssets.push(o);
+            }
+        }
+    }
 
     var w = window.innerWidth;
     var h = window.innerHeight;
@@ -432,6 +477,8 @@ function renderCollection(coll, options) {
 
     var dur = Date.now() - start;
     console.log("renderCollection: " + dur + "ms");
+    console.log("dup " + options.dup);
+    console.log("Number of assets: " + activeAssets.length);
 }
 
 function colorDropdToggle(id) {
@@ -973,7 +1020,18 @@ function filterRate(rate) {
     updateUiFilterRate(rate);
 
     /* update view */
-    var options = getCollectionModifiers();
+    let options = getCollectionModifiers();
+    renderCollection(selectedCollection, options);
+}
+
+function toggleDuplicate(how) {
+    if (globalDuplicate == how) {
+        globalDuplicate = 0;
+    } else {
+        globalDuplicate = how;
+    }
+
+    let options = getCollectionModifiers();
     renderCollection(selectedCollection, options);
 }
 
