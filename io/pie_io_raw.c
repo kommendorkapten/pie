@@ -42,8 +42,12 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         lrd->params.output_color = 1; /* sRGB */
         lrd->params.no_auto_bright = 0;
         lrd->params.highlight = 5; /* blend in high lights */
-        /* lrd->params.auto_bright_thr = 0.00003f; 0.001 to 0.00003 */
-        lrd->params.fbdd_noiserd = 0;
+        /* 0.001 to 0.00003 */
+        /* lrd->params.auto_bright_thr = 0.00003f; */
+        /* 0 no, 1 light, 2 full */
+        lrd->params.fbdd_noiserd = 1;
+        /* 100 - 1000 */
+        /* lrd->params.threshold = 100.0f; */
 
         /* exposure correction */
         lrd->params.exp_correc = 1;
