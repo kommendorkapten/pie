@@ -141,7 +141,7 @@ int main(void)
         PIE_LOG("Proxy fullsize: %d", md_cfg.proxy_fullsize);
         if (md_cfg.proxy_fullsize)
         {
-                md_cfg.max_proxy = -md_cfg.max_proxy;
+                md_cfg.max_proxy = -1;
                 PIE_LOG("Changing maximum proxy size: %d", md_cfg.max_proxy);
         }
 
@@ -206,14 +206,14 @@ int main(void)
                               Q_INCOMING_MEDIA);
         if (ok)
         {
-                PIE_ERR("Could not init queue '%s'", Q_INCOMING_MEDIA);
+                PIE_ERR("Could not init queue '%s' %d", Q_INCOMING_MEDIA, ok);
                 goto cleanup;
         }
         ok = mqs[Q_UPD]->init(mqs[Q_UPD]->this,
                               Q_UPDATE_META);
         if (ok)
         {
-                PIE_ERR("Could not init queue '%s'", Q_UPDATE_META);
+                PIE_ERR("Could not init queue '%s' %d", Q_UPDATE_META, ok);
                 goto cleanup;
         }
 
