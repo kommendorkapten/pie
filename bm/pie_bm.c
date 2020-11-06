@@ -56,6 +56,7 @@ int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
         int align = 4;
 #endif
         int rem = bm->width % align;
+        int ok;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -72,12 +73,15 @@ int pie_bm_alloc_u8(struct pie_bitmap_u8rgb* bm)
 
         s = bm->row_stride * bm->height * sizeof(uint8_t);
         bm->bit_depth = PIE_COLOR_8B;
-        bm->c_red = malloc(s);
+        ok = posix_memalign((void**)&bm->c_red, align * sizeof(uint8_t), s);
+        assert(ok == 0);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(s);
-                bm->c_blue = malloc(s);
+                ok = posix_memalign((void**)&bm->c_green, align * sizeof(uint8_t), s);
+                assert(ok == 0);
+                ok = posix_memalign((void**)&bm->c_blue, align * sizeof(uint8_t), s);
+                assert(ok == 0);
         }
 
         return 0;
@@ -91,6 +95,7 @@ int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
         int align = 4;
 #endif
         int rem = bm->width % align;
+        int ok;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -107,12 +112,15 @@ int pie_bm_alloc_u16(struct pie_bitmap_u16rgb* bm)
 
         s = bm->row_stride * bm->height * sizeof(uint16_t);
         bm->bit_depth = PIE_COLOR_16B;
-        bm->c_red = malloc(s);
+        ok = posix_memalign((void**)&bm->c_red, align * sizeof(uint16_t), s);
+        assert(ok == 0);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(s);
-                bm->c_blue = malloc(s);
+                ok = posix_memalign((void**)&bm->c_green, align * sizeof(uint16_t), s);
+                assert(ok == 0);
+                ok = posix_memalign((void**)&bm->c_blue, align * sizeof(uint16_t), s);
+                assert(ok == 0);
         }
 
         return 0;
@@ -126,6 +134,7 @@ int pie_bm_alloc_f32(struct pie_bitmap_f32rgb* bm)
         int align = 4;
 #endif
         int rem = bm->width % align;
+        int ok;
         size_t s;
 
         assert(bm->color_type != PIE_COLOR_TYPE_INVALID);
@@ -142,12 +151,15 @@ int pie_bm_alloc_f32(struct pie_bitmap_f32rgb* bm)
 
         s = bm->row_stride * bm->height * sizeof(float);
         bm->bit_depth = PIE_COLOR_32B;
-        bm->c_red = malloc(s);
+        ok = posix_memalign((void**)&bm->c_red, align * sizeof(float), s);
+        assert(ok == 0);
 
         if (bm->color_type == PIE_COLOR_TYPE_RGB)
         {
-                bm->c_green = malloc(s);
-                bm->c_blue = malloc(s);
+                ok = posix_memalign((void**)&bm->c_green, align * sizeof(float), s);
+                assert(ok == 0);
+                ok = posix_memalign((void**)&bm->c_blue, align * sizeof(float), s);
+                assert(ok == 0);
         }
 
         return 0;
