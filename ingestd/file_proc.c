@@ -27,11 +27,12 @@
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
+#include "../dm/pie_min.h"
 #include "../mq_msg/pie_mq_msg.h"
 
 #define BUF_LEN (1<<14) /* 16kB */
 
-int pie_fp_process_file(struct pie_mq_new_media*, const char*);
+enum pie_fp_status pie_fp_process_file(struct pie_mq_new_media*, const char*);
 
 /**
  * Calculate a message digest from the provided file descriptor.
@@ -46,11 +47,13 @@ size_t pie_fp_mdigest(unsigned char[], unsigned int*, int);
 int pie_fp_add_file(const char* p)
 {
         struct pie_mq_new_media new_mmsg;
+        enum pie_fp_status status;
 
         /* path is the absolute path for src file on local disk */
-        if (pie_fp_process_file(&new_mmsg, p))
+        status = pie_fp_process_file(&new_mmsg, p);
+        if (status != PIE_FP_OK)
         {
-                return 1;
+                return status;
         }
 
         /* Notify mediad on new media */
@@ -77,16 +80,19 @@ int pie_fp_add_file(const char* p)
         return 0;
 }
 
-int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
+enum pie_fp_status pie_fp_process_file(struct pie_mq_new_media* new_mmsg,
+                                       const char* path)
 {
         char tmp_path[PIE_PATH_LEN];
         char rel_path[PIE_PATH_LEN]; /* relative stg mountpoint */
+        struct pie_min min;
         size_t src_pth_off = strlen(id_cfg.src_path) + 1; /* one extra for the / */
         struct timing t;
         ssize_t len;
         size_t file_size;
         int src_fd;
         int tgt_fd;
+        int ok;
         mode_t mode = 0644;
 
         PIE_LOG("Process %s", path);
@@ -103,6 +109,30 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
                                    &new_mmsg->digest_len,
                                    src_fd);
         PIE_DEBUG("Digest in %ldms", timing_dur_msec(&t));
+
+        /* Check for duplicates */
+        assert(new_mmsg->digest_len * 2 + 1<= MIN_HASH_LEN);
+        for (unsigned int i = 0; i < new_mmsg->digest_len; i++)
+        {
+                snprintf(min.min_sha1_hash + i * 2,
+                         3,
+                         "%02x",
+                         new_mmsg->digest[i]);
+        }
+
+        ok = pie_min_read_hash(pie_cfg_get_db(), &min);
+        if (ok == 0)
+        {
+                /* Collision */
+                close(src_fd);
+                return PIE_FP_COLL;
+        }
+        if (ok < 0)
+        {
+                /* error */
+                close(src_fd);
+                return PIE_FP_ERR;
+        }
 
         /* strip id_cfg.src_path from path */
         PIE_TRACE("Source path: %s", path);
@@ -176,7 +206,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         {
                 PIE_WARN("File %s already exists", tmp_path);
                 close(src_fd);
-                return 1;
+                return PIE_FP_ERR;
         }
 
         /* Reset src fd */
@@ -198,7 +228,7 @@ int pie_fp_process_file(struct pie_mq_new_media* new_mmsg, const char* path)
         close(tgt_fd);
         close(src_fd);
 
-        return 0;
+        return PIE_FP_OK;
 }
 
 size_t pie_fp_mdigest(unsigned char digest[], unsigned int* md_len, int fd)

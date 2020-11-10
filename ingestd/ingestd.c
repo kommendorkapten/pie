@@ -22,6 +22,7 @@
 #include "../lib/fswalk.h"
 #include "../lib/s_queue.h"
 #include "../lib/evp_hw.h"
+#include "../lib/llist.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../cfg/pie_cfg.h"
 #include "../dm/pie_host.h"
@@ -33,6 +34,11 @@ static const struct pie_stg_mnt* stg_from_path(const char*);
 
 struct ingestd_cfg id_cfg;
 static unsigned int num_files;
+static unsigned int num_coll;
+static unsigned int num_ok;
+
+struct llist* lerr;
+struct llist* lcoll;
 
 int main(int argc, char** argv)
 {
@@ -137,10 +143,33 @@ int main(int argc, char** argv)
                 len);
         id_cfg.dst_path[len] = '\0';
 
+        lerr = llist_create();
+        lcoll = llist_create();
+
         walk_dir(id_cfg.src_path, &cb_fun);
         status = 0;
 
         PIE_LOG("Processed %d files", num_files);
+        PIE_LOG("          %d imported", num_ok);
+        PIE_LOG("          %d duplicates", num_coll);
+        PIE_LOG("          %d errors", num_files - (num_ok + num_coll));
+
+        struct lnode* lnode = llist_head(lcoll);
+        while (lnode)
+        {
+                PIE_LOG("dup:%s", lnode->data);
+                free(lnode->data);
+                lnode = lnode->next;
+        }
+        llist_destroy(lcoll);
+        lnode = llist_head(lerr);
+        while (lnode)
+        {
+                PIE_LOG("err:%s", lnode->data);
+                free(lnode->data);
+                lnode = lnode->next;
+        }
+        llist_destroy(lerr);
 cleanup:
         if (id_cfg.queue)
         {
@@ -164,11 +193,31 @@ cleanup:
 
 static void cb_fun(const char* path)
 {
-        if (pie_fp_add_file(path))
-        {
-                PIE_WARN("Processing of %s failed", path);
-        }
+        enum pie_fp_status status = pie_fp_add_file(path);
+        char* p;
+        size_t l;
+
         num_files++;
+        switch (status)
+        {
+        case PIE_FP_OK:
+                num_ok++;
+                break;
+        case PIE_FP_COLL:
+                num_coll++;
+                l = strlen(path) + 1;
+                p = malloc(l);
+                strncpy(p, path, l);
+                llist_pushb(lcoll, p);
+                break;
+        default:
+                PIE_WARN("Processing of %s failed", path);
+                l = strlen(path) + 1;
+                p = malloc(l);
+                strncpy(p, path, l);
+                llist_pushb(lerr, p);
+                break;
+        }
 }
 
 const struct pie_stg_mnt* stg_from_path(const char* p)

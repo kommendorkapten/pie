@@ -399,7 +399,7 @@ static int ingest_new(unsigned char me,
         for (unsigned int i = 0; i < new->digest_len; i++)
         {
                 snprintf(min.min_sha1_hash + i * 2,
-                         MIN_HASH_LEN,
+                         3,
                          "%02x",
                          new->digest[i]);
         }

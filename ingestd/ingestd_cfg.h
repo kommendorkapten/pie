@@ -14,6 +14,12 @@
 #ifndef __INGESTD_CFG_H__
 #define __INGESTD_CFG_H__
 
+enum pie_fp_status{
+        PIE_FP_OK,
+        PIE_FP_ERR,
+        PIE_FP_COLL,
+};
+
 enum ingest_mode
 {
         MODE_COPY_INTO,

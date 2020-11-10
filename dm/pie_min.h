@@ -31,6 +31,7 @@ extern void     pie_min_free(struct pie_min * this);
 extern void     pie_min_release(struct pie_min * this);
 extern int      pie_min_create(sqlite3 * db, struct pie_min * this);
 extern int      pie_min_read(sqlite3 * db, struct pie_min * this);
+extern int      pie_min_read_hash(sqlite3 * db, struct pie_min * this);
 extern int      pie_min_update(sqlite3 * db, struct pie_min * this);
 extern int      pie_min_delete(sqlite3 * db, struct pie_min * this);
 
