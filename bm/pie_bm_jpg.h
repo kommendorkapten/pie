@@ -11,11 +11,11 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_IO_JPG_H__
-#define __PIE_IO_JPG_H__
+#ifndef __PIE_BM_JPG_H__
+#define __PIE_BM_JPG_H__
 
-struct pie_bitmap_u8rgb;
-struct pie_bitmap_f32rgb;
+struct pie_bm_u8rgb;
+struct pie_bm_f32rgb;
 
 /**
  * Reads an JPEG image into the provided bitmap.
@@ -25,7 +25,7 @@ struct pie_bitmap_f32rgb;
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb*, const char*);
+extern int pie_bm_jpg_f32_read(struct pie_bm_f32rgb*, const char*);
 
 /**
  * Writes an 8bit sRGB bitmap to a JPEG file.
@@ -34,6 +34,6 @@ extern int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb*, const char*);
  * @param the quality of the output file, in [0,100].
  * @return 0 on success, non-zero otherwise.
  */
-extern int pie_io_jpg_u8rgb_write(const char*, struct pie_bitmap_u8rgb*, int);
+extern int pie_bm_jpg_u8rgb_write(const char*, struct pie_bm_u8rgb*, int);
 
-#endif /* __PIE_IO_JPG_H__ */
+#endif /* __PIE_BM_JPG_H__ */

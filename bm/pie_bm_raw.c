@@ -12,15 +12,13 @@
 */
 
 #include <libraw/libraw.h>
-#include "pie_io.h"
-#include "pie_io_raw.h"
+#include "pie_bm.h"
+#include "pie_bm_raw.h"
 #include "../pie_log.h"
-#include "../pie_types.h"
-#include "../bm/pie_bm.h"
 
-int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
+int pie_bm_raw_f32_read(struct pie_bm_f32rgb* bm,
                         const char* path,
-                        struct pie_io_opts* opts)
+                        struct pie_bm_opts* opts)
 {
         libraw_data_t* lrd;
         libraw_processed_image_t* mem_img;
@@ -30,7 +28,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         lrd = libraw_init(0);
         if (lrd == NULL)
         {
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         /* Prepare image reading */
@@ -72,7 +70,7 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         {
                 switch (opts->qual)
                 {
-                case PIE_IO_HIGH_QUAL:
+                case PIE_BM_HIGH_QUAL:
                         lrd->params.user_qual = 11;
                         break;
                 default:
@@ -81,15 +79,15 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
 
                 switch (opts->cspace)
                 {
-                case PIE_IO_LINEAR:
+                case PIE_BM_LINEAR:
                         lrd->params.gamm[0] = 1.0f;
                         lrd->params.gamm[1] = 1.0f;
                         break;
-                case PIE_IO_SRGB:
+                case PIE_BM_SRGB:
                         break;
                 default:
                         PIE_WARN("Invalid target color space: %d", opts->cspace);
-                        ret = PIE_IO_INV_OPT;
+                        ret = PIE_BM_IO_INV_OPT;
                         goto done;
                 }
         }
@@ -101,13 +99,13 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
                 switch(ret)
                 {
                 case LIBRAW_FILE_UNSUPPORTED:
-                        ret = PIE_IO_INV_FMT;
+                        ret = PIE_BM_IO_INV_FMT;
                         break;
                 case LIBRAW_IO_ERROR:
-                        ret = PIE_IO_NOT_FOUND;
+                        ret = PIE_BM_IO_NOT_FOUND;
                         break;
                 default:
-                        ret = PIE_IO_INTERNAL_ERR;
+                        ret = PIE_BM_IO_INTERNAL_ERR;
                 }
 
                 goto done;
@@ -116,13 +114,13 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         if (libraw_unpack(lrd))
         {
                 PIE_ERR("libraw_unpack");
-                ret = PIE_IO_INTERNAL_ERR;
+                ret = PIE_BM_IO_INTERNAL_ERR;
                 goto done;
         }
         if (libraw_dcraw_process(lrd))
         {
                 PIE_ERR("libraw_dcraw_process");
-                ret = PIE_IO_INTERNAL_ERR;
+                ret = PIE_BM_IO_INTERNAL_ERR;
                 goto done;
         }
 
@@ -130,14 +128,14 @@ int pie_io_raw_f32_read(struct pie_bitmap_f32rgb* bm,
         if (mem_img == NULL)
         {
                 PIE_ERR("libraw_dcraw_make_mem_image");
-                ret = PIE_IO_INTERNAL_ERR;
+                ret = PIE_BM_IO_INTERNAL_ERR;
                 goto done;
         }
 
         /* Prepare copy of pixels */
         bm->width = mem_img->width;
         bm->height = mem_img->height;
-        bm->color_type = PIE_COLOR_TYPE_RGB;
+        bm->color_type = PIE_BM_COLOR_TYPE_RGB;
         pie_bm_alloc_f32(bm);
 
         /* Copy pixels */

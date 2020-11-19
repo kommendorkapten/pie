@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_CSPACE_H__
-#define __PIE_CSPACE_H__
+#ifndef __PIE_BM_CSPACE_H__
+#define __PIE_BM_CSPACE_H__
 #include <stddef.h>
 
 /**
@@ -21,7 +21,7 @@
  * @param the gamma exponent.
  * @return the corrected value.
  */
-extern float pie_alg_gamma(float, float);
+extern float pie_bm_gamma(float, float);
 /**
  * Apply gamma correction to an array of values.
  * @param the channel values.
@@ -29,14 +29,14 @@ extern float pie_alg_gamma(float, float);
  * @param the number of samples in the array.
  * @return void.
  */
-extern void pie_alg_gammav(float*, float, size_t);
+extern void pie_bm_gammav(float*, float, size_t);
 
 /**
  * Convert from sRGB color space to linear color space.
  * @param sRGB channel value.
  * @return a linear channel value.
  */
-extern float pie_alg_srgb_to_linear(float);
+extern float pie_bm_srgb_to_linear(float);
 
 /**
  * Convert from sRGB color space to linear color space.
@@ -48,7 +48,7 @@ extern float pie_alg_srgb_to_linear(float);
  * @param sRGB channel value.
  * @return a linear channel value.
  */
-extern float pie_alg_srgb_to_linearp(float);
+extern float pie_bm_srgb_to_linearp(float);
 
 /**
  * Convert from sRGB color space to linear color space, vector.
@@ -56,14 +56,14 @@ extern float pie_alg_srgb_to_linearp(float);
  * @param the number of samples in the array.
  * @return void.
  */
-extern void pie_alg_srgb_to_linearv(float*, size_t);
+extern void pie_bm_srgb_to_linearv(float*, size_t);
 
 /**
  * Convert from linear color space to sRGB color space.
  * @param a linear channel value.
  * @return sRGB channel value.
  */
-extern float pie_alg_linear_to_srgb(float);
+extern float pie_bm_linear_to_srgb(float);
 
 /**
  * Convert from linear color space to sRGB color space.
@@ -72,7 +72,7 @@ extern float pie_alg_linear_to_srgb(float);
  * @param a linear channel value.
  * @return sRGB channel value.
  */
-extern float pie_alg_linear_to_srgbp(float);
+extern float pie_bm_linear_to_srgbp(float);
 
 /**
  * Convert from linear color space to sRGB color space, vector.
@@ -80,6 +80,6 @@ extern float pie_alg_linear_to_srgbp(float);
  * @param the number of samples in the array.
  * @return void.
  */
-extern void pie_alg_linear_to_srgbv(float*, size_t);
+extern void pie_bm_linear_to_srgbv(float*, size_t);
 
-#endif /* __PIE_CSPACE_H__ */
+#endif /* __PIE_BM_CSPACE_H__ */

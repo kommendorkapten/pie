@@ -11,12 +11,12 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_IO_PNG_H__
-#define __PIE_IO_PNG_H__
+#ifndef __PIE_BM_PNG_H__
+#define __PIE_BM_PNG_H__
 
-struct pie_bitmap_u8rgb;
-struct pie_bitmap_u16rgb;
-struct pie_bitmap_f32rgb;
+struct pie_bm_u8rgb;
+struct pie_bm_u16rgb;
+struct pie_bm_f32rgb;
 
 /**
  * Reads an PNG image into the provided bitmap.
@@ -26,7 +26,7 @@ struct pie_bitmap_f32rgb;
  * @param path to the file on disk.
  * @return 0 on success, error code otherwise.
  */
-extern int pie_io_png_f32_read(struct pie_bitmap_f32rgb*, const char*);
+extern int pie_bm_png_f32_read(struct pie_bm_f32rgb*, const char*);
 
 /**
  * Writes an 8bit sRGB bitmap to a PNG file.
@@ -34,7 +34,7 @@ extern int pie_io_png_f32_read(struct pie_bitmap_f32rgb*, const char*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int pie_io_png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
+extern int pie_bm_png_u8rgb_write(const char*, struct pie_bm_u8rgb*);
 
 /**
  * Writes an 16bit sRGB bitmap to a PNG file.
@@ -42,6 +42,6 @@ extern int pie_io_png_u8rgb_write(const char*, struct pie_bitmap_u8rgb*);
  * @param the bitmap to write.
  * @return 0 on success, non-zero otherwise.
  */
-extern int pie_io_png_u16rgb_write(const char*, struct pie_bitmap_u16rgb*);
+extern int pie_bm_png_u16rgb_write(const char*, struct pie_bm_u16rgb*);
 
-#endif /* __PIE_IO_PNG_H__ */
+#endif /* __PIE_BM_PNG_H__ */

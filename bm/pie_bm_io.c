@@ -14,10 +14,12 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "pie_io.h"
+#include "pie_bm.h"
+#include "pie_bm_png.h"
+#include "pie_bm_jpg.h"
+#include "pie_bm_raw.h"
+#include "pie_bm_cspace.h"
 #include "../pie_log.h"
-#include "../bm/pie_bm.h"
-#include "../alg/pie_cspace.h"
 
 #define PIE_MAGIC_MAX 16
 
@@ -53,9 +55,9 @@ static struct pie_magic fmts[PIE_FT_COUNT] = {
 static enum pie_file_type pie_get_magic(unsigned char magic[PIE_MAGIC_MAX],
                                         ssize_t len);
 
-int pie_io_load(struct pie_bitmap_f32rgb* bm,
+int pie_bm_load(struct pie_bm_f32rgb* bm,
                 const char* path,
-                struct pie_io_opts* opts)
+                struct pie_bm_opts* opts)
 {
         /* Read the magic bytes */
         unsigned char magic[PIE_MAGIC_MAX];
@@ -68,13 +70,13 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm,
         fd = open(path, O_RDONLY);
         if (fd < 0)
         {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
         br = read(fd, magic, PIE_MAGIC_MAX);
         close(fd);
         if (br < 1)
         {
-                return PIE_IO_IO_ERR;
+                return PIE_BM_IO_IO_ERR;
         }
         ft = pie_get_magic(magic, br);
 
@@ -82,38 +84,38 @@ int pie_io_load(struct pie_bitmap_f32rgb* bm,
         switch (ft)
         {
         case PIE_FT_JPG:
-                ret = pie_io_jpg_f32_read(bm, path);
+                ret = pie_bm_jpg_f32_read(bm, path);
                 conv_cspace = 1;
                 break;
         case PIE_FT_PNG:
-                ret = pie_io_png_f32_read(bm, path);
+                ret = pie_bm_png_f32_read(bm, path);
                 conv_cspace = 1;
                 break;
         case PIE_FT_UNKNOWN:
                 /* Assume a RAW format, try to load */
-                ret = pie_io_raw_f32_read(bm, path, opts);
+                ret = pie_bm_raw_f32_read(bm, path, opts);
                 break;
         default:
-                ret = PIE_IO_UNSUPPORTED_FMT;
+                ret = PIE_BM_IO_UNSUPPORTED_FMT;
         }
 
         if (conv_cspace && opts)
         {
                 switch (opts->cspace)
                 {
-                case PIE_IO_LINEAR:
-                        pie_alg_srgb_to_linearv(bm->c_red,
+                case PIE_BM_LINEAR:
+                        pie_bm_srgb_to_linearv(bm->c_red,
                                                 bm->height * bm->row_stride);
-                        pie_alg_srgb_to_linearv(bm->c_green,
+                        pie_bm_srgb_to_linearv(bm->c_green,
                                                 bm->height * bm->row_stride);
-                        pie_alg_srgb_to_linearv(bm->c_blue,
+                        pie_bm_srgb_to_linearv(bm->c_blue,
                                                 bm->height * bm->row_stride);
                         break;
-                case PIE_IO_SRGB:
+                case PIE_BM_SRGB:
                         break;
                 default:
                         pie_bm_free_f32(bm);
-                        ret = PIE_IO_INV_OPT;
+                        ret = PIE_BM_IO_INV_OPT;
                 }
         }
 

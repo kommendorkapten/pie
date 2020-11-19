@@ -15,10 +15,8 @@
 #include <stdlib.h>
 #include <jpeglib.h>
 #include <setjmp.h>
-#include "pie_io.h"
-#include "pie_io_jpg.h"
-#include "../pie_types.h"
-#include "../bm/pie_bm.h"
+#include "pie_bm.h"
+#include "pie_bm_jpg.h"
 
 #define ONE_OVER_255 0.003921569f
 
@@ -46,7 +44,7 @@ static void pie_jpg_error_exit(j_common_ptr cinfo)
         longjmp(err->setjmp_buffer, 1);
 }
 
-int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_bm_jpg_f32_read(struct pie_bm_f32rgb* bm, const char* path)
 {
         struct jpeg_decompress_struct cinfo;
         struct pie_jpg_error_mgr jerr;
@@ -58,7 +56,7 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         fp = fopen(path, "rb");
         if (fp == NULL)
         {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
 
         cinfo.err = jpeg_std_error(&jerr.pub);
@@ -74,7 +72,7 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                 jpeg_destroy_decompress(&cinfo);
                 fclose(fp);
 
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         jpeg_create_decompress(&cinfo);
@@ -85,13 +83,13 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         switch (cinfo.output_components)
         {
         case 1:
-                bm->color_type = PIE_COLOR_TYPE_GRAY;
+                bm->color_type = PIE_BM_COLOR_TYPE_GRAY;
                 break;
         case 3:
-                bm->color_type = PIE_COLOR_TYPE_RGB;
+                bm->color_type = PIE_BM_COLOR_TYPE_RGB;
                 break;
         default:
-                return PIE_IO_UNSUPPORTED_FMT;
+                return PIE_BM_IO_UNSUPPORTED_FMT;
         }
 
         bm->width = (int)cinfo.output_width;
@@ -143,7 +141,7 @@ int pie_io_jpg_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 }
 
 int pie_io_jpg_u8rgb_write(const char* path,
-                           struct pie_bitmap_u8rgb* bm,
+                           struct pie_bm_u8rgb* bm,
                            int quality)
 {
         struct jpeg_compress_struct cinfo;
@@ -156,7 +154,7 @@ int pie_io_jpg_u8rgb_write(const char* path,
         fp = fopen(path, "wb");
         if (fp == NULL)
         {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
 
         /* Set error handler (before init the compress struct */
@@ -169,18 +167,18 @@ int pie_io_jpg_u8rgb_write(const char* path,
 
         switch(bm->color_type)
         {
-        case PIE_COLOR_TYPE_GRAY:
+        case PIE_BM_COLOR_TYPE_GRAY:
                 cinfo.input_components = 1;
                 cinfo.in_color_space = JCS_GRAYSCALE;
                 break;
-        case PIE_COLOR_TYPE_RGB:
+        case PIE_BM_COLOR_TYPE_RGB:
                 cinfo.input_components = 3;
                 cinfo.in_color_space = JCS_RGB;
                 break;
         default:
                 fclose(fp);
                 jpeg_destroy_compress(&cinfo);
-                return PIE_IO_UNSUPPORTED_FMT;
+                return PIE_BM_IO_UNSUPPORTED_FMT;
         }
 
         /* Set other values */

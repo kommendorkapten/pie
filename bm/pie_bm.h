@@ -14,7 +14,104 @@
 #ifndef __PIE_BM_H__
 #define __PIE_BM_H__
 
-#include "../pie_types.h"
+/* Error codes for pie_bm_load */
+#define PIE_BM_IO_NOT_FOUND       1
+#define PIE_BM_IO_IO_ERR          2
+#define PIE_BM_IO_INTERNAL_ERR    3
+#define PIE_BM_IO_INV_FMT         4
+#define PIE_BM_IO_UNSUPPORTED_FMT 5
+#define PIE_BM_IO_INV_OPT         6
+
+enum pie_bm_color_type
+{
+        PIE_BM_COLOR_TYPE_INVALID = 0,
+        PIE_BM_COLOR_TYPE_GRAY = 1,
+        PIE_BM_COLOR_TYPE_RGB = 3
+};
+
+enum pie_bm_color_bit_depth
+{
+        PIE_BM_COLOR_INVALID  = 0,
+        PIE_BM_COLOR_8B = 8,   /* unsigned 8 bit int */
+        PIE_BM_COLOR_16B = 16, /* unsigned 16 bit int */
+        PIE_BM_COLOR_32B = 32  /* single precision 32 bit float */
+};
+
+struct pie_bm_u8rgb
+{
+        uint8_t* c_red;
+        uint8_t* c_green;
+        uint8_t* c_blue;
+        enum pie_bm_color_type color_type;
+        enum pie_bm_color_bit_depth bit_depth;
+        int width;
+        int height;
+        int row_stride;
+};
+
+struct pie_bm_u16rgb
+{
+        uint16_t* c_red;
+        uint16_t* c_green;
+        uint16_t* c_blue;
+        enum pie_bm_color_type color_type;
+        enum pie_bm_color_bit_depth bit_depth;
+        int width;
+        int height;
+        int row_stride;
+};
+
+struct pie_bm_f32rgb
+{
+        float* c_red;
+        float* c_green;
+        float* c_blue;
+        enum pie_bm_color_type color_type;
+        enum pie_bm_color_bit_depth bit_depth;
+        int width;
+        int height;
+        int row_stride;
+};
+
+struct pie_bm_px_u8rgb
+{
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+};
+
+struct pie_bm_px_u16rgb
+{
+        uint16_t red;
+        uint16_t green;
+        uint16_t blue;
+};
+
+struct pie_bm_px_f32rgb
+{
+        float red;
+        float green;
+        float blue;
+};
+
+
+enum pie_bm_opt_qual
+{
+        PIE_BM_NORM_QUAL,
+        PIE_BM_HIGH_QUAL
+};
+
+enum pie_bm_opt_cspace
+{
+        PIE_BM_LINEAR,
+        PIE_BM_SRGB
+};
+
+struct pie_bm_opts
+{
+        enum pie_bm_opt_qual qual;
+        enum pie_bm_opt_cspace cspace;
+};
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -25,7 +122,7 @@
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int pie_bm_alloc_u8(struct pie_bitmap_u8rgb*);
+int pie_bm_alloc_u8(struct pie_bm_u8rgb*);
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -36,7 +133,7 @@ int pie_bm_alloc_u8(struct pie_bitmap_u8rgb*);
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int pie_bm_alloc_u16(struct pie_bitmap_u16rgb*);
+int pie_bm_alloc_u16(struct pie_bm_u16rgb*);
 
 /**
  * Alloc data for pixel data. If color type is rgb, only
@@ -47,7 +144,7 @@ int pie_bm_alloc_u16(struct pie_bitmap_u16rgb*);
  * @param the bitmap to allocate pixel data for.
  * @return 0 if success, non zero otherwise.
  */
-int pie_bm_alloc_f32(struct pie_bitmap_f32rgb*);
+int pie_bm_alloc_f32(struct pie_bm_f32rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -55,7 +152,7 @@ int pie_bm_alloc_f32(struct pie_bitmap_f32rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void pie_bm_free_u8(struct pie_bitmap_u8rgb*);
+void pie_bm_free_u8(struct pie_bm_u8rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -63,7 +160,7 @@ void pie_bm_free_u8(struct pie_bitmap_u8rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void pie_bm_free_u16(struct pie_bitmap_u16rgb*);
+void pie_bm_free_u16(struct pie_bm_u16rgb*);
 
 /**
  * Free data for bitmap. If color type is rgb, only
@@ -71,7 +168,7 @@ void pie_bm_free_u16(struct pie_bitmap_u16rgb*);
  * @param the bitmap to free data for.
  * @return void
  */
-void pie_bm_free_f32(struct pie_bitmap_f32rgb*);
+void pie_bm_free_f32(struct pie_bm_f32rgb*);
 
 /**
  * Get a pixel from a bitmap.
@@ -81,10 +178,10 @@ void pie_bm_free_f32(struct pie_bitmap_f32rgb*);
  * @param the y coordinate (row).
  * @return void
  */
-void pie_bm_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
-                            const struct pie_bitmap_u8rgb*,
-                            int,
-                            int);
+void pie_bm_px_u8rgb_get(struct pie_bm_px_u8rgb*,
+                         const struct pie_bm_u8rgb*,
+                         int,
+                         int);
 
 /**
  * Set a pixel int the bitmap.
@@ -94,10 +191,10 @@ void pie_bm_pixel_u8rgb_get(struct pie_pixel_u8rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_bm_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
-                            int,
-                            int,
-                            struct pie_pixel_u8rgb*);
+void pie_bm_px_u8rgb_set(struct pie_bm_u8rgb*,
+                         int,
+                         int,
+                         struct pie_bm_px_u8rgb*);
 
 /**
  * Get a pixel from a bitmap.
@@ -107,10 +204,10 @@ void pie_bm_pixel_u8rgb_set(struct pie_bitmap_u8rgb*,
  * @param the y coordinate (row).
  * @return void
  */
-void pie_bm_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
-                             const struct pie_bitmap_u16rgb*,
-                             int,
-                             int);
+void pie_bm_px_u16rgb_get(struct pie_bm_px_u16rgb*,
+                          const struct pie_bm_u16rgb*,
+                          int,
+                          int);
 
 /**
  * Set a pixel int the bitmap.
@@ -120,10 +217,10 @@ void pie_bm_pixel_u16rgb_get(struct pie_pixel_u16rgb*,
  * @param the pixel to use.
  * @return void
  */
-void pie_bm_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
-                             int,
-                             int,
-                             struct pie_pixel_u16rgb*);
+void pie_bm_px_u16rgb_set(struct pie_bm_u16rgb*,
+                          int,
+                          int,
+                          struct pie_bm_px_u16rgb*);
 
 /**
  * Convert a bitmap from a specific bitdepth.
@@ -139,12 +236,12 @@ void pie_bm_pixel_u16rgb_set(struct pie_bitmap_u16rgb*,
  * @return 0 on success.
  */
 int pie_bm_conv_bd(void* restrict,
-                   enum pie_color_bit_depth,
+                   enum pie_bm_color_bit_depth,
                    void* restrict,
-                   enum pie_color_bit_depth);
+                   enum pie_bm_color_bit_depth);
 
 /**
- * Down sample an bitmap. Downscaling is performed by a Gaussian blur
+ * Downsample an bitmap. Downscaling is performed by a Gaussian blur
  * across the neighbours. The new size is provided by maximum new width
  * and height. The new size is the smallest of the new parameters that
  * can be achieved by maintaining the original aspect ratio.
@@ -157,9 +254,24 @@ int pie_bm_conv_bd(void* restrict,
  * @param maximum new height in pixels, -1 if dont' care.
  * @return 0 on success. Non zero otherwise.
  */
-int pie_bm_dwn_smpl(struct pie_bitmap_f32rgb* restrict,
-                    const struct pie_bitmap_f32rgb* restrict,
+#if 0
+int pie_bm_dwn_smpl(struct pie_bm_f32rgb* restrict,
+                    const struct pie_bm_f32rgb* restrict,
                     int,
                     int);
+#endif
+
+/**
+ * Open a file and load content into an empty bitmap.
+ * @param the bitmap to load content into.
+ * @param the path to open.
+ * @param options to use when loading, or NULL for default:
+ *        PIE_IO_NORM_QUAL
+ *        PIE_IO_SRGB
+ * @return 0 on success.
+ */
+extern int pie_bm_load(struct pie_bm_f32rgb*,
+                       const char*,
+                       struct pie_bm_opts*);
 
 #endif /* __PIE_BM_H__ */

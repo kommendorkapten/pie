@@ -12,26 +12,26 @@
 */
 
 #include <math.h>
-#include "pie_cspace.h"
+#include "pie_bm_cspace.h"
 
 /* sRGB gamma exponent */
 #define SRGB_G_EXP 2.4f
 #define APPROX 1
 
-float pie_alg_gamma(float b, float g)
+float pie_bm_gamma(float b, float g)
 {
         return powf(b, g);
 }
 
-void pie_alg_gammav(float* b, float g, size_t size)
+void pie_bm_gammav(float* b, float g, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
-                b[i] = pie_alg_gamma(b[i], g);
+                b[i] = pie_bm_gamma(b[i], g);
         }
 }
 
-float pie_alg_srgb_to_linear(float g)
+float pie_bm_srgb_to_linear(float g)
 {
         float l;
 
@@ -47,7 +47,7 @@ float pie_alg_srgb_to_linear(float g)
         return l;
 }
 
-float pie_alg_srgb_to_linearp(float g)
+float pie_bm_srgb_to_linearp(float g)
 {
         float p1 = -0.04895813f;
         float p2 = 0.20727534f;
@@ -77,19 +77,19 @@ float pie_alg_srgb_to_linearp(float g)
                 p7;
 }
 
-void pie_alg_srgb_to_linearv(float* l, size_t size)
+void pie_bm_srgb_to_linearv(float* l, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
 #if APPROX
-                l[i] = pie_alg_srgb_to_linearp(l[i]);
+                l[i] = pie_bm_srgb_to_linearp(l[i]);
 #else
-                l[i] = pie_alg_srgb_to_linear(l[i]);
+                l[i] = pie_bm_srgb_to_linear(l[i]);
 #endif
         }
 }
 
-float pie_alg_linear_to_srgb(float l)
+float pie_bm_linear_to_srgb(float l)
 {
         float g;
 
@@ -105,16 +105,16 @@ float pie_alg_linear_to_srgb(float l)
         return g;
 }
 
-float pie_alg_linear_to_srgbp(float l)
+float pie_bm_linear_to_srgbp(float l)
 {
-        float p1 =35.340155;
-        float p2 =-137.128546;
-        float p3 =216.887479;
-        float p4 =-180.266583;
-        float p5 =85.050919;
-        float p6 =-23.472036;
-        float p7 =4.528103;
-        float p8 =0.064798;
+        float p1 =35.340155f;
+        float p2 =-137.128546f;
+        float p3 =216.887479f;
+        float p4 =-180.266583f;
+        float p5 =85.050919f;
+        float p6 =-23.472036f;
+        float p7 =4.528103f;
+        float p8 =0.064798f;
 
         float l2 = l * l;
         float l3 = l * l2;
@@ -138,10 +138,10 @@ float pie_alg_linear_to_srgbp(float l)
                 p8;
 }
 
-void pie_alg_linear_to_srgbv(float* l, size_t size)
+void pie_bm_linear_to_srgbv(float* l, size_t size)
 {
         for (size_t i = 0; i < size; i++)
         {
-                l[i] = pie_alg_linear_to_srgb(l[i]);
+                l[i] = pie_bm_linear_to_srgb(l[i]);
         }
 }

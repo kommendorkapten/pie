@@ -11,12 +11,11 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_IO_RAW_H__
-#define __PIE_IO_RAW_H__
+#ifndef __PIE_BM_RAW_H__
+#define __PIE_BM_RAW_H__
 
-#include "../pie_types.h"
-
-struct pie_io_opts;
+struct pie_bm_f32rgb;
+struct pie_bm_opts;
 
 /**
  * Reads an RAW image into the provided bitmap.
@@ -25,8 +24,8 @@ struct pie_io_opts;
  * @param options to use when loading, or NULL for default.
  * @return 0 on success, error code otherwise.
  */
-extern int pie_io_raw_f32_read(struct pie_bitmap_f32rgb*,
+extern int pie_bm_raw_f32_read(struct pie_bm_f32rgb*,
                                const char*,
-                               struct pie_io_opts*);
+                               struct pie_bm_opts*);
 
-#endif /* __PIE_IO_RAW_H__ */
+#endif /* __PIE_BM_RAW_H__ */

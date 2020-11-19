@@ -19,10 +19,8 @@
 #else
 # define NOTE(X)
 #endif
-#include "pie_io.h"
-#include "pie_io_png.h"
-#include "../pie_types.h"
-#include "../bm/pie_bm.h"
+#include "pie_bm.h"
+#include "pie_bm_png.h"
 #include "../pie_log.h"
 
 /* PNG is stored in network order */
@@ -40,7 +38,7 @@
 # error __BYTE_ORDER__, __BIG_ENDIAN__  or __SMALL_ENDIAN__ not defined
 #endif
 
-int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
+int pie_bm_png_f32_read(struct pie_bm_f32rgb* bm, const char* path)
 {
         unsigned char header[8];
         FILE* fp = fopen(path, "rb");
@@ -55,13 +53,13 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
 
         if (fp == NULL)
         {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
 
         fread(header, 1, 8, fp);
         if (png_sig_cmp(header, 0, 8))
         {
-                return PIE_IO_INV_FMT;
+                return PIE_BM_IO_INV_FMT;
         }
 
         pngp = png_create_read_struct(PNG_LIBPNG_VER_STRING,
@@ -70,7 +68,7 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
                                       NULL);
         if (pngp == NULL)
         {
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         infop = png_create_info_struct(pngp);
@@ -78,14 +76,14 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         {
                 fclose(fp);
                 png_destroy_read_struct(&pngp, NULL, NULL);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         if (setjmp(png_jmpbuf(pngp)))
         {
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         png_init_io(pngp, fp);
@@ -110,15 +108,15 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         switch (color_type)
         {
         case PNG_COLOR_TYPE_GRAY:
-                bm->color_type = PIE_COLOR_TYPE_GRAY;
+                bm->color_type = PIE_BM_COLOR_TYPE_GRAY;
                 break;
         case PNG_COLOR_TYPE_RGB:
-                bm->color_type = PIE_COLOR_TYPE_RGB;
+                bm->color_type = PIE_BM_COLOR_TYPE_RGB;
                 break;
         default:
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_UNSUPPORTED_FMT;
+                return PIE_BM_IO_UNSUPPORTED_FMT;
         }
 
         switch (bit_depth)
@@ -133,7 +131,7 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         default:
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_UNSUPPORTED_FMT;
+                return PIE_BM_IO_UNSUPPORTED_FMT;
         }
 
         /* Sett restore point */
@@ -141,7 +139,7 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         {
                 png_destroy_read_struct(&pngp, &infop, NULL);
                 fclose(fp);
-                return PIE_IO_IO_ERR;
+                return PIE_BM_IO_IO_ERR;
         }
 
         size_t row_bytes = png_get_rowbytes(pngp, infop);
@@ -214,7 +212,7 @@ int pie_io_png_f32_read(struct pie_bitmap_f32rgb* bm, const char* path)
         return 0;
 }
 
-int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
+int pie_bm_png_u8rgb_write(const char* path, struct pie_bm_u8rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;
@@ -225,7 +223,7 @@ int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
 
         fp = fopen(path, "wb");
         if (fp == NULL) {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
 
         pngp = png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -234,20 +232,20 @@ int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                                        NULL);
         if (pngp == NULL) {
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         infop = png_create_info_struct(pngp);
         if (infop == NULL) {
                 png_destroy_write_struct(&pngp, NULL);
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         if (setjmp(png_jmpbuf(pngp))) {
                 png_destroy_write_struct(&pngp, &infop);
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         /* Set image attributes. */
@@ -272,9 +270,9 @@ int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
                 rows[y] = row;
                 for (int x = 0; x < bitmap->width; ++x)
                 {
-                        struct pie_pixel_u8rgb p;
+                        struct pie_bm_px_u8rgb p;
 
-                        pie_bm_pixel_u8rgb_get(&p, bitmap, x, y);
+                        pie_bm_px_u8rgb_get(&p, bitmap, x, y);
                         *row++ = p.red;
                         *row++ = p.green;
                         *row++ = p.blue;
@@ -301,7 +299,7 @@ int pie_io_png_u8rgb_write(const char* path, struct pie_bitmap_u8rgb* bitmap)
         return 0;
 }
 
-int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
+int pie_bm_png_u16rgb_write(const char* path, struct pie_bm_u16rgb* bitmap)
 {
         FILE* fp;
         png_structp pngp;
@@ -312,7 +310,7 @@ int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
 
         fp = fopen(path, "wb");
         if (fp == NULL) {
-                return PIE_IO_NOT_FOUND;
+                return PIE_BM_IO_NOT_FOUND;
         }
 
         pngp = png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -321,20 +319,20 @@ int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                                        NULL);
         if (pngp == NULL) {
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         infop = png_create_info_struct(pngp);
         if (infop == NULL) {
                 png_destroy_write_struct(&pngp, NULL);
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         if (setjmp(png_jmpbuf(pngp))) {
                 png_destroy_write_struct(&pngp, &infop);
                 fclose(fp);
-                return PIE_IO_INTERNAL_ERR;
+                return PIE_BM_IO_INTERNAL_ERR;
         }
 
         /* Set image attributes. */
@@ -361,9 +359,9 @@ int pie_io_png_u16rgb_write(const char* path, struct pie_bitmap_u16rgb* bitmap)
                 rows[y] = row;
                 for (int x = 0; x < bitmap->width; ++x)
                 {
-                        struct pie_pixel_u16rgb p;
+                        struct pie_bm_px_u16rgb p;
 
-                        pie_bm_pixel_u16rgb_get(&p, bitmap, x, y);
+                        pie_bm_px_u16rgb_get(&p, bitmap, x, y);
                         *r16++ = p.red;
                         *r16++ = p.green;
                         *r16++ = p.blue;
