@@ -14,9 +14,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "pie_doml_mob.h"
-#include "pie_doml_stg.h"
-#include "../pie_types.h"
+#include "pie_mh_mob.h"
+#include "pie_mh_stg.h"
 #include "../pie_log.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
@@ -25,8 +24,8 @@
 #include "../dm/pie_dev_params.h"
 #include "../dm/pie_collection.h"
 #include "../dm/pie_collection_member.h"
-#include "../lib/llist.h"
-#include "../lib/fal.h"
+#include "../vendor/llist.h"
+#include "../vendor/fal.h"
 #include "../cfg/pie_cfg.h"
 
 /**
@@ -35,7 +34,7 @@
  * @param Storage file is located on.
  * @param 0 on success.
  */
-static int pie_doml_unlink(const char*, int);
+static int pie_mh_unlink(const char*, int);
 
 /**
  * Move a file from one storage to another.
@@ -47,9 +46,9 @@ static int pie_doml_unlink(const char*, int);
  * @param Source absolute path.
  * @param 0 on success.
  */
-static int pie_doml_move(int, int, const char*, int, int, const char*);
+static int pie_mh_move(int, int, const char*, int, int, const char*);
 
-int pie_doml_mob_delete(sqlite3* db, pie_id mob_id)
+int pie_mh_mob_delete(sqlite3* db, pie_id mob_id)
 {
         char path[PIE_PATH_LEN];
         struct pie_stg_mnt_arr* stgs = NULL;
@@ -112,13 +111,13 @@ int pie_doml_mob_delete(sqlite3* db, pie_id mob_id)
                  "%s/%ld.jpg",
                  stgs->arr[proxy]->mnt_path,
                  mob_id);
-        pie_doml_unlink(path, PIE_STG_PROXY);
+        pie_mh_unlink(path, PIE_STG_PROXY);
         snprintf(path,
                  PIE_PATH_LEN,
                  "%s/%ld.jpg",
                  stgs->arr[thumb]->mnt_path,
                  mob_id);
-        pie_doml_unlink(path, PIE_STG_THUMB);
+        pie_mh_unlink(path, PIE_STG_THUMB);
         for (n = llist_head(l); n != NULL; n = n->next)
         {
                 struct pie_min* min = n->data;
@@ -133,7 +132,7 @@ int pie_doml_mob_delete(sqlite3* db, pie_id mob_id)
                          "%s%s",
                          stgs->arr[min->min_stg_id]->mnt_path,
                          min->min_path);
-                pie_doml_unlink(path, type);
+                pie_mh_unlink(path, type);
 
                 /* Delete MIN from database */
                 pie_min_delete(db, min);
@@ -181,10 +180,10 @@ done:
     2.3: update min path.
   3: move file.
  */
-int pie_doml_mob_move(sqlite3* db,
-                      pie_id tgt_col_id,
-                      pie_id src_col_id,
-                      pie_id mob_id)
+int pie_mh_mob_move(sqlite3* db,
+                    pie_id tgt_col_id,
+                    pie_id src_col_id,
+                    pie_id mob_id)
 {
         char tgt_path[PIE_PATH_LEN];
         char filename[PIE_PATH_LEN];
@@ -264,7 +263,7 @@ int pie_doml_mob_move(sqlite3* db,
                  filename);
 
         /* See that file does not already exists */
-        if (pie_doml_file_exists(min->min_stg_id, tgt_path))
+        if (pie_mh_file_exists(min->min_stg_id, tgt_path))
         {
                 PIE_WARN("Target filename exists");
                 goto done;
@@ -294,12 +293,12 @@ int pie_doml_mob_move(sqlite3* db,
         }
 
         /* Move file */
-        ret = pie_doml_move(host->hst_id,
-                            min->min_stg_id,
-                            tgt_path,
-                            host->hst_id,
-                            min->min_stg_id,
-                            min->min_path);
+        ret = pie_mh_move(host->hst_id,
+                          min->min_stg_id,
+                          tgt_path,
+                          host->hst_id,
+                          min->min_stg_id,
+                          min->min_path);
         if (ret)
         {
                 PIE_ERR("Could not move file");
@@ -336,7 +335,7 @@ done:
         return ret;
 }
 
-static int pie_doml_unlink(const char* path, int stg_type)
+static int pie_mh_unlink(const char* path, int stg_type)
 {
         int valid_stg = 0;
 
@@ -359,12 +358,12 @@ static int pie_doml_unlink(const char* path, int stg_type)
         return unlink(path);
 }
 
-static int pie_doml_move(int tgt_host,
-                         int tgt_stg,
-                         const char* tgt_rel_path,
-                         int src_host,
-                         int src_stg,
-                         const char* src_rel_path)
+static int pie_mh_move(int tgt_host,
+                       int tgt_stg,
+                       const char* tgt_rel_path,
+                       int src_host,
+                       int src_stg,
+                       const char* src_rel_path)
 {
         char tgt_path[PIE_PATH_LEN];
         char src_path[PIE_PATH_LEN];

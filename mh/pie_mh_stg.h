@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_DOML_STG_H__
-#define __PIE_DOML_STG_H__
+#ifndef __PIE_MH_STG_H__
+#define __PIE_MH_STG_H__
 
 #include <sqlite3.h>
 #include "../pie_id.h"
@@ -29,10 +29,10 @@ struct pie_stg_mnt;
  * @return a min object, or NULL if no MIN could be find for the
  *         provided host.
  */
-extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
-                                            struct pie_stg_mnt**,
-                                            int,
-                                            pie_id);
+extern struct pie_min* pie_mh_min_for_mob(sqlite3*,
+                                          struct pie_stg_mnt**,
+                                          int,
+                                          pie_id);
 
 /**
  * Check if a file exists on a storage. Storage must be mounted on
@@ -41,6 +41,6 @@ extern struct pie_min* pie_doml_min_for_mob(sqlite3*,
  * @param relative path on storage.
  * @return 1 if file exists. 0 if file does not exits. Negative on error.
  */
-extern int pie_doml_file_exists(int, const char*);
+extern int pie_mh_file_exists(int, const char*);
 
-#endif /* __PIE_DOML_STG_H__ */
+#endif /* __PIE_MH_STG_H__ */

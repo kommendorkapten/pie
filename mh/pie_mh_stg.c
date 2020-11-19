@@ -14,16 +14,16 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 #include <unistd.h>
-#include "pie_doml_stg.h"
-#include "../lib/llist.h"
+#include "pie_mh_stg.h"
+#include "../vendor/llist.h"
 #include "../dm/pie_min.h"
 #include "../cfg/pie_cfg.h"
 #include "../pie_log.h"
 
-struct pie_min* pie_doml_min_for_mob(sqlite3* db,
-                                     struct pie_stg_mnt** stgs,
-                                     int len,
-                                     pie_id mob_id)
+struct pie_min* pie_mh_min_for_mob(sqlite3* db,
+                                   struct pie_stg_mnt** stgs,
+                                   int len,
+                                   pie_id mob_id)
 {
         struct llist* l = pie_min_find_mob(db, mob_id);
         struct lnode* c;
@@ -78,7 +78,7 @@ done:
         return min;
 }
 
-int pie_doml_file_exists(int stg, const char* rel_path)
+int pie_mh_file_exists(int stg, const char* rel_path)
 {
         char path[PIE_PATH_LEN];
         struct pie_stg_mnt_arr* stgs;

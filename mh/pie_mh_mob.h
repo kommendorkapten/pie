@@ -11,8 +11,8 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_DOML_MOB_H__
-#define __PIE_DOML_MOB_H__
+#ifndef __PIE_MH_MOB_H__
+#define __PIE_MH_MOB_H__
 
 #include <sqlite3.h>
 #include "../pie_id.h"
@@ -25,7 +25,7 @@
  * @param MOB id to purge.
  * @return 0 on success.
  */
-extern int pie_doml_mob_delete(sqlite3*, pie_id);
+extern int pie_mh_mob_delete(sqlite3*, pie_id);
 
 /**
  * Move a MOB from one collection to a new.
@@ -35,6 +35,6 @@ extern int pie_doml_mob_delete(sqlite3*, pie_id);
  * @param MOB to move.
  * @return 0 on success.
  */
-extern int pie_doml_mob_move(sqlite3*, pie_id, pie_id, pie_id);
+extern int pie_mh_mob_move(sqlite3*, pie_id, pie_id, pie_id);
 
-#endif /* __PIE_DOML_MOB_H__ */
+#endif /* __PIE_MH_MOB_H__ */
