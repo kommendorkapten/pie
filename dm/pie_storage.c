@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "./pie_storage.h"
-#include "../lib/llist.h"
+#include "pie_storage.h"
+#include "../vendor/llist.h"
 
 struct pie_storage *
 pie_storage_alloc(void)
@@ -302,7 +302,7 @@ struct llist* pie_storage_read_all(sqlite3* db)
                 }
 
                 stg = pie_storage_alloc();
-                stg->stg_id = sqlite3_column_int64(pstmt, 0);
+                stg->stg_id = sqlite3_column_int(pstmt, 0);
                 /* Force reading text into memory, and ge the length */
                 /* of the string (null terminator not included). */
                 /* Allocate memory and copy string to destination, */

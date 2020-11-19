@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "../lib/llist.h"
+#include "../vendor/llist.h"
 #include "pie_min.h"
 
 struct pie_min *

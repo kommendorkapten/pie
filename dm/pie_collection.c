@@ -5,7 +5,7 @@
 #include <assert.h>
 #include "pie_collection.h"
 #include "pie_mob.h"
-#include "../lib/llist.h"
+#include "../vendor/llist.h"
 
 struct pie_collection *
 pie_collection_alloc(void)
