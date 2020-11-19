@@ -2,7 +2,11 @@
 bin/*
 obj/*
 *.o
+*.a
 *.jpg
+*.jpeg
+*.JPG
+*.JPEG
 *.png
 *.CR2
 core
