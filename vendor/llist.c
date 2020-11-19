@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -14,7 +14,7 @@
 #include "llist.h"
 #include <stdlib.h>
 
-struct llist 
+struct llist
 {
         struct lnode* head;
         /* tail pointer can only be used on a list that contains elements.
@@ -30,7 +30,7 @@ static void free_node(struct lnode*);
 struct llist* llist_create(void)
 {
         struct llist* new = malloc(sizeof(struct llist));
-        
+
         new->head = NULL;
         new->tail = NULL;
 
@@ -52,7 +52,7 @@ int llist_pushb(struct llist* l, void* e)
                 l->tail->next = new;
                 l->tail = new;
         }
-        else 
+        else
         {
                 /* Empty list */
                 l->head = new;
@@ -77,7 +77,7 @@ int llist_pushf(struct llist* l, void* e)
                 new->next = l->head;
                 l->head = new;
         }
-        else 
+        else
         {
                 /* Empty list */
                 l->head = new;
@@ -91,12 +91,12 @@ void* llist_pop(struct llist* l)
 {
         struct lnode* n = l->head;
         void* ret;
-        
+
         if (n == NULL)
         {
                 return NULL;
         }
-        
+
         ret = n->data;
         l->head = n->next;
 
@@ -113,14 +113,14 @@ struct lnode* llist_head(struct llist* l)
 void llist_clear(struct llist* l)
 {
         struct lnode* next = l->head;
-        
+
         while (next)
         {
                 struct lnode* tmp = next->next;
-                
+
                 free_node(next);
                 next = tmp;
-        }        
+        }
 
         l->head = NULL;
 }
@@ -129,7 +129,7 @@ size_t llist_size(const struct llist* l)
 {
         size_t len = 0;
         struct lnode* n = l->head;
-        
+
         while (n)
         {
                 len++;
