@@ -14,6 +14,8 @@
 #ifndef __PIE_BM_H__
 #define __PIE_BM_H__
 
+#include <stdint.h>
+
 /* Error codes for pie_bm_load */
 #define PIE_BM_IO_NOT_FOUND       1
 #define PIE_BM_IO_IO_ERR          2

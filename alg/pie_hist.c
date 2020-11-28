@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -19,12 +19,13 @@
 #endif
 #include <string.h>
 #include "pie_hist.h"
+#include "../bm/pie_bm.h"
 
 #define LUM_RED   0.2126f
 #define LUM_GREEN 0.7152f
 #define LUM_BLUE  0.0722f
 
-void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
+void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bm_f32rgb* bm)
 {
 #if _HAS_SSE42
 	__m128 coeff_red = _mm_set1_ps(LUM_RED);
@@ -49,9 +50,9 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 
 	for (int y = 0; y < bm->height; y++)
 	{
-                
+
 #if _HAS_SSE42
-                
+
 		for (int x = 0; x < stop; x+=4)
 		{
                         __m128 red;
@@ -79,7 +80,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[2]]++;
 			hist->lum[(unsigned char)out[3]]++;
 		}
-                
+
 #elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x+=4)
@@ -108,8 +109,8 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 			hist->lum[(unsigned char)out[2]]++;
 			hist->lum[(unsigned char)out[3]]++;
                 }
-                
-#endif       
+
+#endif
 
 		for (int x = stop; x < bm->width; x++)
 		{
@@ -120,7 +121,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
                         float b = bm->c_blue[p];
 			unsigned char hp;
 
-			l = LUM_RED * r + 
+			l = LUM_RED * r +
                                 LUM_GREEN * g +
                                 LUM_BLUE * b;
 
@@ -130,7 +131,7 @@ void pie_alg_hist_lum(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 	}
 }
 
-void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
+void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bm_f32rgb* bm)
 {
 #if _HAS_SSE42
 	__m128 coeff_scale = _mm_set1_ps(255.0f);
@@ -155,7 +156,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
 
         for (int y = 0; y < bm->height; y++)
         {
-                
+
 #if _HAS_SSE42
 
                 for (int x = 0; x < stop; x += 4)
@@ -186,7 +187,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
                         hist->c_blue[(unsigned char)ob[2]]++;
                         hist->c_blue[(unsigned char)ob[3]]++;
                 }
-                
+
 #elif _HAS_ALTIVEC
 
                 for (int x = 0; x < stop; x += 4)
@@ -203,7 +204,7 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
                         vec_st(r, 0, or);
                         vec_st(g, 0, og);
                         vec_st(b, 0, ob);
-                        
+
                         hist->c_red[(unsigned char)or[0]]++;
                         hist->c_red[(unsigned char)or[1]]++;
                         hist->c_red[(unsigned char)or[2]]++;
@@ -237,5 +238,3 @@ void pie_alg_hist_rgb(struct pie_histogram* hist, struct pie_bitmap_f32rgb* bm)
                 }
         }
 }
-
-

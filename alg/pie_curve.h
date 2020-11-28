@@ -14,9 +14,16 @@
 #ifndef __PIE_CURVE_H__
 #define __PIE_CURVE_H__
 
-#include "../pie_types.h"
-
 struct pie_point_2d;
+
+enum pie_channel
+{
+        PIE_CHANNEL_INVALID = 0,
+        PIE_CHANNEL_RED = 0x1,
+        PIE_CHANNEL_GREEN = 0x2,
+        PIE_CHANNEL_BLUE = 0x4,
+        PIE_CHANNEL_RGB = 0x7,
+};
 
 /**
  * Apply a curve to a bitmap.

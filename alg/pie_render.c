@@ -12,19 +12,18 @@
 */
 
 #include "pie_render.h"
-#include "../pie_types.h"
-#include "../alg/pie_black.h"
-#include "../alg/pie_contr.h"
-#include "../alg/pie_expos.h"
-#include "../alg/pie_satur.h"
-#include "../alg/pie_white.h"
-#include "../alg/pie_shado.h"
-#include "../alg/pie_highl.h"
-#include "../alg/pie_unsharp.h"
-#include "../alg/pie_vibra.h"
-#include "../alg/pie_colort.h"
-#include "../alg/pie_curve.h"
-#include "../lib/timing.h"
+#include "pie_black.h"
+#include "pie_contr.h"
+#include "pie_expos.h"
+#include "pie_satur.h"
+#include "pie_white.h"
+#include "pie_shado.h"
+#include "pie_highl.h"
+#include "pie_vibra.h"
+#include "pie_colort.h"
+#include "pie_curve.h"
+#include "../bm/pie_bm.h"
+#include "../vendor/timing.h"
 #include "../pie_log.h"
 
 static void pie_curve_set_to_int_fmt(struct pie_curve*);
@@ -149,7 +148,7 @@ static void pie_curve_set_to_can_fmt(struct pie_curve* c)
         }
 }
 
-int pie_bm_render(struct pie_bitmap_f32rgb* img,
+int pie_bm_render(struct pie_bm_f32rgb* img,
                   float* buf,
                   const struct pie_dev_settings* s)
 {

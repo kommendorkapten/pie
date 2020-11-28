@@ -16,4 +16,4 @@ $(lib): $(objects)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a

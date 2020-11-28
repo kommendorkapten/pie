@@ -2,7 +2,7 @@ include ./../include.mk
 
 sources=$(wildcard *.c)
 objects=$(subst .c,.o,$(sources))
-lib=libmh.a
+lib=libalg.a
 
 .PHONY: all clean
 all: $(objects)

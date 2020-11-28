@@ -15,7 +15,7 @@
 #define __PIE_CFG_H__
 
 #include <sqlite3.h>
-#include "../pie_types.h"
+#include "../pie_defs.h"
 #include "../dm/pie_storage.h"
 #define PIE_CFG_PATH "/etc/pie.conf"
 

@@ -14,9 +14,57 @@
 #ifndef __PIE_RENDER_H__
 #define __PIE_RENDER_H__
 
-struct pie_bitmap_f32rgb;
-struct pie_dev_settings;
-struct pie_curve;
+#include "pie_unsharp.h"
+#include "../math/pie_point.h"
+
+#define PIE_CURVE_MAX_CNTL_P 16
+
+struct pie_curve
+{
+        struct pie_point_2d cntl_p[PIE_CURVE_MAX_CNTL_P];
+        int num_p;
+};
+
+struct pie_dev_settings
+{
+       /* [-0.5, 0.5]  def 0 */
+        float color_temp;
+       /* [-0.5, 0.5]  def 0 */
+        float tint;
+        /* [-5, 5]     def 0 */
+        float exposure;
+        /* [0,2]       def 1 */
+        float contrast;
+        /* [-1, 1]     def 0 */
+        float highlights;
+        /* [-1, 1]     def 0 */
+        float shadows;
+        /* [-1, 1]     def 0 */
+        float white;
+        /* [-1, 1]     def 0 */
+        float black;
+        /* unknown def */
+        struct pie_unsharp_param clarity;
+        /* [-100, 100] def 0 */
+        float vibrance;
+        /* [0, 2] def 1 */
+        float saturation;
+        /* [0, 359]    def 0 */
+        float rotate;
+        /* unknown def */
+        struct pie_unsharp_param sharpening;
+
+        /* def linear [0 - 1] */
+        struct pie_curve curve_l;
+        struct pie_curve curve_r;
+        struct pie_curve curve_g;
+        struct pie_curve curve_b;
+
+        /* always last */
+        int version;
+};
+
+struct pie_bm_f32rgb;
 
 /**
  * Init settings to default values.
@@ -56,7 +104,7 @@ extern void pie_bm_set_to_can_fmt(struct pie_dev_settings*);
  * @param settings to apply.
  * @return 0 on success.
  */
-extern int pie_bm_render(struct pie_bitmap_f32rgb*,
+extern int pie_bm_render(struct pie_bm_f32rgb*,
                          float*,
                          const struct pie_dev_settings*);
 
