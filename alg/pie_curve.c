@@ -16,7 +16,7 @@
 #include "pie_curve.h"
 #include "../math/pie_catmull.h"
 #include "../math/pie_point.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 #define SEGMENT_LEN 75
 #define LUT_SIZE  (1 << 16)

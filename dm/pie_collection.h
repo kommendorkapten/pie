@@ -3,7 +3,7 @@
 #ifndef __28052_PIE_COLLECTION_H__
 #define __28052_PIE_COLLECTION_H__
 #include <sqlite3.h>
-#include "../pie_id.h"
+#include "../prunt/pie_id.h"
 
 struct llist;
 struct pie_mob;

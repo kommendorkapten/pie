@@ -23,7 +23,9 @@ endif
 
 all: test pied bin/collver
 
-libs: vendor/libvendor.a math/libpmath.a mh/libmh.a alg/libalg.a dm/libdm.a
+libs: vendor/libvendor.a math/libpmath.a mh/libmh.a alg/libalg.a \
+	dm/libdm.a bm/libbm.a exif/libpexif.a encoding/libpencoding.a \
+	prunt/libprunt.a http/libphttp.a
 
 vendor/libvendor.a:
 	cd vendor && $(MAKE)
@@ -37,6 +39,14 @@ alg/libalg.a:
 	cd alg && $(MAKE)
 dm/libdm.a:
 	cd dm && $(MAKE)
+exif/libpexif.a:
+	cd exif && $(MAKE)
+encoding/libpencoding.a:
+	cd encoding && $(MAKE)
+prunt/libprunt.a:
+	cd prunt && $(MAKE)
+http/libphttp.a:
+	cd http && $(MAKE)
 
 pied: bin/editd bin/ingestd bin/mediad bin/collectiond bin/exportd
 
@@ -54,6 +64,10 @@ clean:
 	cd bm && $(MAKE) clean
 	cd alg && $(MAKE) clean
 	cd dm && $(MAKE) clean
+	cd exif && $(MAKE) clean
+	cd encoding && $(MAKE) clean
+	cd prunt && $(MAKE) clean
+	cd http && $(MAKE) clean
 
 bin/pngrw: testp/pngrw.c $(LIBCORE)
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)

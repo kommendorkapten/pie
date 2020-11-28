@@ -4,7 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include "pie_host.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
+
 struct pie_host *
 pie_host_alloc(void)
 {

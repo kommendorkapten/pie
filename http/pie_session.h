@@ -18,7 +18,7 @@
 #define PIE_TX_IMG  0x1
 #define PIE_TX_HIST  0x2
 
-#include "../lib/timing.h"
+#include "../vendor/timing.h"
 
 struct pie_http_sess_mgr;
 struct pie_editd_workspace;

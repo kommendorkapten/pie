@@ -17,8 +17,8 @@
 #include "pie_mh_stg.h"
 #include "../vendor/llist.h"
 #include "../dm/pie_min.h"
-#include "../cfg/pie_cfg.h"
-#include "../pie_log.h"
+#include "../prunt/pie_cfg.h"
+#include "../prunt/pie_log.h"
 
 struct pie_min* pie_mh_min_for_mob(sqlite3* db,
                                    struct pie_stg_mnt** stgs,

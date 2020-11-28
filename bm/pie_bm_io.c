@@ -19,7 +19,7 @@
 #include "pie_bm_jpg.h"
 #include "pie_bm_raw.h"
 #include "pie_bm_cspace.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 #define PIE_MAGIC_MAX 16
 

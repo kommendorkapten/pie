@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -20,11 +20,11 @@
 #endif
 #include <netinet/in.h>
 #include <string.h>
-#include "../pie_types.h"
+#include "../bm/pie_bm.h"
 #include "pie_rgba.h"
 
 void pie_enc_bm_rgba(unsigned char* restrict buf,
-                     const struct pie_bitmap_f32rgb* restrict img,
+                     const struct pie_bm_f32rgb* restrict img,
                      enum pie_image_type type)
 {
         uint32_t w = htonl(img->width);
@@ -37,7 +37,7 @@ void pie_enc_bm_rgba(unsigned char* restrict buf,
         buf += sizeof(uint32_t);
         memcpy(buf, &h, sizeof(uint32_t));
         buf += sizeof(uint32_t);
-        
+
 #if _HAS_SIMD4
         int rem = img->width % 4;
         int stop = img->width - rem;
@@ -47,7 +47,7 @@ void pie_enc_bm_rgba(unsigned char* restrict buf,
 #else
         int stop = 0;
 #endif
-        
+
 #if _HAS_SSE42
         __m128 scalev = _mm_set1_ps(255.0f);
 #endif
@@ -92,9 +92,9 @@ void pie_enc_bm_rgba(unsigned char* restrict buf,
                         *buf++ = (unsigned char)ob[3];
                         *buf++ = 255;
                 }
-                
+
 #elif _HAS_ALTIVEC
-                
+
                 for (int x = 0; x < stop; x += 4)
                 {
                         int p = y * img->row_stride + x;
@@ -138,12 +138,12 @@ void pie_enc_bm_rgba(unsigned char* restrict buf,
                         r = (unsigned char)(img->c_red[p] * 255.0f);
                         g = (unsigned char)(img->c_green[p] * 255.0f);
                         b = (unsigned char)(img->c_blue[p] * 255.0f);
-                        
+
                         *buf++ = r;
                         *buf++ = g;
                         *buf++ = b;
                         *buf++ = 255;
                 }
-        }        
-        
+        }
+
 }

@@ -15,9 +15,8 @@
 #define __PIE_RENDER_H__
 
 #include "pie_unsharp.h"
+#include "../pie_defs.h"
 #include "../math/pie_point.h"
-
-#define PIE_CURVE_MAX_CNTL_P 16
 
 struct pie_curve
 {

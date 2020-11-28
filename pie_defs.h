@@ -11,27 +11,22 @@
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
 
-#ifndef __PIE_RGBA_H__
-#define __PIE_RGBA_H__
+#ifndef PIE_DEFS_H
+#define PIE_DEFS_H
 
-enum pie_image_type
+#define PIE_HIST_RES 256
+#define PIE_PATH_LEN 256
+
+#define PIE_CURVE_MAX_CNTL_P 16
+
+enum pie_channel
 {
-        PIE_IMAGE_TYPE_PRIMARY = 1,
+        PIE_CHANNEL_INVALID = 0,
+        PIE_CHANNEL_RED = 0x1,
+        PIE_CHANNEL_GREEN = 0x2,
+        PIE_CHANNEL_BLUE = 0x4,
+        PIE_CHANNEL_RGB = 0x7,
 };
 
-struct pie_bm_f32rgb;
 
-/**
- * Encode the proxy_out into rgba format.
- * Rgba format is w, h, rgba, rgba etc.
- * w and h are 32 uint, in network order.
- * Min size of buffer is 8b + w * h * 4b.
- * @param buffer to encode to.
- * @param the bitmap to encode.
- * @return void
- */
-extern void pie_enc_bm_rgba(unsigned char* restrict,
-                            const struct pie_bm_f32rgb* restrict,
-                            enum pie_image_type);
-
-#endif /* __PIE_RGBA_H__ */
+#endif /* PIE_DEFS_H */

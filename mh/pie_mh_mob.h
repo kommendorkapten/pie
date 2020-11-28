@@ -15,7 +15,7 @@
 #define __PIE_MH_MOB_H__
 
 #include <sqlite3.h>
-#include "../pie_id.h"
+#include "../prunt/pie_id.h"
 
 /**
  * Delete a single MOB. This will remove all related assets:

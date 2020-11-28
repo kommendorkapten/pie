@@ -18,9 +18,9 @@
 #include <sqlite3.h>
 #include <assert.h>
 #include "pie_cfg.h"
-#include "../lib/hmap.h"
-#include "../lib/strutil.h"
-#include "../pie_log.h"
+#include "../vendor/hmap.h"
+#include "../vendor/strutil.h"
+#include "../prunt/pie_log.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_mountpoint.h"
 

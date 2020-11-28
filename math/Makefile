@@ -5,7 +5,7 @@ objects=$(subst .c,.o,$(sources))
 lib=libpmath.a
 
 .PHONY: all clean
-all: $(objects)
+all: $(lib)
 
 lib: $(lib)
 

@@ -16,7 +16,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <errno.h>
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 #include "worker.h"
 #include "chan.h"
 

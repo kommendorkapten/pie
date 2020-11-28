@@ -15,8 +15,9 @@
 #include <stddef.h>
 #include <sys/time.h>
 #include <assert.h>
-#include "pie_types.h"
 #include "pie_id.h"
+
+#define PIE_EPOCH 1483228800L /* 20170101T00:00:00Z */
 
 pie_id pie_id_from_ts(unsigned char host,
                       unsigned char worker,

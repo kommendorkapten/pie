@@ -16,7 +16,7 @@
 #include <assert.h>
 
 #include "pie_bm.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 #define MAX_RADIUS 11
 #define MIN_RADIUS 7

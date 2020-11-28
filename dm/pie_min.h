@@ -3,7 +3,7 @@
 #ifndef __28230_PIE_MIN_H__
 #define __28230_PIE_MIN_H__
 #include <sqlite3.h>
-#include "../pie_id.h"
+#include "../prunt/pie_id.h"
 
 struct llist;
 

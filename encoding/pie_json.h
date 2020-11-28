@@ -15,8 +15,8 @@
 #define __PIE_JSON_H__
 
 #include <stdlib.h>
-#include "../pie_id.h"
-#include "../jsmn/jsmn.h"
+#include "../prunt/pie_id.h"
+#include "../vendor/jsmn.h"
 
 struct pie_histogram;
 struct pie_dev_settings;

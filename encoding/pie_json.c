@@ -14,15 +14,18 @@
 #include <stdio.h>
 #include <string.h>
 #include "pie_json.h"
-#include "../pie_log.h"
-#include "../pie_types.h"
+#include "../pie_defs.h"
+#include "../prunt/pie_log.h"
 #include "../dm/pie_exif_data.h"
 #include "../dm/pie_collection.h"
 #include "../dm/pie_mob.h"
-#include "../lib/llist.h"
-#include "../jsmn/jsmn.h"
+#include "../vendor/llist.h"
+#include "../vendor/jsmn.h"
 #include "../http/pie_http_types.h"
 #include "../mq_msg/pie_mq_msg.h"
+#include "../alg/pie_unsharp.h"
+#include "../alg/pie_hist.h"
+#include "../alg/pie_render.h"
 
 #define DEV_SET_SCALE 1000.0f
 #define NUM_TOKENS 512

@@ -5,7 +5,7 @@ objects=$(subst .c,.o,$(sources))
 lib=libvendor.a
 
 .PHONY: all clean
-all: $(objects)
+all: $(lib)
 
 lib: $(lib)
 

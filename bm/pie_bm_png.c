@@ -21,7 +21,7 @@
 #endif
 #include "pie_bm.h"
 #include "pie_bm_png.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 /* PNG is stored in network order */
 #if defined (__BYTE_ORDER__)

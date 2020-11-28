@@ -15,7 +15,7 @@
 #define __PIE_MH_STG_H__
 
 #include <sqlite3.h>
-#include "../pie_id.h"
+#include "../prunt/pie_id.h"
 
 struct pie_min;
 struct pie_stg_mnt;

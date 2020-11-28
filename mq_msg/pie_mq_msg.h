@@ -15,8 +15,8 @@
 #define __PIE_MQ_MSG_H__
 
 #include <stddef.h>
-#include "../pie_types.h"
-#include "../pie_id.h"
+#include "../pie_defs.h"
+#include "../prunt/pie_id.h"
 
 #define pie_mq_swap64(x) ( ((x) & 0x00000000000000ff) << 56 | \
                            ((x) & 0x000000000000ff00) << 40 | \

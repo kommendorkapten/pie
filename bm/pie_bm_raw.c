@@ -14,7 +14,7 @@
 #include <libraw/libraw.h>
 #include "pie_bm.h"
 #include "pie_bm_raw.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 int pie_bm_raw_f32_read(struct pie_bm_f32rgb* bm,
                         const char* path,

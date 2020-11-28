@@ -24,7 +24,7 @@
 #include "pie_curve.h"
 #include "../bm/pie_bm.h"
 #include "../vendor/timing.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 
 static void pie_curve_set_to_int_fmt(struct pie_curve*);
 static void pie_curve_set_to_can_fmt(struct pie_curve*);

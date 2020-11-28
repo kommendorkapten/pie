@@ -17,8 +17,8 @@
 #include <strings.h>
 #include "pie_util.h"
 #include "pie_session.h"
-#include "../pie_log.h"
-#include "../lib/hmap.h"
+#include "../prunt/pie_log.h"
+#include "../vendor/hmap.h"
 
 const char* pie_http_get_mimetype(const char *path)
 {

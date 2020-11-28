@@ -14,7 +14,7 @@
 #ifndef __PIE_HTTP_TYPES_H__
 #define __PIE_HTTP_TYPES_H__
 
-#include "../pie_types.h"
+#include "../pie_defs.h"
 
 #define HTTP_HOSTNAME_LEN 128
 

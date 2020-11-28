@@ -17,8 +17,8 @@
 #include <openssl/sha.h>
 #include <sys/time.h>
 #include "pie_session.h"
-#include "../lib/hmap.h"
-#include "../pie_log.h"
+#include "../vendor/hmap.h"
+#include "../prunt/pie_log.h"
 
 struct pie_http_sess_mgr
 {

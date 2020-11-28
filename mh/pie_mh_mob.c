@@ -16,7 +16,8 @@
 #include <string.h>
 #include "pie_mh_mob.h"
 #include "pie_mh_stg.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
+#include "../prunt/pie_cfg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 #include "../dm/pie_mob.h"
@@ -26,7 +27,6 @@
 #include "../dm/pie_collection_member.h"
 #include "../vendor/llist.h"
 #include "../vendor/fal.h"
-#include "../cfg/pie_cfg.h"
 
 /**
  * Unlink a file.

@@ -20,7 +20,7 @@
 #include <libexif/exif-data.h>
 #include <libraw/libraw.h>
 #include "../dm/pie_exif_data.h"
-#include "../pie_log.h"
+#include "../prunt/pie_log.h"
 #include "pie_exif.h"
 
 #define EXIF_TIME_FORMAT_E "YYYY:MM:DD HH:MM:SS"
