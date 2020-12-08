@@ -4,7 +4,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <string.h>
-#include "../lib/s_queue.h"
+#include "../vendor/s_queue.h"
 
 #define SOCKET "/tmp/pie_ingest.sock"
 

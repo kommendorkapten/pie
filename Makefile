@@ -7,8 +7,8 @@ else
 endif
 
 # Binaries
-#TEST_BINS   = $(shell find testp -type f "*.c" | xargs -I {} basename {} ".c$")
-#T_BINS     = $(TEST_BINS:%=bin/%)
+TEST_BINS   = $(shell find testp -type f -name "*.c" | xargs -I {} basename {} ".c$")
+T_BINS     = $(TEST_BINS:%=bin/%)
 
 #VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
 #        ingestd exif jsmn doml tools exportd
@@ -69,62 +69,62 @@ clean:
 	cd prunt && $(MAKE) clean
 	cd http && $(MAKE) clean
 
-bin/pngrw: testp/pngrw.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
+bin/pngrw: testp/pngrw.c bm/libbm.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a
 
-bin/gradient: testp/gradient.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE)
+bin/gradient: testp/gradient.c bm/libbm.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a
 
-bin/imgread: testp/imgread.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/imgread: testp/imgread.c bm/libbm.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a vendor/libvendor.a
 
-bin/gauss: testp/gauss.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/gauss: testp/gauss.c bm/libbm.a vendor/libvendor.a math/libpmath.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a vendor/libvendor.a math/libpmath.a
 
-bin/unsharp: testp/unsharp.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/unsharp: testp/unsharp.c bm/libbm.a vendor/libvendor.a alg/libalg.a math/libpmath.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a vendor/libvendor.a alg/libalg.a math/libpmath.a
 
-bin/tojpg: testp/tojpg.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/tojpg: testp/tojpg.c bm/libbm.a alg/libalg.a math/libpmath.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a alg/libalg.a math/libpmath.a vendor/libvendor.a
 
-bin/tapply: testp/tapply.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/tapply: testp/tapply.c bm/libbm.a alg/libalg.a vendor/libvendor.a encoding/libpencoding.a math/libpmath.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a alg/libalg.a vendor/libvendor.a encoding/libpencoding.a math/libpmath.a
 
-bin/tdowns: testp/tdowns.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/tdowns: testp/tdowns.c bm/libbm.a alg/libalg.a math/libpmath.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a alg/libalg.a math/libpmath.a vendor/libvendor.a
 
-bin/lrawtest: testp/lrawtest.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/lrawtest: testp/lrawtest.c bm/libbm.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a vendor/libvendor.a
 
-bin/exif_dump: testp/exif_dump.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) -lexif $(LIBCORE) $(LIBUTIL)
+bin/exif_dump: testp/exif_dump.c exif/libpexif.a encoding/libpencoding.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) -lexif exif/libpexif.a encoding/libpencoding.a vendor/libvendor.a
 
-bin/tjson: testp/tjson.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE) $(LIBUTIL)
+bin/tjson: testp/tjson.c alg/libalg.a math/libpmath.a encoding/libpencoding.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) alg/libalg.a math/libpmath.a encoding/libpencoding.a vendor/libvendor.a
 
-bin/bench_blur: testp/bench_blur.c $(LIBCORE) $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) $(LIBCORE) $(LIBUTIL)
+bin/bench_blur: testp/bench_blur.c bm/libbm.a math/libpmath.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a math/libpmath.a vendor/libvendor.a
 
-bin/test_id: testp/test_id.c $(LIBCORE)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIBCORE)
+bin/test_id: testp/test_id.c prunt/libprunt.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) prunt/libprunt.a
 
-bin/testfwlk: testp/testfwlk.c $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LCRYPTO) $(LIBUTIL)
+bin/testfwlk: testp/testfwlk.c vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LCRYPTO) vendor/libvendor.a
 
-bin/qserver: testp/qserver.c $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) -lpthread $(LIBUTIL)
+bin/qserver: testp/qserver.c vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) -lpthread vendor/libvendor.a
 
-bin/qclient: testp/qclient.c $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) $(LIBUTIL)
+bin/qclient: testp/qclient.c vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) vendor/libvendor.a
 
-bin/test_export: testp/test_export.c $(LIBUTIL)
-	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) $(LIBUTIL)
+bin/test_export: testp/test_export.c encoding/libpencoding.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LNET) encoding/libpencoding.a vendor/libvendor.a
 
 bin/exif_tags: testp/exif_tags.c
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) -lexif
 
-bin/srgb_test: testp/srgb_test.c obj/pie_cspace.o obj/timing.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
+bin/srgb_test: testp/srgb_test.c bm/libbm.a vendor/libvendor.a
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) bm/libbm.a vendor/libvendor.a
 
 # Servers
 bin/editd: $(EDITD_OBJS) $(IO_OBJS) $(HTTP_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DOML_OBJS) $(CFG_OBJS) $(ENC_OBJS) $(BM_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/strutil.o obj/timing.o obj/s_queue.o obj/s_queue_intra.o obj/pie_id.o

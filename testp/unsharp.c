@@ -1,15 +1,14 @@
 #include <stdio.h>
-#include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
-#include "../lib/timing.h"
+#include "../bm/pie_bm_jpg.h"
+#include "../vendor/timing.h"
 #include "../alg/pie_unsharp.h"
 
 int main(int argc, char** argv)
 {
         int ret;
-        struct pie_bitmap_f32rgb img;
-        struct pie_bitmap_u8rgb out;
+        struct pie_bm_f32rgb img;
+        struct pie_bm_u8rgb out;
         struct timing t;
         struct pie_unsharp_param p_scr =
                 {
@@ -35,7 +34,7 @@ int main(int argc, char** argv)
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1], NULL);
+        ret = pie_bm_load(&img, argv[1], NULL);
         dur = timing_dur_msec(&t);
         if (ret)
         {
@@ -64,10 +63,10 @@ int main(int argc, char** argv)
         printf("Executed unsharp mask took %lumsec\n", dur);
 
 #if 0
-        pie_bm_conv_bd(&out, PIE_COLOR_8B,
-                       &img, PIE_COLOR_32B);
+        pie_bm_conv_bd(&out, PIE_BM_COLOR_8B,
+                       &img, PIE_BM_COLOR_32B);
 
-        pie_io_jpg_u8rgb_write("out.jpg", &out, 100);
+        pie_bm_jpg_u8rgb_write("out.jpg", &out, 100);
         pie_bm_free_u8(&out);
 #endif
 

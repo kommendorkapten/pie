@@ -2,8 +2,7 @@
 #include <string.h>
 #include <math.h>
 #include "../encoding/pie_json.h"
-#include "../pie_types.h"
-#include "../bm/pie_render.h"
+#include "../alg/pie_render.h"
 
 #define MAX_DELTA 0.0001f
 #define BUF_LEN 1024
@@ -50,12 +49,12 @@ int main(void)
         s.sharpening.amount = 0.001f;
         s.sharpening.radius = 0.002f;
         s.sharpening.threshold = 0.003f;
-        pie_bm_init_curve(&s.curve_l);
-        pie_bm_init_curve(&s.curve_r);
-        pie_bm_init_curve(&s.curve_g);
-        pie_bm_init_curve(&s.curve_b);
+        pie_alg_init_curve(&s.curve_l);
+        pie_alg_init_curve(&s.curve_r);
+        pie_alg_init_curve(&s.curve_g);
+        pie_alg_init_curve(&s.curve_b);
 
-        pie_bm_set_to_can_fmt(&s);
+        pie_alg_set_to_can_fmt(&s);
 
         len = pie_enc_json_settings(buf, BUF_LEN, &s);
         buf[len] = '\0';
@@ -200,5 +199,6 @@ int main(void)
                 }
         }
 
+        printf("ok\n");
         return 0;
 }

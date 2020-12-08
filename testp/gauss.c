@@ -2,13 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
-#include "../lib/timing.h"
+#include "../bm/pie_bm_jpg.h"
+#include "../vendor/timing.h"
 #include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
-#include "../alg/pie_cspace.h"
 
 #define KERNEL_LEN 281
 
@@ -24,8 +22,8 @@ amd64: use gauss if sigma is <= 5. VERIFY!!!!
 int main(int argc, char** argv)
 {
         int ret;
-        struct pie_bitmap_f32rgb img;
-        struct pie_bitmap_u8rgb out;
+        struct pie_bm_f32rgb img;
+        struct pie_bm_u8rgb out;
         struct timing t;
         long dur;
         float kernel[KERNEL_LEN];
@@ -35,12 +33,12 @@ int main(int argc, char** argv)
         float s = 6.0f;
         int kernel_len = (int)((6.0f * s) + 0.5f);
         int size;
-        struct pie_io_opts opts = {
-                .qual = PIE_IO_HIGH_QUAL,
+        struct pie_bm_opts opts = {
+                .qual = PIE_BM_HIGH_QUAL,
 #if _PIE_EDIT_LINEAR
-                .cspace = PIE_IO_LINEAR
+                .cspace = PIE_BM_LINEAR
 #else
-                .cspace = PIE_IO_SRGB
+                .cspace = PIE_BM_SRGB
 #endif
         };
 
@@ -61,7 +59,7 @@ int main(int argc, char** argv)
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, argv[1], &opts);
+        ret = pie_bm_load(&img, argv[1], &opts);
         dur = timing_dur_msec(&t);
         if (ret)
         {
@@ -113,13 +111,13 @@ int main(int argc, char** argv)
         printf("Convert to sRGB took %lumsec\n", timing_dur_msec(&t));
 #endif /* _PIE_EDIT_LINEAR */
 
-        pie_bm_conv_bd(&out, PIE_COLOR_8B,
-                       &img, PIE_COLOR_32B);
-        pie_io_jpg_u8rgb_write("gauss.jpg", &out, 100);
+        pie_bm_conv_bd(&out, PIE_BM_COLOR_8B,
+                       &img, PIE_BM_COLOR_32B);
+        pie_bm_jpg_u8rgb_write("gauss.jpg", &out, 100);
         pie_bm_free_u8(&out);
         pie_bm_free_f32(&img);
 
-        ret = pie_io_load(&img, argv[1], &opts);
+        ret = pie_bm_load(&img, argv[1], &opts);
         /* BOX Blur 6 */
         timing_start(&t);
         pie_mth_box_blur6(img.c_red,
@@ -155,9 +153,9 @@ int main(int argc, char** argv)
         printf("Convert to sRGB took %lumsec\n", timing_dur_msec(&t));
 #endif /* _PIE_EDIT_LINEAR */
 
-        pie_bm_conv_bd(&out, PIE_COLOR_8B,
-                       &img, PIE_COLOR_32B);
-        pie_io_jpg_u8rgb_write("box.jpg", &out, 100);
+        pie_bm_conv_bd(&out, PIE_BM_COLOR_8B,
+                       &img, PIE_BM_COLOR_32B);
+        pie_bm_jpg_u8rgb_write("box.jpg", &out, 100);
         pie_bm_free_u8(&out);
 
         free(buf);

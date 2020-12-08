@@ -29,7 +29,7 @@
 static void pie_curve_set_to_int_fmt(struct pie_curve*);
 static void pie_curve_set_to_can_fmt(struct pie_curve*);
 
-void pie_bm_init_settings(struct pie_dev_settings* s, int w, int h)
+void pie_alg_init_settings(struct pie_dev_settings* s, int w, int h)
 {
         int m = w > h ? w : h;
 
@@ -51,13 +51,13 @@ void pie_bm_init_settings(struct pie_dev_settings* s, int w, int h)
         s->sharpening.radius = 1.0f;
         s->sharpening.threshold = 2.0f;
         s->rotate = 0.0f;
-        pie_bm_init_curve(&s->curve_l);
-        pie_bm_init_curve(&s->curve_r);
-        pie_bm_init_curve(&s->curve_g);
-        pie_bm_init_curve(&s->curve_b);
+        pie_alg_init_curve(&s->curve_l);
+        pie_alg_init_curve(&s->curve_r);
+        pie_alg_init_curve(&s->curve_g);
+        pie_alg_init_curve(&s->curve_b);
 }
 
-void pie_bm_init_curve(struct pie_curve* c)
+void pie_alg_init_curve(struct pie_curve* c)
 {
         c->num_p = 4;
         c->cntl_p[0].x = -0.3f;
@@ -70,7 +70,7 @@ void pie_bm_init_curve(struct pie_curve* c)
         c->cntl_p[3].y =  1.3f;
 }
 
-void pie_bm_set_to_int_fmt(struct pie_dev_settings* s)
+void pie_alg_set_to_int_fmt(struct pie_dev_settings* s)
 {
         s->color_temp /= 100.0f;
         s->tint /= 100.0f;
@@ -113,7 +113,7 @@ static void pie_curve_set_to_int_fmt(struct pie_curve* c)
         }
 }
 
-void pie_bm_set_to_can_fmt(struct pie_dev_settings* s)
+void pie_alg_set_to_can_fmt(struct pie_dev_settings* s)
 {
         s->color_temp *= 100.0f;
         s->tint *= 100.0f;
@@ -148,9 +148,9 @@ static void pie_curve_set_to_can_fmt(struct pie_curve* c)
         }
 }
 
-int pie_bm_render(struct pie_bm_f32rgb* img,
-                  float* buf,
-                  const struct pie_dev_settings* s)
+int pie_alg_render(struct pie_bm_f32rgb* img,
+                   float* buf,
+                   const struct pie_dev_settings* s)
 {
         struct timing t1;
         struct timing t2;

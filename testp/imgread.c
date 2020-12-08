@@ -1,14 +1,13 @@
 #include <stdio.h>
-#include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
-#include "../lib/timing.h"
+#include "../bm/pie_bm_png.h"
+#include "../vendor/timing.h"
 
 int main(int argc, char** argv)
 {
-        struct pie_bitmap_f32rgb bm;
+        struct pie_bm_f32rgb bm;
         struct timing t;
-        int ret;        
+        int ret;
 
         if (argc != 2)
         {
@@ -17,9 +16,9 @@ int main(int argc, char** argv)
 
         timing_start(&t);
 #if 0
-        ret = png_f32_read(&bm, argv[1]);
+        ret = pie_bm_png_f32_read(&bm, argv[1]);
 #else
-        ret = pie_io_load(&bm, argv[1], NULL);
+        ret = pie_bm_load(&bm, argv[1], NULL);
 #endif
         if (ret)
         {
@@ -35,6 +34,6 @@ int main(int argc, char** argv)
         printf("channels:  %d\n", (int)bm.color_type);
         printf("bit depth: %d\n", (int)bm.bit_depth);
         pie_bm_free_f32(&bm);
-        
+
         return ret;
 }

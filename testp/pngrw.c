@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
+#include "../bm/pie_bm_png.h"
 
 int main(void)
 {
         char* f = "out.png";
-        struct pie_bitmap_u8rgb src;
-        struct pie_bitmap_f32rgb dst;
+        struct pie_bm_u8rgb src;
+        struct pie_bm_f32rgb dst;
 
         src.height = 10;
         src.width = 10;
-        src.color_type = PIE_COLOR_TYPE_RGB;
+        src.color_type = PIE_BM_COLOR_TYPE_RGB;
         pie_bm_alloc_u8(&src);
 
         for (int y = 0; y < src.height; y++)
@@ -28,12 +27,12 @@ int main(void)
                 }
         }
 
-        if (pie_io_png_u8rgb_write(f, &src))
+        if (pie_bm_png_u8rgb_write(f, &src))
         {
                 printf("Failed to write\n");
         }
 
-        if (pie_io_png_f32_read(&dst, f))
+        if (pie_bm_png_f32_read(&dst, f))
         {
                 printf("Failed to read\n");
         }

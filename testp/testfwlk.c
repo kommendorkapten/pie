@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <openssl/evp.h>
 #include <openssl/engine.h>
-#include "../lib/fswalk.h"
+#include "../vendor/fswalk.h"
 
 #define NUM_PATH 256
 #define MAX_PATH 256

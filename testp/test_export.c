@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "../pie_log.h"
-#include "../lib/s_queue.h"
+#include "../prunt/pie_log.h"
+#include "../vendor/s_queue.h"
 #include "../mq_msg/pie_mq_msg.h"
 #include "../encoding/pie_json.h"
 

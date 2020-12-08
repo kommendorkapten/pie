@@ -2,23 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../pie_types.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
-#include "../lib/timing.h"
+#include "../vendor/timing.h"
 #include "../math/pie_kernel.h"
 #include "../math/pie_blur.h"
 
 #define KERNEL_LEN 281
 
-long time_gauss(struct pie_bitmap_f32rgb*, float, float*, float*, int);
-long time_box(struct pie_bitmap_f32rgb*, float, float*);
+long time_gauss(struct pie_bm_f32rgb*, float, float*, float*, int);
+long time_box(struct pie_bm_f32rgb*, float, float*);
 
 int main(int argc, char** argv)
 {
+        (void)argc;
+        (void)argv;
+
         int ret;
-        struct pie_bitmap_f32rgb imgl;
-        struct pie_bitmap_f32rgb imgs;
+        struct pie_bm_f32rgb imgl;
+        struct pie_bm_f32rgb imgs;
         float kernel[KERNEL_LEN];
         float* buf;
         int kernel_len;
@@ -29,12 +30,12 @@ int main(int argc, char** argv)
         long timlb[] = {0, 0, 0, 0, 0, 0};
         int count = sizeof(sigmas)/sizeof(float);
 
-        ret = pie_io_load(&imgl, "test-images/large.png", NULL);
+        ret = pie_bm_load(&imgl, "test-images/large.png", NULL);
         if (ret)
         {
                 abort();
         }
-        ret = pie_io_load(&imgs, "test-images/sidensvans_small.jpg", NULL);
+        ret = pie_bm_load(&imgs, "test-images/sidensvans_small.jpg", NULL);
         if (ret)
         {
                 abort();
@@ -60,10 +61,10 @@ int main(int argc, char** argv)
                 }
 
                 printf("Kernel size: %d, sigma: %f\n", kernel_len, s);
-                /*
+
                 timlg[i] = time_gauss(&imgl, s, buf, kernel, kernel_len);
                 timsg[i] = time_gauss(&imgs, s, buf, kernel, kernel_len);
-                */
+
                 timlb[i] = time_box(&imgl, s, buf);
                 timsb[i] = time_box(&imgs, s, buf);
         }
@@ -72,13 +73,13 @@ int main(int argc, char** argv)
         printf("#sigma gauss box\n");
         for (int i = 0; i < count; i++)
         {
-                printf("%4f %10d %10d\n", sigmas[i], timlg[i], timlb[i]);
+                printf("%4f %10ld %10ld\n", sigmas[i], timlg[i], timlb[i]);
         }
         printf("#Small\n");
         printf("#sigma gauss box\n");
         for (int i = 0; i < count; i++)
         {
-                printf("%f %10d %10d\n", sigmas[i], timsg[i], timsb[i]);
+                printf("%f %10ld %10ld\n", sigmas[i], timsg[i], timsb[i]);
         }
 
         free(buf);
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
 }
 
 
-long time_gauss(struct pie_bitmap_f32rgb* img,
+long time_gauss(struct pie_bm_f32rgb* img,
                 float s,
                 float* buf,
                 float* kernel,
@@ -127,7 +128,7 @@ long time_gauss(struct pie_bitmap_f32rgb* img,
         return dur;
 }
 
-long time_box(struct pie_bitmap_f32rgb* img, float s, float* buf)
+long time_box(struct pie_bm_f32rgb* img, float s, float* buf)
 {
         struct timing t;
         time_t dur;

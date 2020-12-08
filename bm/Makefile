@@ -4,7 +4,7 @@ sources=$(wildcard *.c)
 objects=$(subst .c,.o,$(sources))
 lib=libbm.a
 
-.PHONY: all clean
+.PHONY: all clean lib
 all: $(lib)
 
 lib: $(lib)

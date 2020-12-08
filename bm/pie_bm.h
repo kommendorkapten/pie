@@ -243,27 +243,6 @@ int pie_bm_conv_bd(void* restrict,
                    enum pie_bm_color_bit_depth);
 
 /**
- * Downsample an bitmap. Downscaling is performed by a Gaussian blur
- * across the neighbours. The new size is provided by maximum new width
- * and height. The new size is the smallest of the new parameters that
- * can be achieved by maintaining the original aspect ratio.
- * A dimension can be set to don't care by providing -1. It is an error
- * to set both directions as don't care.
- * @param output bitmap. Must be an uninitialized bitmap structure.
- *        If initialized, memory leak will occur.
- * @param source bitmap to downsample.
- * @param maximum new width in pixels, -1 if don't care.
- * @param maximum new height in pixels, -1 if dont' care.
- * @return 0 on success. Non zero otherwise.
- */
-#if 0
-int pie_bm_dwn_smpl(struct pie_bm_f32rgb* restrict,
-                    const struct pie_bm_f32rgb* restrict,
-                    int,
-                    int);
-#endif
-
-/**
  * Open a file and load content into an empty bitmap.
  * @param the bitmap to load content into.
  * @param the path to open.

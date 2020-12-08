@@ -1,30 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../pie_types.h"
+#include "../pie_defs.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io.h"
-#include "../lib/timing.h"
+#include "../bm/pie_bm_jpg.h"
+#include "../vendor/timing.h"
 #include "../alg/pie_medf3.h"
 #include "../alg/pie_unsharp.h"
-#include "../alg/pie_cspace.h"
 #include "../alg/pie_curve.h"
+#include "../alg/pie_render.h"
 #include "../math/pie_kernel.h"
 
 int main(int argc, char** argv)
 {
         char* in;
         char* out;
-        struct pie_bitmap_f32rgb bmf;
-        struct pie_bitmap_u8rgb bmu;
+        struct pie_bm_f32rgb bmf;
+        struct pie_bm_u8rgb bmu;
         struct timing t;
-        struct pie_io_opts opts;
+        struct pie_bm_opts opts;
         float* buf;
         int ok;
         char med3 = 0;
-        char blur = 1;
+        char blur = 0;
         char sharp = 0;
-        char sharp_k = 1;
-        char curve = 1;
+        char sharp_k = 0;
+        char curve = 0;
 
         if (argc != 3)
         {
@@ -35,20 +35,20 @@ int main(int argc, char** argv)
         in = argv[1];
         out = argv[2];
 
-        opts.qual = PIE_IO_HIGH_QUAL;
+        opts.qual = PIE_BM_HIGH_QUAL;
 #if _PIE_EDIT_LINEAR
-        opts.cspace = PIE_IO_LINEAR;
+        opts.cspace = PIE_BM_LINEAR;
 #else
-        opts.cspace = PIE_IO_SRGB;
+        opts.cspace = PIE_BM_SRGB;
 #endif
 
         timing_start(&t);
-        if (ok = pie_io_load(&bmf, in, &opts), ok)
+        if (ok = pie_bm_load(&bmf, in, &opts), ok)
         {
                 printf("pie_io_load: %d\n", ok);
                 return -1;
         }
-        printf("Read %s in %luusec\n", in, timing_dur_usec(&t));
+        printf("Read %s in %lumsec\n", in, timing_dur_msec(&t));
         buf = malloc(bmf.height * bmf.row_stride * sizeof(float));
 
         if (med3)
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
                               bmf.width,
                               bmf.height,
                               bmf.row_stride);
-                printf("Med3 in %luusec\n", timing_dur_usec(&t));
+                printf("Med3 in %lumsec\n", timing_dur_msec(&t));
         }
 
         if (blur)
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
                                          bmf.height,
                                          bmf.row_stride);
 
-                printf("gauss blur in %luusec\n", timing_dur_usec(&t));
+                printf("gauss blur in %lumsec\n", timing_dur_msec(&t));
         }
 
         if (sharp_k)
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
                                         bmf.height,
                                         bmf.row_stride);
 
-                printf("sharp (kernel) in %luusec\n", timing_dur_usec(&t));
+                printf("sharp (kernel) in %lumsec\n", timing_dur_msec(&t));
         }
 
         if (sharp)
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
                                 bmf.width,
                                 bmf.height,
                                 bmf.row_stride);
-                printf("sharp in %luusec\n", timing_dur_usec(&t));
+                printf("sharp in %lumsec\n", timing_dur_msec(&t));
         }
 
         if (curve)
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
                               bmf.width,
                               bmf.height,
                               bmf.row_stride);
-                printf("curve in %luusec\n", timing_dur_usec(&t));
+                printf("curve in %lumsec\n", timing_dur_msec(&t));
         }
 
 #if _PIE_EDIT_LINEAR
@@ -202,24 +202,24 @@ int main(int argc, char** argv)
                                 bmf.height * bmf.row_stride);
         pie_alg_linear_to_srgbv(bmf.c_blue,
                                 bmf.height * bmf.row_stride);
-        printf("Convert to sRGB took %luusec\n", timing_dur_usec(&t));
+        printf("Convert to sRGB took %lumsec\n", timing_dur_msec(&t));
 #endif /* _PIE_EDIT_LINEAR */
 
         timing_start(&t);
-        if (pie_bm_conv_bd(&bmu, PIE_COLOR_8B,
-                           &bmf, PIE_COLOR_32B))
+        if (pie_bm_conv_bd(&bmu, PIE_BM_COLOR_8B,
+                           &bmf, PIE_BM_COLOR_32B))
         {
                 printf("1.5");
         }
-        printf("Converted img to u8 in %luusec\n", timing_dur_usec(&t));
+        printf("Converted img to u8 in %lumsec\n", timing_dur_msec(&t));
 
         timing_start(&t);
-        if (pie_io_jpg_u8rgb_write(out, &bmu, 100))
+        if (pie_bm_jpg_u8rgb_write(out, &bmu, 100))
         {
                 printf("2\n");
                 return -1;
         }
-        printf("Wrote %s in %luusec\n", out, timing_dur_usec(&t));
+        printf("Wrote %s in %lumsec\n", out, timing_dur_msec(&t));
 
         pie_bm_free_u8(&bmu);
         pie_bm_free_f32(&bmf);

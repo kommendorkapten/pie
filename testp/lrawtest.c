@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <strings.h>
 #include <libraw/libraw.h>
-#include "../lib/timing.h"
-#include "../pie_types.h"
+#include "../vendor/timing.h"
 #include "../bm/pie_bm.h"
-#include "../io/pie_io_jpg.h"
-#include "../io/pie_io_png.h"
+#include "../bm/pie_bm_jpg.h"
+#include "../bm/pie_bm_png.h"
 
 int main(int argc, char** argv)
 {
@@ -187,11 +186,11 @@ int main(int argc, char** argv)
         printf("Bits: %d\n", mem_img->bits);
         printf("size: %dKB\n", mem_img->data_size / 1024);
 
-        struct pie_bitmap_f32rgb bm;
-        struct pie_bitmap_u16rgb out;
+        struct pie_bm_f32rgb bm;
+        struct pie_bm_u16rgb out;
         bm.width = mem_img->width;
         bm.height = mem_img->height;
-        bm.color_type = PIE_COLOR_TYPE_RGB;
+        bm.color_type = PIE_BM_COLOR_TYPE_RGB;
         pie_bm_alloc_f32(&bm);
         printf("bm width: %d\n", bm.width);
         printf("bm stride: %d\n", bm.row_stride);
@@ -228,13 +227,13 @@ int main(int argc, char** argv)
 
         timing_start(&t);
         pie_bm_conv_bd(&out,
-                       PIE_COLOR_16B,
+                       PIE_BM_COLOR_16B,
                        &bm,
-                       PIE_COLOR_32B);
+                       PIE_BM_COLOR_32B);
         printf("* pie_bm_conv %0.3fs\n", (float)timing_dur_usec(&t) / 1000000.0f);
 
         timing_start(&t);
-        if (pie_io_png_u16rgb_write("out.png", &out))
+        if (pie_bm_png_u16rgb_write("out.png", &out))
         {
                 printf("write jpg failed\n");
                 return 1;

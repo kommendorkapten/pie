@@ -140,7 +140,7 @@ int pie_bm_jpg_f32_read(struct pie_bm_f32rgb* bm, const char* path)
         return 0;
 }
 
-int pie_io_jpg_u8rgb_write(const char* path,
+int pie_bm_jpg_u8rgb_write(const char* path,
                            struct pie_bm_u8rgb* bm,
                            int quality)
 {

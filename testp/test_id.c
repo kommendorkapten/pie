@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <sys/time.h>
-#include "../pie_id.h"
-#include "../pie_types.h"
+#include "../prunt/pie_id.h"
 
 extern pie_id pie_id_from_ts(unsigned char host,
                              unsigned char worker,

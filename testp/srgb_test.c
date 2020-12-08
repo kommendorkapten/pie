@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../alg/pie_cspace.h"
-#include "../lib/timing.h"
+#include "../bm/pie_bm_cspace.h"
+#include "../vendor/timing.h"
 
-#define NUM_P 1000
+#define NUM_P 10
 #define BENCH 0
 
 int main(void)
@@ -17,27 +17,27 @@ int main(void)
 
         for (int i = 0; i < SIZE; i++)
         {
-                r0[i] = i / (float)SIZE;
-                r1[i] = i / (float)SIZE;
+                r0[i] = (float)i / (float)SIZE;
+                r1[i] = (float)i / (float)SIZE;
         }
         timing_start(&t);
         for (int i = 0; i < SIZE; i++)
         {
-                r0[i] = pie_alg_srgb_to_linear(r0[i]);
+                r0[i] = pie_bm_srgb_to_linear(r0[i]);
         }
         printf("Pow: %ldmsec\n", timing_dur_msec(&t));
 
         timing_start(&t);
         for (int i = 0; i < SIZE; i++)
         {
-                r1[i] = pie_alg_srgb_to_linearp6(r1[i]);
+                r1[i] = pie_bm_srgb_to_linearp(r1[i]);
         }
         printf("Pol: %ldmsec\n", timing_dur_msec(&t));
 
         float max = 0.0f;
         for (int i = 0; i < SIZE; i++)
         {
-                float d = fabs(r0[i] - r1[i]);
+                float d = fabsf(r0[i] - r1[i]);
                 if (d > max)
                 {
                         max = d;
@@ -54,11 +54,11 @@ int main(void)
                 float f = (float)i / (float)NUM_P;
 
 #if 0
-                dpow[i] = pie_alg_srgb_to_linear(f);
-                dpol[i] = pie_alg_srgb_to_linearp(f);
+                dpow[i] = pie_bm_srgb_to_linear(f);
+                dpol[i] = pie_bm_srgb_to_linearp(f);
 #else
-                dpow[i] = pie_alg_linear_to_srgb(f);
-                dpol[i] = pie_alg_linear_to_srgbp(f);
+                dpow[i] = pie_bm_linear_to_srgb(f);
+                dpol[i] = pie_bm_linear_to_srgbp(f);
 #endif
         }
 

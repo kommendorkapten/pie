@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
-#include "../lib/s_queue.h"
+#include "../vendor/s_queue.h"
 
 #define SOCKET "/tmp/pie_ingest.sock"
 
@@ -36,7 +36,7 @@ int main(void)
                 printf("Got null\n");
                 return -1;
         }
-        
+
         ok = q->init(q->this, SOCKET);
         if (ok)
         {
@@ -44,7 +44,7 @@ int main(void)
                 printf("%d\n", ok);
                 return -1;
         }
-        
+
         /* interrupt handler thread */
         ok = pthread_create(&thr_int,
                             NULL,
@@ -59,7 +59,7 @@ int main(void)
         /* Block all signals during thread creating */
         sigfillset(&b_sigset);
         pthread_sigmask(SIG_BLOCK, &b_sigset, NULL);
-        
+
 
         while ((br = q->recv(q->this, buf, 256)) > 0)
         {
@@ -67,7 +67,7 @@ int main(void)
         }
 
         q_del_consumer(q);
-        
+
         return 0;
 }
 
@@ -86,17 +86,15 @@ static void* i_handler(void* arg)
                 perror("i_handler::sigaction");
                 return (void*)0x1L;
         }
-        
+
         pause();
         printf("Leaving.\n");
         q->close(q->this);
 
-        return ret;        
+        return ret;
 }
 
 static void sig_h(int signum)
 {
         (void)signum;
 }
-
-                

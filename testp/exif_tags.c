@@ -38,7 +38,7 @@ static uint16_t load_exif_uint16(uint16_t v)
 static uint32_t load_exif_uint32(uint32_t v)
 {
 #ifdef __BYTE_ORDER__
-# if __BYTE_ORDER__ == 4321
+# if __BYTE_ORDER__ == 4321 /* __ORDER_BIG_ENDIAN__ */
         return swap_uint32(v);
 # else
         return v;
@@ -75,7 +75,7 @@ static void show_tag(ExifData *d, ExifIfd ifd, ExifTag tag)
 
  	        /* Get the contents of the tag in human-readable form */
  	        exif_entry_get_value(entry, buf, sizeof(buf));
- 	
+
  	        /* Don't bother printing it if it's entirely blank */
  	        trim_spaces(buf);
  	        if (*buf) {
@@ -91,8 +91,6 @@ static void show_tag(ExifData *d, ExifIfd ifd, ExifTag tag)
                 short sval;
                 long lval;
                 int ival;
-                int den;
-                int num;
 
                 switch (entry->format)
                 {
@@ -110,7 +108,7 @@ static void show_tag(ExifData *d, ExifIfd ifd, ExifTag tag)
                         printf("Copy %d bytes\n", entry->size);
                         printf("Components %lu\n", entry->components);
                         memcpy(&lval, entry->data, entry->size);
-                        printf("Value is: %d\n", lval);
+                        printf("Value is: %ld\n", lval);
                         break;
                 case EXIF_FORMAT_RATIONAL:
                 case EXIF_FORMAT_SRATIONAL:
@@ -123,7 +121,7 @@ static void show_tag(ExifData *d, ExifIfd ifd, ExifTag tag)
                 default:
                         printf("Unknown type: %d\n", entry->format);
                 }
-                
+
         } else {
                 printf("nentry: %04x\n", tag);
         }
@@ -133,16 +131,15 @@ static void show_tag(ExifData *d, ExifIfd ifd, ExifTag tag)
 int main(int argc, char **argv)
 {
         ExifData *ed;
-        ExifEntry *entry;
         ExifByteOrder bo;
-	
+
         if (argc < 2) {
 	        printf("Usage: %s image.jpg\n", argv[0]);
 	        printf("Displays tags potentially relating to ownership "
                        "of the image.\n");
 	        return 1;
         }
-	
+
         /* Load an ExifData object from an EXIF file */
         ed = exif_data_new_from_file(argv[1]);
         if (!ed) {
@@ -157,13 +154,13 @@ int main(int argc, char **argv)
                 printf("Big endian\n");
                 break;
         case EXIF_BYTE_ORDER_INTEL:
-                printf("Small endian\n");                
+                printf("Small endian\n");
                 break;
         default:
                 printf("Unknown byte order\n");
                 break;
         }
-        
+
         /* show_tag(ed, EXIF_IFD_0,    EXIF_TAG_ARTIST); */
         /* show_tag(ed, EXIF_IFD_0,    EXIF_TAG_COPYRIGHT); */
         /* show_tag(ed, EXIF_IFD_0,    EXIF_TAG_SOFTWARE);         */
@@ -193,9 +190,9 @@ int main(int argc, char **argv)
           show_tag(ed, EXIF_IFD_1, PIE_EXIF_TAG_LENS_2);*/
 
         //exif_data_dump(ed);
- 	
+
         /* Free the EXIF data */
         exif_data_unref(ed);
- 	
+
         return 0;
 }

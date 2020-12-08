@@ -25,6 +25,8 @@ enum pie_obj_type
         PIE_ID_TYPE_PRESET = 0x4
 };
 
+#define PIE_EPOCH 1483228800L /* 20170101T00:00:00Z */
+
 #define PIE_ID_IS_MOB(x) (x & PIE_ID_TYPE_MOB)
 #define PIE_ID_IS_MIN(x) (x & PIE_ID_TYPE_MIN)
 #define PIE_ID_IS_COLL(x) (x & PIE_ID_TYPE_COLL)

@@ -2,22 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../lib/timing.h"
-#include "../io/pie_io.h"
-#include "../pie_types.h"
+#include "../vendor/timing.h"
 #include "../bm/pie_bm.h"
+#include "../bm/pie_bm_png.h"
+#include "../alg/pie_downs.h"
 
 #define MAX_PATH 256
 #define OUTPUT_16B 0
 
 int main(int argc, char** argv)
 {
-        struct pie_bitmap_f32rgb img;
-        struct pie_bitmap_f32rgb dwn;
+        struct pie_bm_f32rgb img;
+        struct pie_bm_f32rgb dwn;
 #if OUTPUT_16B
-        struct pie_bitmap_u16rgb out;
+        struct pie_bm_u16rgb out;
 #else
-        struct pie_bitmap_u8rgb out;
+        struct pie_bm_u8rgb out;
 #endif
         struct timing t;
         char fout[MAX_PATH] = {0};
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
         }
 
         timing_start(&t);
-        ret = pie_io_load(&img, fin, NULL);
+        ret = pie_bm_load(&img, fin, NULL);
         dur = timing_dur_usec(&t);
         if (ret)
         {
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 
         timing_start(&t);
 
-        if (pie_bm_dwn_smpl(&dwn, &img, max, max))
+        if (pie_alg_dwn_smpl(&dwn, &img, max, max))
         {
                 abort();
         }
@@ -86,20 +86,20 @@ int main(int argc, char** argv)
         timing_start(&t);
         pie_bm_conv_bd(&out,
 #if OUTPUT_16B
-                       PIE_COLOR_16B,
+                       PIE_BM_COLOR_16B,
 #else
-                       PIE_COLOR_8B,
+                       PIE_BM_COLOR_8B,
 #endif
                        &dwn,
-                       PIE_COLOR_32B);
+                       PIE_BM_COLOR_32B);
         dur = timing_dur_usec(&t);
         printf("To 16bit took %luusec\n", dur);
 
         timing_start(&t);
 #if OUTPUT_16B
-        pie_io_png_u16rgb_write(fout, &out);
+        pie_bm_png_u16rgb_write(fout, &out);
 #else
-        pie_io_png_u8rgb_write(fout, &out);
+        pie_bm_png_u8rgb_write(fout, &out);
 #endif
         dur = timing_dur_usec(&t);
         printf("Write 16bit PNG took %luusec\n", dur);
