@@ -1,6 +1,8 @@
 # High prio
-* Crop.
+* MOB id in url when navigating
+* mark image for deletion with 'x'
 * Make sure date format is ISO 8601 in export view
+* Crop.
 * Multi select in UI.
 
 # Sorted

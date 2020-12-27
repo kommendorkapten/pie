@@ -15,9 +15,11 @@
 #define __PIE_WRKSPC_MGR_H__
 
 #include <sqlite3.h>
-#include "../pie_types.h"
-#include "../pie_id.h"
+#include "../bm/pie_bm.h"
+#include "../prunt/pie_id.h"
 #include "../dm/pie_exif_data.h"
+#include "../alg/pie_hist.h"
+#include "../alg/pie_render.h"
 
 struct pie_wrkspc_mgr;
 
@@ -25,14 +27,14 @@ struct pie_wrkspc_mgr;
 struct pie_editd_workspace
 {
         pie_id mob_id;
-        struct pie_histogram hist;
-        struct pie_dev_settings settings;
+        struct pie_alg_histogram hist;
+        struct pie_alg_settings settings;
         /* Unmodified full resolution image */
-        struct pie_bitmap_f32rgb raw;
+        struct pie_bm_f32rgb raw;
         /* Downsampled unmodified proxy image */
-        struct pie_bitmap_f32rgb proxy;
+        struct pie_bm_f32rgb proxy;
         /* Downsampled and rendered proxy image */
-        struct pie_bitmap_f32rgb proxy_out;
+        struct pie_bm_f32rgb proxy_out;
         struct pie_exif_data exif;
 };
 

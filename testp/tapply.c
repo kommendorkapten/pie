@@ -13,8 +13,8 @@ int main(int argc, char** argv)
         struct pie_bm_f32rgb img;
         struct pie_bm_u8rgb out;
         struct timing t;
-        struct pie_dev_settings settings;
-        struct pie_histogram hist;
+        struct pie_alg_settings settings;
+        struct pie_alg_histogram hist;
         struct pie_bm_opts opts = {
                 .qual = PIE_BM_HIGH_QUAL,
 #if _PIE_EDIT_LINEAR

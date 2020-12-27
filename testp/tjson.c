@@ -19,8 +19,8 @@ static char* json_settings = "{\"version\":1,\"colort\":0,\"tint\":0,\"expos\":3
 
 int main(void)
 {
-        struct pie_dev_settings s;
-        static struct pie_dev_settings c;
+        struct pie_alg_settings s;
+        static struct pie_alg_settings c;
         size_t len;
 
         if (pie_dec_json_settings(&s, json_settings))

@@ -26,19 +26,19 @@
 #include "pie_msg.h"
 #include "pie_wrkspc_mgr.h"
 #include "pie_editd_ws.h"
-#include "../bm/pie_render.h"
-#include "../lib/chan.h"
-#include "../lib/timing.h"
-#include "../pie_types.h"
-#include "../pie_log.h"
+#include "../vendor/chan.h"
+#include "../vendor/timing.h"
+#include "../vendor/s_queue.h"
+#include "../prunt/pie_log.h"
+#include "../prunt/pie_id.h"
+#include "../prunt/pie_cfg.h"
 #include "../bm/pie_bm.h"
+#include "../bm/pie_bm_cspace.h"
+#include "../alg/pie_render.h"
 #include "../alg/pie_hist.h"
 #include "../alg/pie_unsharp.h"
-#include "../alg/pie_cspace.h"
-#include "../pie_id.h"
-#include "../cfg/pie_cfg.h"
+#include "../alg/pie_downs.h"
 #include "../mq_msg/pie_mq_msg.h"
-#include "../lib/s_queue.h"
 #include "../encoding/pie_json.h"
 #include "../dm/pie_dev_params.h"
 #include "../exif/pie_exif.h"
@@ -114,7 +114,7 @@ static enum pie_msg_type cb_calc_hist(struct pie_msg*);
  * @param settigs to store.
  * @return void.
  */
-static void store_settings(pie_id, const struct pie_dev_settings*);
+static void store_settings(pie_id, const struct pie_alg_settings*);
 
 /**
  * Create and downsample a proxy.
@@ -124,8 +124,8 @@ static void store_settings(pie_id, const struct pie_dev_settings*);
  * @param requested proxy max height.
  * @return void
  */
-static void create_proxy(struct pie_bitmap_f32rgb*,
-                         struct pie_bitmap_f32rgb*,
+static void create_proxy(struct pie_bm_f32rgb*,
+                         struct pie_bm_f32rgb*,
                          int,
                          int);
 
@@ -140,9 +140,9 @@ static void create_proxy(struct pie_bitmap_f32rgb*,
  */
 static int parse_curve_pnts(struct pie_curve*, char*);
 
-static int gen_screen_bm(struct pie_bitmap_f32rgb*,
-                         struct pie_bitmap_f32rgb*,
-                         struct pie_dev_settings*);
+static int gen_screen_bm(struct pie_bm_f32rgb*,
+                         struct pie_bm_f32rgb*,
+                         struct pie_alg_settings*);
 
 int main(void)
 {
@@ -417,8 +417,8 @@ static void* ev_loop(void* a)
 
                                         PIE_LOG("[%s]histd: %p proxy: %p",
                                                 hcmd->token,
-                                                &hcmd->wrkspc->hist,
-                                                &hcmd->wrkspc->proxy_out);
+                                                (void*)&hcmd->wrkspc->hist,
+                                                (void*)&hcmd->wrkspc->proxy_out);
 
                                         if (chan_write(s->command, &envelope))
                                         {
@@ -463,9 +463,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 {
         struct pie_dev_params settings_json;
         struct timing t;
-        struct pie_bitmap_f32rgb* raw;
-        struct pie_bitmap_f32rgb* proxy;
-        struct pie_bitmap_f32rgb* proxy_out;
+        struct pie_bm_f32rgb* raw;
+        struct pie_bm_f32rgb* proxy;
+        struct pie_bm_f32rgb* proxy_out;
         pie_id id;
         int len;
         int res;
@@ -556,7 +556,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         {
                 proxy->width = proxy_w;
                 proxy->height = proxy_h;
-                proxy->color_type = PIE_COLOR_TYPE_RGB;
+                proxy->color_type = PIE_BM_COLOR_TYPE_RGB;
                 pie_bm_alloc_f32(proxy);
                 /* Copy raw to proxy */
                 len = (int)(proxy_h * stride * sizeof(float));
@@ -568,7 +568,7 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
         /* Create a working copy of the proxy for editing */
         proxy_out->width = proxy->width;
         proxy_out->height = proxy->height;
-        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+        proxy_out->color_type = PIE_BM_COLOR_TYPE_RGB;
         pie_bm_alloc_f32(proxy_out);
 
         /* Load stored development settings. First
@@ -576,9 +576,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
            as a JSON string. This way we can be future compatible,
            if the format stored in the DB is older, only the relevat
            changes are merged. */
-        pie_bm_init_settings(&msg->wrkspc->settings,
-                             proxy->width,
-                             proxy->height);
+        pie_alg_init_settings(&msg->wrkspc->settings,
+                              proxy->width,
+                              proxy->height);
 
         settings_json.pdp_mob_id = id;
         res = pie_dev_params_read(pie_cfg_get_db(), &settings_json);
@@ -589,15 +589,15 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
                 if (res == 0)
                 {
                         /* Convert to internal format */
-                        pie_bm_set_to_int_fmt(&msg->wrkspc->settings);
+                        pie_alg_set_to_int_fmt(&msg->wrkspc->settings);
                 }
                 else
                 {
                         PIE_ERR("Broken dev settings stored in db for MOB %ld",
                                 id);
-                        pie_bm_init_settings(&msg->wrkspc->settings,
-                                             proxy->width,
-                                             proxy->height);
+                        pie_alg_init_settings(&msg->wrkspc->settings,
+                                              proxy->width,
+                                              proxy->height);
                 }
 
                 /* Free any resources */
@@ -624,9 +624,9 @@ static enum pie_msg_type cb_msg_load(struct pie_msg* msg)
 
 static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
 {
-        struct pie_bitmap_f32rgb* raw = &msg->wrkspc->raw;
-        struct pie_bitmap_f32rgb* proxy = &msg->wrkspc->proxy;
-        struct pie_bitmap_f32rgb* proxy_out = &msg->wrkspc->proxy_out;
+        struct pie_bm_f32rgb* raw = &msg->wrkspc->raw;
+        struct pie_bm_f32rgb* proxy = &msg->wrkspc->proxy;
+        struct pie_bm_f32rgb* proxy_out = &msg->wrkspc->proxy_out;
         int x0 = msg->i1;
         int y0 = msg->i2;
         int x1 = msg->i3;
@@ -726,7 +726,7 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
 
                         proxy_out->width = proxy->width;
                         proxy_out->height = proxy->height;
-                        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+                        proxy_out->color_type = PIE_BM_COLOR_TYPE_RGB;
                         pie_bm_alloc_f32(proxy_out);
                 }
         }
@@ -748,10 +748,10 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
 
                         proxy->width = t_w;
                         proxy->height = t_h;
-                        proxy->color_type = PIE_COLOR_TYPE_RGB;
+                        proxy->color_type = PIE_BM_COLOR_TYPE_RGB;
                         proxy_out->width = t_w;
                         proxy_out->height = t_h;
-                        proxy_out->color_type = PIE_COLOR_TYPE_RGB;
+                        proxy_out->color_type = PIE_BM_COLOR_TYPE_RGB;
 
                         pie_bm_alloc_f32(proxy);
                         pie_bm_alloc_f32(proxy_out);
@@ -792,6 +792,10 @@ static enum pie_msg_type cb_msg_viewp(struct pie_msg* msg)
         res = gen_screen_bm(&msg->wrkspc->proxy_out,
                             &msg->wrkspc->proxy,
                             &msg->wrkspc->settings);
+        if (res)
+        {
+                abort();
+        }
 
         if (new_proxy)
         {
@@ -1089,8 +1093,8 @@ static enum pie_msg_type cb_calc_hist(struct pie_msg* msg)
         timing_start(&t);
         PIE_LOG("[%s]histd: %p proxy: %p",
                 msg->token,
-                &msg->wrkspc->hist,
-                &msg->wrkspc->proxy_out);
+                (void*)&msg->wrkspc->hist,
+                (void*)&msg->wrkspc->proxy_out);
         pie_alg_hist_lum(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
         pie_alg_hist_rgb(&msg->wrkspc->hist, &msg->wrkspc->proxy_out);
         PIE_DEBUG("Created histogram:     %8ldusec",
@@ -1100,14 +1104,14 @@ static enum pie_msg_type cb_calc_hist(struct pie_msg* msg)
 }
 
 static void store_settings(pie_id mob_id,
-                           const struct pie_dev_settings* settings)
+                           const struct pie_alg_settings* settings)
 {
         struct pie_mq_upd_media msg;
-        struct pie_dev_settings copy = *settings;
+        struct pie_alg_settings copy = *settings;
         size_t bw;
 
         /* Convert to canonical format */
-        pie_bm_set_to_can_fmt(&copy);
+        pie_alg_set_to_can_fmt(&copy);
 
         msg.type = PIE_MQ_MEDIA_SETTINGS;
         PIE_DEBUG("Update settings for %lu", mob_id);
@@ -1136,8 +1140,8 @@ static void store_settings(pie_id mob_id,
         }
 }
 
-static void create_proxy(struct pie_bitmap_f32rgb* tgt,
-                         struct pie_bitmap_f32rgb* src,
+static void create_proxy(struct pie_bm_f32rgb* tgt,
+                         struct pie_bm_f32rgb* src,
                          int w,
                          int h)
 {
@@ -1150,7 +1154,7 @@ static void create_proxy(struct pie_bitmap_f32rgb* tgt,
         int res;
 
         timing_start(&t);
-        res = pie_bm_dwn_smpl(tgt, src, w, h);
+        res = pie_alg_dwn_smpl(tgt, src, w, h);
         if (res)
         {
                 abort();
@@ -1231,9 +1235,9 @@ static int parse_curve_pnts(struct pie_curve* c, char* msg)
         return ret;
 }
 
-static int gen_screen_bm(struct pie_bitmap_f32rgb* new,
-                         struct pie_bitmap_f32rgb* org,
-                         struct pie_dev_settings* s)
+static int gen_screen_bm(struct pie_bm_f32rgb* new,
+                         struct pie_bm_f32rgb* org,
+                         struct pie_alg_settings* s)
 {
         struct timing t;
         size_t len = org->height * org->row_stride * sizeof(float);
@@ -1247,7 +1251,7 @@ static int gen_screen_bm(struct pie_bitmap_f32rgb* new,
         PIE_DEBUG("Reset proxy:           %8ldusec",
                   timing_dur_usec(&t));
 
-        r = pie_bm_render(new, NULL, s);
+        r = pie_alg_render(new, NULL, s);
 
 #if _PIE_EDIT_LINEAR
         timing_start(&t);

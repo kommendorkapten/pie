@@ -13,8 +13,8 @@
 
 #include <string.h>
 #include <ctype.h>
-#include "../pie_types.h"
-#include "../pie_log.h"
+#include "../pie_defs.h"
+#include "../prunt/pie_log.h"
 #include "pie_msg.h"
 
 #define MAX_CMD 256

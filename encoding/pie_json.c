@@ -55,7 +55,7 @@ Encode to following structure (without newlines)
 }
  */
 
-size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_histogram* h)
+size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_alg_histogram* h)
 {
         size_t bw = 0;
 
@@ -89,7 +89,7 @@ size_t pie_enc_json_hist(char* buf, size_t len, const struct pie_histogram* h)
  */
 size_t pie_enc_json_settings(char* buf,
                              size_t len,
-                             const struct pie_dev_settings* d)
+                             const struct pie_alg_settings* d)
 {
         size_t bw = 0;
 
@@ -185,11 +185,10 @@ static size_t pie_enc_json_curve(char* buf,
                 bw += snprintf(buf+bw, len-bw, "]");
         }
 
-
         return bw;
 }
 
-int pie_dec_json_settings(struct pie_dev_settings* s, char* buf)
+int pie_dec_json_settings(struct pie_alg_settings* s, char* buf)
 {
         jsmn_parser parser;
         jsmntok_t* tokens = malloc(NUM_TOKENS * sizeof(jsmntok_t));
@@ -776,7 +775,7 @@ int pie_dec_json_export_request(struct pie_http_export_request* r, char* s)
                 }
                 else if (pie_enc_jsoneq(s, tokens + i, "max_x") == 0)
                 {
-                        r->max_x = strtol(field, &p, 10);
+                        r->max_x = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid max x: %s", field);
@@ -785,7 +784,7 @@ int pie_dec_json_export_request(struct pie_http_export_request* r, char* s)
                 }
                 else if (pie_enc_jsoneq(s, tokens + i, "max_y") == 0)
                 {
-                        r->max_y = strtol(field, &p, 10);
+                        r->max_y = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid max y: %s", field);
@@ -896,7 +895,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "stg_id") == 0)
                 {
-                        em->stg_id = strtol(field, &p, 10);
+                        em->stg_id = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid stg_id: %s", field);
@@ -905,7 +904,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "max_x") == 0)
                 {
-                        em->max_x = strtol(field, &p, 10);
+                        em->max_x = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid max_x: %s", field);
@@ -914,7 +913,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "max_y") == 0)
                 {
-                        em->max_y = strtol(field, &p, 10);
+                        em->max_y = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid max_y: %s", field);
@@ -932,7 +931,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "quality") == 0)
                 {
-                        em->quality = strtol(field, &p, 10);
+                        em->quality = (int)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid quality: %s", field);
@@ -941,7 +940,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "sharpen") == 0)
                 {
-                        em->sharpen = strtol(field, &p, 10);
+                        em->sharpen = (unsigned char)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid sharpen: %s", field);
@@ -950,7 +949,7 @@ int pie_dec_json_mq_export(struct pie_mq_export_media* em, char* buf)
                 }
                 else if (pie_enc_jsoneq(buf, tokens + i, "disable_exif") == 0)
                 {
-                        em->disable_exif= strtol(field, &p, 10);
+                        em->disable_exif= (unsigned char)strtol(field, &p, 10);
                         if (field == p)
                         {
                                 PIE_WARN("Invalid disable_exif: %s", field);

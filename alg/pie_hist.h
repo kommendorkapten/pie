@@ -16,7 +16,7 @@
 
 #define PIE_HIST_RES 256
 
-struct pie_histogram
+struct pie_alg_histogram
 {
         unsigned int lum[PIE_HIST_RES];
         unsigned int c_red[PIE_HIST_RES];
@@ -31,7 +31,7 @@ struct pie_bm_f32rgb;
  * @param the the bitmap to read from.
  * @return void
  */
-extern void pie_alg_hist_lum(struct pie_histogram*, struct pie_bm_f32rgb*);
+extern void pie_alg_hist_lum(struct pie_alg_histogram*, struct pie_bm_f32rgb*);
 
 /**
  * Calculate the crominance (RGB) histogram for a bitmap.
@@ -39,6 +39,6 @@ extern void pie_alg_hist_lum(struct pie_histogram*, struct pie_bm_f32rgb*);
  * @param the the bitmap to read from.
  * @return void
  */
-extern void pie_alg_hist_rgb(struct pie_histogram*, struct pie_bm_f32rgb*);
+extern void pie_alg_hist_rgb(struct pie_alg_histogram*, struct pie_bm_f32rgb*);
 
 #endif /* __PIE_HIST_H__ */

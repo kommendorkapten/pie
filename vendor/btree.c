@@ -6,7 +6,7 @@
 * Development and Distribution License (the "License"). You may not use this
 * file except in compliance with the License. You can obtain a copy of the
 * License at http://opensource.org/licenses/CDDL-1.0. See the License for the
-* specific language governing permissions and limitations under the License. 
+* specific language governing permissions and limitations under the License.
 * When distributing the software, include this License Header Notice in each
 * file and include the License file at http://opensource.org/licenses/CDDL-1.0.
 */
@@ -33,7 +33,7 @@ static struct node* alloc_node(void*);
 static void free_node(struct node*);
 /**
  * Find the min (left most) element in the subtree referenced by
- * node. 
+ * node.
  * @param the subtree to scan.
  * @return the minum tree node.
  */
@@ -57,7 +57,7 @@ static btree_cmp cmp;
 struct btree* btree_create(btree_cmp cmp)
 {
         struct btree* bt = (struct btree*)malloc(sizeof(struct btree));
-        
+
         bt->cmp = cmp;
         bt->root = NULL;
         bt->len = 0;
@@ -69,7 +69,7 @@ void btree_clear(struct btree* bt)
 {
         struct node** stack = malloc(btree_size(bt) * sizeof(struct node*));
         int sp = 0;
-        
+
         if (bt->root)
         {
                 stack[sp++] = bt->root;
@@ -78,7 +78,7 @@ void btree_clear(struct btree* bt)
         while (sp-- > 0)
         {
                 struct node* n = stack[sp];
-                
+
                 if (n->left)
                 {
                         stack[sp++] = n->left;
@@ -87,7 +87,7 @@ void btree_clear(struct btree* bt)
                 {
                         stack[sp++] = n->right;
                 }
-                
+
                 free(n);
         }
 
@@ -136,7 +136,7 @@ int btree_insert(struct btree* bt, void* d)
                         }
                         n = n->left;
                 }
-                else 
+                else
                 {
                         /* n->data < d */
                         if (n->right == NULL)
@@ -148,7 +148,7 @@ int btree_insert(struct btree* bt, void* d)
                         n = n->right;
                 }
         }
-        
+
         return 0;
 }
 
@@ -157,7 +157,7 @@ void* btree_find(const struct btree* bt, const void* d)
         struct node* n = bt->root;
         int c;
         void* ret = NULL;
-        
+
         for (;;)
         {
                 if (n == NULL)
@@ -176,7 +176,7 @@ void* btree_find(const struct btree* bt, const void* d)
                 {
                         n = n->left;
                 }
-                else 
+                else
                 {
                         n = n->right;
                 }
@@ -215,7 +215,7 @@ void* btree_remove(struct btree* bt, const void* d)
                         {
                                 nc++;
                         }
-                        
+
                         if (nc == 0)
                         {
                                 /* No children */
@@ -232,14 +232,14 @@ void* btree_remove(struct btree* bt, const void* d)
                                 {
                                         *p = n->left;
                                 }
-                                else 
+                                else
                                 {
                                         *p = n->right;
                                 }
                                 bt->len--;
                                 free_node(n);
                         }
-                        
+
                         if (nc == 2)
                         {
                                 /* Two children */
@@ -251,7 +251,7 @@ void* btree_remove(struct btree* bt, const void* d)
                                 void* res = btree_remove(bt, min);
 
                                 assert(min == res);
-                                
+
                                 n->data = min;
                         }
                         break;
@@ -266,7 +266,7 @@ void* btree_remove(struct btree* bt, const void* d)
                         p = &n->right;
                         n = n->right;
                 }
-                
+
         }
 
         return (void*)ret;
@@ -290,7 +290,7 @@ void** btree_bf(const struct btree* bt)
         {
                 n = list[out++];
                 ret[p++] = (void*)n->data;
-                
+
                 if (n->left)
                 {
                         list[in++] = n->left;
@@ -301,7 +301,7 @@ void** btree_bf(const struct btree* bt)
                         list[in++] = n->right;
                 }
         }
-        
+
         free(list);
         ret[p] = NULL;
         return ret;
@@ -314,7 +314,7 @@ void** btree_df(const struct btree* bt)
         struct node* n;
         int sp = 0;
         int p = 0;
-        
+
         if (bt->root)
         {
                 stack[sp++] = bt->root;
@@ -324,7 +324,7 @@ void** btree_df(const struct btree* bt)
         {
                 n = stack[sp];
                 ret[p++] = (void*)n->data;
-                
+
                 if (n->right)
                 {
                         stack[sp++] = n->right;
@@ -347,13 +347,13 @@ unsigned int btree_height(const struct btree* bt)
         unsigned int* stack_h = malloc(btree_size(bt) * sizeof(int));
         unsigned int h = 0;
         int sp = 0;
-        
+
         if (bt->root)
         {
                 stack_h[sp] = 1;
                 stack_n[sp++] = bt->root;
         }
-        
+
         while (sp-- > 0)
         {
                 struct node* n;
@@ -440,7 +440,7 @@ int btree_balance(struct btree* bt)
 struct node* alloc_node(void* d)
 {
         struct node* new = malloc(sizeof(struct node));
-        
+
         new->data = d;
         new->left = NULL;
         new->right = NULL;
@@ -463,7 +463,7 @@ static struct node* find_min(const struct node* n)
         return (struct node*)n;
 }
 
-static int cmp_wrap(const void* v1, const void* v2) 
+static int cmp_wrap(const void* v1, const void* v2)
 {
         const void** a = (const void**)v1;
         const void** b = (const void**)v2;

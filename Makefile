@@ -18,6 +18,17 @@ T_BINS     = $(TEST_BINS:%=bin/%)
 .PHONY: clean
 .PHONY: libs
 .PHONY: pied
+.PHONY: vendor/libvendor.a
+.PHONY: math/libpmath.a
+.PHONY: mh/libmh.a
+.PHONY: bm/libbm.a
+.PHONY: alg/libalg.a
+.PHONY: dm/libdm.a
+.PHONY: exif/libpexif.a
+.PHONY: encoding/libpencoding.a
+.PHONY: prunt/libprunt.a
+.PHONY: http/libphttp.a
+.PHONY: editobj
 
 ########################################################################
 
@@ -47,6 +58,8 @@ prunt/libprunt.a:
 	cd prunt && $(MAKE)
 http/libphttp.a:
 	cd http && $(MAKE)
+editdobj:
+	cd editd && $(MAKE)
 
 pied: bin/editd bin/ingestd bin/mediad bin/collectiond bin/exportd
 
@@ -68,6 +81,8 @@ clean:
 	cd encoding && $(MAKE) clean
 	cd prunt && $(MAKE) clean
 	cd http && $(MAKE) clean
+	cd editd && $(MAKE) clean
+	rm -f bin/*
 
 bin/pngrw: testp/pngrw.c bm/libbm.a
 	$(CC) $(CFLAGS) $< -o $@ $(LFLAGS) $(LIMG) bm/libbm.a
@@ -127,8 +142,10 @@ bin/srgb_test: testp/srgb_test.c bm/libbm.a vendor/libvendor.a
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) bm/libbm.a vendor/libvendor.a
 
 # Servers
-bin/editd: $(EDITD_OBJS) $(IO_OBJS) $(HTTP_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(DOML_OBJS) $(CFG_OBJS) $(ENC_OBJS) $(BM_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/chan.o obj/chan_poll.o obj/lock.o obj/strutil.o obj/timing.o obj/s_queue.o obj/s_queue_intra.o obj/pie_id.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET)
+editdsrc=$(wildcard editd/*.c)
+editdobj=$(subst .c,.o,$(editdsrc))
+bin/editd: editdobj bm/libbm.a dm/libdm.a alg/libalg.a http/libphttp.a prunt/libprunt.a math/libpmath.a mh/libmh.a encoding/libpencoding.a vendor/libvendor.a
+	$(CC) $(CFLAGS) -o $@ $(editdobj) $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET) bm/libbm.a alg/libalg.a http/libphttp.a prunt/libprunt.a math/libpmath.a mh/libmh.a encoding/libpencoding.a dm/libdm.a vendor/libvendor.a
 
 bin/ingestd: $(INGEST_OBJS) $(CFG_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/s_queue.o obj/s_queue_intra.o obj/timing.o obj/strutil.o obj/fal.o obj/evp_hw.o obj/fswalk.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)

@@ -14,7 +14,7 @@
 #ifndef __PIE_MSG_H__
 #define __PIE_MSG_H__
 
-#include "../lib/timing.h"
+#include "../vendor/timing.h"
 
 struct pie_editd_workspace;
 

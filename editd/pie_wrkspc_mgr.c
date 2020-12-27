@@ -15,13 +15,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include "pie_wrkspc_mgr.h"
-#include "../pie_types.h"
-#include "../pie_log.h"
-#include "../io/pie_io.h"
 #include "../bm/pie_bm.h"
-#include "../lib/timing.h"
-#include "../cfg/pie_cfg.h"
-#include "../doml/pie_doml_stg.h"
+#include "../prunt/pie_log.h"
+#include "../prunt/pie_cfg.h"
+#include "../bm/pie_bm.h"
+#include "../vendor/timing.h"
+#include "../mh/pie_mh_stg.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 
@@ -196,10 +195,10 @@ struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 int res;
 
                 /* Check for MIN existance before allocating anything */
-                min = pie_doml_min_for_mob(mgr->db,
-                                           mgr->storages->arr,
-                                           mgr->storages->len,
-                                           id);
+                min = pie_mh_min_for_mob(mgr->db,
+                                         mgr->storages->arr,
+                                         mgr->storages->len,
+                                         id);
                 if (min == NULL)
                 {
                         PIE_WARN("Could not find any MIN for MOB %ld", id);
@@ -226,14 +225,14 @@ struct pie_editd_workspace* pie_wrkspc_mgr_acquire(struct pie_wrkspc_mgr* mgr,
                 pie_min_free(min);
 
                 timing_start(&t);
-                struct pie_io_opts opts;
-                opts.qual = PIE_IO_NORM_QUAL;
+                struct pie_bm_opts opts;
+                opts.qual = PIE_BM_NORM_QUAL;
 #if _PIE_EDIT_LINEAR
-                opts.cspace = PIE_IO_LINEAR;
+                opts.cspace = PIE_BM_LINEAR;
 #else
-                opts.cspace = PIE_IO_SRGB;
+                opts.cspace = PIE_BM_SRGB;
 #endif
-                res = pie_io_load(&wrkspc->raw, buf, &opts);
+                res = pie_bm_load(&wrkspc->raw, buf, &opts);
                 PIE_DEBUG("Loaded '%s'@stg-%d in %ldmsec",
                           buf,
                           min->min_stg_id,

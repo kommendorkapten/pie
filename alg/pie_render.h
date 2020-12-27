@@ -24,7 +24,7 @@ struct pie_curve
         int num_p;
 };
 
-struct pie_dev_settings
+struct pie_alg_settings
 {
        /* [-0.5, 0.5]  def 0 */
         float color_temp;
@@ -72,7 +72,7 @@ struct pie_bm_f32rgb;
  * @param height of image.
  * @return void.
  */
-extern void pie_alg_init_settings(struct pie_dev_settings*, int, int);
+extern void pie_alg_init_settings(struct pie_alg_settings*, int, int);
 
 /**
  * Init a curve to linear from (0, 0) to (1, 1).
@@ -82,19 +82,19 @@ extern void pie_alg_init_settings(struct pie_dev_settings*, int, int);
 extern void pie_alg_init_curve(struct pie_curve*);
 
 /**
- * Convert pie_dev_settings to internal format, used when rendering.
+ * Convert pie_alg_settings to internal format, used when rendering.
  * @param settings struct.
  * @return void
  */
-extern void pie_alg_set_to_int_fmt(struct pie_dev_settings*);
+extern void pie_alg_set_to_int_fmt(struct pie_alg_settings*);
 
 /**
- * Convert pie_dev_settings to canonical format. Used for exchanging
+ * Convert pie_alg_settings to canonical format. Used for exchanging
  * data (to webapp or persist in database).
  * @param settings struct.
  * @return void
  */
-extern void pie_alg_set_to_can_fmt(struct pie_dev_settings*);
+extern void pie_alg_set_to_can_fmt(struct pie_alg_settings*);
 
 /**
  * Render a bitmap.
@@ -105,6 +105,6 @@ extern void pie_alg_set_to_can_fmt(struct pie_dev_settings*);
  */
 extern int pie_alg_render(struct pie_bm_f32rgb*,
                           float*,
-                          const struct pie_dev_settings*);
+                          const struct pie_alg_settings*);
 
 #endif /* __PIE_RENDER_H__ */

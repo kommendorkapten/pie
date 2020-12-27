@@ -5,9 +5,9 @@ set -e
 
 CFLAGS=""
 CFLAGS_cc=""
-CFLAGS_gcc="-std=c99 -pedantic -fstrict-aliasing -Wextra -Wall -Wstrict-aliasing -Wconversion -Wno-sign-conversion"
+CFLAGS_gcc="-std=c99 -pedantic -pedantic-errors -fstrict-aliasing -Wextra -Wall -Wstrict-aliasing -Wconversion -Wno-sign-conversion"
 CFLAGS_c99=""
-CFLAGS_clang="-std=c99 -pedantic -fstrict-aliasing -Wextra -Wall -Wstrict-aliasing -Wconversion -Wno-sign-conversion"
+CFLAGS_clang="-std=c99 -pedantic -pedantic-errors -fstrict-aliasing -Wextra -Wall -Wstrict-aliasing -Wconversion -Wno-sign-conversion"
 
 SUNOS_cc="-std=c99 -pedantic -v -errwarn -mt -fast -xalias_level=std"
 SUNOS_c99="-v -errwarn -mt -xalias_level=std -fast"

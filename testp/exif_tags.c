@@ -14,6 +14,7 @@ static uint16_t swap_uint16(uint16_t v)
 
 }
 
+#if __BYTE_ORDER == __ORDER_BIG_ENDIAN__
 static uint32_t swap_uint32(uint32_t v)
 {
         return (uint32_t)((0xff000000 & v) >> 24 |
@@ -21,6 +22,7 @@ static uint32_t swap_uint32(uint32_t v)
                           (0x0000ff00 & v) << 8 |
                           (0x000000ff & v) << 24);
 }
+#endif
 
 static uint16_t load_exif_uint16(uint16_t v)
 {
