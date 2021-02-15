@@ -10,9 +10,6 @@ endif
 TEST_BINS   = $(shell find testp -type f -name "*.c" | xargs -I {} basename {} ".c$")
 T_BINS     = $(TEST_BINS:%=bin/%)
 
-#VPATH = io lib alg encoding math bm http editd collectiond mediad cfg dm \
-#        ingestd exif jsmn doml tools exportd
-
 .PHONY: all
 .PHONY: test
 .PHONY: clean
@@ -29,6 +26,10 @@ T_BINS     = $(TEST_BINS:%=bin/%)
 .PHONY: prunt/libprunt.a
 .PHONY: http/libphttp.a
 .PHONY: editobj
+.PHONY: ingestdobj
+.PHONY: mediaobj
+.PHONY: collectiondobj
+.PHONY: exportdobj
 
 ########################################################################
 
@@ -60,6 +61,14 @@ http/libphttp.a:
 	cd http && $(MAKE)
 editdobj:
 	cd editd && $(MAKE)
+ingestdobj:
+	cd ingestd && $(MAKE)
+mediadobj:
+	cd mediad && $(MAKE)
+collectiondobj:
+	cd collectiond && $(MAKE)
+exportdobj:
+	cd exportd && $(MAKE)
 
 pied: bin/editd bin/ingestd bin/mediad bin/collectiond bin/exportd
 
@@ -147,17 +156,25 @@ editdobj=$(subst .c,.o,$(editdsrc))
 bin/editd: editdobj bm/libbm.a dm/libdm.a alg/libalg.a http/libphttp.a prunt/libprunt.a math/libpmath.a mh/libmh.a encoding/libpencoding.a vendor/libvendor.a
 	$(CC) $(CFLAGS) -o $@ $(editdobj) $(LFLAGS) -lwebsockets $(LCRYPTO) $(LIMG) -lsqlite3 $(LNET) bm/libbm.a alg/libalg.a http/libphttp.a prunt/libprunt.a math/libpmath.a mh/libmh.a encoding/libpencoding.a dm/libdm.a vendor/libvendor.a
 
-bin/ingestd: $(INGEST_OBJS) $(CFG_OBJS) $(DM_OBJS) obj/llist.o obj/hmap.o obj/s_queue.o obj/s_queue_intra.o obj/timing.o obj/strutil.o obj/fal.o obj/evp_hw.o obj/fswalk.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO)
+ingestdsrc=$(wildcard ingestd/*.c)
+ingestdobj=$(subst .c,.o,$(ingestdsrc))
+bin/ingestd: ingestdobj prunt/libprunt.a mh/libmh.a dm/libdm.a vendor/libvendor.a
+	$(CC) $(CFLAGS) -o $@ $(ingestdobj) $(LFLAGS) $(LNET) -lsqlite3 $(LCRYPTO) prunt/libprunt.a mh/libmh.a dm/libdm.a vendor/libvendor.a
 
-bin/mediad: $(MEDIAD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) $(ALG_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/timing.o obj/chan.o obj/chan_poll.o obj/lock.o obj/pie_bm.o obj/evp_hw.o obj/s_queue.o obj/s_queue_intra.o obj/pie_exif.o obj/pie_id.o obj/pie_cspace.o obj/btree.o obj/pie_json.o obj/pie_render.o obj/jsmn.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
+mediadsrc=$(wildcard mediad/*.c)
+mediadobj=$(subst .c,.o,$(mediadsrc))
+bin/mediad: mediadobj
+	$(CC) $(CFLAGS) -o $@ $(mediadobj) $(LFLAGS) $(LNET) $(LCRYPTO) -lsqlite3 -lexif $(LIMG)
 
-bin/collectiond: $(COLLD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(DOML_OBJS) $(ENC_OBJS) $(HTTP_OBJS) obj/llist.o obj/hmap.o obj/strutil.o obj/s_queue.o obj/s_queue_intra.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3
+collectiondsrc=$(wildcard collectiond/*.c)
+collectiondobj=$(subst .c,.o,$(collectiondsrc))
+bin/collectiond: collectiondobj
+	$(CC) $(CFLAGS) -o $@ $(collectiondobj) $(LFLAGS) $(LNET) -lwebsockets $(LCRYPTO) -lsqlite3 prunt/libprunt.a mh/libmh.a dm/libdm.a http/libphttp.a encoding/libpencoding.a vendor/libvendor.a
 
-bin/exportd: $(EXPORTD_OBJS) $(CFG_OBJS) $(DM_OBJS) $(ALG_OBJS) $(MATH_OBJS) $(BM_OBJS) $(IO_OBJS) $(ENC_OBJS) $(DOML_OBJS) obj/llist.o obj/hmap.o obj/timing.o obj/strutil.o obj/s_queue.o obj/s_queue_intra.o obj/fal.o obj/worker.o obj/chan.o obj/chan_poll.o obj/lock.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS) $(LNET) -lsqlite3 $(LIMG)
+exportdsrc=$(wildcard exportd/*.c)
+exportdobj=$(subst .c,.o,$(exportdsrc))
+bin/exportd: exportdobj
+	$(CC) $(CFLAGS) -o $@ $(exportdobj) $(LFLAGS) $(LNET) -lsqlite3 $(LIMG) prunt/libprunt.a mh/libmh.a alg/libalg.a dm/libdm.a math/libpmath.a bm/libbm.a encoding/libpencoding.a vendor/libvendor.a
 
 # Tools
 bin/collver: tools/collver.c $(CFG_OBJS) $(DM_OBJS) $(IO_OBJS) $(MATH_OBJS) obj/llist.o obj/hmap.o obj/pie_bm.o obj/pie_cspace.o obj/strutil.o

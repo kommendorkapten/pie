@@ -15,25 +15,26 @@
 #include <signal.h>
 #include <assert.h>
 #include <string.h>
-#include "../pie_types.h"
+#include "../prunt/pie_log.h"
+#include "../prunt/pie_cfg.h"
 #include "../bm/pie_bm.h"
-#include "../bm/pie_render.h"
-#include "../cfg/pie_cfg.h"
+#include "../bm/pie_bm_png.h"
+#include "../bm/pie_bm_jpg.h"
+#include "../bm/pie_bm_cspace.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_min.h"
 #include "../dm/pie_dev_params.h"
-#include "../doml/pie_doml_stg.h"
-#include "../io/pie_io.h"
-#include "../lib/llist.h"
-#include "../lib/s_queue.h"
-#include "../lib/timing.h"
-#include "../lib/worker.h"
-#include "../lib/fal.h"
+#include "../mh/pie_mh_stg.h"
+#include "../vendor/llist.h"
+#include "../vendor/s_queue.h"
+#include "../vendor/timing.h"
+#include "../vendor/worker.h"
+#include "../vendor/fal.h"
 #include "../mq_msg/pie_mq_msg.h"
-#include "../pie_log.h"
 #include "../encoding/pie_json.h"
 #include "../alg/pie_unsharp.h"
-#include "../alg/pie_cspace.h"
+#include "../alg/pie_render.h"
+#include "../alg/pie_downs.h"
 
 /**
  * Signal handler.
@@ -64,7 +65,7 @@ static void export(void*, size_t);
  * @param new max y size.
  * @return void.
  */
-static void resize(struct pie_bitmap_f32rgb*, int, int);
+static void resize(struct pie_bm_f32rgb*, int, int);
 
 static struct config
 {
@@ -230,8 +231,8 @@ static int process(struct q_consumer* q)
 static void export(void* a, size_t len)
 {
         char path[PIE_PATH_LEN];
-        struct pie_io_opts io_opts;
-        struct pie_bitmap_f32rgb bm_src;
+        struct pie_bm_opts io_opts;
+        struct pie_bm_f32rgb bm_src;
         struct timing t;
         struct timing t_tot;
         struct pie_mq_export_media msg;
@@ -249,11 +250,11 @@ static void export(void* a, size_t len)
                 return;
         }
 
-        io_opts.qual = PIE_IO_HIGH_QUAL;
+        io_opts.qual = PIE_BM_HIGH_QUAL;
 #if _PIE_EDIT_LINEAR
-        io_opts.cspace = PIE_IO_LINEAR;
+        io_opts.cspace = PIE_BM_LINEAR;
 #else
-        io_opts.cspace = PIE_IO_SRGB;
+        io_opts.cspace = PIE_BM_SRGB;
 #endif
 
         PIE_DEBUG("Path %s", msg.path);
@@ -266,10 +267,10 @@ static void export(void* a, size_t len)
         PIE_DEBUG("qualit: %d", msg.quality);
         PIE_DEBUG("e type: %d", msg.type);
 
-        min = pie_doml_min_for_mob(db,
-                                   cfg.storages->arr,
-                                   cfg.storages->len,
-                                   msg.mob_id);
+        min = pie_mh_min_for_mob(db,
+                                 cfg.storages->arr,
+                                 cfg.storages->len,
+                                 msg.mob_id);
         if (!min)
         {
                 PIE_WARN("No MIN found for MOB %ld", msg.mob_id);
@@ -297,7 +298,7 @@ static void export(void* a, size_t len)
 
         PIE_DEBUG("Src path %s", path);
         timing_start(&t);
-        if (pie_io_load(&bm_src, path, &io_opts))
+        if (pie_bm_load(&bm_src, path, &io_opts))
         {
                 PIE_ERR("Failed to load %s", path);
                 goto cleanup;
@@ -315,7 +316,7 @@ static void export(void* a, size_t len)
         st = pie_dev_params_read(db, &dev_json);
         if (st == 0)
         {
-                struct pie_dev_settings dev;
+                struct pie_alg_settings dev;
 
                 st = pie_dec_json_settings(&dev, dev_json.pdp_settings);
                 if (st)
@@ -325,10 +326,10 @@ static void export(void* a, size_t len)
                 }
                 else
                 {
-                        pie_bm_set_to_int_fmt(&dev);
+                        pie_alg_set_to_int_fmt(&dev);
                         timing_start(&t);
                         float* buf = malloc(bm_src.row_stride * bm_src.height * sizeof(float));
-                        pie_bm_render(&bm_src, buf, &dev);
+                        pie_alg_render(&bm_src, buf, &dev);
                         free(buf);
                         PIE_DEBUG("Rendered %s in %ldms",
                                   path,
@@ -375,8 +376,8 @@ static void export(void* a, size_t len)
 #endif /* _PIE_EDIT_LINEAR */
 
         /* Export */
-        struct pie_bitmap_u8rgb u8;
-        struct pie_bitmap_u16rgb u16;
+        struct pie_bm_u8rgb u8;
+        struct pie_bm_u16rgb u16;
         /* get the file name */
         char* p = strrchr(min->min_path, '/');
         if (!p)
@@ -423,20 +424,29 @@ static void export(void* a, size_t len)
                 assert(msg.quality > 0);
 
                 strncat(path, ".jpg", PIE_PATH_LEN - plen);
-                pie_bm_conv_bd(&u8, PIE_COLOR_8B, &bm_src, PIE_COLOR_32B);
-                pie_io_jpg_u8rgb_write(path, &u8, msg.quality);
+                pie_bm_conv_bd(&u8,
+                               PIE_BM_COLOR_8B,
+                               &bm_src,
+                               PIE_BM_COLOR_32B);
+                pie_bm_jpg_u8rgb_write(path, &u8, msg.quality);
                 pie_bm_free_u8(&u8);
                 break;
         case PIE_MQ_EXP_PNG8:
                 strncat(path, ".png", PIE_PATH_LEN - plen);
-                pie_bm_conv_bd(&u8, PIE_COLOR_8B, &bm_src, PIE_COLOR_32B);
-                pie_io_png_u8rgb_write(path, &u8);
+                pie_bm_conv_bd(&u8,
+                               PIE_BM_COLOR_8B,
+                               &bm_src,
+                               PIE_BM_COLOR_32B);
+                pie_bm_png_u8rgb_write(path, &u8);
                 pie_bm_free_u8(&u8);
                 break;
         case PIE_MQ_EXP_PNG16:
                 strncat(path, ".png", PIE_PATH_LEN - plen);
-                pie_bm_conv_bd(&u16, PIE_COLOR_16B, &bm_src, PIE_COLOR_32B);
-                pie_io_png_u16rgb_write(path, &u16);
+                pie_bm_conv_bd(&u16,
+                               PIE_BM_COLOR_16B,
+                               &bm_src,
+                               PIE_BM_COLOR_32B);
+                pie_bm_png_u16rgb_write(path, &u16);
                 pie_bm_free_u16(&u16);
                 break;
         default:
@@ -452,9 +462,9 @@ cleanup:
                   timing_dur_msec(&t_tot));
 }
 
-static void resize(struct pie_bitmap_f32rgb* bm, int max_x, int max_y)
+static void resize(struct pie_bm_f32rgb* bm, int max_x, int max_y)
 {
-        struct pie_bitmap_f32rgb new;
+        struct pie_bm_f32rgb new;
         struct timing t;
 
         if (max_x < 1 && max_y < 1)
@@ -463,14 +473,14 @@ static void resize(struct pie_bitmap_f32rgb* bm, int max_x, int max_y)
         }
 
         timing_start(&t);
-        if (pie_bm_dwn_smpl(&new, bm, max_x, max_y))
+        if (pie_alg_dwn_smpl(&new, bm, max_x, max_y))
         {
                 return;
         }
 
         /* Free old, copy new to old and free new */
         pie_bm_free_f32(bm);
-        pie_bm_conv_bd(bm, PIE_COLOR_32B, &new, PIE_COLOR_32B);
+        pie_bm_conv_bd(bm, PIE_BM_COLOR_32B, &new, PIE_BM_COLOR_32B);
         pie_bm_free_f32(&new);
         PIE_DEBUG("Downsampled to %dpx, %dpx in %ldms",
                   bm->width, bm->height, timing_dur_msec(&t));

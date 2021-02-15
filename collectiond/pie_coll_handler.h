@@ -15,7 +15,6 @@
 #define __PIE_COLL_HANDLER_H__
 
 #include <sqlite3.h>
-#include "../pie_id.h"
 #include "../http/pie_util.h"
 
 struct pie_http_post_data;

@@ -19,12 +19,11 @@
 #include <assert.h>
 #include <errno.h>
 #include "ingestd_cfg.h"
-#include "../pie_types.h"
-#include "../pie_log.h"
-#include "../lib/s_queue.h"
-#include "../lib/fal.h"
-#include "../lib/timing.h"
-#include "../cfg/pie_cfg.h"
+#include "../prunt/pie_log.h"
+#include "../prunt/pie_cfg.h"
+#include "../vendor/s_queue.h"
+#include "../vendor/fal.h"
+#include "../vendor/timing.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
 #include "../dm/pie_min.h"
@@ -32,6 +31,10 @@
 
 #define BUF_LEN (1<<14) /* 16kB */
 
+/**
+ * @param Empty message to prepare.
+ * @param Absolute path to file to process.
+ */
 enum pie_fp_status pie_fp_process_file(struct pie_mq_new_media*, const char*);
 
 /**

@@ -16,13 +16,13 @@
 #include <regex.h>
 #include <libwebsockets.h>
 #include "pie_coll_handler.h"
-#include "../cfg/pie_cfg.h"
-#include "../pie_log.h"
-#include "../lib/hmap.h"
+#include "../prunt/pie_cfg.h"
+#include "../prunt/pie_log.h"
+#include "../vendor/hmap.h"
 #include "../http/pie_util.h"
 #include "../dm/pie_host.h"
 #include "../dm/pie_storage.h"
-#include "../lib/s_queue.h"
+#include "../vendor/s_queue.h"
 #include "../mq_msg/pie_mq_msg.h"
 
 #define RESP_LEN (1 << 20) /* 1M */

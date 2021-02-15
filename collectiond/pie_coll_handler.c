@@ -15,10 +15,10 @@
 #include <ctype.h>
 #include <libwebsockets.h>
 #include "pie_coll_handler.h"
-#include "../pie_id.h"
-#include "../pie_log.h"
-#include "../lib/llist.h"
-#include "../lib/s_queue.h"
+#include "../prunt/pie_log.h"
+#include "../vendor/llist.h"
+#include "../vendor/s_queue.h"
+#include "../vendor/jsmn.h"
 #include "../encoding/pie_json.h"
 #include "../http/pie_util.h"
 #include "../dm/pie_collection.h"
@@ -28,10 +28,9 @@
 #include "../dm/pie_collection_member.h"
 #include "../dm/pie_storage.h"
 #include "../dm/pie_host.h"
-#include "../jsmn/jsmn.h"
 #include "../http/pie_util.h"
 #include "../http/pie_http_types.h"
-#include "../doml/pie_doml_mob.h"
+#include "../mh/pie_mh_mob.h"
 #include "../mq_msg/pie_mq_msg.h"
 
 extern struct q_producer* export_q;
@@ -203,6 +202,7 @@ int pie_coll_h_coll(struct pie_coll_h_resp* r,
                 case HTTP_STATUS_SERVICE_UNAVAILABLE:
                 case HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         ret = 1;
+                        break;
                 default:
                         ret = 0;
                 }
@@ -263,7 +263,7 @@ static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp* r,
                 src_col.cmb_col_id,
                 tgt_col_id);
 
-        if (pie_doml_mob_move(db, tgt_col_id, src_col.cmb_col_id, mob_id))
+        if (pie_mh_mob_move(db, tgt_col_id, src_col.cmb_col_id, mob_id))
         {
                 PIE_ERR("pie_doml_mob_move");
                 r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -290,6 +290,7 @@ static int pie_coll_h_coll_asset_post(struct pie_coll_h_resp* r,
                 case HTTP_STATUS_SERVICE_UNAVAILABLE:
                 case HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         ret = 1;
+                        break;
                 default:
                         ret = 0;
                 }
@@ -332,7 +333,7 @@ static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
         }
 
         /* Purge MOB, MINs files etc */
-        if (pie_doml_mob_delete(db, cmb.cmb_mob_id))
+        if (pie_mh_mob_delete(db, cmb.cmb_mob_id))
         {
                 r->http_sc = HTTP_STATUS_INTERNAL_SERVER_ERROR;
                 r->content_type = "application/json; charset=UTF-8";
@@ -360,6 +361,7 @@ static int pie_coll_h_coll_asset_del(struct pie_coll_h_resp* r,
                 case HTTP_STATUS_SERVICE_UNAVAILABLE:
                 case HTTP_STATUS_INTERNAL_SERVER_ERROR:
                         ret = 1;
+                        break;
                 default:
                         ret = 0;
                 }
@@ -779,7 +781,7 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
 #define BUF_LEN 4096
         struct pie_http_export_request req;
         char* buf = NULL;
-        const char *p;
+        const char *p = NULL;
         pie_id stg_id;
 
         memset(&req, 0, sizeof(req));
@@ -802,6 +804,12 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
         if (get_id1_path(&stg_id, &p, url))
         {
                 r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
+        }
+        if (p == NULL)
+        {
+                r->http_sc = HTTP_STATUS_BAD_REQUEST;
+                return 0;
         }
 
         PIE_LOG("Export to %s@%d", p, (int)stg_id);
@@ -826,7 +834,7 @@ int pie_coll_h_exp(struct pie_coll_h_resp* r,
 
                 strncpy(em.path, p, PIE_PATH_LEN);
                 em.mob_id = (pie_id)n->data;
-                em.stg_id = stg_id;
+                em.stg_id = (int)stg_id;
                 em.max_x = req.max_x;
                 em.max_y = req.max_y;
                 em.type = PIE_MQ_EXP_JPG;
