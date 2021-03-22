@@ -16,7 +16,6 @@
 * Load collection in editd.
 
 # Unsorted
-
 ## Editd
 * empty workspace after x min of activity.
 * prefetch files to workspace.
